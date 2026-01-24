@@ -10,7 +10,8 @@ class Paiements extends Model
     protected $fillable = [
         'user_id',
         'amount',
-        'method',
+        'method_name',
+        'description',
         'status',
         'payment_date',
         'transaction_id',
@@ -26,11 +27,46 @@ class Paiements extends Model
 
     public function orders(): HasMany
     {
-        return $this->hasMany(Commandes::class, 'payment_id');
+        return $this->hasMany(Commandes::class, 'paiement_id');
     }
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function photos()
+    {
+        return $this->hasMany(Photos::class);
+    }
+
+    /**
+     * @param UploadedFile $files
+     */
+    public function attachfiles(?array $files)
+    {
+        $pictures = [];
+        if($files !== null)
+        {    foreach($files as $file)
+            {
+                if($file->getError())
+                {
+                    continue;
+                }
+                $filename = $file->store('Paiement/'. $this->id, 'public');
+                $pictures[] = [
+                    'filename'=> $filename,
+                ];
+            }
+        }
+        if(count($pictures) > 0)
+        {
+            $this->photos()->createMany($pictures);
+        }
+    }
+
+    public function getPhoto(): ?Photos
+    {
+        return $this->photos()->where('paiements_id', $this->id)->first();
     }
 }

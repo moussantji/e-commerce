@@ -13,8 +13,8 @@ class Tag extends Model
         'description'
     ];
 
-    public function products(): BelongsToMany
+    public function produits(): BelongsToMany
     {
-        return $this->belongsToMany(Produits::class, 'product_tag');
+        return $this->belongsToMany(Produits::class, 'product_tag', 'tag_id', 'produit_id');
     }
 }

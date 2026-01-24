@@ -24,7 +24,7 @@
                         </div>
                         <div class="col-auto">
                             <button type="button" class="btn btn-phoenix-secondary"
-                                onclick="document.querySelector('a[href=\'#tab-password\']').click(); 
+                                onclick="document.querySelector('a[href=\'#tab-password\']').click();
                  document.getElementById('tab-password').scrollIntoView({behavior: 'smooth'})">
                                 <span class="fas fa-key me-2"></span>Réinitialiser le mot de passe
                             </button>
@@ -53,13 +53,7 @@
                         <div class="card-body">
                             <div class="border-bottom border-dashed pb-4">
                                 <div class="row align-items-center g-3 g-sm-5 text-center text-sm-start">
-                                    <div class="col-12 col-sm-auto">
-                                        <div class="col-12 col-sm-auto"><input class="d-none" id="avatarFile"
-                                                type="file" /><label class="cursor-pointer avatar avatar-5xl"
-                                                for="avatarFile"><img class="rounded-circle"
-                                                    src="../../../assets/img/team/15.webp" alt="" /></label>
-                                        </div>
-                                    </div>
+                                    <livewire:user-avatar :user="$user" />
                                     <div class="col-12 col-sm-auto flex-1">
                                         <h3>{{ $user->name }}</h3>
                                         <p class="text-body-secondary">Membre depuis
@@ -69,7 +63,15 @@
                                                 if ($created->isToday()) {
                                                     echo round($created->diffInMinutes($now) / 60) . ' heures';
                                                 } else {
-                                                    echo str_replace(',', '', $created->diffForHumans(['parts' => 2, 'join' => ' et ', 'syntax' => \Carbon\CarbonInterface::DIFF_ABSOLUTE]));
+                                                    echo str_replace(
+                                                        ',',
+                                                        '',
+                                                        $created->diffForHumans([
+                                                            'parts' => 2,
+                                                            'join' => ' et ',
+                                                            'syntax' => \Carbon\CarbonInterface::DIFF_ABSOLUTE,
+                                                        ]),
+                                                    );
                                                 }
                                             @endphp
                                         </p>
@@ -86,18 +88,27 @@
                             <div class="d-flex flex-between-center pt-4">
                                 <div>
                                     <h6 class="mb-2 text-body-secondary">Date d'inscription</h6>
-                                    <h4 class="fs-7 text-body-highlight mb-0">{{ $user->created_at->translatedFormat('j F Y') }}</h4>
+                                    <h4 class="fs-7 text-body-highlight mb-0">
+                                        {{ $user->created_at->translatedFormat('j F Y') }}</h4>
                                 </div>
                                 <div class="text-end">
                                     <h6 class="mb-2 text-body-secondary">Dernière connexion</h6>
                                     <h4 class="fs-7 text-body-highlight mb-0">
-                                        @if($user->last_login)
+                                        @if ($user->last_login)
                                             @php
                                                 $lastLogin = \Carbon\Carbon::parse($user->last_login);
                                                 if ($lastLogin->isToday()) {
                                                     echo round($lastLogin->diffInMinutes(now()) / 60) . ' heures';
                                                 } else {
-                                                    echo str_replace(',', '', $lastLogin->diffForHumans(['parts' => 2, 'join' => ' et ', 'syntax' => \Carbon\CarbonInterface::DIFF_ABSOLUTE]));
+                                                    echo str_replace(
+                                                        ',',
+                                                        '',
+                                                        $lastLogin->diffForHumans([
+                                                            'parts' => 2,
+                                                            'join' => ' et ',
+                                                            'syntax' => \Carbon\CarbonInterface::DIFF_ABSOLUTE,
+                                                        ]),
+                                                    );
                                                 }
                                             @endphp
                                         @else
@@ -121,7 +132,7 @@
                             <div class="border-bottom border-dashed d-flex justify-content-between align-items-center">
                                 <h4 class="mb-3">Adresse par défaut</h4>
                                 <button type="button"
-                                    onclick="document.querySelector('a[href=\'#tab-personal-info\']').click(); 
+                                    onclick="document.querySelector('a[href=\'#tab-personal-info\']').click();
                                         document.getElementById('tab-personal-info').scrollIntoView({behavior: 'smooth'})"
                                     class="btn btn-link p-0" data-bs-toggle="modal" data-bs-target="#editAddressModal">
                                     <span class="fas fa-edit fs-9 text-body-quaternary"></span>
@@ -222,7 +233,8 @@
                                         for="email">Email</label>
                                     <input class="form-control" id="email" name="email" type="email"
                                         value="{{ $user->email }}" readonly />
-                                    <small class="text-muted">Contactez l'administrateur pour modifier cette information</small>
+                                    <small class="text-muted">Contactez l'administrateur pour modifier cette
+                                        information</small>
                                 </div>
                                 <div class="col-12 col-lg-6">
                                     <label class="form-label text-body-highlight fs-8 ps-0 text-capitalize lh-sm"
@@ -253,7 +265,7 @@
                                                 class="fab fa-facebook-f text-primary"></i></span>
                                         <input type="url" class="form-control" id="facebook_url" name="facebook_url"
                                             placeholder="https://facebook.com/votrepseudo"
-                                            value="{{ $user->social_links ? (is_string($user->social_links) ? json_decode($user->social_links, true)['facebook'] ?? '' : ($user->social_links['facebook'] ?? '')) : '' }}">
+                                            value="{{ $user->social_links ? (is_string($user->social_links) ? json_decode($user->social_links, true)['facebook'] ?? '' : $user->social_links['facebook'] ?? '') : '' }}">
                                     </div>
                                 </div>
                                 <div class="col-12 col-lg-6">
@@ -262,7 +274,7 @@
                                                 class="fab fa-twitter text-info"></i></span>
                                         <input type="url" class="form-control" id="twitter_url" name="twitter_url"
                                             placeholder="https://twitter.com/votrepseudo"
-                                            value="{{ $user->social_links ? (is_string($user->social_links) ? json_decode($user->social_links, true)['twitter'] ?? '' : ($user->social_links['twitter'] ?? '')) : '' }}">
+                                            value="{{ $user->social_links ? (is_string($user->social_links) ? json_decode($user->social_links, true)['twitter'] ?? '' : $user->social_links['twitter'] ?? '') : '' }}">
                                     </div>
                                 </div>
                                 <div class="col-12 col-lg-6">
@@ -273,7 +285,7 @@
                                         </span>
                                         <input type="url" class="form-control" id="instagram_url"
                                             name="instagram_url" placeholder="https://instagram.com/votrepseudo"
-                                            value="{{ $user->social_links ? (is_string($user->social_links) ? json_decode($user->social_links, true)['instagram'] ?? '' : ($user->social_links['instagram'] ?? '')) : '' }}">
+                                            value="{{ $user->social_links ? (is_string($user->social_links) ? json_decode($user->social_links, true)['instagram'] ?? '' : $user->social_links['instagram'] ?? '') : '' }}">
                                     </div>
                                 </div>
                                 <div class="col-12 col-lg-6">
@@ -282,7 +294,7 @@
                                                 class="fab fa-linkedin-in text-primary"></i></span>
                                         <input type="url" class="form-control" id="linkedin_url" name="linkedin_url"
                                             placeholder="https://linkedin.com/in/votrepseudo"
-                                            value="{{ $user->social_links ? (is_string($user->social_links) ? json_decode($user->social_links, true)['linkedin'] ?? '' : ($user->social_links['linkedin'] ?? '')) : '' }}">
+                                            value="{{ $user->social_links ? (is_string($user->social_links) ? json_decode($user->social_links, true)['linkedin'] ?? '' : $user->social_links['linkedin'] ?? '') : '' }}">
                                     </div>
                                 </div>
 
@@ -376,5 +388,17 @@
     </div><!-- <section> close ============================-->
     <!-- ============================================-->
 
+    <script>
+        document.getElementById('avatarFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('avatarPreview').src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
 
 @endsection

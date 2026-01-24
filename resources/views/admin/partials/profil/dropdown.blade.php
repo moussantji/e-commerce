@@ -2,16 +2,7 @@
                 <div class="dropdown-menu dropdown-menu-end navbar-dropdown-caret py-0 dropdown-profile shadow border"
                     aria-labelledby="navbarDropdownUser">
                     <div class="card position-relative border-0">
-                        <div class="card-body p-0">
-                            <div class="text-center pt-4 pb-3">
-                                <div class="avatar avatar-xxl mb-2">
-                                    <img class="rounded-circle" src="{{ asset('assets/img/team/72x72/58.webp') }}" 
-                                        alt="Admin" />
-                                </div>
-                                <h6 class="mt-2 text-body-emphasis mb-1">{{ Auth::user()->name ?? 'Administrateur' }}</h6>
-                            </div>
-                        </div>
-                        <div class="overflow-auto scrollbar" style="max-height: 20rem;">
+                        <div class="overflow-auto scrollbar  pt-4" style="max-height: 20rem;">
                             <ul class="nav d-flex flex-column mb-2 pb-1">
                                 <li class="nav-item">
                                     <a class="nav-link px-3 d-flex align-items-center" href="{{ route('admin.profile') }}">
@@ -20,7 +11,7 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link px-3 d-flex align-items-center" href="{{ route('admin.settings') }}">
+                                    <a class="nav-link px-3 d-flex align-items-center" href="{{ route('admin.users.index') }}">
                                         <span class="me-2 text-body" data-feather="settings"></span>
                                         <span>Paramètres</span>
                                     </a>

@@ -34,8 +34,8 @@ class ProductController extends Controller
         }
 
         $products = $query->latest()->get();
-        $categories = \App\Models\Categories::all();
-        
+        $categories = Category::all();
+
         return view('admin.products.index', compact('products', 'categories'));
     }
 
@@ -44,8 +44,9 @@ class ProductController extends Controller
      */
     public function create()
     {
-        $categories = \App\Models\Categories::all();
-        return view('admin.products.create', compact('categories'));
+        $categories = Category::all();
+        $brands = \App\Models\Brand::orderBy('name')->get();
+        return view('admin.products.create', compact('categories', 'brands'));
     }
 
     /**
@@ -62,13 +63,10 @@ class ProductController extends Controller
             'image' => 'nullable|image|max:2048',
         ]);
 
-        // Gestion de l'upload de l'image si elle existe
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('products', 'public');
-            $validated['image_path'] = $path;
-        }
+        $product = Product::create($validated);
 
-        Product::create($validated);
+        $product->attachFiles($validated['images'] ?? null);
+
 
         return redirect()->route('admin.products.index')
             ->with('success', 'Produit créé avec succès');
@@ -130,9 +128,9 @@ class ProductController extends Controller
         if ($product->image_path) {
             \Storage::disk('public')->delete($product->image_path);
         }
-        
+
         $product->delete();
-        
+
         return redirect()->route('admin.products.index')
             ->with('success', 'Produit supprimé avec succès');
     }
@@ -143,7 +141,7 @@ class ProductController extends Controller
     public function updateStatus(Product $product)
     {
         $product->update(['is_active' => !$product->is_active]);
-        
+
         return response()->json([
             'success' => true,
             'is_active' => $product->is_active

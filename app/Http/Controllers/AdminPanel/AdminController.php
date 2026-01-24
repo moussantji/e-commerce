@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\AdminPanel;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class AdminController extends Controller
 {
@@ -50,11 +51,12 @@ class AdminController extends Controller
     public function updateProfile(Request $request)
     {
         $user = Auth::user();
-        
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'prenom' => 'nullable|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'avatar' => 'nullable|image|max:2048',
             'tel' => 'nullable|string|max:20',
             'date_naiss' => 'nullable|date',
             'lieu_naiss' => 'nullable|string|max:255',
@@ -89,7 +91,6 @@ class AdminController extends Controller
                     'region' => $validated['region'] ?? $user->region
                 ];
                 $userData['adresse'] = json_encode($adresseData);
-                \Log::info('Adresse data to save:', $adresseData);
             } else {
                 // Si l'adresse est vide, on la met à jour avec une chaîne vide
                 $userData['adresse'] = '';
@@ -109,37 +110,43 @@ class AdminController extends Controller
             if (!empty($validated['linkedin_url'] ?? null)) {
                 $socialLinks['linkedin'] = $validated['linkedin_url'];
             }
-            
+
             // Mise à jour des réseaux sociaux
             if (!empty($socialLinks)) {
                 // Si l'utilisateur a déjà des réseaux sociaux, on les récupère
                 $existingSocialLinks = [];
                 if (!empty($user->social_links)) {
-                    $existingSocialLinks = is_string($user->social_links) 
-                        ? json_decode($user->social_links, true) 
+                    $existingSocialLinks = is_string($user->social_links)
+                        ? json_decode($user->social_links, true)
                         : $user->social_links;
                     $existingSocialLinks = is_array($existingSocialLinks) ? $existingSocialLinks : [];
                 }
-                
+
                 // Fusion avec les nouveaux réseaux sociaux
                 $socialLinks = array_merge($existingSocialLinks, $socialLinks);
                 $userData['social_links'] = json_encode($socialLinks);
-                \Log::info('Social links to save:', $socialLinks);
             }
 
             // Journalisation des données avant mise à jour
-            \Log::info('User data to update:', $userData);
-            
+
             // Mise à jour de l'utilisateur
             $updated = $user->update($userData);
-            
-            if ($updated) {
-                \Log::info('User updated successfully');
-                return redirect()->route('admin.profile')
-                    ->with('success', 'Profil mis à jour avec succès');
-            } else {
-                \Log::error('Failed to update user');
-                return back()->with('error', 'Échec de la mise à jour du profil');
+
+
+            // Dans BrandController::update() ET ::destroy()
+            if ($request->hasFile('avatar')) {
+                // ✅ 1️⃣ SUPPRIME FICHIERS d'ABORD
+                foreach ($user->photos as $photo) {
+                    Storage::disk('public')->delete($photo->filename);
+                }
+
+                // ✅ 2️⃣ SUPPRIME DB
+                $user->photos()->delete();
+            }
+
+            // ✅ 2️⃣ ENSUITE attacher logo
+            if ($request->hasFile('avatar')) {
+                $user->attachfiles([$request->file('avatar')]);
             }
         } catch (\Exception $e) {
             \Log::error('Error updating user profile: ' . $e->getMessage());

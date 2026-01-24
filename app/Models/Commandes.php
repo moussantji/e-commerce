@@ -66,7 +66,7 @@ class Commandes extends Model
 
     public function promoCode(): BelongsTo
     {
-        return $this->belongsTo(PromoCode::class);
+        return $this->belongsTo(PromoCode::class, 'promo_code_id');
     }
 
     public function produits(): BelongsToMany
@@ -74,10 +74,38 @@ class Commandes extends Model
         return $this->belongsToMany(Produits::class, 'commande_produit', 'commande_id', 'produit_id')
             ->withPivot(['quantite', 'prix_unitaire', 'total']);
     }
-    
+
     // Alias pour la relation produits (pour la rétrocompatibilité)
     public function products(): BelongsToMany
     {
         return $this->produits();
+    }
+
+    // Add to your Commandes model
+    public function getIsCancelledAttribute(): bool
+    {
+        return $this->statut === 'annulee';
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        $labels = [
+            'en_attente' => 'En attente',
+            'traitement' => 'En traitement',
+            'expedition' => 'Expédiée',
+            'livree' => 'Livrée',
+            'annulee' => 'Annulée',
+            'partiellement_livree' => 'Partiellement livrée',
+        ];
+
+        return $labels[$this->statut] ?? ucfirst($this->statut);
+    }
+    public function getTotalAttribute()
+    {
+        $total = $this->sous_total + $this->frais_livraison;
+        if ($this->promo_code_id && $this->promoCode) {
+            $total -= $this->promoCode->calculateDiscount($this->sous_total);
+        }
+        return $total - ($this->remise ?? 0);
     }
 }

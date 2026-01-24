@@ -1,3 +1,26 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* ✅ FORCE hover Phoenix */
+.hover-actions-trigger {
+    overflow: visible !important;
+}
+
+.hover-actions {
+    z-index: 1060 !important;
+    opacity: 0 !important;
+    transform: translateY(-10px);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.hover-actions-trigger:hover .hover-actions {
+    opacity: 1 !important;
+    transform: translateY(0);
+}
+
+/* ✅ Bouton toujours visible */
+.btn-link {
+    z-index: 1050;
+}
+
+/* ✅ Dropdown visible */
+.dropdown-menu {
+    z-index: 1070 !important;
+}

@@ -27,17 +27,17 @@ class Paniers extends Model
 
     public function products(): BelongsToMany
     {
-        return $this->belongsToMany(Produits::class, 'panier_produit')
-            ->withPivot(['quantity', 'unit_price']);
+        return $this->belongsToMany(Produits::class, 'panier_produit', 'paniers_id', 'produits_id')
+            ->withPivot(['quantite', 'prix_unitaire','total_ligne']);
     }
 
     public function getTotalAttribute()
     {
         return $this->products->sum(function ($product) {
-            return $product->pivot->quantity * $product->pivot->unit_price;
+            return $product->pivot->quantite * $product->pivot->unit_prix_unitaire;
         });
     }
-    
+
     /**
      * Formate un montant en FCFA
      */
@@ -45,7 +45,7 @@ class Paniers extends Model
     {
         return number_format($amount, 0, ',', ' ') . ' FCFA';
     }
-    
+
     /**
      * Accesseur pour le total formaté en FCFA
      */
@@ -53,7 +53,7 @@ class Paniers extends Model
     {
         return $this->formatFcfa($this->total);
     }
-    
+
     /**
      * Accesseur pour le prix unitaire formaté en FCFA
      */
@@ -61,7 +61,7 @@ class Paniers extends Model
     {
         return $this->formatFcfa($price);
     }
-    
+
     /**
      * Accesseur pour le sous-total d'une ligne formaté en FCFA
      */

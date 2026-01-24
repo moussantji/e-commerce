@@ -500,11 +500,11 @@
                 </div>
             </li>
             <li class="nav-item dropdown">
-                <a class="nav-link lh-1 pe-0" id="navbarDropdownUser" href="#!" role="button" 
+                <a class="nav-link lh-1 pe-0" id="navbarDropdownUser" href="#!" role="button"
                     data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true"
                     aria-expanded="false">
                     <div class="avatar avatar-l">
-                        <img class="rounded-circle" src="{{ asset('assets/img/team/40x40/avatar.webp') }}" alt="Admin" />
+                        <img class="rounded-circle" src="{{ $user?->getPhoto()?->getImageUrl(120,120) ?? asset('assets/img/team/15.webp') }}" alt="Admin" />
                     </div>
                 </a>
                 @include('admin.partials.profil.dropdown')

@@ -10,7 +10,7 @@
     <!-- ===============================================-->
     <!--    Document Title-->
     <!-- ===============================================-->
-    <title>Phoenix</title>
+    <title></title>
 
     <!-- ===============================================-->
     <!--    Favicons-->
@@ -32,6 +32,9 @@
     <!-- ===============================================-->
     <!--    Stylesheets-->
     <!-- ===============================================-->
+
+
+    <link href="{{ asset('vendors/dropzone/dropzone.css') }}" rel="stylesheet" />
     <link rel="preconnect" href="https://fonts.googleapis.com/">
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
     <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&amp;display=swap"
@@ -57,11 +60,14 @@
             userLinkRTL.setAttribute('disabled', true);
         }
     </script>
-    @vite(['resources/css/admin.css'])
-    
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <link href="../../../vendors/choices/choices.min.css" rel="stylesheet" />
     <link href="{{ asset('vendors/leaflet/leaflet.css') }}" rel="stylesheet">
     <link href="{{ asset('vendors/leaflet.markercluster/MarkerCluster.css') }}" rel="stylesheet">
     <link href="{{ asset('vendors/leaflet.markercluster/MarkerCluster.Default.css') }}" rel="stylesheet">
+    <link href="{{ asset('vendors/choices/choices.min.css') }}" rel="stylesheet" />
+
 </head>
 
 <body>
@@ -90,6 +96,7 @@
     <!-- ===============================================-->
     <!--    JavaScripts-->
     <!-- ===============================================-->
+    <script src="{{ asset('vendors/dropzone/dropzone-min.js') }}"></script>
     <script src="{{ asset('vendors/popper/popper.min.js') }}"></script>
     <script src="{{ asset('vendors/bootstrap/bootstrap.min.js') }}"></script>
     <script src="{{ asset('vendors/anchorjs/anchor.min.js') }}"></script>
@@ -105,6 +112,29 @@
     <script src="{{ asset('assets/js/phoenix.js') }}"></script>
     <script src="{{ asset('vendors/echarts/echarts.min.js') }}"></script>
     <script src="{{ asset('assets/js/dashboards/ecommerce-dashboard.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('users');
+            if (!container) return;
+
+            // on limite la recherche au nom + email
+            const userList = new List(container, {
+                valueNames: ['name', 'email']
+            });
+
+            // si tu utilises le bouton "Réinitialiser"
+            document.querySelectorAll('[data-list-clear]').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    userList.search('');
+                });
+            });
+        });
+    </script>
+
+
+
+
 </body>
 
 </html>

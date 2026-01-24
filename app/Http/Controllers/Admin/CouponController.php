@@ -15,8 +15,8 @@ class CouponController extends Controller
      */
     public function index()
     {
-        $promoCodes = PromoCode::latest()->paginate(10);
-        return view('admin.coupons.index', compact('promoCodes'));
+        $coupons = PromoCode::latest()->paginate(10);
+        return view('admin.coupons.index', compact('coupons'));
     }
 
     /**
@@ -60,9 +60,9 @@ class CouponController extends Controller
     /**
      * Affiche le formulaire de modification d'un coupon
      */
-    public function edit(PromoCode $promoCode)
+    public function edit(PromoCode $coupon)
     {
-        return view('admin.coupons.edit', compact('promoCode'));
+        return view('admin.coupons.edit', compact('coupon'));
     }
 
     /**

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('livraisons', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->timestamp('duree');
+            $table->timestamp('duree')->nullable();
             $table->string('prix');
             $table->timestamps();
         });

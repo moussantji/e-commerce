@@ -24,7 +24,7 @@ class Cart extends Component
     {
         if (Auth::check()) {
             $this->cart = Paniers::with('products')->where('user_id', Auth::id())->first();
-            
+
             if ($this->cart) {
                 $this->total = $this->cart->total;
                 $this->itemsCount = $this->cart->products->sum('pivot.quantity');
@@ -56,6 +56,8 @@ class Cart extends Component
 
     public function render()
     {
-        return view('livewire.cart');
+        return view('livewire.cart',[
+            'products' => $this->cart->products(),
+        ]);
     }
 }

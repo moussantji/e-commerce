@@ -9,8 +9,8 @@ class Caracteristiques extends Model
 {
     protected $fillable = [
         'name',
-        'description',
-        'unit',
+        'type',
+        'unite',
         'is_filterable'
     ];
 
@@ -21,6 +21,6 @@ class Caracteristiques extends Model
     public function produits(): BelongsToMany
     {
         return $this->belongsToMany(Produits::class, 'produit_caracteristique')
-            ->withPivot('valeur');
+            ->withPivot('value');
     }
 }

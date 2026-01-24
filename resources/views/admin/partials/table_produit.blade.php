@@ -31,11 +31,9 @@
                 <td class="align-middle white-space-nowrap py-0">
                     <a class="d-block border border-translucent rounded-2"
                         href="{{ route('admin.products.edit', $product) }}">
-                        @if ($product->image)
-                            <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}"
+                        @if ($product->getPhoto())
+                            <img src="{{ $product->getPhoto()->getImageUrl(530, 530) }}" alt="{{ $product->name }}"
                                 width="53" />
-                        @else
-                            <img src="../../../assets/img/products/1.png" alt="Aucune image" width="53" />
                         @endif
                     </a>
                 </td>

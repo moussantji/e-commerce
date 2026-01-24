@@ -34,17 +34,21 @@ class ShippingMethodController extends Controller
     public function store(Request $request)
     {
         $validated = $this->validateRequest($request);
-        
-        // Gestion du logo
+
+        // ✅ CRÉER d'ABORD le shipping method
+        $livraison = Livraison::create($validated);
+
+        // ✅ 2️⃣ ENSUITE attacher logo
         if ($request->hasFile('logo')) {
-            $validated['logo'] = $request->file('logo')->store('shipping-methods', 'public');
+            $livraison->attachfiles([$request->file('logo')]);
         }
-        
+
+
         // Conversion des champs JSON
         $validated = $this->processJsonFields($validated);
-        
+
         Livraison::create($validated);
-        
+
         return redirect()
             ->route('admin.shipping-methods.index')
             ->with('success', 'Méthode de livraison créée avec succès');
@@ -66,24 +70,28 @@ class ShippingMethodController extends Controller
     public function update(Request $request, Livraison $shippingMethod)
     {
         $validated = $this->validateRequest($request, $shippingMethod->id);
-        
-        // Gestion du logo
-        if ($request->hasFile('logo')) {
-            // Supprimer l'ancien logo si nécessaire
-            if ($shippingMethod->logo) {
-                Storage::disk('public')->delete($shippingMethod->logo);
+
+        // Dans BrandController::update() ET ::destroy()
+        if ($request->hasFile('logo') || $request->filled('remove_logo')) {
+            // ✅ 1️⃣ SUPPRIME FICHIERS d'ABORD
+            foreach ($shippingMethod->photos as $photo) {
+                Storage::disk('public')->delete($photo->filename);
             }
-            $validated['logo'] = $request->file('logo')->store('shipping-methods', 'public');
-        } elseif ($request->has('remove_logo') && $shippingMethod->logo) {
-            Storage::disk('public')->delete($shippingMethod->logo);
-            $validated['logo'] = null;
+
+            // ✅ 2️⃣ SUPPRIME DB
+            $shippingMethod->photos()->delete();
         }
-        
+
+        // ✅ 2️⃣ ENSUITE attacher logo
+        if ($request->hasFile('logo')) {
+            $shippingMethod->attachfiles([$request->file('logo')]);
+        }
+
         // Conversion des champs JSON
         $validated = $this->processJsonFields($validated);
-        
+
         $shippingMethod->update($validated);
-        
+
         return redirect()
             ->route('admin.shipping-methods.index')
             ->with('success', 'Méthode de livraison mise à jour avec succès');
@@ -98,19 +106,23 @@ class ShippingMethodController extends Controller
         if ($shippingMethod->orders()->exists()) {
             return back()->with('error', 'Impossible de supprimer cette méthode car elle est utilisée dans des commandes.');
         }
-        
-        // Supprimer le logo si nécessaire
-        if ($shippingMethod->logo) {
-            Storage::disk('public')->delete($shippingMethod->logo);
+
+        // ✅ 1️⃣ SUPPRIME TOUTES les photos PHYSIQUES
+        foreach ($shippingMethod->photos as $photo) {
+            if (Storage::disk('public')->exists($photo->filename)) {
+                Storage::disk('public')->delete($photo->filename);
+            }
+            $photo->delete(); // ✅ Supprime ligne DB photos
         }
-        
+
+        // ✅ 2️⃣ MAINTENANT supprime shipping
         $shippingMethod->delete();
-        
+
         return redirect()
             ->route('admin.shipping-methods.index')
             ->with('success', 'Méthode de livraison supprimée avec succès');
     }
-    
+
     /**
      * Traite les champs JSON avant enregistrement
      */
@@ -122,17 +134,17 @@ class ShippingMethodController extends Controller
         } else {
             $data['zones'] = null;
         }
-        
+
         // Configuration
         if (!empty($data['config'])) {
             $data['config'] = json_decode($data['config'], true);
         } else {
             $data['config'] = null;
         }
-        
+
         return $data;
     }
-    
+
     /**
      * Valide les données de la requête
      */
@@ -154,7 +166,7 @@ class ShippingMethodController extends Controller
             'zones' => ['nullable', 'json'],
             'config' => ['nullable', 'json'],
         ];
-        
+
         return $request->validate($rules);
     }
 }

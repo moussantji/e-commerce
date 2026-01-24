@@ -13,10 +13,36 @@ class UserController extends Controller
     /**
      * Affiche la liste des utilisateurs
      */
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::latest()->paginate(10);
-        return view('admin.users.index', compact('users'));
+        $query = User::query();
+
+        switch ($request->get('filter')) {
+            case 'active':
+                $query->where('status', 'active');
+                break;
+            case 'banned':
+                $query->where('status', 'inactive'); // ou ta logique de ban
+                break;
+            case 'admins':
+                $query->where('role', 'admin');
+                break;
+            case 'new':
+                $query->where('created_at', '>', now()->subDays(7));
+                break;
+        }
+
+        $users = $query->paginate(15);
+
+        $counts = [
+            'all'    => User::count(),
+            'active' => User::where('status', 'active')->count(),
+            'banned' => User::where('status', 'inactive')->count(),
+            'admins' => User::where('role', 'admin')->count(),
+            'new'    => User::where('created_at', '>', now()->subDays(7))->count(),
+        ];
+
+        return view('admin.users.index', compact('users', 'counts'));
     }
 
     /**
@@ -32,25 +58,41 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'role' => ['required', 'in:admin,customer'],
+        $data = $request->validate([
+            'name'          => ['required', 'string', 'max:255'],
+            'prenom'        => ['nullable', 'string', 'max:255'],
+            'date_naiss'    => ['nullable', 'date'],
+            'lieu_naiss'    => ['nullable', 'string', 'max:255'],
+            'email'         => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'tel'           => ['nullable', 'string', 'max:50', 'unique:users,tel'],
+            'password'      => ['required', 'string', 'min:8', 'confirmed'],
+            'role'          => ['required', 'in:admin,customer'],
+            'status'        => ['required', 'in:active,inactive'],
+            'pays'          => ['nullable', 'string', 'max:100'],
+            'adresse'       => ['nullable', 'array'],
+            'social_links'  => ['nullable', 'array'],
+            'email_verified' => ['nullable', 'boolean'],
         ]);
+
+        // Préparation des champs JSON et dates
+        $data['adresse']       = $data['adresse'] ?? null;          // sera casté en JSON si cast dans le modèle
+        $data['social_links']  = $data['social_links'] ?? null;
+        $data['password']      = Hash::make($data['password']);
+        $data['email_verified_at'] = !empty($data['email_verified']) ? now() : null;
+
+        // Champs non envoyés mais existants dans la table
+        unset($data['email_verified']);
 
         // Création de l'utilisateur
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'email_verified_at' => now(),
-        ]);
+        $user = User::create($data);
 
-        // Attribution du rôle
-        $user->assignRole($validated['role']);
+        // Si tu utilises spatie/permission
+        if (method_exists($user, 'assignRole')) {
+            $user->assignRole($data['role']);
+        }
 
-        return redirect()->route('admin.users.index')
+        return redirect()
+            ->route('admin.users.index')
             ->with('success', 'Utilisateur créé avec succès');
     }
 

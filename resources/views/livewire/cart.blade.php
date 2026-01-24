@@ -1,111 +1,231 @@
-<div class="relative">
-    <button 
-        @click="open = !open" 
-        class="flex items-center text-gray-700 hover:text-gray-900 focus:outline-none"
-    >
-        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
-        @if($itemsCount > 0)
-            <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                {{ $itemsCount }}
-            </span>
-        @endif
-    </button>
+<div class="row g-5">
+    <div class="col-12 col-lg-8">
+        <div id="cartTable" data-list='{"valueNames":["products","color","size","price","quantity","total"],"page":10}'>
+            <div class="table-responsive scrollbar mx-n1 px-1">
+                @if ($panier && $itemsCount > 0)
+                    <table class="table fs-9 mb-0 border-top border-translucent">
+                        <thead>
+                            <tr>
+                                <th class="sort white-space-nowrap align-middle fs-10" scope="col"></th>
+                                <th class="sort white-space-nowrap align-middle" scope="col" style="min-width:250px;">
+                                    PRODUCTS</th>
+                                <th class="sort align-middle" scope="col" style="width:80px;">COLOR</th>
+                                <th class="sort align-middle" scope="col" style="width:150px;">SIZE</th>
+                                <th class="sort align-middle text-end" scope="col" style="width:300px;">PRICE</th>
+                                <th class="sort align-middle ps-5" scope="col" style="width:200px;">QUANTITY</th>
+                                <th class="sort align-middle text-end" scope="col" style="width:250px;">TOTAL</th>
+                                <th class="sort text-end align-middle pe-0" scope="col"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="list" id="cart-table-body">
+                            @if ($panier && $panier->products->count() > 0)
+                                @foreach ($panier->products as $product)
+                                    <tr class="cart-table-row btn-reveal-trigger">
+                                        {{-- ✅ getPhoto() fonctionne ! --}}
+                                        <td class="align-middle white-space-nowrap py-0">
+                                            <a class="d-block border border-translucent rounded-2"
+                                                href="{{ route('produits.show', ['slug' => $product->getSlug(), 'id' => $product->id]) }}">
+                                                @if ($product->getPhoto())
+                                                    <img src="{{ $product->getPhoto()->getImageUrl(53, 53) }}"
+                                                        alt="{{ $product->name }}" width="53" />
+                                                @else
+                                                    <img src="{{ asset('assets/img/products/' . $product->id . '.png') }}"
+                                                        alt="{{ $product->name }}" width="53" />
+                                                @endif
+                                            </a>
+                                        </td>
 
-    <div 
-        x-show="open" 
-        @click.away="open = false"
-        class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl overflow-hidden z-50"
-        style="display: none;"
-    >
-        <div class="p-4">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Votre panier</h3>
-            
-            @if($itemsCount > 0)
-                <div class="divide-y divide-gray-200">
-                    @foreach($cart->products as $product)
-                        <div class="py-3 flex items-center">
-                            <div class="flex-shrink-0 h-16 w-16 rounded-md overflow-hidden">
-                                @if(isset($product->images[0]))
-                                    <img 
-                                        src="{{ asset('storage/' . $product->images[0]) }}" 
-                                        alt="{{ $product->name }}"
-                                        class="h-full w-full object-cover object-center"
-                                    >
-                                @endif
-                            </div>
-                            <div class="ml-4 flex-1">
-                                <div class="flex justify-between text-base font-medium text-gray-900">
-                                    <h3>{{ $product->name }}</h3>
-                                    <p class="ml-4">{{ $this->formatFcfa($product->pivot->unit_price) }}</p>
+                                        {{-- ✅ getSlug() fonctionne ! --}}
+                                        <td class="products align-middle">
+                                            <a class="fw-semibold mb-0 line-clamp-2"
+                                                href="{{ route('produits.show', ['slug' => $product->getSlug(), 'id' => $product->id]) }}">
+                                                {{ Str::limit($product->name, 80) }}
+                                            </a>
+                                        </td>
+
+                                        <td class="color align-middle white-space-nowrap fs-9 text-body">
+                                            {{ $product->couleur ?? 'Noir' }}
+                                        </td>
+                                        <td
+                                            class="size align-middle white-space-nowrap text-body-tertiary fs-9 fw-semibold">
+                                            {{ $product->taille ?? 'M' }}
+                                        </td>
+
+                                        {{-- Prix pivot --}}
+                                        <td class="price align-middle text-body fs-9 fw-semibold text-end">
+                                            {{-- ✅ 4 vérifications imbriquées --}}
+                                            {{ $this->formatFcfa($product->pivot->prix_unitaire ?? 0) }}
+                                        </td>
+
+                                        <td class="quantity align-middle fs-8 ps-5">
+                                            <div class="input-group input-group-sm flex-nowrap">
+                                                <button class="btn btn-sm px-2"
+                                                    wire:click="decreaseQuantity({{ $product->id }})"
+                                                    {{ ($product->pivot?->quantite ?? 1) <= 1 ? 'hidden' : '' }}>-</button>
+                                                <input
+                                                    class="form-control text-center input-spin-none bg-transparent border-0 px-0"
+                                                    type="number" min="1"
+                                                    value="{{ $product->pivot?->quantite ?? 1 }}"
+                                                    disabled />
+                                                <button class="btn btn-sm px-2"
+                                                    wire:click="increaseQuantity({{ $product->id }})">+</button>
+                                            </div>
+                                        </td>
+
+                                        <td class="total align-middle fw-bold text-body-highlight text-end">
+                                            {{ $this->formatFcfa($product->pivot?->total_ligne ?? 0) }}
+                                        </td>
+
+                                        <td class="align-middle white-space-nowrap text-end pe-0 ps-3">
+                                            <button wire:click="removeFromCart({{ $product->id }})"
+                                                class="btn btn-sm text-body-tertiary"
+                                                onclick="return confirm('Supprimer {{ $product->name }} ?')">
+                                                <span class="fas fa-trash"></span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            @else
+                                <div class="text-center py-8">
+                                    <i class="fas fa-shopping-cart fa-4x text-muted mb-4"></i>
+                                    <h5>Votre panier est vide</h5>
+                                    <a href="{{ route('produits') }}" class="btn btn-primary">Voir les
+                                        produits</a>
                                 </div>
-                                <div class="flex items-center mt-1">
-                                    <span class="text-sm text-gray-500">Qté: </span>
-                                    <input 
-                                        type="number" 
-                                        min="1" 
-                                        value="{{ $product->pivot->quantity }}"
-                                        wire:change="updateQuantity({{ $product->id }}, $event.target.value)"
-                                        class="ml-2 w-16 px-2 py-1 border rounded text-sm"
-                                    >
-                                    <button 
-                                        wire:click="removeFromCart({{ $product->id }})"
-                                        class="ml-2 text-red-500 hover:text-red-700"
-                                    >
-                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-                
-                <div class="mt-4 border-t border-gray-200 pt-4">
-                    <div class="flex justify-between text-base font-medium text-gray-900">
-                        <p>Total</p>
-                        <p>{{ $this->formatFcfa($total) }}</p>
-                    </div>
-                    <div class="mt-4">
-                        <a 
-                            href="{{ route('checkout') }}" 
-                            class="flex justify-center items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700"
-                        >
-                            Commander
+                            @endif
+
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td class="text-body-emphasis fw-semibold ps-0 fs-8" colspan="6">Sous-total :</td>
+                                <td class="text-body-emphasis fw-bold text-end fs-8">{{ $this->formatFcfa($total) }}
+                                </td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                @else
+                    <div class="text-center py-8">
+                        <i class="fas fa-shopping-cart fa-4x text-muted mb-4"></i>
+                        <h5 class="text-muted mb-3">Votre panier est vide</h5>
+                        <a href="{{ route('products') }}" class="btn btn-primary">
+                            Voir les produits
                         </a>
                     </div>
-                </div>
-            @else
-                <p class="text-gray-500 text-center py-4">Votre panier est vide</p>
-                <div class="mt-4">
-                    <a 
-                        href="{{ route('products') }}" 
-                        class="flex justify-center items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700"
-                    >
-                        Voir les produits
-                    </a>
-                </div>
-            @endif
+                @endif
+            </div>
         </div>
     </div>
-</div>
 
-@push('scripts')
-<script>
-    function formatFcfa(amount) {
-        return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
-    }
-    
-    document.addEventListener('livewire:load', function () {
-        window.livewire.hook('message.processed', (message, component) => {
-            // Mettre à jour le compteur dans la barre de navigation
-            const cartCount = document.getElementById('cart-count');
-            if (cartCount) {
-                cartCount.textContent = component.entangle('itemsCount').value;
-            }
-        });
-    });
-</script>
-@endpush
+    <!-- Sidebar Summary -->
+    <div class="col-12 col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex flex-between-center mb-3">
+                    <h3 class="card-title mb-0">Résumé</h3>
+                    @if ($panier && $itemsCount > 0)
+                        <span class="badge bg-success-soft">
+                            {{ $itemsCount }} article{{ $itemsCount > 1 ? 's' : '' }}
+                        </span>
+                    @endif
+                </div>
+
+                {{-- Paiement --}}
+                <select class="form-select" wire:model="paymentMethodId">
+                    @foreach ($paymentMethods as $method)
+                        <option value="{{ $method->id }}">
+                            @if ($method->getPhoto())
+                                <span class="me-2"
+                                    style="background-image: url('{{ $method->getPhoto()->getImageUrl(20, 20) }}');
+                                           width: 20px; height: 20px; display: inline-block;
+                                           background-size: cover; background-position: center;
+                                           border-radius: 3px;"></span>
+                            @endif
+                            {{ $method->name ?? $method->method_name }}
+                            @if ($method->price ?? $method->frais > 0)
+                                ({{ $this->formatFcfa($method->price ?? $method->frais) }})
+                            @endif
+                        </option>
+                    @endforeach
+                </select>
+
+                {{-- Livraison --}}
+                @if ($panier && $itemsCount > 0)
+                    <select class="form-select mb-3 mt-3" wire:model.live="deliveryMethodId">
+                        @foreach ($deliveryMethods as $method)
+                            <option value="{{ $method->id }}">
+                                {{ $method->method_name }} - {{ $this->formatFcfa($method->price) }}
+                                {{ $this->formatDeliveryTime($method) ?? '' }}
+                            </option>
+                        @endforeach
+                    </select>
+
+                    <div class="border-start border-dashed ps-3 mb-3">
+                        {{-- Sous-total --}}
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Sous-total :</span>
+                            <strong>{{ $this->formatFcfa($total) }}</strong>
+                        </div>
+
+                        {{-- Promo --}}
+                        @if ($discount > 0)
+                            <div class="d-flex justify-content-between mb-2 text-success">
+                                <span>Promo <code>{{ $voucherCode }}</code> :</span>
+                                <strong>-{{ $this->formatFcfa($discount) }}</strong>
+                            </div>
+                        @endif
+
+                        {{-- 🔥 ERREUR PROMO (même style, rouge) --}}
+                        @if ($voucherError)
+                            <div class="d-flex justify-content-between mb-2 text-danger">
+                                <span>Promo <code>{{ $voucherCode }}</code> :</span>
+                                <strong class="fw-bold">{{ $voucherError }}</strong>
+                            </div>
+                        @endif
+
+                        {{-- Livraison --}}
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Livraison :</span>
+                            <strong>{{ $this->formatFcfa($shippingCost) }}</strong>
+                        </div>
+
+                        {{-- Code promo --}}
+                        <div class="input-group input-group-sm mb-3">
+                            <input class="form-control" wire:model="voucherCode" placeholder="PROMO10, SOLDES20..." />
+                            <button class="btn btn-outline-primary px-3" wire:click="applyVoucher"
+                                wire:loading.attr="disabled" >
+                                OK
+                            </button>
+                        </div>
+
+                        {{-- TOTAL --}}
+                        <hr class="my-3">
+                        <div class="d-flex justify-content-between">
+                            <h4 class="mb-0">TOTAL :</h4>
+                            <h4 class="mb-0 text-primary fw-bold">
+                                {{ $this->formatFcfa($this->getFinalTotal()) }}
+                            </h4>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary w-100" wire:click="checkout">
+                        <i class="fas fa-lock me-2"></i>
+                        Passer à la caisse
+                        <i class="fas fa-chevron-right ms-2"></i>
+                    </button>
+                @else
+                    <div class="text-center py-5">
+                        <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Panier vide</h5>
+                        <a href="{{ route('products') }}" class="btn btn-primary">
+                            Voir les produits
+                        </a>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+
+
+</div>

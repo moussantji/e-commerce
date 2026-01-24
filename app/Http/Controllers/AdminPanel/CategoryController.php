@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\AdminPanel;
 
 use App\Http\Controllers\Controller;
-use App\Models\Category;
+use App\Models\Categories as Category;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller
@@ -22,7 +22,8 @@ class CategoryController extends Controller
      */
     public function create()
     {
-        return view('admin.categories.create');
+        $categories = Category::whereNull('parent_id')->orderBy('sort_order')->get();
+    return view('admin.categories.create', compact('categories'));
     }
 
     /**
@@ -61,7 +62,8 @@ class CategoryController extends Controller
      */
     public function edit(Category $category)
     {
-        return view('admin.categories.edit', compact('category'));
+        $categories = Category::where('id', '!=', $category->id)->orderBy('sort_order')->get();
+    return view('admin.categories.edit', compact('category', 'categories'));
     }
 
     /**
@@ -106,9 +108,9 @@ class CategoryController extends Controller
         if ($category->image_path) {
             \Storage::disk('public')->delete($category->image_path);
         }
-        
+
         $category->delete();
-        
+
         return redirect()->route('admin.categories.index')
             ->with('success', 'Catégorie supprimée avec succès');
     }

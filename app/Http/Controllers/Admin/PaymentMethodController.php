@@ -34,19 +34,19 @@ class PaymentMethodController extends Controller
     public function store(Request $request)
     {
         $validated = $this->validateRequest($request);
-        
-        // Gestion du logo
-        if ($request->hasFile('logo')) {
-            $validated['logo'] = $request->file('logo')->store('payment-methods', 'public');
-        }
-        
+
         // Conversion du JSON de configuration
         if (!empty($validated['config'])) {
             $validated['config'] = json_decode($validated['config'], true);
         }
-        
-        Paiements::create($validated);
-        
+
+        $paiements = Paiements::create($validated);
+
+        // ✅ 2️⃣ ENSUITE attacher logo
+        if ($request->hasFile('logo')) {
+            $paiements->attachfiles([$request->file('logo')]);
+        }
+
         return redirect()
             ->route('admin.payment-methods.index')
             ->with('success', 'Méthode de paiement créée avec succès');
@@ -68,28 +68,32 @@ class PaymentMethodController extends Controller
     public function update(Request $request, Paiements $paymentMethod)
     {
         $validated = $this->validateRequest($request, $paymentMethod->id);
-        
-        // Gestion du logo
-        if ($request->hasFile('logo')) {
-            // Supprimer l'ancien logo si nécessaire
-            if ($paymentMethod->logo) {
-                Storage::disk('public')->delete($paymentMethod->logo);
+
+        /// Dans BrandController::update() ET ::destroy()
+        if ($request->hasFile('logo') || $request->filled('remove_logo')) {
+            // ✅ 1️⃣ SUPPRIME FICHIERS d'ABORD
+            foreach ($paymentMethod->photos as $photo) {
+                Storage::disk('public')->delete($photo->filename);
             }
-            $validated['logo'] = $request->file('logo')->store('payment-methods', 'public');
-        } elseif ($request->has('remove_logo') && $paymentMethod->logo) {
-            Storage::disk('public')->delete($paymentMethod->logo);
-            $validated['logo'] = null;
+
+            // ✅ 2️⃣ SUPPRIME DB
+            $paymentMethod->photos()->delete();
         }
-        
+
+        // ✅ 2️⃣ ENSUITE attacher logo
+        if ($request->hasFile('logo')) {
+            $paymentMethod->attachfiles([$request->file('logo')]);
+        }
+
         // Conversion du JSON de configuration
         if (!empty($validated['config'])) {
             $validated['config'] = json_decode($validated['config'], true);
         } else {
             $validated['config'] = null;
         }
-        
+
         $paymentMethod->update($validated);
-        
+
         return redirect()
             ->route('admin.payment-methods.index')
             ->with('success', 'Méthode de paiement mise à jour avec succès');
@@ -104,19 +108,23 @@ class PaymentMethodController extends Controller
         if ($paymentMethod->orders()->exists()) {
             return back()->with('error', 'Impossible de supprimer cette méthode car elle est utilisée dans des commandes.');
         }
-        
-        // Supprimer le logo si nécessaire
-        if ($paymentMethod->logo) {
-            Storage::disk('public')->delete($paymentMethod->logo);
+
+        // ✅ 1️⃣ SUPPRIME TOUTES les photos PHYSIQUES
+        foreach ($paymentMethod->photos as $photo) {
+            if (Storage::disk('public')->exists($photo->filename)) {
+                Storage::disk('public')->delete($photo->filename);
+            }
+            $photo->delete(); // ✅ Supprime ligne DB photos
         }
-        
+
+        // ✅ 2️⃣ MAINTENANT supprime shipping
         $paymentMethod->delete();
-        
+
         return redirect()
             ->route('admin.payment-methods.index')
             ->with('success', 'Méthode de paiement supprimée avec succès');
     }
-    
+
     /**
      * Valide les données de la requête
      */
@@ -133,7 +141,7 @@ class PaymentMethodController extends Controller
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'config' => ['nullable', 'json'],
         ];
-        
+
         return $request->validate($rules);
     }
 }

@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
+use App\Models\photos;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -26,14 +27,10 @@ class User extends Authenticatable implements MustVerifyEmail
         'tel',
         'role',
         'status',
-        'date_naiss',
         'lieu_naiss',
         'pays',
         'region',
-        'adresse',
-        'social_links',
-        'last_login',
-        'last_activity'
+        'adresse'
     ];
 
     /**
@@ -47,6 +44,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'last_login' => 'datetime',
         'last_activity' => 'datetime',
         'date_naiss' => 'date',
+        'adresse'      => 'array',
+        'social_links' => 'array',
     ];
 
     /**
@@ -70,6 +69,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     *
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
      * Get the orders for the user.
      */
     public function orders(): HasMany
@@ -84,6 +91,52 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->orders()->latest()->first();
     }
+
+    // User
+    // app/Models/Produit.php
+    public function photos()
+    {
+        return $this->hasMany(Photos::class);
+    }
+
+    /**
+     * @param UploadedFile $files
+     */
+    public function attachfiles(?array $files)
+    {
+        $pictures = [];
+        if ($files !== null) {
+            foreach ($files as $file) {
+                if ($file->getError()) {
+                    continue;
+                }
+                $filename = $file->store('User/' . $this->id, 'public');
+                $pictures[] = [
+                    'filename' => $filename,
+                ];
+            }
+        }
+        if (count($pictures) > 0) {
+            $this->photos()->createMany($pictures);
+        }
+    }
+
+    public function getPhoto(): ?Photos
+    {
+        return $this->photos()->where('user_id', $this->id)->first();
+    }
+
+    public function wishlistProducts()
+    {
+        return $this->belongsToMany(Produits::class, 'wishlist_user_produit', 'user_id', 'produits_id');
+    }
+
+    public function wishlistCount()
+    {
+        return $this->wishlistProducts()->count();
+    }
+
+
 
     /**
      * The attributes that should be mutated to dates.

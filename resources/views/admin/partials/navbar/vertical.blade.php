@@ -8,7 +8,8 @@
                     <p class="navbar-vertical-label">TABLEAU DE BORD</p>
                     <hr class="navbar-vertical-line" />
                     <div class="nav-item-wrapper">
-                        <a class="nav-link label-1 {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}" role="button">
+                        <a class="nav-link label-1 {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"
+                            href="{{ route('admin.dashboard') }}" role="button">
                             <div class="d-flex align-items-center">
                                 <span class="nav-link-icon">
                                     <span data-feather="pie-chart"></span>
@@ -28,9 +29,9 @@
                 <!-- Section Produits -->
                 <li class="nav-item">
                     <div class="nav-item-wrapper">
-                        <a class="nav-link dropdown-indicator label-1 {{ request()->routeIs('admin.products.*') ? 'active' : '' }}" 
-                            href="#nv-products" role="button" data-bs-toggle="collapse" 
-                            aria-expanded="{{ request()->routeIs('admin.products.*') ? 'true' : 'false' }}" 
+                        <a class="nav-link dropdown-indicator label-1 {{ request()->routeIs('admin.products.*') ? 'active' : '' }}"
+                            href="#nv-products" role="button" data-bs-toggle="collapse"
+                            aria-expanded="{{ request()->routeIs('admin.products.*') ? 'true' : 'false' }}"
                             aria-controls="nv-products">
                             <div class="d-flex align-items-center">
                                 <div class="dropdown-indicator-icon-wrapper">
@@ -45,7 +46,7 @@
                         <div class="parent-wrapper label-1">
                             <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-products">
                                 <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('admin.products.index') ? 'active' : '' }}" 
+                                    <a class="nav-link {{ request()->routeIs('admin.products.index') ? 'active' : '' }}"
                                         href="{{ route('admin.products.index') }}">
                                         <div class="d-flex align-items-center">
                                             <span class="nav-link-text">Liste des produits</span>
@@ -53,7 +54,7 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('admin.products.create') ? 'active' : '' }}" 
+                                    <a class="nav-link {{ request()->routeIs('admin.products.create') ? 'active' : '' }}"
                                         href="{{ route('admin.products.create') }}">
                                         <div class="d-flex align-items-center">
                                             <span class="nav-link-text">Ajouter un produit</span>
@@ -65,12 +66,52 @@
                     </div>
                 </li>
 
+                <!-- Section Caracteristiques -->
+                <li class="nav-item">
+                    <div class="nav-item-wrapper">
+                        <a class="nav-link dropdown-indicator label-1 {{ request()->routeIs('admin.caracteristiques.*') ? 'active' : '' }}"
+                            href="#nv-caracteristiques" role="button" data-bs-toggle="collapse"
+                            aria-expanded="{{ request()->routeIs('admin.caracteristiques.*') ? 'true' : 'false' }}"
+                            aria-controls="nv-caracteristiques">
+                            <div class="d-flex align-items-center">
+                                <div class="dropdown-indicator-icon-wrapper">
+                                    <span class="fas fa-caret-right dropdown-indicator-icon"></span>
+                                </div>
+                                <span class="nav-link-icon">
+                                    <span data-feather="sliders"></span>
+                                </span>
+                                <span class="nav-link-text">Caracteristiques</span>
+                            </div>
+                        </a>
+                        <div class="parent-wrapper label-1">
+                            <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-caracteristiques">
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->routeIs('admin.caracteristiques.index') ? 'active' : '' }}"
+                                        href="{{ route('admin.caracteristiques.index') }}">
+                                        <div class="d-flex align-items-center">
+                                            <span class="nav-link-text">Liste des Caracteristiques</span>
+                                        </div>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->routeIs('admin.caracteristiques.create') ? 'active' : '' }}"
+                                        href="{{ route('admin.caracteristiques.create') }}">
+                                        <div class="d-flex align-items-center">
+                                            <span class="nav-link-text">Ajouter une caracteristique</span>
+                                        </div>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </li>
+
                 <!-- Section Catégories -->
                 <li class="nav-item">
                     <div class="nav-item-wrapper">
-                        <a class="nav-link dropdown-indicator label-1 {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}" 
-                            href="#nv-categories" role="button" data-bs-toggle="collapse" 
-                            aria-expanded="{{ request()->routeIs('admin.categories.*') ? 'true' : 'false' }}" 
+                        <a class="nav-link dropdown-indicator label-1 {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}"
+                            href="#nv-categories" role="button" data-bs-toggle="collapse"
+                            aria-expanded="{{ request()->routeIs('admin.categories.*') ? 'true' : 'false' }}"
                             aria-controls="nv-categories">
                             <div class="d-flex align-items-center">
                                 <div class="dropdown-indicator-icon-wrapper">
@@ -85,7 +126,7 @@
                         <div class="parent-wrapper label-1">
                             <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-categories">
                                 <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('admin.categories.index') ? 'active' : '' }}" 
+                                    <a class="nav-link {{ request()->routeIs('admin.categories.index') ? 'active' : '' }}"
                                         href="{{ route('admin.categories.index') }}">
                                         <div class="d-flex align-items-center">
                                             <span class="nav-link-text">Liste des catégories</span>
@@ -93,7 +134,7 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('admin.categories.create') ? 'active' : '' }}" 
+                                    <a class="nav-link {{ request()->routeIs('admin.categories.create') ? 'active' : '' }}"
                                         href="{{ route('admin.categories.create') }}">
                                         <div class="d-flex align-items-center">
                                             <span class="nav-link-text">Ajouter une catégorie</span>
@@ -105,12 +146,52 @@
                     </div>
                 </li>
 
+                <!-- Section brands -->
+                <li class="nav-item">
+                    <div class="nav-item-wrapper">
+                        <a class="nav-link dropdown-indicator label-1 {{ request()->routeIs('admin.brands.*') ? 'active' : '' }}"
+                            href="#nv-brands" role="button" data-bs-toggle="collapse"
+                            aria-expanded="{{ request()->routeIs('admin.brands.*') ? 'true' : 'false' }}"
+                            aria-controls="nv-brands">
+                            <div class="d-flex align-items-center">
+                                <div class="dropdown-indicator-icon-wrapper">
+                                    <span class="fas fa-caret-right dropdown-indicator-icon"></span>
+                                </div>
+                                <span class="nav-link-icon">
+                                    <span data-feather="award"></span>
+                                </span>
+                                <span class="nav-link-text">Marque</span>
+                            </div>
+                        </a>
+                        <div class="parent-wrapper label-1">
+                            <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-brands">
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->routeIs('admin.brands.index') ? 'active' : '' }}"
+                                        href="{{ route('admin.brands.index') }}">
+                                        <div class="d-flex align-items-center">
+                                            <span class="nav-link-text">Liste des marques</span>
+                                        </div>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->routeIs('admin.brands.create') ? 'active' : '' }}"
+                                        href="{{ route('admin.brands.create') }}">
+                                        <div class="d-flex align-items-center">
+                                            <span class="nav-link-text">Ajouter une marque</span>
+                                        </div>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </li>
+
                 <!-- Section Tags -->
                 <li class="nav-item">
                     <div class="nav-item-wrapper">
-                        <a class="nav-link dropdown-indicator label-1 {{ request()->routeIs('admin.tags.*') ? 'active' : '' }}" 
-                            href="#nv-tags" role="button" data-bs-toggle="collapse" 
-                            aria-expanded="{{ request()->routeIs('admin.tags.*') ? 'true' : 'false' }}" 
+                        <a class="nav-link dropdown-indicator label-1 {{ request()->routeIs('admin.tags.*') ? 'active' : '' }}"
+                            href="#nv-tags" role="button" data-bs-toggle="collapse"
+                            aria-expanded="{{ request()->routeIs('admin.tags.*') ? 'true' : 'false' }}"
                             aria-controls="nv-tags">
                             <div class="d-flex align-items-center">
                                 <div class="dropdown-indicator-icon-wrapper">
@@ -125,7 +206,7 @@
                         <div class="parent-wrapper label-1">
                             <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-tags">
                                 <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('admin.tags.index') ? 'active' : '' }}" 
+                                    <a class="nav-link {{ request()->routeIs('admin.tags.index') ? 'active' : '' }}"
                                         href="{{ route('admin.tags.index') }}">
                                         <div class="d-flex align-items-center">
                                             <span class="nav-link-text">Liste des tags</span>
@@ -133,7 +214,7 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('admin.tags.create') ? 'active' : '' }}" 
+                                    <a class="nav-link {{ request()->routeIs('admin.tags.create') ? 'active' : '' }}"
                                         href="{{ route('admin.tags.create') }}">
                                         <div class="d-flex align-items-center">
                                             <span class="nav-link-text">Ajouter un tag</span>
@@ -151,9 +232,9 @@
 
                 <li class="nav-item">
                     <div class="nav-item-wrapper">
-                        <a class="nav-link dropdown-indicator label-1 {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}" 
-                            href="#nv-orders" role="button" data-bs-toggle="collapse" 
-                            aria-expanded="{{ request()->routeIs('admin.orders.*') ? 'true' : 'false' }}" 
+                        <a class="nav-link dropdown-indicator label-1 {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}"
+                            href="#nv-orders" role="button" data-bs-toggle="collapse"
+                            aria-expanded="{{ request()->routeIs('admin.orders.*') ? 'true' : 'false' }}"
                             aria-controls="nv-orders">
                             <div class="d-flex align-items-center">
                                 <div class="dropdown-indicator-icon-wrapper">
@@ -168,7 +249,7 @@
                         <div class="parent-wrapper label-1">
                             <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-orders">
                                 <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('admin.orders.index') && !request()->has('status') ? 'active' : '' }}" 
+                                    <a class="nav-link {{ request()->routeIs('admin.orders.index') && !request()->has('status') ? 'active' : '' }}"
                                         href="{{ route('admin.orders.index') }}">
                                         <div class="d-flex align-items-center">
                                             <span class="nav-link-text">Toutes les commandes</span>
@@ -176,7 +257,7 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link {{ request()->get('status') === 'en_attente' ? 'active' : '' }}" 
+                                    <a class="nav-link {{ request()->get('status') === 'en_attente' ? 'active' : '' }}"
                                         href="{{ route('admin.orders.index') }}?status=en_attente">
                                         <div class="d-flex align-items-center">
                                             <span class="nav-link-text">Commandes en attente</span>
@@ -184,7 +265,7 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link {{ request()->get('status') === 'en_cours' ? 'active' : '' }}" 
+                                    <a class="nav-link {{ request()->get('status') === 'en_cours' ? 'active' : '' }}"
                                         href="{{ route('admin.orders.index') }}?status=en_cours">
                                         <div class="d-flex align-items-center">
                                             <span class="nav-link-text">Commandes en cours</span>
@@ -192,7 +273,7 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link {{ request()->get('status') === 'expediee' ? 'active' : '' }}" 
+                                    <a class="nav-link {{ request()->get('status') === 'expediee' ? 'active' : '' }}"
                                         href="{{ route('admin.orders.index') }}?status=expediee">
                                         <div class="d-flex align-items-center">
                                             <span class="nav-link-text">Commandes terminées</span>
@@ -210,9 +291,9 @@
 
                 <li class="nav-item">
                     <div class="nav-item-wrapper">
-                        <a class="nav-link dropdown-indicator label-1 {{ request()->routeIs('admin.shipping-methods.*') ? 'active' : '' }}" 
-                            href="#nv-shipping" role="button" data-bs-toggle="collapse" 
-                            aria-expanded="{{ request()->routeIs('admin.shipping-methods.*') ? 'true' : 'false' }}" 
+                        <a class="nav-link dropdown-indicator label-1 {{ request()->routeIs('admin.shipping-methods.*') ? 'active' : '' }}"
+                            href="#nv-shipping" role="button" data-bs-toggle="collapse"
+                            aria-expanded="{{ request()->routeIs('admin.shipping-methods.*') ? 'true' : 'false' }}"
                             aria-controls="nv-shipping">
                             <div class="d-flex align-items-center">
                                 <div class="dropdown-indicator-icon-wrapper">
@@ -225,9 +306,10 @@
                             </div>
                         </a>
                         <div class="parent-wrapper label-1">
-                            <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-shipping">
+                            <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse"
+                                id="nv-shipping">
                                 <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('admin.shipping-methods.index') ? 'active' : '' }}" 
+                                    <a class="nav-link {{ request()->routeIs('admin.shipping-methods.index') ? 'active' : '' }}"
                                         href="{{ route('admin.shipping-methods.index') }}">
                                         <div class="d-flex align-items-center">
                                             <span class="nav-link-text">Liste des méthodes</span>
@@ -235,7 +317,7 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('admin.shipping-methods.create') ? 'active' : '' }}" 
+                                    <a class="nav-link {{ request()->routeIs('admin.shipping-methods.create') ? 'active' : '' }}"
                                         href="{{ route('admin.shipping-methods.create') }}">
                                         <div class="d-flex align-items-center">
                                             <span class="nav-link-text">Ajouter une méthode</span>
@@ -253,9 +335,9 @@
 
                 <li class="nav-item">
                     <div class="nav-item-wrapper">
-                        <a class="nav-link dropdown-indicator label-1 {{ request()->routeIs('admin.payment-methods.*') ? 'active' : '' }}" 
-                            href="#nv-payment" role="button" data-bs-toggle="collapse" 
-                            aria-expanded="{{ request()->routeIs('admin.payment-methods.*') ? 'true' : 'false' }}" 
+                        <a class="nav-link dropdown-indicator label-1 {{ request()->routeIs('admin.payment-methods.*') ? 'active' : '' }}"
+                            href="#nv-payment" role="button" data-bs-toggle="collapse"
+                            aria-expanded="{{ request()->routeIs('admin.payment-methods.*') ? 'true' : 'false' }}"
                             aria-controls="nv-payment">
                             <div class="d-flex align-items-center">
                                 <div class="dropdown-indicator-icon-wrapper">
@@ -270,7 +352,7 @@
                         <div class="parent-wrapper label-1">
                             <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-payment">
                                 <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('admin.payment-methods.index') ? 'active' : '' }}" 
+                                    <a class="nav-link {{ request()->routeIs('admin.payment-methods.index') ? 'active' : '' }}"
                                         href="{{ route('admin.payment-methods.index') }}">
                                         <div class="d-flex align-items-center">
                                             <span class="nav-link-text">Liste des méthodes</span>
@@ -278,7 +360,7 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('admin.payment-methods.create') ? 'active' : '' }}" 
+                                    <a class="nav-link {{ request()->routeIs('admin.payment-methods.create') ? 'active' : '' }}"
                                         href="{{ route('admin.payment-methods.create') }}">
                                         <div class="d-flex align-items-center">
                                             <span class="nav-link-text">Ajouter une méthode</span>
@@ -297,9 +379,9 @@
                 <!-- Section Coupons -->
                 <li class="nav-item">
                     <div class="nav-item-wrapper">
-                        <a class="nav-link dropdown-indicator label-1 {{ request()->routeIs('admin.coupons.*') ? 'active' : '' }}" 
-                            href="#nv-coupons" role="button" data-bs-toggle="collapse" 
-                            aria-expanded="{{ request()->routeIs('admin.coupons.*') ? 'true' : 'false' }}" 
+                        <a class="nav-link dropdown-indicator label-1 {{ request()->routeIs('admin.coupons.*') ? 'active' : '' }}"
+                            href="#nv-coupons" role="button" data-bs-toggle="collapse"
+                            aria-expanded="{{ request()->routeIs('admin.coupons.*') ? 'true' : 'false' }}"
                             aria-controls="nv-coupons">
                             <div class="d-flex align-items-center">
                                 <div class="dropdown-indicator-icon-wrapper">
@@ -314,7 +396,7 @@
                         <div class="parent-wrapper label-1">
                             <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-coupons">
                                 <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('admin.coupons.index') ? 'active' : '' }}" 
+                                    <a class="nav-link {{ request()->routeIs('admin.coupons.index') ? 'active' : '' }}"
                                         href="{{ route('admin.coupons.index') }}">
                                         <div class="d-flex align-items-center">
                                             <span class="nav-link-text">Liste des coupons</span>
@@ -322,7 +404,7 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('admin.coupons.create') ? 'active' : '' }}" 
+                                    <a class="nav-link {{ request()->routeIs('admin.coupons.create') ? 'active' : '' }}"
                                         href="{{ route('admin.coupons.create') }}">
                                         <div class="d-flex align-items-center">
                                             <span class="nav-link-text">Créer un coupon</span>
@@ -336,9 +418,9 @@
 
                 <li class="nav-item">
                     <div class="nav-item-wrapper">
-                        <a class="nav-link dropdown-indicator label-1 {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" 
-                            href="#nv-users" role="button" data-bs-toggle="collapse" 
-                            aria-expanded="{{ request()->routeIs('admin.users.*') ? 'true' : 'false' }}" 
+                        <a class="nav-link dropdown-indicator label-1 {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"
+                            href="#nv-users" role="button" data-bs-toggle="collapse"
+                            aria-expanded="{{ request()->routeIs('admin.users.*') ? 'true' : 'false' }}"
                             aria-controls="nv-users">
                             <div class="d-flex align-items-center">
                                 <div class="dropdown-indicator-icon-wrapper">
@@ -353,7 +435,7 @@
                         <div class="parent-wrapper label-1">
                             <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-users">
                                 <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('admin.users.index') && !request()->has('role') ? 'active' : '' }}" 
+                                    <a class="nav-link {{ request()->routeIs('admin.users.index') && !request()->has('role') ? 'active' : '' }}"
                                         href="{{ route('admin.users.index') }}">
                                         <div class="d-flex align-items-center">
                                             <span class="nav-link-text">Tous les utilisateurs</span>
@@ -361,7 +443,7 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link {{ request()->get('role') === 'customer' ? 'active' : '' }}" 
+                                    <a class="nav-link {{ request()->get('role') === 'customer' ? 'active' : '' }}"
                                         href="{{ route('admin.users.index') }}?role=customer">
                                         <div class="d-flex align-items-center">
                                             <span class="nav-link-text">Clients</span>
@@ -369,7 +451,7 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link {{ request()->get('role') === 'admin' ? 'active' : '' }}" 
+                                    <a class="nav-link {{ request()->get('role') === 'admin' ? 'active' : '' }}"
                                         href="{{ route('admin.users.index') }}?role=admin">
                                         <div class="d-flex align-items-center">
                                             <span class="nav-link-text">Administrateurs</span>
@@ -386,9 +468,9 @@
                 <hr class="navbar-vertical-line" />
                 <li class="nav-item">
                     <div class="nav-item-wrapper">
-                        <a class="nav-link dropdown-indicator label-1 {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" 
-                            href="#nv-settings" role="button" data-bs-toggle="collapse" 
-                            aria-expanded="{{ request()->routeIs('admin.settings.*') ? 'true' : 'false' }}" 
+                        <a class="nav-link dropdown-indicator label-1 {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}"
+                            href="#nv-settings" role="button" data-bs-toggle="collapse"
+                            aria-expanded="{{ request()->routeIs('admin.settings.*') ? 'true' : 'false' }}"
                             aria-controls="nv-settings">
                             <div class="d-flex align-items-center">
                                 <div class="dropdown-indicator-icon-wrapper">
@@ -404,7 +486,8 @@
                             <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse"
                                 id="nv-settings">
                                 <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('admin.profile') ? 'active' : '' }}" href="{{ route('admin.profile') }}">
+                                    <a class="nav-link {{ request()->routeIs('admin.profile') ? 'active' : '' }}"
+                                        href="{{ route('admin.profile') }}">
                                         <div class="d-flex align-items-center">
                                             <span class="nav-link-icon"><span data-feather="user"></span></span>
                                             <span class="nav-link-text">Mon profil</span>
