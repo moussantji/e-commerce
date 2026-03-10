@@ -30,7 +30,7 @@
                                     'livree' => 'success',
                                     'annulee' => 'danger'
                                 ][$order->status] ?? 'secondary';
-                                
+
                                 $statusText = [
                                     'en_attente' => 'En attente',
                                     'en_cours' => 'En cours de traitement',
@@ -40,7 +40,7 @@
                                 ][$order->status] ?? $order->status;
                             @endphp
                             <span class="badge bg-{{ $statusClass }} fs-6">{{ $statusText }}</span>
-                            
+
                             <div class="mt-2">
                                 <small class="text-muted">
                                     Date de commande: {{ $order->created_at->format('d/m/Y H:i') }}
@@ -68,9 +68,9 @@
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 @if($produit->image)
-                                                    <img src="{{ asset('storage/' . $produit->image) }}" 
-                                                         alt="{{ $produit->nom }}" 
-                                                         class="img-thumbnail me-3" 
+                                                    <img src="{{ asset('storage/' . $produit->image) }}"
+                                                         alt="{{ $produit->nom }}"
+                                                         class="img-thumbnail me-3"
                                                          style="width: 60px; height: 60px; object-fit: cover;">
                                                 @endif
                                                 <div>
@@ -92,7 +92,7 @@
                                         </td>
                                     </tr>
                                 @endforeach
-                                
+
                                 <tr>
                                     <td colspan="3" class="text-end fw-bold">Sous-total</td>
                                     <td class="text-end">
@@ -136,7 +136,17 @@
                         <a href="{{ route('admin.orders.index') }}" class="btn btn-light">
                             <i class="fas fa-arrow-left me-2"></i> Retour à la liste
                         </a>
-                        
+                        @if($order->paiement)
+                            <div class="float-start ms-3">
+                                <strong>Preuve de paiement:</strong>
+                                <div class="mt-2">
+                                    @foreach($order->paiement->photos as $photo)
+                                        <img src="{{ asset('storage/' . $photo->filename) }}" alt="preuve" class="img-thumbnail me-2" style="max-width:120px" />
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
                         @if($order->status !== 'annulee' && $order->status !== 'livree')
                             <div class="btn-group float-end">
                                 <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
@@ -156,7 +166,7 @@
                                                     @csrf
                                                     @method('PATCH')
                                                     <input type="hidden" name="status" value="{{ $status }}">
-                                                    <button type="submit" class="dropdown-item" 
+                                                    <button type="submit" class="dropdown-item"
                                                             onclick="return confirm('Êtes-vous sûr de vouloir passer cette commande en statut {{ strtolower($label) }} ?')">
                                                         {{ $label }}
                                                     </button>
@@ -166,6 +176,15 @@
                                     @endforeach
                                 </ul>
                             </div>
+                            @if($order->paiement && ($order->paiement->status === 'en_attente' || $order->paiement->status === 'pending'))
+                                <form action="{{ route('admin.orders.confirm-payment', $order) }}" method="POST" class="d-inline ms-2">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" class="btn btn-success" onclick="return confirm('Confirmer le paiement et marquer la commande comme payée ?')">
+                                        <i class="fas fa-check me-1"></i> Confirmer paiement
+                                    </button>
+                                </form>
+                            @endif
                         @endif
                     </div>
                 </div>

@@ -11,6 +11,7 @@ use App\Models\Paiements;
 use App\Models\PromoCode;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class Cart extends Component
 {
@@ -29,6 +30,14 @@ class Cart extends Component
     public $taxRate = 0.18; // 18% TVA
     public $shippingCost = 0;
 
+    public $commandeId; // ← NOUVEAU
+    public $isProcessing = false; // ← NOUVEAU
+
+    // ✅ VALIDATION
+    protected $rules = [
+        'paymentMethodId' => 'required|exists:paiements,id',
+        'deliveryMethodId' => 'required|exists:livraisons,id'
+    ];
 
     protected $listeners = ['cartUpdated' => '$refresh'];
 
@@ -272,56 +281,156 @@ class Cart extends Component
     {
         $delivery = Livraison::find($this->deliveryMethodId);
         $this->shippingCost = $delivery?->price ?? 5000;
-
-        // ✅ AU CHARGEMENT aussi
-        if (!$deliveryId) {
-            $firstDelivery = Livraison::first();
-            $this->shippingCost = $firstDelivery?->price ?? 5000;
-        }
-        $this->loadCart();
+        $this->loadCart(); // ✅ Recalcul total
     }
 
     public function checkout()
     {
         if (!$this->panier || $this->itemsCount === 0) {
-            session()->flash('error', 'Panier vide');
+            $this->dispatch('error', ['message' => 'Panier vide']);
             return;
         }
 
-        // Création commande + paiement/livraison
-        $this->createOrder();
+        // ✅ VALIDATION VOS SELECTS
+        $this->validate();
+
+        // ✅ CRÉER COMMANDE AVANT redirection
+        $this->commandeId = $this->createOrder();
+
+
+
+        return redirect()->route('commande.show', $this->commandeId)->with('success', 'Commande #' . $this->commandeId . ' créée — envoyez la preuve de paiement.');
     }
 
     private function createOrder()
     {
-        DB::transaction(function () {
-            // 1. Créer commande depuis panier
+        return DB::transaction(function () {
+            // ✅ GÉNÉRER NUMÉRO UNIQUE
+            $orderNumber = $this->generateOrderNumber();
+
+            // 1. Créer la commande
             $order = Commandes::create([
                 'user_id' => Auth::id(),
-                'panier_id' => $this->panier->id,
-                'total' => $this->getFinalTotal(),
-                'status' => 'pending',
+                'paiement_id' => $this->paymentMethodId,
                 'livraison_id' => $this->deliveryMethodId,
+                'numero_commande' => $orderNumber,
+                'statut' => 'en_attente',
+                'sous_total' => $this->total,  // Sera mis à jour après insertion produits
+                'frais_livraison' => $this->shippingCost,
+                'remise' => $this->discount,
+                'total' => $this->getFinalTotal(),
+                'adresse_facturation' => Auth::user()->adresse ?? '',
+                'adresse_livraison' => Auth::user()->adresse ?? '',
+                'promo_code_id' => null,
+                'promo_discount' => $this->discount,
+                'notes' => null,
+                'date_en_attente' => now(),
+                'cinetpay_transaction_id' => null
             ]);
 
-            // 2. Créer paiement
-            Paiements::create([
-                'user_id' => Auth::id(),
-                'amount' => $this->getFinalTotal(),
-                'method_name' => $this->paymentMethod,
-                'status' => 'pending',
-                'payment_mode' => $this->paymentMethod,
-                'description' => 'Paiement commande #' . $order->id
-            ]);
+            // 2. Copier panier_produit → commande_produit
+            $panierItems = DB::table('panier_produit')
+                ->where('paniers_id', $this->panier->id)
+                ->get();
+
+            foreach ($panierItems as $item) {
+                DB::table('commande_produit')->insert([
+                    'commande_id' => $order->id,
+                    'produit_id' => $item->produits_id,
+                    'quantite' => $item->quantite,
+                    'prix_unitaire' => $item->prix_unitaire,
+                    'total' => $item->quantite * $item->prix_unitaire,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            }
 
             // 3. Vider panier
             DB::table('panier_produit')
                 ->where('paniers_id', $this->panier->id)
                 ->delete();
 
+            // 4. Recalculer sous_total basé sur commande_produit
+            $sousTotal = DB::table('commande_produit')
+                ->where('commande_id', $order->id)
+                ->sum('total');
+
+            // 5. Mettre à jour totals finaux
+            $order->update([
+                'sous_total' => $sousTotal,
+                'total' => $sousTotal + $this->shippingCost - $this->discount
+            ]);
+
             $this->loadCart();
+            return $order;
         });
     }
+
+
+    private function generateOrderNumber()
+    {
+        $orderDate = now(); // 20260128
+        $randomString = substr(strtoupper(md5(uniqid())), 0, 3); // ABC
+        $i = 1;
+
+        // ✅ Vérifier unicité
+        do {
+            $orderNumber = 'CMD' . $orderDate->format('Ymd') . $randomString . $i;
+            $exists = Commandes::where('numero_commande', $orderNumber)->exists();
+            $i++;
+        } while ($exists && $i < 1000); // Sécurité boucle
+
+        return $orderNumber;
+    }
+
+
+    private function initCinetPay()
+    {
+        $this->isProcessing = true;
+
+        $cinetpay = new \App\Services\CinetPayService();
+        $paiement = $cinetpay->payer(
+            $this->getFinalTotal(),
+            Auth::user()->name,
+            Auth::user()->telephone,
+            'Commande #' . $this->commandeId
+        );
+
+        if ($paiement['ok'] && $paiement['url']) {
+            // ✅ Lier transaction à commande
+            Commandes::where('id', $this->commandeId)
+                ->update(['cinetpay_transaction_id' => $paiement['transaction_id']]);
+
+            // ✅ REDIRIGER vers CinetPay
+            return redirect()->away($paiement['url']);
+        }
+
+        $this->dispatch('error', ['message' => 'Erreur CinetPay']);
+        $this->isProcessing = false;
+    }
+
+    // Retourne vrai si la méthode sélectionnée est traitée via Fedapay
+    private function isFedapay()
+    {
+        if (! $this->paymentMethodId) return false;
+        $method = Paiements::find($this->paymentMethodId);
+        if (! $method) return false;
+        $name = strtolower($method->method_name ?? $method->name ?? '');
+        return str_contains($name, 'orange') || str_contains($name, 'wave') || str_contains($name, 'moov') || str_contains($name, 'malitel') || str_contains($name, 'fedapay');
+    }
+
+    private function getProviderFromMethod()
+    {
+        $method = Paiements::find($this->paymentMethodId);
+        $name = strtolower($method->method_name ?? $method->name ?? '');
+        if (str_contains($name, 'wave')) return 'wave';
+        if (str_contains($name, 'malitel')) return 'malitel';
+        if (str_contains($name, 'moov')) return 'moov';
+        if (str_contains($name, 'orange')) return 'orange';
+        return 'orange';
+    }
+
+
 
     public function getFinalTotal()
     {

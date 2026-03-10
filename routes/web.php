@@ -1,22 +1,29 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CheckoutShow;
+use Illuminate\Support\Facades\Request;
 use App\Http\Controllers\AvisController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PhotoControler;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Admin\BrandController;
-use App\Http\Controllers\BrandController as ClientBrandController;
+use App\Http\Controllers\Admin\BannerController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ClientCategoryController;
 use App\Http\Controllers\AdminPanel\UserController;
 use App\Http\Controllers\AdminPanel\AdminController;
 use App\Http\Controllers\AdminPanel\OrderController;
 use App\Http\Controllers\AdminPanel\ProductController;
 use App\Http\Controllers\AdminPanel\CategoryController;
 use App\Http\Controllers\Admin\CaracteristiqueController;
-use App\Http\Controllers\CartController;
-use App\Http\Controllers\ClientCategoryController;
 use App\Http\Controllers\CustomerPanel\CustomerComtroller;
 use App\Http\Controllers\CustomerPanel\CustomerController;
+use App\Http\Controllers\BrandController as ClientBrandController;
 
 $idRegex = '[0-9]+';
 $slugRegex = '[0-9a-z\-]+';
@@ -31,15 +38,38 @@ Route::get('produits/{slug}-{id}', [HomeController::class, 'produits'])->name('p
     'slug' => $slugRegex,
     'id' => $idRegex
 ]);
+
+Route::post('/paiement/callback', function (Request $request) {
+    $transaction_id = $request->transaction_id;
+    $commande = \App\Models\Commandes::where('cinetpay_transaction_id', $transaction_id)
+        ->where('statut', 'en_attente')
+        ->first();
+
+    if ($commande) {
+        $commande->update([
+            'statut' => 'payee',
+            'date_en_attente' => null
+        ]);
+    }
+    return response('OK', 200);
+})->name('paiement.callback');
+
+// Fedapay initiation and webhook
+Route::get('/paiement/fedapay', [\App\Http\Controllers\PaymentController::class, 'initiateFedapay'])->name('paiement.fedapay');
+Route::post('/paiement/fedapay/callback', [\App\Http\Controllers\PaymentController::class, 'notifyFedapay'])->name('paiement.fedapay.callback');
+
+Route::get('/paiement/success', function () {
+    return redirect('/')->with('success', '✅ Paiement réussi !');
+})->name('paiement.success');
+
 Route::prefix('categories')->name('categories.')->group(function () use ($slugRegex) {
     // Liste toutes categories
     Route::get('/', [ClientCategoryController::class, 'index'])->name('index');
 
     // Catégorie + ses sous-categories
     Route::get('{category}', [ClientCategoryController::class, 'show'])->where([
-    'category' => $slugRegex,
-])->name('show');
-
+        'category' => $slugRegex,
+    ])->name('show');
 });
 
 
@@ -70,6 +100,9 @@ Route::middleware(['auth', 'role:customer'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Paiement mobile : envoi preuve (Orange / Malitel / Wave)
+    Route::post('/paiement/mobile', [PaymentController::class, 'storeManual'])->name('paiement.mobile');
 });
 
 // Routes d'administration
@@ -77,6 +110,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     // Tableau de bord admin
     Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
 
+    Route::resource('/banners', BannerController::class)->except('show');
     // Récupération des données de vente (AJAX)
     Route::get('/sales-data/{month}', [\App\Http\Controllers\Admin\DashboardController::class, 'getSalesData'])
         ->where('month', '[0-9]{4}-[0-9]{2}')
@@ -138,6 +172,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
 
     Route::post('orders/{order}/update-status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
 
+    // Confirmation manuelle du paiement par l'admin (preuve mobile money)
+    Route::patch('orders/{order}/confirm-payment', [\App\Http\Controllers\PaymentController::class, 'confirmPayment'])->name('orders.confirm-payment');
+
+    Route::delete('photo/{photo}', [PhotoControler::class, 'destroyPhoto'])->name('photo.destroy');
+
     // Gestion du profil administrateur
     Route::get('/profile', [AdminController::class, 'profile'])->name('profile');
     Route::put('/profile', [AdminController::class, 'updateProfile'])->name('profile.update');
@@ -146,6 +185,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     // Paramètres du site
     Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
     Route::post('/settings', [AdminController::class, 'updateSettings'])->name('settings.update');
+});
+
+Route::middleware('auth')->group(function () {
+    // Page liste complète
+    Route::get('/notifications', [App\Http\Controllers\NotificationController::class, 'index'])
+        ->name('notifications.index');
+    Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.delete');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
 });
 
 Route::get('/images/{path}', [ImageController::class, 'show'])->where('path', '.*')->name('glide.image');

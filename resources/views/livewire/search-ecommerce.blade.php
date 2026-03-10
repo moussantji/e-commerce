@@ -18,7 +18,7 @@
     {{-- DROPDOWN --}}
     @if(!empty($suggestions))
         <div class="suggestions-dropdown position-absolute top-100 start-0 w-100 mt-1 shadow-lg rounded-3 overflow-hidden"
-            style="max-height: 18rem; z-index: 1060; border: 1px solid #e9ecef;">
+            style="max-height: 1 8rem; z-index: 1060; border: 1px solid #e9ecef;">
 
             <div class="dropdown-scroll p-0" style="height: 28rem; overflow-y: auto;">
                 @foreach($suggestions as $suggestion)

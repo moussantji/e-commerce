@@ -3,12 +3,15 @@
 namespace App\Livewire;
 
 use App\Models\Tag;
+use App\Models\User;
 use App\Models\Brand;
 use Livewire\Component;
 use App\Models\Categories;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Log;
 use App\Models\Produits as Products;
+use App\Notifications\ProductFavoriNotification;
+use Illuminate\Container\Attributes\Auth;
 
 class Produits extends Component
 {
@@ -113,6 +116,7 @@ class Produits extends Component
 
     public function toggleWishlist($produitId)
     {
+        $product = Products::findOrFail($produitId); // ✅ Par ID
         // Logique toggle (comme avant)
         if (in_array($produitId, $this->wishlistItems)) {
             auth()->user()->wishlistProducts()->detach($produitId);
@@ -120,6 +124,12 @@ class Produits extends Component
         } else {
             auth()->user()->wishlistProducts()->attach($produitId);
             $this->wishlistItems[] = $produitId;
+            $user = Auth()->user();
+
+            $user->notify(new ProductFavoriNotification(
+                auth()->user(),  // Qui ajoute
+                $product         // Produit
+            ));
         }
     }
 

@@ -12,14 +12,34 @@ use League\Glide\Signatures\SignatureFactory;
 
 class photos extends Model
 {
-    protected $fillable = ['filename', 'user_id', 'produit_id', 'payment_id', 'livraison_id','brand_id'];
+    protected $fillable = ['filename', 'user_id', 'produit_id', 'payment_id', 'livraison_id', 'brand_id', 'banner_id'];
 
+    // Photos.php
     protected static function booted(): void
     {
         static::deleting(function (Photos $picture) {
+            // Supprime fichier
             Storage::disk('public')->delete($picture->filename);
+
+            // ✅ Récupère banner_id AVANT suppression
+            $bannerId = $picture->banner_id;
+
+            if ($bannerId) {
+                // Compte les AUTRES photos (exclut lui-même)
+                $otherPhotosCount = Photos::where('banner_id', $bannerId)
+                    ->where('id', '!=', $picture->id)
+                    ->count();
+
+                if ($otherPhotosCount === 0) {
+                    $directory = 'Banners/' . $bannerId;
+                    Storage::disk('public')->exists($directory) &&
+                        Storage::disk('public')->deleteDirectory($directory, true);
+                }
+            }
         });
     }
+
+
 
 
 
@@ -40,7 +60,8 @@ class photos extends Model
     {
         return $this->belongsTo(User::class);
     }
-    public function brands() {
+    public function brands()
+    {
         return $this->belongsTo(Brand::class);
     }
     public function produits()
@@ -54,5 +75,10 @@ class photos extends Model
     public function livraison()
     {
         return $this->belongsTo(Livraison::class);
+    }
+
+    public function banner()
+    {
+        return $this->belongsTo(Banner::class);
     }
 }

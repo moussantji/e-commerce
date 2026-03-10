@@ -22,6 +22,8 @@ return new class extends Migration
             $table->foreignIdFor(\App\Models\Livraison::class)->nullable()->constrained();
             $table->foreignIdFor(\App\Models\Brand::class)->nullable()->constrained();
             $table->foreignIdFor(\App\Models\Categories::class)->nullable()->constrained();
+            // ✅ Par ceci :
+            $table->foreignId('banner_id')->nullable()->constrained('banners')->cascadeOnDelete();
 
             $table->timestamps();
         });

@@ -84,7 +84,8 @@
                             </div>
                         </a>
                         <div class="parent-wrapper label-1">
-                            <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse" id="nv-caracteristiques">
+                            <ul class="nav collapse parent" data-bs-parent="#navbarVerticalCollapse"
+                                id="nv-caracteristiques">
                                 <li class="nav-item">
                                     <a class="nav-link {{ request()->routeIs('admin.caracteristiques.index') ? 'active' : '' }}"
                                         href="{{ route('admin.caracteristiques.index') }}">
@@ -495,12 +496,31 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" href="#">
+                                    <a class="nav-link {{ request()->routeIs('admin.banners') ? 'active' : '' }}"
+                                        href="{{ route('admin.banners.index') }}">
                                         <div class="d-flex align-items-center">
-                                            <span class="nav-link-icon"><span data-feather="log-out"></span></span>
-                                            <span class="nav-link-text">Déconnexion</span>
+                                            <span class="nav-link-icon">
+                                                <span data-feather="image"></span>
+                                            </span>
+                                            <span class="nav-link-text">Les Bannieres</span>
                                         </div>
                                     </a>
+                                </li>
+                                <li class="nav-item">
+                                    <form id="logout-form" method="POST" action="{{ route('logout') }}"
+                                        class="w-100" style="display: inline;">
+                                        @csrf
+                                        <a href="#"
+                                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
+                                            class="nav-link" title="Déconnexion">
+                                            <div class="d-flex align-items-center">
+                                                <span class="nav-link-icon"><span
+                                                        data-feather="log-out"></span></span>
+                                                <span class="nav-link-text">Déconnexion</span>
+                                            </div>
+                                        </a>
+                                    </form>
+
                                 </li>
                             </ul>
                         </div>

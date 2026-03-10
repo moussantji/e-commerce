@@ -208,7 +208,7 @@
                         </div>
                     </div>
 
-                    <button class="btn btn-primary w-100" wire:click="checkout">
+                    <button class="btn btn-primary w-100" wire:click="checkout" wire:loading.attr="disabled">
                         <i class="fas fa-lock me-2"></i>
                         Passer à la caisse
                         <i class="fas fa-chevron-right ms-2"></i>

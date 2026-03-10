@@ -17,21 +17,21 @@ class OrderController extends Controller
         $params = array_filter($request->query(), function($value) {
             return $value !== '' && $value !== null;
         });
-        
+
         // Rediriger si des paramètres vides ont été supprimés
         if (count($params) !== count($request->query())) {
             return redirect()->route('admin.orders.index', $params);
         }
-        
+
         // Si on arrive ici, l'URL est propre, on peut traiter la requête
         $query = Order::with(['user', 'produits'])
             ->latest('created_at');
-            
+
         // Filtre par statut si présent dans la requête
         if ($request->filled('status')) {
             $query->where('statut', $request->status);
         }
-        
+
         // Filtre par recherche si présent
         if ($request->filled('search')) {
             $search = $request->search;
@@ -43,9 +43,9 @@ class OrderController extends Controller
                   });
             });
         }
-        
+
         $commandes = $query->get();
-        
+
         // Récupérer les statuts disponibles pour le filtre
         $statuses = [
             'en_attente' => 'En attente',
@@ -54,7 +54,7 @@ class OrderController extends Controller
             'livre' => 'Livré',
             'annule' => 'Annulé'
         ];
-            
+
         return view('admin.orders.index', compact('commandes', 'statuses'));
     }
 
@@ -72,35 +72,50 @@ class OrderController extends Controller
      */
     public function updateStatus(Request $request, Order $order)
     {
-        $request->validate([
-            'statut' => 'required|in:en_attente,en_traitement,expédiée,livrée,annulée',
-        ]);
+        // Accept either 'status' (views) or 'statut' (other callers)
+        $status = $request->input('status') ?? $request->input('statut');
+        if (! $status) {
+            return back()->with('error', 'Statut requis.');
+        }
 
-        $order->update(['statut' => $request->statut]);
-        
-        // Mettre à jour la date appropriée en fonction du statut
+        $allowed = [
+            'en_attente', 'en_traitement', 'expediee', 'expédition', 'expédition',
+            'expedie', 'en_cours', 'expediee', 'livree', 'livree', 'annulee', 'annule', 'payee'
+        ];
+        if (! in_array($status, $allowed, true)) {
+            return back()->with('error', 'Statut invalide.');
+        }
+
+        $order->update(['statut' => $status]);
+
+        // Mise à jour des dates en fonction du statut
         $now = now();
         $updates = [];
-        
-        switch($request->statut) {
+        switch ($status) {
             case 'en_attente':
                 $updates['date_en_attente'] = $now;
                 break;
             case 'en_traitement':
+            case 'en_cours':
                 $updates['date_traitement'] = $now;
                 break;
-            case 'expédiée':
+            case 'expediee':
+            case 'expedie':
                 $updates['date_expedition'] = $now;
                 break;
-            case 'livrée':
+            case 'livree':
                 $updates['date_livraison'] = $now;
                 break;
-            case 'annulée':
+            case 'annulee':
+            case 'annule':
                 $updates['date_annulation'] = $now;
                 break;
+            case 'payee':
+                $updates['date_traitement'] = $now;
+                break;
         }
-        
-        if (!empty($updates)) {
+
+        if (! empty($updates)) {
             $order->update($updates);
         }
 
@@ -155,7 +170,7 @@ class OrderController extends Controller
                 'commentaire' => 'Commande ' . $order->statut
             ]
         ]);
-        
+
         return view('admin.orders.history', compact('order', 'history'));
     }
 
@@ -169,7 +184,7 @@ class OrderController extends Controller
         // pour générer un PDF de la facture
         // $pdf = \PDF::loadView('admin.orders.invoice', compact('order'));
         // return $pdf->download('facture-' . $order->id . '.pdf');
-        
+
         // Pour l'instant, on retourne simplement la vue
         return view('admin.orders.invoice', compact('order'));
     }

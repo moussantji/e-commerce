@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'fedapay' => [
+        'base_url' => env('FEDAPAY_BASE', 'https://sandbox.fedapay.com/api'),
+        'public_key' => env('FEDAPAY_PUBLIC_KEY'),
+        'secret_key' => env('FEDAPAY_SECRET_KEY'),
+    ],
+
 ];

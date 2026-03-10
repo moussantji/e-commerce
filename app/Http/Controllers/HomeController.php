@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Banner;
 use App\Models\Produits;
 use App\Models\Commandes;
 use App\Models\Categories;
@@ -18,8 +19,11 @@ class HomeController extends Controller
             ->take(8)
             ->get();
 
+        $banners = Banner::with('photos')->latest()->take(3)->get();
+
         return view("welcome", [
             'categories' => $categories,
+            'banners' => $banners,
         ]);
     }
 
@@ -72,8 +76,14 @@ class HomeController extends Controller
 
     public function commande(Commandes $id)
     {
+        $categories = Categories::with('children')
+            ->whereNull('parent_id')
+            ->where('is_active', true)
+            ->take(8)
+            ->get();
         return view("commande.show", [
-            "commande" => $id
+            "commande" => $id,
+            'categories' => $categories,
         ]);
     }
 

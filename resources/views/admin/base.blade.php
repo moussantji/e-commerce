@@ -102,6 +102,7 @@
     <script src="{{ asset('vendors/anchorjs/anchor.min.js') }}"></script>
     <script src="{{ asset('vendors/is/is.min.js') }}"></script>
     <script src="{{ asset('vendors/fontawesome/all.min.js') }}"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="{{ asset('vendors/lodash/lodash.min.js') }}"></script>
     <script src="{{ asset('vendors/list.js/list.min.js') }}"></script>
     <script src="{{ asset('vendors/feather-icons/feather.min.js') }}"></script>
@@ -113,7 +114,7 @@
     <script src="{{ asset('vendors/echarts/echarts.min.js') }}"></script>
     <script src="{{ asset('assets/js/dashboards/ecommerce-dashboard.js') }}"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const container = document.getElementById('users');
             if (!container) return;
 
@@ -123,15 +124,14 @@
             });
 
             // si tu utilises le bouton "Réinitialiser"
-            document.querySelectorAll('[data-list-clear]').forEach(function(btn) {
-                btn.addEventListener('click', function(e) {
+            document.querySelectorAll('[data-list-clear]').forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
                     e.preventDefault();
                     userList.search('');
                 });
             });
         });
     </script>
-
 
 
 

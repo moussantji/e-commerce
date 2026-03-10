@@ -124,10 +124,6 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
-        // Supprimer l'image associée si elle existe
-        if ($product->image_path) {
-            \Storage::disk('public')->delete($product->image_path);
-        }
 
         $product->delete();
 

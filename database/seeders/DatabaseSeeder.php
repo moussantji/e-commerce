@@ -46,6 +46,7 @@ class DatabaseSeeder extends Seeder
             // Enfin les commandes et avis (dépendent des utilisateurs, produits et codes promo)
             OrderSeeder::class,
             ReviewSeeder::class,
+            BannerSeeder::class,
         ]);
     }
 }
