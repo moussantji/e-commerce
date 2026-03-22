@@ -20,15 +20,17 @@ class CartItems extends Component
 
     private function loadOrderItems()
     {
-        // ✅ Get Produits MODELS directly (not stdClass)
-        $this->orderItems = Produits::whereHas('commandes', function ($q) {
+        $produits = Produits::whereHas('commandes', function ($q) {
             $q->where('commandes.id', $this->commande->id);
-        })->get()->map(function ($produit) {
-            // Add commande_produit data as custom attributes
-            $cp = DB::table('commande_produit')
-                ->where('commande_id', $this->commande->id)
-                ->where('produit_id', $produit->id)
-                ->first();
+        })->get();
+
+        $commandeProduits = DB::table('commande_produit')
+            ->where('commande_id', $this->commande->id)
+            ->get()
+            ->keyBy('produit_id');
+
+        $this->orderItems = $produits->map(function ($produit) use ($commandeProduits) {
+            $cp = $commandeProduits->get($produit->id);
 
             if ($cp) {
                 $produit->quantite = $cp->quantite;
@@ -38,7 +40,7 @@ class CartItems extends Component
                 $produit->total = $produit->prix ?? 0;
             }
 
-            return $produit; // ✅ Full Produits model with getPhoto() method
+            return $produit;
         });
     }
 

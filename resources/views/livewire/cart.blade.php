@@ -65,8 +65,7 @@
                                                 <input
                                                     class="form-control text-center input-spin-none bg-transparent border-0 px-0"
                                                     type="number" min="1"
-                                                    value="{{ $product->pivot?->quantite ?? 1 }}"
-                                                    disabled />
+                                                    value="{{ $product->pivot?->quantite ?? 1 }}" disabled />
                                                 <button class="btn btn-sm px-2"
                                                     wire:click="increaseQuantity({{ $product->id }})">+</button>
                                             </div>
@@ -121,6 +120,7 @@
     <div class="col-12 col-lg-4">
         <div class="card">
             <div class="card-body">
+                @if ($panier && $itemsCount > 0)
                 <div class="d-flex flex-between-center mb-3">
                     <h3 class="card-title mb-0">Résumé</h3>
                     @if ($panier && $itemsCount > 0)
@@ -129,25 +129,28 @@
                         </span>
                     @endif
                 </div>
+                @endif
 
                 {{-- Paiement --}}
-                <select class="form-select" wire:model="paymentMethodId">
-                    @foreach ($paymentMethods as $method)
-                        <option value="{{ $method->id }}">
-                            @if ($method->getPhoto())
-                                <span class="me-2"
-                                    style="background-image: url('{{ $method->getPhoto()->getImageUrl(20, 20) }}');
+                @if ($panier && $itemsCount > 0)
+                    <select class="form-select" wire:model="paymentMethodId">
+                        @foreach ($paymentMethods as $method)
+                            <option value="{{ $method->id }}">
+                                @if ($method->getPhoto())
+                                    <span class="me-2"
+                                        style="background-image: url('{{ $method->getPhoto()->getImageUrl(20, 20) }}');
                                            width: 20px; height: 20px; display: inline-block;
                                            background-size: cover; background-position: center;
                                            border-radius: 3px;"></span>
-                            @endif
-                            {{ $method->name ?? $method->method_name }}
-                            @if ($method->price ?? $method->frais > 0)
-                                ({{ $this->formatFcfa($method->price ?? $method->frais) }})
-                            @endif
-                        </option>
-                    @endforeach
-                </select>
+                                @endif
+                                {{ $method->name ?? $method->method_name }}
+                                @if ($method->price ?? $method->frais > 0)
+                                    ({{ $this->formatFcfa($method->price ?? $method->frais) }})
+                                @endif
+                            </option>
+                        @endforeach
+                    </select>
+                @endif
 
                 {{-- Livraison --}}
                 @if ($panier && $itemsCount > 0)
@@ -193,7 +196,7 @@
                         <div class="input-group input-group-sm mb-3">
                             <input class="form-control" wire:model="voucherCode" placeholder="PROMO10, SOLDES20..." />
                             <button class="btn btn-outline-primary px-3" wire:click="applyVoucher"
-                                wire:loading.attr="disabled" >
+                                wire:loading.attr="disabled">
                                 OK
                             </button>
                         </div>

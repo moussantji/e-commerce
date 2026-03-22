@@ -137,6 +137,10 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->wishlistProducts()->count();
     }
 
+    public function panier()
+    {
+        return $this->hasOne(Paniers::class, 'user_id');
+    }
 
 
     /**

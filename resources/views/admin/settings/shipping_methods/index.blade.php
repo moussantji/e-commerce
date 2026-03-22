@@ -44,14 +44,14 @@
                             </td>
                             <td>
                                 @if($method->price > 0)
-                                    {{ number_format($method->price, 2) }}€
+                                    {{ number_format($method->price, 2) }} FCFA
                                 @else
                                     Gratuit
                                 @endif
                             </td>
                             <td>
                                 @if($method->free_shipping_threshold)
-                                    {{ number_format($method->free_shipping_threshold, 2) }}€
+                                    {{ number_format($method->free_shipping_threshold, 2) }} FCFA
                                 @else
                                     -
                                 @endif

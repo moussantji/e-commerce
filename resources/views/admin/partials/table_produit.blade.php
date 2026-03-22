@@ -43,7 +43,7 @@
                     </a>
                 </td>
                 <td class="price align-middle white-space-nowrap text-end fw-bold text-body-tertiary ps-4">
-                    {{ number_format($product->price, 2, ',', ' ') }} €
+                    {{ number_format($product->price, 2, ',', ' ') }} FCFA
                 </td>
                 <td class="category align-middle white-space-nowrap text-body-quaternary fs-9 ps-4 fw-semibold">
                     {{ $product->category->name ?? 'Sans catégorie' }}

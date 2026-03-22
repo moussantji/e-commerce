@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('livraisons', function (Blueprint $table) {
             // Suppression des anciennes colonnes
             $table->dropColumn(['name', 'duree', 'prix']);
-            
+
             // Ajout des nouvelles colonnes
             $table->string('method_name');
             $table->string('description')->nullable();
@@ -58,10 +58,10 @@ return new class extends Migration
                 'sort_order',
                 'config'
             ]);
-            
+
             // Recréation des anciennes colonnes
             $table->string('name');
-            $table->timestamp('duree');
+            $table->timestamp('duree')->nullable();
             $table->string('prix');
         });
     }

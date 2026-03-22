@@ -157,7 +157,7 @@
                                             {{ $user->orders_count ?? 0 }}
                                         </td>
                                         <td class="spent align-middle text-end pe-3 fw-bold text-primary">
-                                            {{ $user->total_spent ? number_format($user->total_spent, 0) . '€' : '0€' }}
+                                            {{ $user->total_spent ? number_format($user->total_spent, 0) . ' FCFA' : '0 FCFA' }}
                                         </td>
                                         <td class="city align-middle pe-3 text-body-highlight">
                                             {{ $user->city ?? 'N/A' }}

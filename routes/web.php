@@ -1,29 +1,30 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\CheckoutShow;
-use Illuminate\Support\Facades\Request;
-use App\Http\Controllers\AvisController;
-use App\Http\Controllers\CartController;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\PhotoControler;
-use App\Http\Controllers\ImageController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\CheckoutController;
-use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\BannerController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\ClientCategoryController;
-use App\Http\Controllers\AdminPanel\UserController;
+use App\Http\Controllers\Admin\BrandController;
+use App\Http\Controllers\Admin\CaracteristiqueController;
 use App\Http\Controllers\AdminPanel\AdminController;
+use App\Http\Controllers\AdminPanel\CategoryController;
 use App\Http\Controllers\AdminPanel\OrderController;
 use App\Http\Controllers\AdminPanel\ProductController;
-use App\Http\Controllers\AdminPanel\CategoryController;
-use App\Http\Controllers\Admin\CaracteristiqueController;
+use App\Http\Controllers\AdminPanel\UserController;
+use App\Http\Controllers\AvisController;
+use App\Http\Controllers\BrandController as ClientBrandController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\CheckoutShow;
+use App\Http\Controllers\ClientCategoryController;
 use App\Http\Controllers\CustomerPanel\CustomerComtroller;
 use App\Http\Controllers\CustomerPanel\CustomerController;
-use App\Http\Controllers\BrandController as ClientBrandController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ImageController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PhotoControler;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\WishlistController;
+use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Facades\Route;
 
 $idRegex = '[0-9]+';
 $slugRegex = '[0-9a-z\-]+';
@@ -81,6 +82,11 @@ Route::delete('commande/{id}', [HomeController::class, 'destroy'])
     ->where(['id' => $idRegex])
     ->name('commande.destroy');
 
+Route::get('commande/{id}/pdf', [HomeController::class, 'exportPdf'])
+->where(['id' => $idRegex])
+->name('commande.pdf');
+
+
 Route::get('avis/{avis}', [AvisController::class, 'show'])->name('avis.show');
 Route::get('avis/{avis}/export', [AvisController::class, 'export'])->name('avis.export');
 Route::delete('avis/{avis}', [AvisController::class, 'destroy'])->name('avis.destroy');
@@ -92,6 +98,9 @@ Route::delete('avis/{avis}', [AvisController::class, 'destroy'])->name('avis.des
 Route::middleware(['auth', 'role:customer'])->group(function () {
     // Tableau de bord client
     Route::get('/dashboard', [CustomerComtroller::class, 'dashboard'])->name('dashboard');
+    Route::delete('wishlist/{id}', [WishlistController::class, 'destroy'])->name('wishlist.destroy');
+    Route::post('cart/{id}', [CartController::class, 'addCart'])->name('cart.add');
+
 
     Route::put('/profile/password', [CustomerComtroller::class, 'updatePassword'])->name('profile.password');
     Route::put('/profile', [CustomerComtroller::class, 'updateProfile'])->name('profile.update');

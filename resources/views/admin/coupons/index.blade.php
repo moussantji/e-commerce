@@ -48,7 +48,7 @@
                                     @if($coupon->type === 'percentage')
                                         {{ $coupon->value }} %
                                     @else
-                                        {{ number_format($coupon->value, 2) }} €
+                                        {{ number_format($coupon->value, 2) }} FCFA
                                     @endif
                                 </td>
                                 <td>{{ $coupon->starts_at->format('d/m/Y') }}</td>

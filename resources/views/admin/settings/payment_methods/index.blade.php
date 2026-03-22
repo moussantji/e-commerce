@@ -39,10 +39,10 @@
                                 @if($method->fee_percentage > 0)
                                     {{ $method->fee_percentage }}%
                                     @if($method->fee > 0)
-                                        + {{ number_format($method->fee, 2) }}€
+                                        + {{ number_format($method->fee, 2) }} FCFA
                                     @endif
                                 @elseif($method->fee > 0)
-                                    {{ number_format($method->fee, 2) }}€
+                                    {{ number_format($method->fee, 2) }} FCFA
                                 @else
                                     Gratuit
                                 @endif

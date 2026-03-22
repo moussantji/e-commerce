@@ -159,4 +159,12 @@ class Produits extends Model
     {
         return $this->belongsToMany(User::class, 'wishlist_user_produit', 'produits_id', 'user_id');
     }
+
+    /**
+     * Get the formatted price in CFA.
+     */
+    public function getFormattedPriceAttribute()
+    {
+        return number_format((float) $this->price, 0, ',', ' ') . ' FCFA';
+    }
 }

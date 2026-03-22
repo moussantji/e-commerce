@@ -5,16 +5,10 @@
                     href="#tab-orders" role="tab" aria-controls="tab-orders" aria-selected="true"><span
                         class="fas fa-shopping-cart me-2"></span>Orders <span class="text-body-tertiary fw-normal">
                         ({{ $commandes->count() }})</span></a></li>
-            <li class="nav-item me-3"><a class="nav-link text-nowrap" id="reviews-tab" data-bs-toggle="tab"
-                    href="#tab-reviews" role="tab" aria-controls="tab-orders" aria-selected="true"><span
-                        class="fas fa-star me-2"></span>Reviews<span class="text-body-tertiary fw-normal">
-                        ({{ $avis->count() }})</span></a></li>
             <li class="nav-item me-3"><a class="nav-link text-nowrap" id="wishlist-tab" data-bs-toggle="tab"
                     href="#tab-wishlist" role="tab" aria-controls="tab-orders" aria-selected="true"><span
-                        class="fas fa-heart me-2"></span>Wishlist</a></li>
-            <li class="nav-item me-3"><a class="nav-link text-nowrap" id="stores-tab" data-bs-toggle="tab"
-                    href="#tab-stores" role="tab" aria-controls="tab-stores" aria-selected="true"><span
-                        class="fas fa-home me-2"></span>Stores</a></li>
+                        class="fas fa-heart me-2"></span>Wishlist <span class="text-body-tertiary fw-normal">
+                        ({{ $wishlist->count() }})</span></a></li>
             <li class="nav-item"><a class="nav-link text-nowrap" id="personal-info-tab" data-bs-toggle="tab"
                     href="#tab-personal-info" role="tab" aria-controls="tab-personal-info"
                     aria-selected="true"><span class="fas fa-user me-2"></span>Personal info</a></li>
@@ -116,14 +110,17 @@
                                             <button
                                                 class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal"
                                                 type="button" data-bs-toggle="dropdown" data-boundary="window"
-                                                aria-haspopup="true" aria-expanded="false"
-                                                data-bs-reference="parent">
+                                                aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
                                                 <span class="fas fa-ellipsis-h fs-10"></span>
                                             </button>
                                             <div class="dropdown-menu dropdown-menu-end py-2">
                                                 <a class="dropdown-item"
                                                     href="{{ route('commande.show', $commande->id) }}">View</a>
-                                                <a class="dropdown-item" href="">Export</a>
+                                                @if ($commande->statut === 'payee' || $commande->statut === 'paid' || $commande->statut === 'payé')
+                                                    <a class="dropdown-item"
+                                                        href="{{ route('commande.pdf', $commande->id) }}">Export</a>
+                                                @endif
+
                                                 <div class="dropdown-divider"></div>
                                                 <form action="{{ route('commande.destroy', $commande->id) }}"
                                                     method="POST" class="d-inline"
@@ -131,11 +128,10 @@
                                                     @csrf
                                                     @method('DELETE')
                                                 </form>
-                                                <a class="dropdown-item text-danger" href="#"
+                                                <a class="dropdown-item text-danger" href=""
                                                     onclick="event.preventDefault();
-                                                    if(confirm('Confirmer la suppression?')) {
                                                         document.getElementById('delete-form-{{ $commande->id }}').submit();
-                                                    }">
+                                                    ">
                                                     Remove
                                                 </a>
 
@@ -171,1036 +167,233 @@
                 </div>
             </div>
         </div>
-        <div class="tab-pane fade" id="tab-reviews" role="tabpanel" aria-labelledby="reviews-tab">
-            <div class="border-y" id="profileRatingTable"
-                data-list='{"valueNames":["product","rating","review","status","date"],"page":6,"pagination":true}'>
+        <div class="tab-pane fade" id="tab-wishlist" role="tabpanel" aria-labelledby="wishlist-tab">
+            <div class="border-y border-translucent" id="productWishlistTable"
+                data-list='{"valueNames":["products","color","size","price","quantity","total"],"page":5,"pagination":true}'>
                 <div class="table-responsive scrollbar">
                     <table class="table fs-9 mb-0">
                         <thead>
                             <tr>
+                                <th class="sort white-space-nowrap align-middle fs-10" scope="col"
+                                    style="width:7%;"></th>
                                 <th class="sort white-space-nowrap align-middle" scope="col"
-                                    style="min-width:220px;" data-sort="product">PRODUCT</th>
-                                <th class="sort align-middle" scope="col" data-sort="rating"
-                                    style="max-width:10%;">RATING</th>
-                                <th class="sort align-middle" scope="col" style="min-width:480px"
-                                    data-sort="review">REVIEW</th>
-                                <th class="sort align-middle" scope="col" style="max-width:12%;"
-                                    data-sort="status">STATUS</th>
-                                <th class="sort text-end align-middle" scope="col" style="max-width:10%;"
-                                    data-sort="date">DATE</th>
-                                <th class="sort text-end pe-0 align-middle" scope="col" style="width: 7%"> </th>
+                                    style="width:30%; min-width:250px;" data-sort="products">PRODUCTS
+                                </th>
+                                <th class="sort align-middle" scope="col" data-sort="color" style="width:16%;">
+                                    COLOR</th>
+                                <th class="sort align-middle" scope="col" data-sort="size" style="width:10%;">
+                                    SIZE</th>
+                                <th class="sort align-middle text-end" scope="col" data-sort="price"
+                                    style="width:10%;">PRICE</th>
+                                <th class="sort align-middle text-end pe-0" scope="col" style="width:35%;"> </th>
                             </tr>
                         </thead>
-                        <tbody class="list" id="profile-review-table-body">
-                            @forelse($avis as $avi)
+                        <tbody class="list" id="profile-wishlist-table-body">
+                            @forelse ($wishlist as $item)
+                                @php
+                                    $couleur = $item->caracteristiques->firstWhere('name', 'Couleur');
+                                    $taille = $item->caracteristiques->firstWhere('name', 'Taille');
+                                @endphp
+
                                 <tr class="hover-actions-trigger btn-reveal-trigger position-static">
-                                    <td class="align-middle product pe-3">
-                                        <a class="fw-semibold line-clamp-1"
-                                            href="{{ route('produits.show', ['slug' => $avi->product->getSlug(), 'id' => $avi->product]) }}">
-                                            {{ $avi->product?->name ?? 'Produit supprimé' }}
+                                    <td class="align-middle white-space-nowrap ps-0 py-0">
+                                        <a class="border border-translucent rounded-2 d-inline-block"
+                                            href="{{ route('produits.show', ['slug' => $item->getSlug(), 'id' => $item->id]) }}">
+                                            <img src="{{ $item->getPhoto() ? $item->getPhoto()->getImageUrl(60, 60) : 'assets/img/products/default.png' }}"
+                                                alt="" width="53" />
                                         </a>
                                     </td>
-                                    <td class="align-middle rating white-space-nowrap fs-10">
-                                        @for ($i = 1; $i <= 5; $i++)
-                                            @if ($avi->nb_etoiles >= $i)
-                                                <span class="fa fa-star text-warning"></span>
-                                            @else
-                                                <span class="fa-regular fa-star text-warning-light"
-                                                    data-bs-theme="light"></span>
-                                            @endif
-                                        @endfor
+                                    <td class="products align-middle pe-11">
+                                        <a class="fw-semibold mb-0 line-clamp-1"
+                                            href="{{ route('produits.show', ['slug' => $item->getSlug(), 'id' => $item->id]) }}">
+                                            {{ $item->name }}
+                                        </a>
                                     </td>
-                                    <td class="align-middle review pe-7">
-                                        <p class="fw-semibold text-body-highlight mb-0 line-clamp-2">
-                                            {{ $avi->commentaire }}</p>
+                                    <td class="color align-middle white-space-nowrap fs-9 text-body">
+                                        {{ $couleur ? $couleur->pivot->value : 'N/A' }}
                                     </td>
-                                    <td class="align-middle status pe-9">
-                                        @switch($avi->statut ?? 'pending')
-                                            @case('approved')
-                                                <span class="badge badge-phoenix fs-10 badge-phoenix-success">
-                                                    Approuvé <span class="ms-1" data-feather="check"></span>
-                                                </span>
-                                            @break
-
-                                            @case('pending')
-                                                <span class="badge badge-phoenix fs-10 badge-phoenix-warning">
-                                                    En attente <span class="ms-1" data-feather="clock"></span>
-                                                </span>
-                                            @break
-
-                                            @default
-                                                <span class="badge badge-phoenix fs-10 badge-phoenix-secondary">
-                                                    Annulé <span class="ms-1" data-feather="x"></span>
-                                                </span>
-                                        @endswitch
+                                    <td
+                                        class="size align-middle white-space-nowrap text-body-tertiary fs-9 fw-semibold">
+                                        {{ $taille ? $taille->pivot->value : 'N/A' }}
                                     </td>
-                                    <td class="align-middle text-end date white-space-nowrap">
-                                        <p class="text-body-tertiary mb-0">{{ $avi->created_at->diffForHumans() }}</p>
+                                    <td class="price align-middle text-body fs-9 fw-semibold text-end">
+                                        {{ $item->formatted_price }}
                                     </td>
-                                    <td class="align-middle white-space-nowrap text-end pe-0">
-                                        <!-- Votre dropdown actions ici avec routes dynamiques -->
-                                        <div class="btn-reveal-trigger position-static">
-                                            <button
-                                                class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal"
-                                                type="button" data-bs-toggle="dropdown">
-                                                <span class="fas fa-ellipsis-h fs-10"></span>
+                                    <td
+                                        class="total align-middle fw-bold text-body-highlight text-end text-nowrap pe-0">
+                                        <form action="{{ route('wishlist.destroy', $item->id) }}" method="POST"
+                                            class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                class="btn btn-sm text-body-quaternary text-body-tertiary-hover me-2">
+                                                <span class="fas fa-trash"></span>
                                             </button>
-                                            <div class="dropdown-menu dropdown-menu-end py-2">
-                                                <a class="dropdown-item"
-                                                    href="{{ route('avis.show', $avi) }}">View</a>
-                                                <a class="dropdown-item"
-                                                    href="{{ route('avis.export', $avi->id) }}">Export</a>
-                                                <div class="dropdown-divider"></div>
-                                                <a class="dropdown-item text-danger"
-                                                    href="{{ route('avis.destroy', $avi) }}"
-                                                    onclick="event.preventDefault(); if(confirm('Supprimer cet avis?')) this.closest('form').submit();">
-                                                    Remove
-                                                </a>
-                                            </div>
-                                        </div>
+                                        </form>
+
+                                        {{-- Ajouter au panier en POST --}}
+                                        <form action="{{ route('cart.add', $item->id) }}" method="POST"
+                                            class="d-inline">
+                                            @csrf
+                                            <button type="submit" class="btn btn-primary fs-10">
+                                                <span class="fas fa-shopping-cart me-1 fs-10"></span>
+                                                Ajouter au panier
+                                            </button>
+                                        </form>
                                     </td>
                                 </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="6" class="text-center py-4">Aucun avis disponible</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-
-                        </table>
-                    </div>
-                    <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
-                        <div class="col-auto d-flex">
-                            <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info">
-                            </p><a class="fw-semibold" href="#!" data-list-view="*">View all<span
-                                    class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a
-                                class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span
-                                    class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
-                        </div>
-                        <div class="col-auto d-flex"><button class="page-link" data-list-pagination="prev"><span
-                                    class="fas fa-chevron-left"></span></button>
-                            <ul class="mb-0 pagination"></ul><button class="page-link pe-0"
-                                data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="tab-pane fade" id="tab-wishlist" role="tabpanel" aria-labelledby="wishlist-tab">
-                <div class="border-y border-translucent" id="productWishlistTable"
-                    data-list='{"valueNames":["products","color","size","price","quantity","total"],"page":5,"pagination":true}'>
-                    <div class="table-responsive scrollbar">
-                        <table class="table fs-9 mb-0">
-                            <thead>
+                            @empty
                                 <tr>
-                                    <th class="sort white-space-nowrap align-middle fs-10" scope="col"
-                                        style="width:7%;"></th>
-                                    <th class="sort white-space-nowrap align-middle" scope="col"
-                                        style="width:30%; min-width:250px;" data-sort="products">PRODUCTS
-                                    </th>
-                                    <th class="sort align-middle" scope="col" data-sort="color" style="width:16%;">
-                                        COLOR</th>
-                                    <th class="sort align-middle" scope="col" data-sort="size" style="width:10%;">
-                                        SIZE</th>
-                                    <th class="sort align-middle text-end" scope="col" data-sort="price"
-                                        style="width:10%;">PRICE</th>
-                                    <th class="sort align-middle text-end pe-0" scope="col" style="width:35%;"> </th>
-                                </tr>
-                            </thead>
-                            <tbody class="list" id="profile-wishlist-table-body">
-                                <tr class="hover-actions-trigger btn-reveal-trigger position-static">
-                                    <td class="align-middle white-space-nowrap ps-0 py-0"><a
-                                            class="border border-translucent rounded-2 d-inline-block"
-                                            href="product-details.html"><img src="../../../assets/img/products/1.png"
-                                                alt="" width="53" /></a></td>
-                                    <td class="products align-middle pe-11"><a class="fw-semibold mb-0 line-clamp-1"
-                                            href="product-details.html">Fitbit Sense Advanced Smartwatch with
-                                            Tools for Heart Health, Stress Management &amp; Skin Temperature
-                                            Trends, Carbon/Graphite, One Size (S &amp; L Bands)</a></td>
-                                    <td class="color align-middle white-space-nowrap fs-9 text-body">Pure
-                                        matte black</td>
-                                    <td class="size align-middle white-space-nowrap text-body-tertiary fs-9 fw-semibold">
-                                        42</td>
-                                    <td class="price align-middle text-body fs-9 fw-semibold text-end">$57
-                                    </td>
-                                    <td class="total align-middle fw-bold text-body-highlight text-end text-nowrap pe-0">
-                                        <button class="btn btn-sm text-body-quaternary text-body-tertiary-hover me-2"><span
-                                                class="fas fa-trash"></span></button><button
-                                            class="btn btn-primary fs-10"><span
-                                                class="fas fa-shopping-cart me-1 fs-10"></span>Add to
-                                            cart</button>
+                                    <td colspan="6" class="text-center py-4 text-body-tertiary">
+                                        Votre liste de souhaits est vide
                                     </td>
                                 </tr>
-                                <tr class="hover-actions-trigger btn-reveal-trigger position-static">
-                                    <td class="align-middle white-space-nowrap ps-0 py-0"><a
-                                            class="border border-translucent rounded-2 d-inline-block"
-                                            href="product-details.html"><img src="../../../assets/img/products/7.png"
-                                                alt="" width="53" /></a></td>
-                                    <td class="products align-middle pe-11"><a class="fw-semibold mb-0 line-clamp-1"
-                                            href="product-details.html">2021 Apple 12.9-inch iPad Pro (Wi‑Fi,
-                                            128GB) - Space Gray</a></td>
-                                    <td class="color align-middle white-space-nowrap fs-9 text-body">Black
-                                    </td>
-                                    <td class="size align-middle white-space-nowrap text-body-tertiary fs-9 fw-semibold">
-                                        Pro</td>
-                                    <td class="price align-middle text-body fs-9 fw-semibold text-end">$1,499
-                                    </td>
-                                    <td class="total align-middle fw-bold text-body-highlight text-end text-nowrap pe-0">
-                                        <button class="btn btn-sm text-body-quaternary text-body-tertiary-hover me-2"><span
-                                                class="fas fa-trash"></span></button><button
-                                            class="btn btn-primary fs-10"><span
-                                                class="fas fa-shopping-cart me-1 fs-10"></span>Add to
-                                            cart</button>
-                                    </td>
-                                </tr>
-                                <tr class="hover-actions-trigger btn-reveal-trigger position-static">
-                                    <td class="align-middle white-space-nowrap ps-0 py-0"><a
-                                            class="border border-translucent rounded-2 d-inline-block"
-                                            href="product-details.html"><img src="../../../assets/img/products/6.png"
-                                                alt="" width="53" /></a></td>
-                                    <td class="products align-middle pe-11"><a class="fw-semibold mb-0 line-clamp-1"
-                                            href="product-details.html">PlayStation 5 DualSense Wireless
-                                            Controller</a></td>
-                                    <td class="color align-middle white-space-nowrap fs-9 text-body">White
-                                    </td>
-                                    <td class="size align-middle white-space-nowrap text-body-tertiary fs-9 fw-semibold">
-                                        Regular</td>
-                                    <td class="price align-middle text-body fs-9 fw-semibold text-end">$299
-                                    </td>
-                                    <td class="total align-middle fw-bold text-body-highlight text-end text-nowrap pe-0">
-                                        <button class="btn btn-sm text-body-quaternary text-body-tertiary-hover me-2"><span
-                                                class="fas fa-trash"></span></button><button
-                                            class="btn btn-primary fs-10"><span
-                                                class="fas fa-shopping-cart me-1 fs-10"></span>Add to
-                                            cart</button>
-                                    </td>
-                                </tr>
-                                <tr class="hover-actions-trigger btn-reveal-trigger position-static">
-                                    <td class="align-middle white-space-nowrap ps-0 py-0"><a
-                                            class="border border-translucent rounded-2 d-inline-block"
-                                            href="product-details.html"><img src="../../../assets/img/products/3.png"
-                                                alt="" width="53" /></a></td>
-                                    <td class="products align-middle pe-11"><a class="fw-semibold mb-0 line-clamp-1"
-                                            href="product-details.html">Apple MacBook Pro 13
-                                            inch-M1-8/256GB-space</a></td>
-                                    <td class="color align-middle white-space-nowrap fs-9 text-body">Space
-                                        Gray</td>
-                                    <td class="size align-middle white-space-nowrap text-body-tertiary fs-9 fw-semibold">
-                                        Pro</td>
-                                    <td class="price align-middle text-body fs-9 fw-semibold text-end">$1,699
-                                    </td>
-                                    <td class="total align-middle fw-bold text-body-highlight text-end text-nowrap pe-0">
-                                        <button class="btn btn-sm text-body-quaternary text-body-tertiary-hover me-2"><span
-                                                class="fas fa-trash"></span></button><button
-                                            class="btn btn-primary fs-10"><span
-                                                class="fas fa-shopping-cart me-1 fs-10"></span>Add to
-                                            cart</button>
-                                    </td>
-                                </tr>
-                                <tr class="hover-actions-trigger btn-reveal-trigger position-static">
-                                    <td class="align-middle white-space-nowrap ps-0 py-0"><a
-                                            class="border border-translucent rounded-2 d-inline-block"
-                                            href="product-details.html"><img src="../../../assets/img/products/4.png"
-                                                alt="" width="53" /></a></td>
-                                    <td class="products align-middle pe-11"><a class="fw-semibold mb-0 line-clamp-1"
-                                            href="product-details.html">Apple iMac 24&quot; 4K Retina Display
-                                            M1 8 Core CPU, 7 Core GPU, 256GB SSD, Green (MJV83ZP/A) 2021</a>
-                                    </td>
-                                    <td class="color align-middle white-space-nowrap fs-9 text-body">Ocean
-                                        Blue</td>
-                                    <td class="size align-middle white-space-nowrap text-body-tertiary fs-9 fw-semibold">
-                                        21&quot;</td>
-                                    <td class="price align-middle text-body fs-9 fw-semibold text-end">$65
-                                    </td>
-                                    <td class="total align-middle fw-bold text-body-highlight text-end text-nowrap pe-0">
-                                        <button class="btn btn-sm text-body-quaternary text-body-tertiary-hover me-2"><span
-                                                class="fas fa-trash"></span></button><button
-                                            class="btn btn-primary fs-10"><span
-                                                class="fas fa-shopping-cart me-1 fs-10"></span>Add to
-                                            cart</button>
-                                    </td>
-                                </tr>
-                                <tr class="hover-actions-trigger btn-reveal-trigger position-static">
-                                    <td class="align-middle white-space-nowrap ps-0 py-0"><a
-                                            class="border border-translucent rounded-2 d-inline-block"
-                                            href="product-details.html"><img src="../../../assets/img/products/10.png"
-                                                alt="" width="53" /></a></td>
-                                    <td class="products align-middle pe-11"><a class="fw-semibold mb-0 line-clamp-1"
-                                            href="product-details.html">Apple Magic Mouse (Wireless,
-                                            Rechargable) - Silver</a></td>
-                                    <td class="color align-middle white-space-nowrap fs-9 text-body">White
-                                    </td>
-                                    <td class="size align-middle white-space-nowrap text-body-tertiary fs-9 fw-semibold">
-                                        Regular</td>
-                                    <td class="price align-middle text-body fs-9 fw-semibold text-end">$30
-                                    </td>
-                                    <td class="total align-middle fw-bold text-body-highlight text-end text-nowrap pe-0">
-                                        <button class="btn btn-sm text-body-quaternary text-body-tertiary-hover me-2"><span
-                                                class="fas fa-trash"></span></button><button
-                                            class="btn btn-primary fs-10"><span
-                                                class="fas fa-shopping-cart me-1 fs-10"></span>Add to
-                                            cart</button>
-                                    </td>
-                                </tr>
-                                <tr class="hover-actions-trigger btn-reveal-trigger position-static">
-                                    <td class="align-middle white-space-nowrap ps-0 py-0"><a
-                                            class="border border-translucent rounded-2 d-inline-block"
-                                            href="product-details.html"><img src="../../../assets/img/products/8.png"
-                                                alt="" width="53" /></a></td>
-                                    <td class="products align-middle pe-11"><a class="fw-semibold mb-0 line-clamp-1"
-                                            href="product-details.html">Amazon Basics Matte Black Wired
-                                            Keyboard - US Layout (QWERTY)</a></td>
-                                    <td class="color align-middle white-space-nowrap fs-9 text-body">Black
-                                    </td>
-                                    <td class="size align-middle white-space-nowrap text-body-tertiary fs-9 fw-semibold">
-                                        MD</td>
-                                    <td class="price align-middle text-body fs-9 fw-semibold text-end">$40
-                                    </td>
-                                    <td class="total align-middle fw-bold text-body-highlight text-end text-nowrap pe-0">
-                                        <button class="btn btn-sm text-body-quaternary text-body-tertiary-hover me-2"><span
-                                                class="fas fa-trash"></span></button><button
-                                            class="btn btn-primary fs-10"><span
-                                                class="fas fa-shopping-cart me-1 fs-10"></span>Add to
-                                            cart</button>
-                                    </td>
-                                </tr>
-                                <tr class="hover-actions-trigger btn-reveal-trigger position-static">
-                                    <td class="align-middle white-space-nowrap ps-0 py-0"><a
-                                            class="border border-translucent rounded-2 d-inline-block"
-                                            href="product-details.html"><img src="../../../assets/img/products/12.png"
-                                                alt="" width="53" /></a></td>
-                                    <td class="products align-middle pe-11"><a class="fw-semibold mb-0 line-clamp-1"
-                                            href="product-details.html">HORI Racing Wheel Apex for PlayStation
-                                            4_3, and PC</a></td>
-                                    <td class="color align-middle white-space-nowrap fs-9 text-body">Black
-                                    </td>
-                                    <td class="size align-middle white-space-nowrap text-body-tertiary fs-9 fw-semibold">
-                                        45</td>
-                                    <td class="price align-middle text-body fs-9 fw-semibold text-end">$130
-                                    </td>
-                                    <td class="total align-middle fw-bold text-body-highlight text-end text-nowrap pe-0">
-                                        <button class="btn btn-sm text-body-quaternary text-body-tertiary-hover me-2"><span
-                                                class="fas fa-trash"></span></button><button
-                                            class="btn btn-primary fs-10"><span
-                                                class="fas fa-shopping-cart me-1 fs-10"></span>Add to
-                                            cart</button>
-                                    </td>
-                                </tr>
-                                <tr class="hover-actions-trigger btn-reveal-trigger position-static">
-                                    <td class="align-middle white-space-nowrap ps-0 py-0"><a
-                                            class="border border-translucent rounded-2 d-inline-block"
-                                            href="product-details.html"><img src="../../../assets/img/products/17.png"
-                                                alt="" width="53" /></a></td>
-                                    <td class="products align-middle pe-11"><a class="fw-semibold mb-0 line-clamp-1"
-                                            href="product-details.html">Xbox Series S</a></td>
-                                    <td class="color align-middle white-space-nowrap fs-9 text-body">Space
-                                        Gray</td>
-                                    <td class="size align-middle white-space-nowrap text-body-tertiary fs-9 fw-semibold">
-                                        sm</td>
-                                    <td class="price align-middle text-body fs-9 fw-semibold text-end">$99
-                                    </td>
-                                    <td class="total align-middle fw-bold text-body-highlight text-end text-nowrap pe-0">
-                                        <button class="btn btn-sm text-body-quaternary text-body-tertiary-hover me-2"><span
-                                                class="fas fa-trash"></span></button><button
-                                            class="btn btn-primary fs-10"><span
-                                                class="fas fa-shopping-cart me-1 fs-10"></span>Add to
-                                            cart</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                            @endforelse
+
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+                    <div class="col-auto d-flex">
+                        <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info">
+                        </p><a class="fw-semibold" href="#!" data-list-view="*">View all<span
+                                class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a
+                            class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span
+                                class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
                     </div>
-                    <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
-                        <div class="col-auto d-flex">
-                            <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info">
-                            </p><a class="fw-semibold" href="#!" data-list-view="*">View all<span
-                                    class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a
-                                class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span
-                                    class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
-                        </div>
-                        <div class="col-auto d-flex"><button class="page-link" data-list-pagination="prev"><span
-                                    class="fas fa-chevron-left"></span></button>
-                            <ul class="mb-0 pagination"></ul><button class="page-link pe-0"
-                                data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
-                        </div>
+                    <div class="col-auto d-flex"><button class="page-link" data-list-pagination="prev"><span
+                                class="fas fa-chevron-left"></span></button>
+                        <ul class="mb-0 pagination"></ul><button class="page-link pe-0"
+                            data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
                     </div>
                 </div>
             </div>
-            <div class="tab-pane fade" id="tab-stores" role="tabpanel" aria-labelledby="wishlist-tab">
-                <div class="border-y border-translucent mb-6" id="profileStoreTable"
-                    data-list='{"valueNames":["products","color","size","price","quantity","total"],"page":5,"pagination":true}'>
-                    <div class="table-responsive scrollbar">
-                        <table class="table table-sm fs-9 mb-0">
-                            <thead>
-                                <tr>
-                                    <th class="sort white-space-nowrap align-middle fs-10" scope="col"
-                                        style="width:7%; min-width:80px;"></th>
-                                    <th class="sort white-space-nowrap align-middle" scope="col"
-                                        style="width:20%; min-width:150px;" data-sort="products">VENDOR</th>
-                                    <th class="sort align-middle" scope="col" data-sort="color"
-                                        style="width:15%; min-width:150px;">STORE RATING</th>
-                                    <th class="sort align-middle text-end" scope="col" data-sort="price"
-                                        style="width:12%; min-width:150px;">ORDERS</th>
-                                    <th class="sort align-middle text-end" scope="col" data-sort="size"
-                                        style="width:15%; min-width:150px;">TOTAL SPENT</th>
-                                    <th class="sort align-middle text-end" scope="col" data-sort="price"
-                                        style="width:15%; min-width:150px;">LAST ORDER
-                                    </th>
-                                    <th class="sort align-middle text-end pe-0" scope="col"
-                                        style="width:30%; min-width:150px;"> </th>
-                                </tr>
-                            </thead>
-                            <tbody class="list" id="profile-stores-table-body">
-                                <tr class="hover-actions-trigger btn-reveal-trigger position-static">
-                                    <td class="align-middle white-space-nowrap ps-0 py-0"><a href="#!">
-                                            <img src="../../../assets/img/brand2/dell.png" alt=""
-                                                width="53" /></a></td>
-                                    <td class="products align-middle"><a class="fw-semibold mb-0" href="#!">Dell
-                                            Technologies</a></td>
-                                    <td class="color align-middle white-space-nowrap fs-9 text-body"><span
-                                            class="fa fa-star text-warning"></span><span
-                                            class="fa fa-star text-warning"></span><span
-                                            class="fa fa-star text-warning"></span><span
-                                            class="fa fa-star text-warning"></span><span
-                                            class="fa fa-star text-warning"></span></td>
-                                    <td class="size align-middle white-space-nowrap text-primary fs-9 fw-bold text-end">
-                                        3</td>
-                                    <td class="price align-middle text-end text-body fw-semibold">$ 23987</td>
-                                    <td class="price align-middle text-body-tertiary fs-9 text-end">Dec 12,
-                                        12:56 PM</td>
-                                    <td class="total align-middle fw-bold text-body-highlight text-end">
-                                        <div class="btn-reveal-trigger position-static"><button
-                                                class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal"
-                                                type="button" data-bs-toggle="dropdown" data-boundary="window"
-                                                aria-haspopup="true" aria-expanded="false"
-                                                data-bs-reference="parent"><span
-                                                    class="fas fa-ellipsis-h fs-10"></span></button>
-                                            <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item"
-                                                    href="#!">View</a><a class="dropdown-item"
-                                                    href="#!">Export</a>
-                                                <div class="dropdown-divider"></div><a class="dropdown-item text-danger"
-                                                    href="#!">Remove</a>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr class="hover-actions-trigger btn-reveal-trigger position-static">
-                                    <td class="align-middle white-space-nowrap ps-0 py-0"><a href="#!">
-                                            <img src="../../../assets/img/brand2/honda.png" alt=""
-                                                width="53" /></a></td>
-                                    <td class="products align-middle"><a class="fw-semibold mb-0"
-                                            href="#!">Honda</a></td>
-                                    <td class="color align-middle white-space-nowrap fs-9 text-body"><span
-                                            class="fa fa-star text-warning"></span><span
-                                            class="fa fa-star text-warning"></span><span
-                                            class="fa fa-star text-warning"></span><span
-                                            class="fa-regular fa-star text-warning-light"
-                                            data-bs-theme="light"></span><span
-                                            class="fa-regular fa-star text-warning-light" data-bs-theme="light"></span>
-                                    </td>
-                                    <td class="size align-middle white-space-nowrap text-primary fs-9 fw-bold text-end">
-                                        5</td>
-                                    <td class="price align-middle text-end text-body fw-semibold">$ 1250</td>
-                                    <td class="price align-middle text-body-tertiary fs-9 text-end">Dec 09,
-                                        10:48 AM</td>
-                                    <td class="total align-middle fw-bold text-body-highlight text-end">
-                                        <div class="btn-reveal-trigger position-static"><button
-                                                class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal"
-                                                type="button" data-bs-toggle="dropdown" data-boundary="window"
-                                                aria-haspopup="true" aria-expanded="false"
-                                                data-bs-reference="parent"><span
-                                                    class="fas fa-ellipsis-h fs-10"></span></button>
-                                            <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item"
-                                                    href="#!">View</a><a class="dropdown-item"
-                                                    href="#!">Export</a>
-                                                <div class="dropdown-divider"></div><a class="dropdown-item text-danger"
-                                                    href="#!">Remove</a>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr class="hover-actions-trigger btn-reveal-trigger position-static">
-                                    <td class="align-middle white-space-nowrap ps-0 py-0"><a href="#!">
-                                            <img src="../../../assets/img/brand2/xiaomi.png" alt=""
-                                                width="53" /></a></td>
-                                    <td class="products align-middle"><a class="fw-semibold mb-0"
-                                            href="#!">Xiaomi</a></td>
-                                    <td class="color align-middle white-space-nowrap fs-9 text-body"><span
-                                            class="fa fa-star text-warning"></span><span
-                                            class="fa fa-star text-warning"></span><span
-                                            class="fa fa-star text-warning"></span><span
-                                            class="fa-regular fa-star text-warning-light"
-                                            data-bs-theme="light"></span><span
-                                            class="fa-regular fa-star text-warning-light" data-bs-theme="light"></span>
-                                    </td>
-                                    <td class="size align-middle white-space-nowrap text-primary fs-9 fw-bold text-end">
-                                        6</td>
-                                    <td class="price align-middle text-end text-body fw-semibold">$ 360</td>
-                                    <td class="price align-middle text-body-tertiary fs-9 text-end">Dec 03,
-                                        05:45 PM</td>
-                                    <td class="total align-middle fw-bold text-body-highlight text-end">
-                                        <div class="btn-reveal-trigger position-static"><button
-                                                class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal"
-                                                type="button" data-bs-toggle="dropdown" data-boundary="window"
-                                                aria-haspopup="true" aria-expanded="false"
-                                                data-bs-reference="parent"><span
-                                                    class="fas fa-ellipsis-h fs-10"></span></button>
-                                            <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item"
-                                                    href="#!">View</a><a class="dropdown-item"
-                                                    href="#!">Export</a>
-                                                <div class="dropdown-divider"></div><a class="dropdown-item text-danger"
-                                                    href="#!">Remove</a>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr class="hover-actions-trigger btn-reveal-trigger position-static">
-                                    <td class="align-middle white-space-nowrap ps-0 py-0"><a href="#!">
-                                            <img src="../../../assets/img/brand/huawei.png" alt=""
-                                                width="53" /></a></td>
-                                    <td class="products align-middle"><a class="fw-semibold mb-0" href="#!">Huawei
-                                            Shop BD</a></td>
-                                    <td class="color align-middle white-space-nowrap fs-9 text-body"><span
-                                            class="fa fa-star text-warning"></span><span
-                                            class="fa fa-star text-warning"></span><span
-                                            class="fa fa-star text-warning"></span><span
-                                            class="fa-regular fa-star text-warning-light"
-                                            data-bs-theme="light"></span><span
-                                            class="fa-regular fa-star text-warning-light" data-bs-theme="light"></span>
-                                    </td>
-                                    <td class="size align-middle white-space-nowrap text-primary fs-9 fw-bold text-end">
-                                        1</td>
-                                    <td class="price align-middle text-end text-body fw-semibold">$1,799</td>
-                                    <td class="price align-middle text-body-tertiary fs-9 text-end">Nov 27,
-                                        06:20 PM</td>
-                                    <td class="total align-middle fw-bold text-body-highlight text-end">
-                                        <div class="btn-reveal-trigger position-static"><button
-                                                class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal"
-                                                type="button" data-bs-toggle="dropdown" data-boundary="window"
-                                                aria-haspopup="true" aria-expanded="false"
-                                                data-bs-reference="parent"><span
-                                                    class="fas fa-ellipsis-h fs-10"></span></button>
-                                            <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item"
-                                                    href="#!">View</a><a class="dropdown-item"
-                                                    href="#!">Export</a>
-                                                <div class="dropdown-divider"></div><a class="dropdown-item text-danger"
-                                                    href="#!">Remove</a>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr class="hover-actions-trigger btn-reveal-trigger position-static">
-                                    <td class="align-middle white-space-nowrap ps-0 py-0"><a href="#!">
-                                            <img src="../../../assets/img/brand2/intel-2.png" alt=""
-                                                width="53" /></a></td>
-                                    <td class="products align-middle"><a class="fw-semibold mb-0"
-                                            href="#!">Intel</a></td>
-                                    <td class="color align-middle white-space-nowrap fs-9 text-body"><span
-                                            class="fa fa-star text-warning"></span><span
-                                            class="fa fa-star text-warning"></span><span
-                                            class="fa fa-star text-warning"></span><span
-                                            class="fa fa-star text-warning"></span><span
-                                            class="fa-regular fa-star text-warning-light" data-bs-theme="light"></span>
-                                    </td>
-                                    <td class="size align-middle white-space-nowrap text-primary fs-9 fw-bold text-end">
-                                        2</td>
-                                    <td class="price align-middle text-end text-body fw-semibold">$65</td>
-                                    <td class="price align-middle text-body-tertiary fs-9 text-end">Nov 21,
-                                        10:25 AM</td>
-                                    <td class="total align-middle fw-bold text-body-highlight text-end">
-                                        <div class="btn-reveal-trigger position-static"><button
-                                                class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal"
-                                                type="button" data-bs-toggle="dropdown" data-boundary="window"
-                                                aria-haspopup="true" aria-expanded="false"
-                                                data-bs-reference="parent"><span
-                                                    class="fas fa-ellipsis-h fs-10"></span></button>
-                                            <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item"
-                                                    href="#!">View</a><a class="dropdown-item"
-                                                    href="#!">Export</a>
-                                                <div class="dropdown-divider"></div><a class="dropdown-item text-danger"
-                                                    href="#!">Remove</a>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+        </div>
+        <div class="tab-pane fade show" id="tab-personal-info" role="tabpanel" aria-labelledby="personal-info-tab">
+            <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                @method('PUT')
+                <div class="row gx-3 gy-4 mb-5">
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label text-body-highlight fs-8 ps-0 text-capitalize lh-sm"
+                            for="nom">Nom</label>
+                        <input class="form-control" id="nom" name="name" type="text"
+                            value="{{ $user->name }}" />
                     </div>
-                    <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
-                        <div class="col-auto d-flex">
-                            <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info">
-                            </p><a class="fw-semibold" href="#!" data-list-view="*">View all<span
-                                    class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a
-                                class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span
-                                    class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
-                        </div>
-                        <div class="col-auto d-flex"><button class="page-link" data-list-pagination="prev"><span
-                                    class="fas fa-chevron-left"></span></button>
-                            <ul class="mb-0 pagination"></ul><button class="page-link pe-0"
-                                data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label text-body-highlight fs-8 ps-0 text-capitalize lh-sm"
+                            for="prenom">Prénom</label>
+                        <input class="form-control" id="prenom" name="prenom" type="text"
+                            value="{{ $user->prenom }}" />
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label text-body-highlight fs-8 ps-0 text-capitalize lh-sm"
+                            for="date_naiss">Date de naissance</label>
+                        <input type="date" class="form-control" id="date_naiss" name="date_naiss"
+                            value="{{ $user->date_naiss ? (is_string($user->date_naiss) ? \Carbon\Carbon::parse($user->date_naiss)->format('Y-m-d') : $user->date_naiss->format('Y-m-d')) : '' }}">
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label text-body-highlight fs-8 ps-0 text-capitalize lh-sm"
+                            for="lieu_naiss">Lieu de naissance</label>
+                        <input type="text" class="form-control" id="lieu_naiss" name="lieu_naiss"
+                            value="{{ $user->lieu_naiss }}">
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label text-body-highlight fs-8 ps-0 text-capitalize lh-sm"
+                            for="email">Email</label>
+                        <input class="form-control" id="email" name="email" type="email"
+                            value="{{ $user->email }}" readonly />
+                        <small class="text-muted">Contactez l'administrateur pour modifier cette
+                            information</small>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label text-body-highlight fs-8 ps-0 text-capitalize lh-sm"
+                            for="tel">Téléphone</label>
+                        <input class="form-control" id="tel" name="tel" type="tel"
+                            value="{{ $user->tel }}" />
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label text-body-highlight fs-8 ps-0 text-capitalize lh-sm"
+                            for="pays">Pays</label>
+                        <input class="form-control" id="pays" name="pays" type="text"
+                            value="{{ $user->pays }}" />
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label text-body-highlight fs-8 ps-0 text-capitalize lh-sm"
+                            for="region">Région</label>
+                        <input class="form-control" id="region" name="region" type="text"
+                            value="{{ $user->region }}" />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label text-body-highlight fs-8 ps-0 text-capitalize lh-sm"
+                            for="address">Adresse complète</label>
+                        <textarea class="form-control" id="adresse" name="adresse" rows="2">{{ $user->adresse ? (is_string($user->adresse) ? json_decode($user->adresse, true)['adresse'] ?? $user->adresse : $user->adresse) : '' }}</textarea>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text bg-light"><i
+                                    class="fab fa-facebook-f text-primary"></i></span>
+                            <input type="url" class="form-control" id="facebook_url" name="facebook_url"
+                                placeholder="https://facebook.com/votrepseudo"
+                                value="{{ $user->social_links ? (is_string($user->social_links) ? json_decode($user->social_links, true)['facebook'] ?? '' : $user->social_links['facebook'] ?? '') : '' }}">
                         </div>
                     </div>
+                    <div class="col-12 col-lg-6">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text bg-light"><i class="fab fa-twitter text-info"></i></span>
+                            <input type="url" class="form-control" id="twitter_url" name="twitter_url"
+                                placeholder="https://twitter.com/votrepseudo"
+                                value="{{ $user->social_links ? (is_string($user->social_links) ? json_decode($user->social_links, true)['twitter'] ?? '' : $user->social_links['twitter'] ?? '') : '' }}">
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text bg-light"
+                                style="background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); color: white;">
+                                <i class="fab fa-instagram"></i>
+                            </span>
+                            <input type="url" class="form-control" id="instagram_url" name="instagram_url"
+                                placeholder="https://instagram.com/votrepseudo"
+                                value="{{ $user->social_links ? (is_string($user->social_links) ? json_decode($user->social_links, true)['instagram'] ?? '' : $user->social_links['instagram'] ?? '') : '' }}">
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text bg-light"><i
+                                    class="fab fa-linkedin-in text-primary"></i></span>
+                            <input type="url" class="form-control" id="linkedin_url" name="linkedin_url"
+                                placeholder="https://linkedin.com/in/votrepseudo"
+                                value="{{ $user->social_links ? (is_string($user->social_links) ? json_decode($user->social_links, true)['linkedin'] ?? '' : $user->social_links['linkedin'] ?? '') : '' }}">
+                        </div>
+                    </div>
+
                 </div>
-                <div class="d-flex flex-between-center mb-5">
-                    <div>
-                        <h3 class="text-body-emphasis mb-2">My Favourite Stores</h3>
-                        <h5 class="text-body-tertiary fw-semibold">Essential for a better life</h5>
-                    </div><button class="btn btn-phoenix-primary">View all</button>
+
+                <div class="text-end mt-4">
+                    <button type="submit" class="btn btn-primary px-7">
+                        <i class="fas fa-save me-2"></i>Enregistrer les modifications
+                    </button>
                 </div>
-                <div class="row gx-3 gy-5">
-                    <div class="col-6 col-sm-4 col-md-3 col-lg-2 hover-actions-trigger btn-reveal-trigger">
-                        <div class="border border-translucent d-flex flex-center rounded-3 mb-3 p-4"
-                            style="height:180px;"><img class="mw-100" src="../../../assets/img/brand2/dell.png"
-                                alt="Dell Technologies" /></div>
-                        <h5 class="mb-2">Dell Technologies</h5>
-                        <div class="mb-1 fs-9"><span class="fa fa-star text-warning"></span><span
-                                class="fa fa-star text-warning"></span><span class="fa fa-star text-warning"></span><span
-                                class="fa fa-star text-warning"></span><span class="fa-regular fa-star text-warning-light"
-                                data-bs-theme="light"></span>
-                        </div>
-                        <p class="text-body-quaternary fs-9 mb-2 fw-semibold">(1263 people rated)</p><a
-                            class="btn btn-link p-0" href="#!">Visit Store<span
-                                class="fas fa-chevron-right ms-1 fs-10"></span></a>
-                        <div class="hover-actions top-0 end-0 mt-2 me-3">
-                            <div class="btn-reveal-trigger"><button
-                                    class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal lh-1 bg-body-highlight rounded-1"
-                                    type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true"
-                                    aria-expanded="false" data-bs-reference="parent"><span
-                                        class="fas fa-ellipsis-h fs-9"></span></button>
-                                <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item"
-                                        href="#!">View</a><a class="dropdown-item" href="#!">Export</a>
-                                    <div class="dropdown-divider"></div><a class="dropdown-item text-danger"
-                                        href="#!">Remove</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-sm-4 col-md-3 col-lg-2 hover-actions-trigger btn-reveal-trigger">
-                        <div class="border border-translucent d-flex flex-center rounded-3 mb-3 p-4"
-                            style="height:180px;"><img class="mw-100" src="../../../assets/img/brand2/hp.png"
-                                alt="HP Global Store" /></div>
-                        <h5 class="mb-2">HP Global Store</h5>
-                        <div class="mb-1 fs-9"><span class="fa fa-star text-warning"></span><span
-                                class="fa fa-star text-warning"></span><span class="fa fa-star text-warning"></span><span
-                                class="fa-regular fa-star text-warning-light" data-bs-theme="light"></span><span
-                                class="fa-regular fa-star text-warning-light" data-bs-theme="light"></span>
-                        </div>
-                        <p class="text-body-quaternary fs-9 mb-2 fw-semibold">(365 people rated)</p><a
-                            class="btn btn-link p-0" href="#!">Visit Store<span
-                                class="fas fa-chevron-right ms-1 fs-10"></span></a>
-                        <div class="hover-actions top-0 end-0 mt-2 me-3">
-                            <div class="btn-reveal-trigger"><button
-                                    class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal lh-1 bg-body-highlight rounded-1"
-                                    type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true"
-                                    aria-expanded="false" data-bs-reference="parent"><span
-                                        class="fas fa-ellipsis-h fs-9"></span></button>
-                                <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item"
-                                        href="#!">View</a><a class="dropdown-item" href="#!">Export</a>
-                                    <div class="dropdown-divider"></div><a class="dropdown-item text-danger"
-                                        href="#!">Remove</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-sm-4 col-md-3 col-lg-2 hover-actions-trigger btn-reveal-trigger">
-                        <div class="border border-translucent d-flex flex-center rounded-3 mb-3 p-4"
-                            style="height:180px;"><img class="mw-100" src="../../../assets/img/brand2/honda.png"
-                                alt="Honda" /></div>
-                        <h5 class="mb-2">Honda</h5>
-                        <div class="mb-1 fs-9"><span class="fa fa-star text-warning"></span><span
-                                class="fa fa-star text-warning"></span><span class="fa fa-star text-warning"></span><span
-                                class="fa fa-star text-warning"></span><span class="fa fa-star text-warning"></span>
-                        </div>
-                        <p class="text-body-quaternary fs-9 mb-2 fw-semibold">(596 people rated)</p><a
-                            class="btn btn-link p-0" href="#!">Visit Store<span
-                                class="fas fa-chevron-right ms-1 fs-10"></span></a>
-                        <div class="hover-actions top-0 end-0 mt-2 me-3">
-                            <div class="btn-reveal-trigger"><button
-                                    class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal lh-1 bg-body-highlight rounded-1"
-                                    type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true"
-                                    aria-expanded="false" data-bs-reference="parent"><span
-                                        class="fas fa-ellipsis-h fs-9"></span></button>
-                                <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item"
-                                        href="#!">View</a><a class="dropdown-item" href="#!">Export</a>
-                                    <div class="dropdown-divider"></div><a class="dropdown-item text-danger"
-                                        href="#!">Remove</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-sm-4 col-md-3 col-lg-2 hover-actions-trigger btn-reveal-trigger">
-                        <div class="border border-translucent d-flex flex-center rounded-3 mb-3 p-4"
-                            style="height:180px;"><img class="mw-100" src="../../../assets/img/brand2/asus-rog.png"
-                                alt="Asus ROG" /></div>
-                        <h5 class="mb-2">Asus ROG</h5>
-                        <div class="mb-1 fs-9"><span class="fa fa-star text-warning"></span><span
-                                class="fa fa-star text-warning"></span><span class="fa fa-star text-warning"></span><span
-                                class="fa-regular fa-star text-warning-light" data-bs-theme="light"></span><span
-                                class="fa-regular fa-star text-warning-light" data-bs-theme="light"></span>
-                        </div>
-                        <p class="text-body-quaternary fs-9 mb-2 fw-semibold">(2365 people rated)</p><a
-                            class="btn btn-link p-0" href="#!">Visit Store<span
-                                class="fas fa-chevron-right ms-1 fs-10"></span></a>
-                        <div class="hover-actions top-0 end-0 mt-2 me-3">
-                            <div class="btn-reveal-trigger"><button
-                                    class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal lh-1 bg-body-highlight rounded-1"
-                                    type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true"
-                                    aria-expanded="false" data-bs-reference="parent"><span
-                                        class="fas fa-ellipsis-h fs-9"></span></button>
-                                <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item"
-                                        href="#!">View</a><a class="dropdown-item" href="#!">Export</a>
-                                    <div class="dropdown-divider"></div><a class="dropdown-item text-danger"
-                                        href="#!">Remove</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-sm-4 col-md-3 col-lg-2 hover-actions-trigger btn-reveal-trigger">
-                        <div class="border border-translucent d-flex flex-center rounded-3 mb-3 p-4"
-                            style="height:180px;"><img class="mw-100" src="../../../assets/img/brand2/yamaha.png"
-                                alt="Yamaha" /></div>
-                        <h5 class="mb-2">Yamaha</h5>
-                        <div class="mb-1 fs-9"><span class="fa fa-star text-warning"></span><span
-                                class="fa fa-star text-warning"></span><span class="fa fa-star text-warning"></span><span
-                                class="fa fa-star text-warning"></span><span class="fa fa-star text-warning"></span>
-                        </div>
-                        <p class="text-body-quaternary fs-9 mb-2 fw-semibold">(1253 people rated)</p><a
-                            class="btn btn-link p-0" href="#!">Visit Store<span
-                                class="fas fa-chevron-right ms-1 fs-10"></span></a>
-                        <div class="hover-actions top-0 end-0 mt-2 me-3">
-                            <div class="btn-reveal-trigger"><button
-                                    class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal lh-1 bg-body-highlight rounded-1"
-                                    type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true"
-                                    aria-expanded="false" data-bs-reference="parent"><span
-                                        class="fas fa-ellipsis-h fs-9"></span></button>
-                                <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item"
-                                        href="#!">View</a><a class="dropdown-item" href="#!">Export</a>
-                                    <div class="dropdown-divider"></div><a class="dropdown-item text-danger"
-                                        href="#!">Remove</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-sm-4 col-md-3 col-lg-2 hover-actions-trigger btn-reveal-trigger">
-                        <div class="border border-translucent d-flex flex-center rounded-3 mb-3 p-4"
-                            style="height:180px;"><img class="mw-100" src="../../../assets/img/brand2/ibm.png"
-                                alt="IBM" /></div>
-                        <h5 class="mb-2">IBM</h5>
-                        <div class="mb-1 fs-9"><span class="fa fa-star text-warning"></span><span
-                                class="fa fa-star text-warning"></span><span class="fa fa-star text-warning"></span><span
-                                class="fa-regular fa-star text-warning-light" data-bs-theme="light"></span><span
-                                class="fa-regular fa-star text-warning-light" data-bs-theme="light"></span>
-                        </div>
-                        <p class="text-body-quaternary fs-9 mb-2 fw-semibold">(996 people rated)</p><a
-                            class="btn btn-link p-0" href="#!">Visit Store<span
-                                class="fas fa-chevron-right ms-1 fs-10"></span></a>
-                        <div class="hover-actions top-0 end-0 mt-2 me-3">
-                            <div class="btn-reveal-trigger"><button
-                                    class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal lh-1 bg-body-highlight rounded-1"
-                                    type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true"
-                                    aria-expanded="false" data-bs-reference="parent"><span
-                                        class="fas fa-ellipsis-h fs-9"></span></button>
-                                <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item"
-                                        href="#!">View</a><a class="dropdown-item" href="#!">Export</a>
-                                    <div class="dropdown-divider"></div><a class="dropdown-item text-danger"
-                                        href="#!">Remove</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-sm-4 col-md-3 col-lg-2 hover-actions-trigger btn-reveal-trigger">
-                        <div class="border border-translucent d-flex flex-center rounded-3 mb-3 p-4"
-                            style="height:180px;"><img class="mw-100" src="../../../assets/img/brand2/apple-2.png"
-                                alt="Apple Store" /></div>
-                        <h5 class="mb-2">Apple Store</h5>
-                        <div class="mb-1 fs-9"><span class="fa fa-star text-warning"></span><span
-                                class="fa fa-star text-warning"></span><span class="fa fa-star text-warning"></span><span
-                                class="fa-regular fa-star text-warning-light" data-bs-theme="light"></span><span
-                                class="fa-regular fa-star text-warning-light" data-bs-theme="light"></span>
-                        </div>
-                        <p class="text-body-quaternary fs-9 mb-2 fw-semibold">(365 people rated)</p><a
-                            class="btn btn-link p-0" href="#!">Visit Store<span
-                                class="fas fa-chevron-right ms-1 fs-10"></span></a>
-                        <div class="hover-actions top-0 end-0 mt-2 me-3">
-                            <div class="btn-reveal-trigger"><button
-                                    class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal lh-1 bg-body-highlight rounded-1"
-                                    type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true"
-                                    aria-expanded="false" data-bs-reference="parent"><span
-                                        class="fas fa-ellipsis-h fs-9"></span></button>
-                                <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item"
-                                        href="#!">View</a><a class="dropdown-item" href="#!">Export</a>
-                                    <div class="dropdown-divider"></div><a class="dropdown-item text-danger"
-                                        href="#!">Remove</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-sm-4 col-md-3 col-lg-2 hover-actions-trigger btn-reveal-trigger">
-                        <div class="border border-translucent d-flex flex-center rounded-3 mb-3 p-4"
-                            style="height:180px;"><img class="mw-100" src="../../../assets/img/brand2/oppo.png"
-                                alt="Oppo" /></div>
-                        <h5 class="mb-2">Oppo</h5>
-                        <div class="mb-1 fs-9"><span class="fa fa-star text-warning"></span><span
-                                class="fa fa-star text-warning"></span><span class="fa fa-star text-warning"></span><span
-                                class="fa-regular fa-star text-warning-light" data-bs-theme="light"></span><span
-                                class="fa-regular fa-star text-warning-light" data-bs-theme="light"></span>
-                        </div>
-                        <p class="text-body-quaternary fs-9 mb-2 fw-semibold">(576 people rated)</p><a
-                            class="btn btn-link p-0" href="#!">Visit Store<span
-                                class="fas fa-chevron-right ms-1 fs-10"></span></a>
-                        <div class="hover-actions top-0 end-0 mt-2 me-3">
-                            <div class="btn-reveal-trigger"><button
-                                    class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal lh-1 bg-body-highlight rounded-1"
-                                    type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true"
-                                    aria-expanded="false" data-bs-reference="parent"><span
-                                        class="fas fa-ellipsis-h fs-9"></span></button>
-                                <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item"
-                                        href="#!">View</a><a class="dropdown-item" href="#!">Export</a>
-                                    <div class="dropdown-divider"></div><a class="dropdown-item text-danger"
-                                        href="#!">Remove</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-sm-4 col-md-3 col-lg-2 hover-actions-trigger btn-reveal-trigger">
-                        <div class="border border-translucent d-flex flex-center rounded-3 mb-3 p-4"
-                            style="height:180px;"><img class="mw-100" src="../../../assets/img/brand2/redragon.png"
-                                alt="Redragon" /></div>
-                        <h5 class="mb-2">Redragon</h5>
-                        <div class="mb-1 fs-9"><span class="fa fa-star text-warning"></span><span
-                                class="fa fa-star text-warning"></span><span
-                                class="fa-regular fa-star text-warning-light" data-bs-theme="light"></span><span
-                                class="fa-regular fa-star text-warning-light" data-bs-theme="light"></span><span
-                                class="fa-regular fa-star text-warning-light" data-bs-theme="light"></span>
-                        </div>
-                        <p class="text-body-quaternary fs-9 mb-2 fw-semibold">(1125 people rated)</p><a
-                            class="btn btn-link p-0" href="#!">Visit Store<span
-                                class="fas fa-chevron-right ms-1 fs-10"></span></a>
-                        <div class="hover-actions top-0 end-0 mt-2 me-3">
-                            <div class="btn-reveal-trigger"><button
-                                    class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal lh-1 bg-body-highlight rounded-1"
-                                    type="button" data-bs-toggle="dropdown" data-boundary="window"
-                                    aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span
-                                        class="fas fa-ellipsis-h fs-9"></span></button>
-                                <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item"
-                                        href="#!">View</a><a class="dropdown-item" href="#!">Export</a>
-                                    <div class="dropdown-divider"></div><a class="dropdown-item text-danger"
-                                        href="#!">Remove</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-sm-4 col-md-3 col-lg-2 hover-actions-trigger btn-reveal-trigger">
-                        <div class="border border-translucent d-flex flex-center rounded-3 mb-3 p-4"
-                            style="height:180px;"><img class="mw-100" src="../../../assets/img/brand2/xbox.png"
-                                alt="Microsoft XBOX" /></div>
-                        <h5 class="mb-2">Microsoft XBOX</h5>
-                        <div class="mb-1 fs-9"><span class="fa fa-star text-warning"></span><span
-                                class="fa fa-star text-warning"></span><span
-                                class="fa fa-star text-warning"></span><span
-                                class="fa fa-star text-warning"></span><span
-                                class="fa-regular fa-star text-warning-light" data-bs-theme="light"></span>
-                        </div>
-                        <p class="text-body-quaternary fs-9 mb-2 fw-semibold">(830 people rated)</p><a
-                            class="btn btn-link p-0" href="#!">Visit Store<span
-                                class="fas fa-chevron-right ms-1 fs-10"></span></a>
-                        <div class="hover-actions top-0 end-0 mt-2 me-3">
-                            <div class="btn-reveal-trigger"><button
-                                    class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal lh-1 bg-body-highlight rounded-1"
-                                    type="button" data-bs-toggle="dropdown" data-boundary="window"
-                                    aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span
-                                        class="fas fa-ellipsis-h fs-9"></span></button>
-                                <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item"
-                                        href="#!">View</a><a class="dropdown-item" href="#!">Export</a>
-                                    <div class="dropdown-divider"></div><a class="dropdown-item text-danger"
-                                        href="#!">Remove</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-sm-4 col-md-3 col-lg-2 hover-actions-trigger btn-reveal-trigger">
-                        <div class="border border-translucent d-flex flex-center rounded-3 mb-3 p-4"
-                            style="height:180px;"><img class="mw-100" src="../../../assets/img/brand2/lenovo.png"
-                                alt="Lenovo" /></div>
-                        <h5 class="mb-2">Lenovo</h5>
-                        <div class="mb-1 fs-9"><span class="fa fa-star text-warning"></span><span
-                                class="fa fa-star text-warning"></span><span
-                                class="fa fa-star text-warning"></span><span
-                                class="fa-regular fa-star text-warning-light" data-bs-theme="light"></span><span
-                                class="fa-regular fa-star text-warning-light" data-bs-theme="light"></span>
-                        </div>
-                        <p class="text-body-quaternary fs-9 mb-2 fw-semibold">(1032 people rated)</p><a
-                            class="btn btn-link p-0" href="#!">Visit Store<span
-                                class="fas fa-chevron-right ms-1 fs-10"></span></a>
-                        <div class="hover-actions top-0 end-0 mt-2 me-3">
-                            <div class="btn-reveal-trigger"><button
-                                    class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal lh-1 bg-body-highlight rounded-1"
-                                    type="button" data-bs-toggle="dropdown" data-boundary="window"
-                                    aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span
-                                        class="fas fa-ellipsis-h fs-9"></span></button>
-                                <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item"
-                                        href="#!">View</a><a class="dropdown-item" href="#!">Export</a>
-                                    <div class="dropdown-divider"></div><a class="dropdown-item text-danger"
-                                        href="#!">Remove</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-sm-4 col-md-3 col-lg-2 hover-actions-trigger btn-reveal-trigger">
-                        <div class="border border-translucent d-flex flex-center rounded-3 mb-3 p-4"
-                            style="height:180px;"><img class="mw-100" src="../../../assets/img/brand2/xiaomi.png"
-                                alt="Xiaomi" /></div>
-                        <h5 class="mb-2">Xiaomi</h5>
-                        <div class="mb-1 fs-9"><span class="fa fa-star text-warning"></span><span
-                                class="fa fa-star text-warning"></span><span
-                                class="fa fa-star text-warning"></span><span
-                                class="fa-regular fa-star text-warning-light" data-bs-theme="light"></span><span
-                                class="fa-regular fa-star text-warning-light" data-bs-theme="light"></span>
-                        </div>
-                        <p class="text-body-quaternary fs-9 mb-2 fw-semibold">(965 people rated)</p><a
-                            class="btn btn-link p-0" href="#!">Visit Store<span
-                                class="fas fa-chevron-right ms-1 fs-10"></span></a>
-                        <div class="hover-actions top-0 end-0 mt-2 me-3">
-                            <div class="btn-reveal-trigger"><button
-                                    class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal lh-1 bg-body-highlight rounded-1"
-                                    type="button" data-bs-toggle="dropdown" data-boundary="window"
-                                    aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span
-                                        class="fas fa-ellipsis-h fs-9"></span></button>
-                                <div class="dropdown-menu dropdown-menu-end py-2"><a class="dropdown-item"
-                                        href="#!">View</a><a class="dropdown-item" href="#!">Export</a>
-                                    <div class="dropdown-divider"></div><a class="dropdown-item text-danger"
-                                        href="#!">Remove</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="tab-pane fade show" id="tab-personal-info" role="tabpanel"
-                aria-labelledby="personal-info-tab">
-                <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    @method('PUT')
-                    <div class="row gx-3 gy-4 mb-5">
-                        <div class="col-12 col-lg-6">
-                            <label class="form-label text-body-highlight fs-8 ps-0 text-capitalize lh-sm"
-                                for="nom">Nom</label>
-                            <input class="form-control" id="nom" name="name" type="text"
-                                value="{{ $user->name }}" />
-                        </div>
-                        <div class="col-12 col-lg-6">
-                            <label class="form-label text-body-highlight fs-8 ps-0 text-capitalize lh-sm"
-                                for="prenom">Prénom</label>
-                            <input class="form-control" id="prenom" name="prenom" type="text"
-                                value="{{ $user->prenom }}" />
-                        </div>
-                        <div class="col-12 col-lg-6">
-                            <label class="form-label text-body-highlight fs-8 ps-0 text-capitalize lh-sm"
-                                for="date_naiss">Date de naissance</label>
-                            <input type="date" class="form-control" id="date_naiss" name="date_naiss"
-                                value="{{ $user->date_naiss ? (is_string($user->date_naiss) ? \Carbon\Carbon::parse($user->date_naiss)->format('Y-m-d') : $user->date_naiss->format('Y-m-d')) : '' }}">
-                        </div>
-                        <div class="col-12 col-lg-6">
-                            <label class="form-label text-body-highlight fs-8 ps-0 text-capitalize lh-sm"
-                                for="lieu_naiss">Lieu de naissance</label>
-                            <input type="text" class="form-control" id="lieu_naiss" name="lieu_naiss"
-                                value="{{ $user->lieu_naiss }}">
-                        </div>
-                        <div class="col-12 col-lg-6">
-                            <label class="form-label text-body-highlight fs-8 ps-0 text-capitalize lh-sm"
-                                for="email">Email</label>
-                            <input class="form-control" id="email" name="email" type="email"
-                                value="{{ $user->email }}" readonly />
-                            <small class="text-muted">Contactez l'administrateur pour modifier cette
-                                information</small>
-                        </div>
-                        <div class="col-12 col-lg-6">
-                            <label class="form-label text-body-highlight fs-8 ps-0 text-capitalize lh-sm"
-                                for="tel">Téléphone</label>
-                            <input class="form-control" id="tel" name="tel" type="tel"
-                                value="{{ $user->tel }}" />
-                        </div>
-                        <div class="col-12 col-lg-6">
-                            <label class="form-label text-body-highlight fs-8 ps-0 text-capitalize lh-sm"
-                                for="pays">Pays</label>
-                            <input class="form-control" id="pays" name="pays" type="text"
-                                value="{{ $user->pays }}" />
-                        </div>
-                        <div class="col-12 col-lg-6">
-                            <label class="form-label text-body-highlight fs-8 ps-0 text-capitalize lh-sm"
-                                for="region">Région</label>
-                            <input class="form-control" id="region" name="region" type="text"
-                                value="{{ $user->region }}" />
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label text-body-highlight fs-8 ps-0 text-capitalize lh-sm"
-                                for="address">Adresse complète</label>
-                            <textarea class="form-control" id="adresse" name="adresse" rows="2">{{ $user->adresse ? (is_string($user->adresse) ? json_decode($user->adresse, true)['adresse'] ?? $user->adresse : $user->adresse) : '' }}</textarea>
-                        </div>
-                        <div class="col-12 col-lg-6">
-                            <div class="input-group mb-3">
-                                <span class="input-group-text bg-light"><i
-                                        class="fab fa-facebook-f text-primary"></i></span>
-                                <input type="url" class="form-control" id="facebook_url" name="facebook_url"
-                                    placeholder="https://facebook.com/votrepseudo"
-                                    value="{{ $user->social_links ? (is_string($user->social_links) ? json_decode($user->social_links, true)['facebook'] ?? '' : $user->social_links['facebook'] ?? '') : '' }}">
-                            </div>
-                        </div>
-                        <div class="col-12 col-lg-6">
-                            <div class="input-group mb-3">
-                                <span class="input-group-text bg-light"><i class="fab fa-twitter text-info"></i></span>
-                                <input type="url" class="form-control" id="twitter_url" name="twitter_url"
-                                    placeholder="https://twitter.com/votrepseudo"
-                                    value="{{ $user->social_links ? (is_string($user->social_links) ? json_decode($user->social_links, true)['twitter'] ?? '' : $user->social_links['twitter'] ?? '') : '' }}">
-                            </div>
-                        </div>
-                        <div class="col-12 col-lg-6">
-                            <div class="input-group mb-3">
-                                <span class="input-group-text bg-light"
-                                    style="background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); color: white;">
-                                    <i class="fab fa-instagram"></i>
-                                </span>
-                                <input type="url" class="form-control" id="instagram_url" name="instagram_url"
-                                    placeholder="https://instagram.com/votrepseudo"
-                                    value="{{ $user->social_links ? (is_string($user->social_links) ? json_decode($user->social_links, true)['instagram'] ?? '' : $user->social_links['instagram'] ?? '') : '' }}">
-                            </div>
-                        </div>
-                        <div class="col-12 col-lg-6">
-                            <div class="input-group mb-3">
-                                <span class="input-group-text bg-light"><i
-                                        class="fab fa-linkedin-in text-primary"></i></span>
-                                <input type="url" class="form-control" id="linkedin_url" name="linkedin_url"
-                                    placeholder="https://linkedin.com/in/votrepseudo"
-                                    value="{{ $user->social_links ? (is_string($user->social_links) ? json_decode($user->social_links, true)['linkedin'] ?? '' : $user->social_links['linkedin'] ?? '') : '' }}">
-                            </div>
-                        </div>
 
-                    </div>
+            </form>
+        </div>
+        <!-- Onglet de modification du mot de passe -->
+        <div class="tab-pane fade" id="tab-password" role="tabpanel" aria-labelledby="password-tab">
+            <form action="{{ route('profile.password') }}" method="POST">
+                @csrf
+                @method('PUT')
 
-                    <div class="text-end mt-4">
-                        <button type="submit" class="btn btn-primary px-7">
-                            <i class="fas fa-save me-2"></i>Enregistrer les modifications
-                        </button>
-                    </div>
+                <div class="row gx-3 gy-4 mb-5">
 
-                </form>
-            </div>
-            <!-- Onglet de modification du mot de passe -->
-            <div class="tab-pane fade" id="tab-password" role="tabpanel" aria-labelledby="password-tab">
-                <form action="{{ route('profile.password') }}" method="POST">
-                    @csrf
-                    @method('PUT')
-
-                    <div class="row gx-3 gy-4 mb-5">
-
-                        <div class="col-12">
-                            <div class="mb-3">
-                                <label class="form-label text-body-highlight fs-8 ps-0 text-capitalize lh-sm"
-                                    for="new_password">Nouveau mot de passe</label>
-                                <div class="input-group">
-                                    <input type="password" class="form-control" id="new_password"
-                                        name="new_password" required minlength="8">
-                                    <button class="btn btn-outline-secondary password-toggle" type="button"
-                                        onclick="const icon = this.firstElementChild;
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label class="form-label text-body-highlight fs-8 ps-0 text-capitalize lh-sm"
+                                for="new_password">Nouveau mot de passe</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="new_password" name="new_password"
+                                    required minlength="8">
+                                <button class="btn btn-outline-secondary password-toggle" type="button"
+                                    onclick="const icon = this.firstElementChild;
                                                          const input = this.previousElementSibling;
                                                          if (input.type === 'password') {
                                                              icon.classList.remove('fa-eye');
@@ -1211,22 +404,22 @@
                                                              icon.classList.add('fa-eye');
                                                              input.type = 'password';
                                                          }">
-                                        <i class="far fa-eye"></i>
-                                    </button>
-                                </div>
-                                <small class="text-body-tertiary">Minimum 8 caractères</small>
+                                    <i class="far fa-eye"></i>
+                                </button>
                             </div>
+                            <small class="text-body-tertiary">Minimum 8 caractères</small>
                         </div>
+                    </div>
 
-                        <div class="col-12">
-                            <div class="mb-3">
-                                <label class="form-label text-body-highlight fs-8 ps-0 text-capitalize lh-sm"
-                                    for="new_password_confirmation">Confirmer le mot de passe</label>
-                                <div class="input-group">
-                                    <input type="password" class="form-control" id="new_password_confirmation"
-                                        name="new_password_confirmation" required>
-                                    <button class="btn btn-outline-secondary password-toggle" type="button"
-                                        onclick="const icon = this.firstElementChild;
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label class="form-label text-body-highlight fs-8 ps-0 text-capitalize lh-sm"
+                                for="new_password_confirmation">Confirmer le mot de passe</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="new_password_confirmation"
+                                    name="new_password_confirmation" required>
+                                <button class="btn btn-outline-secondary password-toggle" type="button"
+                                    onclick="const icon = this.firstElementChild;
                                                          const input = this.previousElementSibling;
                                                          if (input.type === 'password') {
                                                              icon.classList.remove('fa-eye');
@@ -1237,19 +430,18 @@
                                                              icon.classList.add('fa-eye');
                                                              input.type = 'password';
                                                          }">
-                                        <i class="far fa-eye"></i>
-                                    </button>
-                                </div>
+                                    <i class="far fa-eye"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="text-end">
-                        <button type="submit" class="btn btn-primary px-7">
-                            <i class="fas fa-save me-2"></i>Mettre à jour le mot de passe
-                        </button>
-                    </div>
-                </form>
-            </div>
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary px-7">
+                        <i class="fas fa-save me-2"></i>Mettre à jour le mot de passe
+                    </button>
+                </div>
+            </form>
         </div>
     </div>

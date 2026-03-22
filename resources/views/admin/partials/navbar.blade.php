@@ -3,18 +3,6 @@
 
 @include('admin.partials.navbar.fixed_top')
 
-@include('admin.partials.navbar.topnavslim')
-
-@include('admin.partials.navbar.navbartop')
-
-@include('admin.partials.navbar.navbartopslim')
-
-@include('admin.partials.navbar.navbarcombo')
-
-@include('admin.partials.navbar.navbarcomboslim')
-
-@include('admin.partials.navbar.dualnav')
-
 <script>
     var navbarTopShape = window.config.config.phoenixNavbarTopShape;
     var navbarPosition = window.config.config.phoenixNavbarPosition;

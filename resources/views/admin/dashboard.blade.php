@@ -17,12 +17,6 @@
                 @include('admin.partials.dashboard.table')
             </div>
         </div>
-
-        <div class="row g-3">
-            <div class="col-12">
-                @include('admin.partials.dashboard.revenu')
-            </div>
-        </div>
         
         @include('admin.partials.footer')
     </div>

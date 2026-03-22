@@ -8,7 +8,7 @@
                              src="{{ $item->getPhoto() ? $item->getPhoto()->getImageUrl(50,50) : asset('assets/img/products/default.png') }}"
                              width="40" alt="{{ $item->name }}" />
                         <h6 class="fw-semibold text-body-highlight lh-base">
-                            {{ Str::limit($item->name ?? $item->nom, 50) }}
+                            {{ Str::limit($item->name, 50) }}
                         </h6>
                     </div>
                 </div>

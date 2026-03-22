@@ -81,4 +81,8 @@ class photos extends Model
     {
         return $this->belongsTo(Banner::class);
     }
+    public function avisClient()
+    {
+        return $this->belongsTo(AvisClient::class);
+    }
 }

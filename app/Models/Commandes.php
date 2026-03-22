@@ -108,4 +108,16 @@ class Commandes extends Model
         }
         return $total - ($this->remise ?? 0);
     }
+
+    public function items()
+    {
+        return $this->hasMany(CommandeProduit::class, 'commande_id');
+    }
+
+    public function isPaid()
+    {
+        $statuts_payes = ['payé', 'payee', 'paid', 'paiement_accepte'];
+
+        return in_array($this->statut, $statuts_payes);
+    }
 }

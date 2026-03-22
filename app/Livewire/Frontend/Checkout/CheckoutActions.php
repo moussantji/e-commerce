@@ -57,8 +57,20 @@ class CheckoutActions extends Component
 
     public function saveAndExit()
     {
-        $this->commande->update(['status' => 'en_attente']);
-        session()->flash('success', 'Commande sauvegardée !');
+        if (! $this->commande->exists) {
+            session()->flash('warning', 'Commande introuvable.');
+            return $this->redirect(route('dashboard'));
+        }
+
+        // Si le statut est différent de "en_attente", on refuse la suppression
+        if ($this->commande->status !== 'en_attente') {
+            session()->flash('error', 'Impossible de supprimer une commande qui n’est pas en attente.');
+            return $this->redirect(route('dashboard'));
+        }
+
+        $this->commande->delete();
+
+        session()->flash('success', 'Commande supprimée.');
         return $this->redirect(route('dashboard'));
     }
 

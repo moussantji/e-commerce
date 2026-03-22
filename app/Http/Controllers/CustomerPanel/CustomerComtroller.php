@@ -20,16 +20,20 @@ class CustomerComtroller extends Controller
             ->take(8)
             ->get();
         $commandes = Auth::user()->orders()
-        ->with(['produits']) // Si relation produits
-        ->latest()
-        ->get();
+            ->with(['produits']) // Si relation produits
+            ->latest()
+            ->get();
         $avis = AvisClient::with(['user', 'product'])
-                     ->latest()
-                     ->get();
+            ->latest()
+            ->get();
+        $wishlist = Auth::user()->wishlistProducts()
+            ->with(['photos', 'caracteristiques'])
+            ->get();
         return view('dashboard', [
             'categories' => $categories,
             'commandes' => $commandes,
-            'avis' => $avis
+            'avis' => $avis,
+            'wishlist' => $wishlist
         ]);
     }
 

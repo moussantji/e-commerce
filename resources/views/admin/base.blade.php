@@ -80,17 +80,10 @@
 
         @yield('content')
 
-        <!-- Search Modal -->
-        @include('admin.partials.search_modal')
-
-        <!-- Chat -->
-        @include('admin.partials.chat')
     </main><!-- ===============================================-->
     <!--    End of Main Content-->
     <!-- ===============================================-->
 
-    <!-- Theme -->
-    @include('admin.partials.theme')
 
 
     <!-- ===============================================-->

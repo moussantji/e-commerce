@@ -2,57 +2,90 @@
 
 namespace App\Livewire;
 
+use App\Models\AvisClient;
 use App\Models\Paniers;
-use Livewire\Component;
-use Livewire\Attributes\Url;
-use Illuminate\Support\Facades\DB;
 use App\Models\Produits as Product;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Livewire\Attributes\Url;
+use Livewire\Component;
+use Livewire\WithFileUploads;
+use Livewire\WithPagination;
 
 class ProduitDetail extends Component
 {
+    use WithPagination;
+    use WithFileUploads;
     public Product $product;
 
-    public array $images = [];
-    public $couleurs;
+    public $images = [];
+    public $avisimages = [];
+
+    #[Url(except: null)]
+    public string $tab = 'description';
 
 
     public int $quantity = 1;
 
+    public bool $alwaysActive = true;
+
     public float $ratingAvg = 0.0;
     public int $ratingCount = 0;
 
-    public array $similarProducts = [];
-    public array $bundleItems = [];
+    public $similarProducts;
+    public $bundleItems;
 
     #[Url(except: null)]
     public ?string $slug = null;
 
+    public $rating = 0;         // 0.5, 1, ..., 5 ← valeur JS du rater
+    public $commentaire = '';
+    public $anonyme = true;
+
+    public $selectedItems = [];
+    public $bundleTotal = 0;
+    public $selectedItemsCount = 0;
+
+
+
+    protected $rules = [
+        'rating'      => 'required|numeric|min:0.5|max:5',
+        'commentaire' => 'nullable|string|max:1000',
+        'avisimages.*' => 'image|max:20480', // Chaque image max 2MB
+    ];
+
+    protected $listeners = [
+        'rater::value' => 'raterValue',
+        'refreshBundle' => '$refresh',
+    ];
+
+
+
+
     public function mount(?Product $product = null, ?string $slug = null): void
     {
+        $this->alwaysActive = true;
         // Vérifie si le produit existe vraiment en DB
         if (!$product || !$product->exists) {
             if ($slug) {
                 $this->product = Product::with(['photos', 'avisClients', 'caracteristiques'])
                     ->where('slug', $slug)->firstOrFail();
-                $this->couleurs = $this->product->caracteristiques
-                    ->where('type', 'couleur');
             } else {
                 $this->product = Product::with(['photos', 'avisClients', 'caracteristiques'])
                     ->latest('id')->firstOrFail();
-                $this->couleurs = $this->product->caracteristiques
-                    ->where('type', 'couleur');
             }
         } else {
             $this->loadProduct($product);
         }
 
+        $this->similarProducts = Product::where('category_id', $this->product->category_id)
+            ->get();
         $this->setRatings();
         $this->hydrateImages();
-        $this->loadSimilarAndBundles();
+        $this->loadBundleItems();
     }
 
     private function loadProduct($product)
@@ -60,8 +93,6 @@ class ProduitDetail extends Component
         // Produit valide → reload complet avec relations
         $this->product = Product::with(['photos', 'avisClients', 'caracteristiques'])
             ->findOrFail($product->id);
-        $this->couleurs = $this->product->caracteristiques
-            ->where('type', 'couleur');
     }
     private function setRatings(): void
     {
@@ -82,6 +113,21 @@ class ProduitDetail extends Component
 
         $this->ratingAvg = $ratings['avg'] ?? 0;
         $this->ratingCount = $ratings['count'] ?? 0;
+    }
+
+    public function raterValue($value)
+    {
+        $this->rating = $value;
+    }
+
+    public function paginationView()
+    {
+        return 'components.pagination.custom-links';
+    }
+
+    public function formatFcfa($amount)
+    {
+        return number_format($amount, 0, ',', ' ') . ' FCFA';
     }
 
     public function hydrateImages(): void
@@ -184,11 +230,18 @@ class ProduitDetail extends Component
         redirect()->route('panier');
     }
 
-
-    public function toggleWishlist(): void
+    public function toggleWishlist($productId)
     {
-        $this->dispatch('wishlist:toggle', productId: $this->product->id);
-        session()->flash('wishlist_message', 'Liste de souhaits mise à jour');
+        $user = auth()->user();
+        if (!$user) return; // ✅ Sécurité
+
+        $exists = $user->wishlistProducts()->where('produits_id', $productId)->exists();
+
+        if (!$exists) {
+            $user->wishlistProducts()->attach($productId); // ✅ AJOUTE ligne DB
+        }
+        redirect('/favoris');
+        // Livewire refresh automatique → vue mise à jour !
     }
 
     public function getPrice(): array
@@ -203,37 +256,139 @@ class ProduitDetail extends Component
         return (int)($this->product->stock ?? 0) > 0;
     }
 
-    public function loadSimilarAndBundles(): void
+    public function loadBundleItems()
     {
-        $query = Product::query()->where('id', '!=', $this->product->id);
-        if (isset($this->product->brand_id)) {
-            $query->where('brand_id', $this->product->brand_id);
-        }
-        $similar = $query->latest('id')->limit(10)->get();
-        $this->similarProducts = $similar->map(function ($p) {
-            $firstPhoto = method_exists($p, 'photos') ? optional($p->photos()->first())->filename : null;
-            $img = $this->imageUrl($firstPhoto ?? $p->image ?? null);
-            return [
-                'id' => $p->id,
-                'name' => $p->name ?? 'Produit',
-                'price' => (float)($p->sale_price ?? $p->price ?? 0),
-                'original' => (float)($p->price ?? 0),
-                'img' => $img,
-                'slug' => $p->slug ?? $p->id,
-            ];
-        })->all();
+        // Logique pour récupérer les produits complémentaires
+        $this->bundleItems = Product::where('id', '!=', $this->product->id)
+            ->inRandomOrder()
+            ->limit(4)
+            ->get();
 
-        $this->bundleItems = array_slice($this->similarProducts, 0, 3);
+        $this->selectedItems = $this->bundleItems->pluck('id')->toArray();
+        $this->calculateTotal();
+    }
+
+    public function toggleBundleItem($itemId)
+    {
+        if (in_array($itemId, $this->selectedItems)) {
+            $this->selectedItems = array_diff($this->selectedItems, [$itemId]);
+        } else {
+            $this->selectedItems[] = $itemId;
+        }
+        $this->calculateTotal();
+    }
+
+    public function calculateTotal()
+    {
+        $selected = collect($this->bundleItems)
+            ->whereIn('id', $this->selectedItems);
+
+        $this->bundleTotal = $selected->sum(fn($item) => $item->prix_promo ?? $item->price);
+
+        // ✅ Force la mise à jour du compteur
+        $this->selectedItemsCount = $selected->count();
+    }
+
+    public function addBundleToCart()
+    {
+        if (!Auth::check()) {
+            session()->flash('error', 'Connectez-vous pour ajouter au panier');
+            return redirect()->route('login');
+        }
+
+        $userId = Auth::id();
+
+        // 1. Récupère ou crée le PANIER ACTIF de l'utilisateur
+        $panier = Paniers::where('user_id', $userId)
+            ->where('status', 'actif')
+            ->firstOrCreate([
+                'user_id' => $userId,
+                'status' => 'actif',
+            ]);
+
+        // 2. Ajoute chaque produit du bundle dans panier_produit
+        foreach ($this->selectedItems as $itemId) {
+            $product = $this->bundleItems->firstWhere('id', $itemId);
+            if (!$product) continue;
+
+            $prixUnitaire = $product->prix_promo ?? $product->price;
+
+            // Vérifie si le produit existe déjà dans panier_produit
+            $panierProduit = DB::table('panier_produit')
+                ->where('paniers_id', $panier->id)
+                ->where('produits_id', $itemId)
+                ->first();
+
+            if ($panierProduit) {
+                // INCRÉMENTER la quantité
+                DB::table('panier_produit')
+                    ->where('paniers_id', $panier->id)
+                    ->where('produits_id', $itemId)
+                    ->increment('quantite', 1);
+            } else {
+                // NOUVEAU produit
+                DB::table('panier_produit')->insert([
+                    'paniers_id' => $panier->id,
+                    'produits_id' => $itemId,
+                    'quantite' => 1,
+                    'prix_unitaire' => $prixUnitaire,
+                    'total_ligne' => $prixUnitaire,
+                ]);
+            }
+        }
+
+        // 3. Notifications
+        $this->dispatch('bundle-added', [
+            'count' => count($this->selectedItems),
+            'total' => $this->bundleTotal
+        ]);
+
+        session()->flash('success', count($this->selectedItems) . ' articles ajoutés au panier !');
+        return redirect()->route('panier');
+    }
+
+    public function getSelectedItemsCountProperty()
+    {
+        return count($this->selectedItems);
+    }
+
+    public function submitReview()
+    {
+
+        $review = AvisClient::create([
+            'produits_id' => $this->product->id,
+            'user_id'     => Auth::id(),
+            'nb_etoiles'  => $this->rating,
+            'note'        => $this->rating,
+            'commentaire' => $this->commentaire,
+        ]);
+
+
+        // Attaque les images
+        $review->attachfiles($this->avisimages);
+
+        // Rediriger vers la même page (URL courante)
+        return redirect(route('produits.show', ['slug' => $this->product->getSlug(), 'id' => $this->product->id]))
+            ->with('success', 'Merci pour votre avis !');
     }
 
     public function render()
     {
         [$price, $original] = $this->getPrice();
         $inStock = $this->getInStockProperty();
+        // ✅ Paginer les avis de ce produit
+        $reviews = $this->product->avisClients()
+            ->with(['user', 'response'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(3);
+        $couleurs = $this->product->caracteristiques
+            ->where('type', 'couleur');
         return view('livewire.produit-detail', [
             'price' => $price,
             'original' => $original,
             'inStock' => $inStock,
+            'reviews' => $reviews,
+            'couleurs' => $couleurs,
         ]);
     }
 }
