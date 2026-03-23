@@ -37,6 +37,31 @@
     <link href="{{ asset('assets/css/user.min.css') }}" type="text/css" rel="stylesheet" id="user-style-default">
     <link href="{{ asset('assets/css/user-rtl.min.css') }}" type="text/css" rel="stylesheet" id="user-style-rtl"
         disabled>
+
+    <style>
+        /* TOUTES les pages : fade in après loader */
+        body.fade-ready,
+        main,
+        .container,
+        .produit-main,
+        .content-wrapper {
+            opacity: 0;
+            animation: fadeInGlobal 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        @keyframes fadeInGlobal {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+
     <style>
         /* Toast minimaliste très visible */
         #toastNotification {
@@ -168,6 +193,24 @@
                     }
                 }, 300);
             }, 10000);
+
+            setTimeout(() => {
+                const loader = document.getElementById('pageLoader');
+                if (loader) {
+                    loader.classList.add('fade-out');
+
+                    setTimeout(() => {
+                        // ✅ FADE IN TOUTES LES PAGES
+                        document.body.classList.add('fade-ready');
+
+                        // Scrollbar seulement si existe
+                        const scrollTrack = document.querySelector('.scroll-track');
+                        if (scrollTrack) {
+                            scrollTrack.style.animationPlayState = 'running';
+                        }
+                    }, 850);
+                }
+            }, 2500);
         });
     </script>
 
@@ -193,48 +236,3 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-{{-- <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
-
-        <title>{{ config('app.name', 'Laravel') }}</title>
-
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-
-        <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    </head>
-    <body class="font-sans text-gray-900 antialiased">
-        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
-            <div>
-                <a href="/">
-                    <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
-                </a>
-            </div>
-
-            <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
-                {{ $slot }}
-            </div>
-        </div>
-    </body>
-</html> --}}

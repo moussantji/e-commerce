@@ -67,6 +67,29 @@
     <link href="{{ asset('vendors/leaflet.markercluster/MarkerCluster.css') }}" rel="stylesheet">
     <link href="{{ asset('vendors/leaflet.markercluster/MarkerCluster.Default.css') }}" rel="stylesheet">
     <link href="{{ asset('vendors/choices/choices.min.css') }}" rel="stylesheet" />
+    <style>
+        /* TOUTES les pages : fade in après loader */
+        body.fade-ready,
+        main,
+        .container,
+        .produit-main,
+        .content-wrapper {
+            opacity: 0;
+            animation: fadeInGlobal 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        @keyframes fadeInGlobal {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
 
 </head>
 
@@ -107,7 +130,7 @@
     <script src="{{ asset('vendors/echarts/echarts.min.js') }}"></script>
     <script src="{{ asset('assets/js/dashboards/ecommerce-dashboard.js') }}"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const container = document.getElementById('users');
             if (!container) return;
 
@@ -117,8 +140,8 @@
             });
 
             // si tu utilises le bouton "Réinitialiser"
-            document.querySelectorAll('[data-list-clear]').forEach(function (btn) {
-                btn.addEventListener('click', function (e) {
+            document.querySelectorAll('[data-list-clear]').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
                     e.preventDefault();
                     userList.search('');
                 });

@@ -1,6 +1,11 @@
 @extends('base')
 
 @section('content')
+    <!-- LOADING SCREEN -->
+    <div class="page-loader" id="pageLoader">
+        <div class="loader-circle"></div>
+        <div class="loader-glow"></div>
+    </div>
     <!-- ===============================================-->
     <!--    Main Content-->
     <!-- ===============================================-->
@@ -18,62 +23,69 @@
 
             <!-- ============================================-->
             <!-- <section> begin ============================-->
+            <!-- <section> close ============================-->
+            <!-- ============================================-->
             <section class="py-0">
                 <div class="container-small">
                     <div class="scrollbar position-relative">
-                        <div class="d-flex justify-content-between animate-scroll scroll-content" id="scrollContent">
-                            <a class="icon-nav-item" href="{{ route('products', ['category' => 'deals']) }}">
-                                <div class="icon-container mb-2 bg-warning-subtle" data-bs-theme="light"><span
-                                        class="fs-4 uil uil-star text-warning"></span></div>
-                                <p class="nav-label">Deals</p>
-                            </a><a class="icon-nav-item" href="{{ route('products', ['category' => 'grocery']) }}">
-                                <div class="icon-container mb-2" data-bs-theme="undefined"><span
-                                        class="fs-4 uil uil-shopping-bag"></span></div>
-                                <p class="nav-label">Grocery</p>
-                            </a><a class="icon-nav-item" href="{{ route('products', ['category' => 'mode']) }}">
-                                <div class="icon-container mb-2" data-bs-theme="undefined"><span
-                                        class="fs-4 uil uil-watch-alt"></span></div>
-                                <p class="nav-label">Fashion</p>
-                            </a><a class="icon-nav-item"
-                                href="{{ route('products', ['category' => 'telephones-portables']) }}">
-                                <div class="icon-container mb-2" data-bs-theme="undefined"><span
-                                        class="fs-4 uil uil-mobile-android"></span></div>
-                                <p class="nav-label">Mobile</p>
-                            </a><a class="icon-nav-item" href="{{ route('products', ['category' => 'electronique']) }}">
-                                <div class="icon-container mb-2" data-bs-theme="undefined"><span
-                                        class="fs-4 uil uil-monitor"></span></div>
-                                <p class="nav-label">Electronics</p>
-                            </a><a class="icon-nav-item" href="{{ route('home') }}">
-                                <div class="icon-container mb-2" data-bs-theme="undefined"><span
-                                        class="fs-4 uil uil-estate"></span></div>
-                                <p class="nav-label">Home</p>
-                            </a><a class="icon-nav-item" href="{{ route('products', ['category' => 'dining']) }}">
-                                <div class="icon-container mb-2" data-bs-theme="undefined"><span
-                                        class="fs-4 uil uil-lamp"></span></div>
-                                <p class="nav-label">Dining</p>
-                            </a><a class="icon-nav-item" href="{{ route('products', ['category' => 'gift']) }}">
-                                <div class="icon-container mb-2" data-bs-theme="undefined"><span
-                                        class="fs-4 uil uil-gift"></span></div>
-                                <p class="nav-label">Gifts</p>
-                            </a><a class="icon-nav-item" href="{{ route('products', ['category' => 'tool']) }}">
-                                <div class="icon-container mb-2" data-bs-theme="undefined"><span
-                                        class="fs-4 uil uil-wrench"></span></div>
-                                <p class="nav-label">Tools</p>
-                            </a><a class="icon-nav-item" href="{{ route('products', ['category' => 'travel']) }}">
-                                <div class="icon-container mb-2" data-bs-theme="undefined"><span
-                                        class="fs-4 uil uil-plane-departure"></span></div>
-                                <p class="nav-label">Travel</p>
-                            </a><a class="icon-nav-item" href="{{ route('products', ['category' => 'autres']) }}">
-                                <div class="icon-container mb-2" data-bs-theme="undefined"><span
-                                        class="fs-4 uil uil-palette"></span></div>
-                                <p class="nav-label">Others</p>
-                            </a>
+                        <div class="scroll-track" id="scrollTrack">
+                            <div class="scroll-content" id="scrollContent">
+                                <a class="icon-nav-item" href="{{ route('products', ['category' => 'deals']) }}">
+                                    <div class="icon-container mb-2 bg-warning-subtle">
+                                        <span class="fs-4 uil uil-star text-warning"></span>
+                                    </div>
+                                    <p class="nav-label">Deals</p>
+                                </a>
+                                <!-- Add your other 10 links here -->
+                                <a class="icon-nav-item" href="{{ route('products', ['category' => 'grocery']) }}">
+                                    <div class="icon-container mb-2" data-bs-theme="undefined"><span
+                                            class="fs-4 uil uil-shopping-bag"></span></div>
+                                    <p class="nav-label">Grocery</p>
+                                </a><a class="icon-nav-item" href="{{ route('products', ['category' => 'mode']) }}">
+                                    <div class="icon-container mb-2" data-bs-theme="undefined"><span
+                                            class="fs-4 uil uil-watch-alt"></span></div>
+                                    <p class="nav-label">Fashion</p>
+                                </a><a class="icon-nav-item"
+                                    href="{{ route('products', ['category' => 'telephones-portables']) }}">
+                                    <div class="icon-container mb-2" data-bs-theme="undefined"><span
+                                            class="fs-4 uil uil-mobile-android"></span></div>
+                                    <p class="nav-label">Mobile</p>
+                                </a><a class="icon-nav-item" href="{{ route('products', ['category' => 'electronique']) }}">
+                                    <div class="icon-container mb-2" data-bs-theme="undefined"><span
+                                            class="fs-4 uil uil-monitor"></span></div>
+                                    <p class="nav-label">Electronics</p>
+                                </a><a class="icon-nav-item" href="{{ route('home') }}">
+                                    <div class="icon-container mb-2" data-bs-theme="undefined"><span
+                                            class="fs-4 uil uil-estate"></span></div>
+                                    <p class="nav-label">Home</p>
+                                </a><a class="icon-nav-item" href="{{ route('products', ['category' => 'dining']) }}">
+                                    <div class="icon-container mb-2" data-bs-theme="undefined"><span
+                                            class="fs-4 uil uil-lamp"></span></div>
+                                    <p class="nav-label">Dining</p>
+                                </a><a class="icon-nav-item" href="{{ route('products', ['category' => 'gift']) }}">
+                                    <div class="icon-container mb-2" data-bs-theme="undefined"><span
+                                            class="fs-4 uil uil-gift"></span></div>
+                                    <p class="nav-label">Gifts</p>
+                                </a><a class="icon-nav-item" href="{{ route('products', ['category' => 'tool']) }}">
+                                    <div class="icon-container mb-2" data-bs-theme="undefined"><span
+                                            class="fs-4 uil uil-wrench"></span></div>
+                                    <p class="nav-label">Tools</p>
+                                </a><a class="icon-nav-item" href="{{ route('products', ['category' => 'travel']) }}">
+                                    <div class="icon-container mb-2" data-bs-theme="undefined"><span
+                                            class="fs-4 uil uil-plane-departure"></span></div>
+                                    <p class="nav-label">Travel</p>
+                                </a><a class="icon-nav-item" href="{{ route('products', ['category' => 'autres']) }}">
+                                    <div class="icon-container mb-2" data-bs-theme="undefined"><span
+                                            class="fs-4 uil uil-palette"></span></div>
+                                    <p class="nav-label">Others</p>
+                                </a>
+                            </div>
+                            <!-- Clone will be inserted by JS -->
+                            <div class="scroll-content" id="scrollContentClone"></div>
                         </div>
                     </div>
-                </div><!-- end of .container-->
-            </section><!-- <section> close ============================-->
-            <!-- ============================================-->
-
+                </div>
+            </section>
 
 
             <!-- ============================================-->
@@ -157,7 +169,7 @@
                     </div>
                     <div class="row g-4 mb-6">
                         <div class="col-12 col-lg-9 col-xxl-10">
-                            <div class="d-flex flex-between-center mb-3">
+                            <div class="d-flex flex-between-center mb-3" data-hidden>
                                 <div class="d-flex">
                                     <span class="fas fa-bolt text-warning fs-6"></span>
                                     <h3 class="mx-2">Top Deals today</h3>
@@ -168,9 +180,23 @@
                                     more<span class="fas fa-chevron-right fs-9 ms-1"></span>
                                 </a>
                             </div>
-                            <div class="swiper-theme-container products-slider">
+                            <div class="swiper-theme-container products-slider" data-hidden>
                                 <div class="swiper swiper theme-slider"
-                                    data-swiper='{"slidesPerView":1,"spaceBetween":16,"breakpoints":{"450":{"slidesPerView":2,"spaceBetween":16},"768":{"slidesPerView":3,"spaceBetween":20},"1200":{"slidesPerView":4,"spaceBetween":16},"1540":{"slidesPerView":5,"spaceBetween":16}}}'>
+                                    data-swiper='{
+         "slidesPerView":1,
+         "spaceBetween":16,
+         "autoplay": {
+             "delay": 5000,
+             "disableOnInteraction": false,
+             "pauseOnMouseEnter": true
+         },
+         "breakpoints":{
+             "450":{"slidesPerView":2,"spaceBetween":16},
+             "768":{"slidesPerView":3,"spaceBetween":20},
+             "1200":{"slidesPerView":4,"spaceBetween":16},
+             "1540":{"slidesPerView":5,"spaceBetween":16}
+         }
+     }'>
                                     <livewire:client.top-deals />
 
                                 </div>
@@ -184,7 +210,7 @@
                                     class="fas fa-chevron-right fs-9 ms-1"></span></a>
                         </div>
                         <div class="col-lg-3 d-none d-lg-block col-xxl-2">
-                            <div class="h-100 position-relative rounded-3 overflow-hidden">
+                            <div class="h-100 position-relative rounded-3 overflow-hidden" data-hidden>
                                 <div class="bg-holder"
                                     style="background-image:url(../../../assets/img/e-commerce/4.png);"></div>
                                 <!--/.bg-holder-->
@@ -194,14 +220,28 @@
                                     src="{{ asset('assets/img/e-commerce/6.png') }}" alt="" /></a></div>
                     </div>
                     <div class="mb-6">
-                        <div class="d-flex flex-between-center mb-3">
+                        <div class="d-flex flex-between-center mb-3" data-hidden>
                             <h3>Top Electronics</h3><a class="fw-bold d-none d-md-block"
                                 href="{{ route('products') }}">Explore more<span
                                     class="fas fa-chevron-right fs-9 ms-1"></span></a>
                         </div>
-                        <div class="swiper-theme-container products-slider">
+                        <div class="swiper-theme-container products-slider" data-hidden>
                             <div class="swiper swiper theme-slider"
-                                data-swiper='{"slidesPerView":1,"spaceBetween":16,"breakpoints":{"450":{"slidesPerView":2,"spaceBetween":16},"576":{"slidesPerView":3,"spaceBetween":20},"768":{"slidesPerView":4,"spaceBetween":20},"992":{"slidesPerView":5,"spaceBetween":20},"1200":{"slidesPerView":6,"spaceBetween":16}}}'>
+                                data-swiper='{
+         "slidesPerView":1,
+         "spaceBetween":16,
+         "autoplay": {
+             "delay": 5000,
+             "disableOnInteraction": false,
+             "pauseOnMouseEnter": true
+         },
+         "breakpoints":{
+             "450":{"slidesPerView":2,"spaceBetween":16},
+             "768":{"slidesPerView":3,"spaceBetween":20},
+             "1200":{"slidesPerView":4,"spaceBetween":16},
+             "1540":{"slidesPerView":5,"spaceBetween":16}
+         }
+     }'>
                                 <livewire:client.top-electronics />
                             </div>
                             <div class="swiper-nav">
@@ -213,14 +253,28 @@
                                 class="fas fa-chevron-right fs-9 ms-1"></span></a>
                     </div>
                     <div class="mb-6">
-                        <div class="d-flex flex-between-center mb-3">
+                        <div class="d-flex flex-between-center mb-3" data-hidden>
                             <h3>Best Offers</h3><a class="fw-bold d-none d-md-block"
                                 href="{{ route('products') }}">Explore more<span
                                     class="fas fa-chevron-right fs-9 ms-1"></span></a>
                         </div>
-                        <div class="swiper-theme-container products-slider">
+                        <div class="swiper-theme-container products-slider" data-hidden>
                             <div class="swiper swiper theme-slider"
-                                data-swiper='{"slidesPerView":1,"spaceBetween":16,"breakpoints":{"450":{"slidesPerView":2,"spaceBetween":16},"576":{"slidesPerView":3,"spaceBetween":20},"768":{"slidesPerView":4,"spaceBetween":20},"992":{"slidesPerView":5,"spaceBetween":20},"1200":{"slidesPerView":6,"spaceBetween":16}}}'>
+                                data-swiper='{
+         "slidesPerView":1,
+         "spaceBetween":16,
+         "autoplay": {
+             "delay": 5000,
+             "disableOnInteraction": false,
+             "pauseOnMouseEnter": true
+         },
+         "breakpoints":{
+             "450":{"slidesPerView":2,"spaceBetween":16},
+             "768":{"slidesPerView":3,"spaceBetween":20},
+             "1200":{"slidesPerView":4,"spaceBetween":16},
+             "1540":{"slidesPerView":5,"spaceBetween":16}
+         }
+     }'>
                                 <livewire:client.best-offers />
                             </div>
                             <div class="swiper-nav">

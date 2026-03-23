@@ -1,8 +1,8 @@
-<div class="swiper-wrapper">
+<div class="swiper-wrapper ">
     @forelse($topDeals as $produit)
         <div class="swiper-slide">
             <!-- Copie exacte de votre HTML avec variables dynamiques -->
-            <div class="position-relative text-decoration-none product-card h-100">
+            <div class="position-relative text-decoration-none product-card h-100 top-deals-card">
                 <div class="d-flex flex-column justify-content-between h-100">
                     <div>
                         <div class="border border-1 border-translucent rounded-3 position-relative mb-3">

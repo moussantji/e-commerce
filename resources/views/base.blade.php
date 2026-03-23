@@ -45,40 +45,360 @@
     <link href="{{ asset('vendors/swiper/swiper-bundle.min.css') }}" rel="stylesheet">
 
     <style>
+        /* ANIMATION PAGE COMPLÈTE */
+        /* LOADING SCREEN PRO */
+        /* LOADER PRO */
+        .page-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            /* Transition EXACTE 0.8s */
+            transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .page-loader.fade-out {
+            opacity: 0;
+            transform: scale(1.05);
+            visibility: hidden;
+        }
+
+        .loader-circle {
+            width: 80px;
+            height: 80px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            animation: spinPro 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            position: relative;
+        }
+
+        .loader-glow {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            margin: auto;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: pulseGlow 2s ease-out infinite;
+        }
+
+        @keyframes spinPro {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes pulseGlow {
+            0% {
+                opacity: 1;
+                transform: scale(0.8);
+            }
+
+            100% {
+                opacity: 0;
+                transform: scale(1.2);
+            }
+        }
+    </style>
+
+    <style>
+        /* ANIMATION SECTION AU SCROLL */
+
+        /* banniere full width */
+        /* Bannières invisibles au début */
+        .whooping-banner,
+        .gift-items-banner,
+        .best-in-market-banner {
+            opacity: 0;
+        }
+
+        /* Délai + fade après loader */
+        .whooping-banner.fade-ready {
+            animation: fadeInBanner 1s ease-out 0.2s forwards;
+        }
+
+        .gift-items-banner.fade-ready {
+            animation: fadeInBanner 1s ease-out 0.5s forwards;
+        }
+
+        .best-in-market-banner.fade-ready {
+            animation: fadeInBanner 1s ease-out 0.8s forwards;
+        }
+
+        @keyframes fadeInBanner {
+            0% {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Animation d'entrée de la section entière */
+        /* Top Deals Header */
+        .d-flex.flex-between-center.mb-3 {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .d-flex.flex-between-center.mb-3.animate {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+        }
+
+        /* Bolts icons */
+        .d-flex.flex-between-center .fas.fa-bolt {
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.5s ease;
+        }
+
+        .d-flex.flex-between-center.animate .fas.fa-bolt {
+            opacity: 1 !important;
+            transform: scale(1) !important;
+        }
+
+        /* Swiper container */
+        .swiper-theme-container.products-slider {
+            opacity: 0;
+            transform: translateX(-50px) scale(0.95);
+            transition: all 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .swiper-theme-container.products-slider.animate {
+            opacity: 1 !important;
+            transform: translateX(0) scale(1) !important;
+        }
+
+        /* Sidebar image */
+        .col-lg-3 .h-100 {
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.8s ease;
+        }
+
+        .col-lg-3 .h-100.animate {
+            opacity: 1 !important;
+            transform: scale(1) !important;
+        }
+
+        /* Mobile image */
+        .col-12.d-lg-none img {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease;
+        }
+
+        .col-12.d-lg-none img.animate {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+        }
+
+        /* SUPPRIME opacity:0 initial → utilise data-hidden */
+        [data-hidden] {
+            opacity: 0;
+            transform: translateY(60px);
+            transition: all 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        [data-hidden].animate {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+        }
+
+        /* Animation SEULEMENT sur les product-card (PAS swiper-slide) */
+        .top-deals-card {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .top-deals-card.animate {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+        }
+    </style>
+    <style>
         .scrollbar {
             max-width: 100%;
             overflow: hidden;
             white-space: nowrap;
-            position: relative;
+            padding: 20px 0;
         }
 
-        .animate-scroll {
-            display: flex;
-            animation: scrollRightToLeft 25s linear infinite;
-            will-change: transform;
+        /* Animation d'entrée PRO */
+        .scrollbar {
+            opacity: 0;
+            transform: translateY(50px);
+            animation: slideInUpPro 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
         }
 
-        @keyframes scrollRightToLeft {
+        @keyframes slideInUpPro {
             0% {
-                transform: translateX(100%);
+                opacity: 0;
+                transform: translateY(50px) scale(0.95);
+            }
+
+            50% {
+                opacity: 0.7;
+                transform: translateY(15px) scale(0.98);
             }
 
             100% {
-                transform: translateX(-100%);
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Les icônes arrivent une par une */
+        .scroll-content .icon-nav-item:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .scroll-content .icon-nav-item:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .scroll-content .icon-nav-item:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        .scroll-content .icon-nav-item:nth-child(4) {
+            animation-delay: 0.25s;
+        }
+
+        .scroll-content .icon-nav-item:nth-child(5) {
+            animation-delay: 0.3s;
+        }
+
+        .scroll-content .icon-nav-item:nth-child(6) {
+            animation-delay: 0.35s;
+        }
+
+        .scroll-content .icon-nav-item:nth-child(7) {
+            animation-delay: 0.4s;
+        }
+
+        .scroll-content .icon-nav-item:nth-child(8) {
+            animation-delay: 0.45s;
+        }
+
+        .scroll-content .icon-nav-item:nth-child(9) {
+            animation-delay: 0.5s;
+        }
+
+        .scroll-content .icon-nav-item:nth-child(10) {
+            animation-delay: 0.55s;
+        }
+
+        .scroll-content .icon-nav-item:nth-child(11) {
+            animation-delay: 0.6s;
+        }
+
+        .icon-nav-item {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUpItem 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        @keyframes fadeInUpItem {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .scroll-track {
+            display: flex !important;
+            animation: scrollInfinite 35s linear infinite;
+            width: max-content;
+        }
+
+        .scroll-content {
+            display: flex;
+            gap: 30px;
+            flex-shrink: 0;
+            padding-right: 20px;
+        }
+
+        .icon-nav-item {
+            text-decoration: none;
+            color: inherit;
+            flex-shrink: 0;
+            min-width: 100px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .icon-container {
+            width: 70px;
+            height: 70px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        @keyframes scrollInfinite {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(-50%);
             }
         }
 
         /* Pause au hover */
-        .scrollbar:hover .animate-scroll {
-            animation-play-state: paused;
+        .scrollbar:hover .scroll-track {
+            animation-play-state: paused !important;
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .animate-scroll {
-                animation-duration: 30s;
-            }
+        /* Effets hover */
+        /* Effets hover SANS FOND BLANC */
+        .icon-nav-item:hover {
+            transform: scale(1.2) translateY(-10px);
         }
+
+        .icon-nav-item:hover .icon-container {
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            /* ✅ SUPPRIMÉ: background: rgba(255,255,255,0.95) !important; */
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            /* Bordure subtile à la place */
+        }
+
+        .icon-nav-item:hover .nav-label {
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            color: inherit !important;
+            /* Garde la couleur originale */
+        }
+
 
 
         /* Toast minimaliste très visible */
@@ -154,6 +474,30 @@
             border-radius: 0 0 8px 8px;
         }
     </style>
+
+    <style>
+        /* TOUTES les pages : fade in après loader */
+        body.fade-ready,
+        main,
+        .container,
+        .produit-main,
+        .content-wrapper {
+            opacity: 0;
+            animation: fadeInGlobal 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        @keyframes fadeInGlobal {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
     <script>
         var phoenixIsRTL = window.config.config.phoenixIsRTL;
         if (phoenixIsRTL) {
@@ -173,6 +517,7 @@
 </head>
 
 <body>
+
 
     @yield('content')
 
@@ -257,23 +602,85 @@
                 }, 300);
             }, 10000);
         });
-
-        // Contrôle manuel
-        document.querySelector('.left-control')?.addEventListener('click', () => {
-            document.getElementById('scrollContainer').scrollBy({
-                left: -200,
-                behavior: 'smooth'
-            });
-        });
-
-        document.querySelector('.right-control')?.addEventListener('click', () => {
-            document.getElementById('scrollContainer').scrollBy({
-                left: 200,
-                behavior: 'smooth'
-            });
-        });
-
     </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Clone + loader (inchangé)
+            const original = document.getElementById('scrollContent');
+            const clone = document.getElementById('scrollContentClone');
+            clone.innerHTML = original.innerHTML;
+
+            setTimeout(() => {
+                const loader = document.getElementById('pageLoader');
+                if (loader) {
+                    loader.classList.add('fade-out');
+
+                    setTimeout(() => {
+                        // ✅ FADE IN TOUTES LES PAGES
+                        document.body.classList.add('fade-ready');
+
+                        // Scrollbar seulement si existe
+                        const scrollTrack = document.querySelector('.scroll-track');
+                        if (scrollTrack) {
+                            scrollTrack.style.animationPlayState = 'running';
+                        }
+                    }, 850);
+                }
+            }, 2500);
+            // Observer spécifique pour Top Deals
+            // Observer Top Deals cards (APRES Livewire)
+            setTimeout(() => {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const cards = document.querySelectorAll('.top-deals-card');
+                            cards.forEach((card, index) => {
+                                setTimeout(() => card.classList.add('animate'),
+                                    index * 100);
+                            });
+                        }
+                    });
+                }, {
+                    threshold: 0.1
+                });
+
+                observer.observe(document.querySelector('.swiper-theme-container'));
+            }, 1500); // Attend Livewire
+            document.querySelector('.scroll-track').style.animationPlayState = 'paused';
+
+            setTimeout(() => {
+                document.getElementById('pageLoader').classList.add('fade-out');
+                setTimeout(() => {
+                    document.querySelector('.scroll-track').style.animationPlayState = 'running';
+                }, 850);
+            }, 2000);
+            // APRÈS la ligne loader.classList.add('fade-out');
+            setTimeout(() => {
+                document.querySelector('.whooping-banner').classList.add('fade-ready');
+                document.querySelector('.gift-items-banner').classList.add('fade-ready');
+                document.querySelector('.best-in-market-banner').classList.add('fade-ready');
+            }, 2000); // Pile après fin du fadeout loader
+
+            // Observer SIMPLifié
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animate');
+                    }
+                });
+            }, {
+                threshold: 0.2,
+                rootMargin: '0px 0px -100px 0px'
+            });
+
+            // Observe TOUS les data-hidden
+            document.querySelectorAll('[data-hidden]').forEach(el => {
+                observer.observe(el);
+            });
+        });
+    </script>
+
 
 
     @livewireScripts
@@ -298,6 +705,7 @@
 
 
     @stack('scripts')
+
 
 </body>
 
