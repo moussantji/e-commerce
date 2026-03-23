@@ -33,45 +33,36 @@
         <ul class="navbar-nav justify-content-end align-items-center">
             <li class="nav-item" data-nav-item="data-nav-item">
                 <a class="nav-link ps-0 {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">
-                    Home
+                    Accueil
                 </a>
             </li>
-            <li class="nav-item" data-nav-item="data-nav-item">
-                <a class="nav-link {{ request()->routeIs('client.brands.*') ? 'active' : '' }}"
-                    href="{{ route('client.brands.index') }}">
-                    All Stores
-                </a>
-            </li>
-            <li class="nav-item" data-nav-item="data-nav-item">
-                <a class="nav-link {{ request()->routeIs('products') ? 'active' : '' }}"
-                    href="{{ route('products') }}">
-                    Products
-                </a>
-            </li>
+            <li class="nav-item" data-nav-item="data-nav-item"><a
+                    class="nav-link {{ request()->routeIs('categories.*') ? 'active' : '' }}"
+                    href="{{ route('products') }}">Categories</a></li>
+            <li class="nav-item" data-nav-item="data-nav-item"><a
+                    class="nav-link {{ request()->routeIs('products') ? 'active' : '' }}"
+                    href="{{ route('products') }}">Products</a></li>
+            <li class="nav-item" data-nav-item="data-nav-item"><a
+                    class="nav-link pe-0 {{ request()->routeIs('client.brands.*') ? 'active' : '' }}"
+                    href="{{ route('client.brands.index') }}">All Brands</a></li>
             @if (Auth::check())
-                <li class="nav-item" data-nav-item="data-nav-item">
-                    <a class="nav-link {{ request()->routeIs('favoris') ? 'active' : '' }}"
-                        href="{{ route('favoris') }}">
-                        Wishlist
-                    </a>
-                </li>
-                <li class="nav-item" data-nav-item="data-nav-item">
-                    <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
-                        href="{{ route('dashboard') }}">
-                        Dashboard
-                    </a>
-                </li>
+            <li class="nav-item" data-nav-item="data-nav-item"><a
+                    class="nav-link pe-0 {{ request()->routeIs('favoris') ? 'active' : '' }}"
+                    href="{{ route('favoris') }}">Wishlist</a></li>
+            <li class="nav-item" data-nav-item="data-nav-item"><a
+                    class="nav-link pe-0 {{ request()->routeIs('dashboard') ? 'active' : '' }}"
+                    href="{{ route('dashboard') }}">Dashboard</a></li>
             @endif
-
-            <li class="nav-item dropdown" data-nav-item="data-nav-item" data-more-item="data-more-item">
-                <a class="nav-link dropdown-toggle dropdown-caret-none fw-bold pe-0 {{ request()->is('categories*', 'tags*') ? 'active' : '' }}"
-                    href="javascript: void(0)" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
-                    aria-expanded="false" data-boundary="window" data-bs-reference="parent">
-                    More<span class="fas fa-angle-down ms-2"></span>
-                </a>
+            <li class="nav-item dropdown" data-nav-item="data-nav-item" data-more-item="data-more-item"><a
+                    class="nav-link dropdown-toggle dropdown-caret-none fw-bold pe-0" href="javascript: void(0)"
+                    id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false"
+                    data-boundary="window" data-bs-reference="parent"> More<span
+                        class="fas fa-angle-down ms-2"></span></a>
                 <div class="dropdown-menu dropdown-menu-end category-list" aria-labelledby="navbarDropdown"
                     data-category-list="data-category-list"></div>
             </li>
+
+
         </ul>
 
     </div>

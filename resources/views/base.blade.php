@@ -236,18 +236,17 @@
         }
     </style>
     <style>
-        .scrollbar {
-            max-width: 100%;
-            overflow: hidden;
-            white-space: nowrap;
-            padding: 20px 0;
-        }
-
-        /* Animation d'entrée PRO */
+        /* Garde animation d'entrée */
         .scrollbar {
             opacity: 0;
             transform: translateY(50px);
             animation: slideInUpPro 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        .scrollbar-nav {
+            overflow: hidden;
+            /* ✅ GARDÉ pour navbar */
+            white-space: nowrap;
         }
 
         @keyframes slideInUpPro {
@@ -495,6 +494,38 @@
             100% {
                 opacity: 1;
                 transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 576px) {
+            .order-items-scroll {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                padding: 10px 0;
+                scrollbar-width: thin;
+            }
+
+            /* ✅ CORRIGÉ : utilise flex au lieu d'inline-table */
+            .order-items-scroll>.border-dashed>.ms-n2 {
+                min-width: 420px;
+                /* Force scroll horizontal */
+                display: flex !important;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            /* Scrollbar discrète mais fluide */
+            .order-items-scroll::-webkit-scrollbar {
+                height: 4px;
+            }
+
+            .order-items-scroll::-webkit-scrollbar-track {
+                background: transparent;
+            }
+
+            .order-items-scroll::-webkit-scrollbar-thumb {
+                background: rgba(0, 0, 0, 0.4);
+                border-radius: 2px;
             }
         }
     </style>

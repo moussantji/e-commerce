@@ -27,7 +27,7 @@
             <!-- ============================================-->
             <section class="py-0">
                 <div class="container-small">
-                    <div class="scrollbar position-relative">
+                    <div class="scrollbar scrollbar-nav position-relative">
                         <div class="scroll-track" id="scrollTrack">
                             <div class="scroll-content" id="scrollContent">
                                 <a class="icon-nav-item" href="{{ route('products', ['category' => 'deals']) }}">
