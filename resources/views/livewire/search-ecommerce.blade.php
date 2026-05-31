@@ -20,7 +20,7 @@
         <div class="suggestions-dropdown position-absolute top-100 start-0 w-100 mt-1 shadow-lg rounded-3 overflow-hidden"
             style="max-height: 1 8rem; z-index: 1060; border: 1px solid #e9ecef;">
 
-            <div class="dropdown-scroll p-0" style="height: 28rem; overflow-y: auto;">
+            <div class="dropdown-scroll p-0">
                 @foreach($suggestions as $suggestion)
                     <a href="{{ $suggestion['url'] }}"
                         class="suggestion-item p-3 border-bottom hover-link d-flex align-items-center text-decoration-none">
