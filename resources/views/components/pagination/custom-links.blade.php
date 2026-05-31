@@ -21,7 +21,9 @@ use Illuminate\View\ComponentAttributeBag;
                 {{-- Previous --}}
                 @if ($paginator->onFirstPage())
                     <li class="page-item disabled">
-                        <span class="page-link"><span class="fas fa-chevron-left"></span></span>
+                        <span class="page-link">
+                            <span class="fas fa-chevron-left"></span>
+                        </span>
                     </li>
                 @else
                     <li class="page-item">
@@ -31,64 +33,89 @@ use Illuminate\View\ComponentAttributeBag;
                     </li>
                 @endif
 
-                {{-- Pages DYNAMIQUES --}}
                 @php
                     $current = $paginator->currentPage();
                     $last = $paginator->lastPage();
-                    $window = 2; // ±2 pages autour de la courante
                 @endphp
 
-                {{-- 1ère page toujours --}}
-                @if ($current > 1)
-                    <li class="page-item">
-                        <button class="page-link" wire:click="gotoPage(1)">1</button>
-                    </li>
-                    @if ($current > 3)
-                        <li class="page-item disabled"><span class="page-link">…</span></li>
-                    @endif
+                {{-- Si 5 pages ou moins : tout afficher --}}
+                @if ($last <= 5)
+
+                    @for ($page = 1; $page <= $last; $page++)
+                        <li class="page-item {{ $page == $current ? 'active' : '' }}">
+                            @if ($page == $current)
+                                <span class="page-link">{{ $page }}</span>
+                            @else
+                                <button type="button" class="page-link" wire:click="gotoPage({{ $page }})">
+                                    {{ $page }}
+                                </button>
+                            @endif
+                        </li>
+                    @endfor
                 @else
-                    <li class="page-item active"><span class="page-link">1</span></li>
-                @endif
+                    {{-- Première page --}}
+                    <li class="page-item {{ $current == 1 ? 'active' : '' }}">
+                        @if ($current == 1)
+                            <span class="page-link">1</span>
+                        @else
+                            <button type="button" class="page-link" wire:click="gotoPage(1)">
+                                1
+                            </button>
+                        @endif
+                    </li>
 
-                {{-- Pages autour de la courante --}}
-                @for ($page = max(2, $current - $window); $page <= min($last - 1, $current + $window); $page++)
-                    @if ($page == $current)
-                        <li class="page-item active">
-                            <span class="page-link">{{ $page }}</span>
-                        </li>
-                    @else
-                        <li class="page-item">
-                            <button class="page-link"
-                                wire:click="gotoPage({{ $page }})">{{ $page }}</button>
+                    {{-- Points de suspension à gauche --}}
+                    @if ($current > 4)
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
                         </li>
                     @endif
-                @endfor
 
-                {{-- Dernière page toujours --}}
-                @if ($current < $last)
-                    @if ($current < $last - 2)
-                        <li class="page-item disabled"><span class="page-link">…</span></li>
+                    {{-- Pages autour de la page courante --}}
+                    @for ($page = max(2, $current - 2); $page <= min($last - 1, $current + 2); $page++)
+                        <li class="page-item {{ $page == $current ? 'active' : '' }}">
+                            @if ($page == $current)
+                                <span class="page-link">{{ $page }}</span>
+                            @else
+                                <button type="button" class="page-link" wire:click="gotoPage({{ $page }})">
+                                    {{ $page }}
+                                </button>
+                            @endif
+                        </li>
+                    @endfor
+
+                    {{-- Points de suspension à droite --}}
+                    @if ($current < $last - 3)
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
                     @endif
+
+                    {{-- Dernière page --}}
                     <li class="page-item {{ $current == $last ? 'active' : '' }}">
                         @if ($current == $last)
                             <span class="page-link">{{ $last }}</span>
                         @else
-                            <button class="page-link"
-                                wire:click="gotoPage({{ $last }})">{{ $last }}</button>
+                            <button type="button" class="page-link" wire:click="gotoPage({{ $last }})">
+                                {{ $last }}
+                            </button>
                         @endif
                     </li>
+
                 @endif
 
                 {{-- Next --}}
                 @if ($paginator->hasMorePages())
                     <li class="page-item">
-                        <button class="page-link" wire:click="nextPage" wire:loading.attr="disabled">
+                        <button type="button" class="page-link" wire:click="nextPage" wire:loading.attr="disabled">
                             <span class="fas fa-chevron-right"></span>
                         </button>
                     </li>
                 @else
                     <li class="page-item disabled">
-                        <span class="page-link"><span class="fas fa-chevron-right"></span></span>
+                        <span class="page-link">
+                            <span class="fas fa-chevron-right"></span>
+                        </span>
                     </li>
                 @endif
 

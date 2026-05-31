@@ -15,6 +15,7 @@
                                     <i
                                         class="{{ auth()->user()->wishlistProducts->contains($produit->id) ? 'fas fa-heart text-danger' : 'far fa-heart' }}"></i>
                                 </button>
+                                
                             @else
                                 {{-- ❌ NON CONNECTÉ : bouton disabled --}}
                                 <a class="btn btn-wish btn-wish-primary z-2 d-toggle-container" href="{{ route('login') }}" data-bs-toggle="tooltip"

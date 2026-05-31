@@ -31,9 +31,20 @@
                         </div>
                         <div class="d-flex">
                             @if (auth()->check())
-                                <button wire:click="toggleWishlist({{ $product->id }})"
-                                    class="btn btn-lg btn-outline-warning rounded-pill w-100 me-3 px-2 px-sm-4 fs-9 fs-sm-8"><span
-                                        class="me-2 far fa-heart"></span>Add to wishlist</button>
+                                @if ($iswishlisted)
+                                    <button wire:click="toggleWishlist({{ $product->id }})"
+                                        class="btn btn-lg btn-outline-warning rounded-pill w-100 me-3 px-2 px-sm-4 fs-9 fs-sm-8">
+
+                                        <span class="fas fa-heart text-danger"></span>Remove from wishlist
+
+                                    </button>
+                                @else
+                                    <button wire:click="toggleWishlist({{ $product->id }})"
+                                        class="btn btn-lg btn-outline-warning rounded-pill w-100 me-3 px-2 px-sm-4 fs-9 fs-sm-8"><span
+                                            class="me-2 far fa-heart"></span>Add to wishlist
+
+                                    </button>
+                                @endif
                                 <a class="btn btn-lg btn-warning rounded-pill w-100 fs-9 fs-sm-8"
                                     onclick="addToCartWithQty({{ $product->id }})"><span
                                         class="fas fa-shopping-cart me-2"></span>Add to cart</a>
@@ -295,7 +306,7 @@
                                                                         class="rating-stars mb-2 fs-1 text-warning">
                                                                         ★ ★ ★ ★ ★
                                                                     </div>
-                                                                    <div class="text-muted fs-7">
+                                                                    <div class="text-muted fs-7" hidden>
                                                                         Selected: <span
                                                                             id="rating-value">{{ $rating ?? 0 }} /
                                                                             5</span>
@@ -342,8 +353,9 @@
                                             <div class="d-flex justify-content-between">
                                                 <h5 class="mb-2">
                                                     @for ($i = 1; $i <= 5; $i++)
+
                                                         <span
-                                                            class="fa {{ $i <= (int) ($review->nb_etoiles ?? 0) ? 'fa-star' : 'fa-regular fa-star' }} text-warning"></span>
+                                                            class="{{ ($i <= (int) ($review->nb_etoiles ?? 0)) ? 'fa fa-star' : 'fa-regular fa-star' }} text-warning"></span>
                                                     @endfor
                                                     <span class="text-body-secondary ms-1">par</span>
                                                     {{ optional($review->user)->name ?? 'Client' }}
@@ -475,7 +487,7 @@
                 </div>
             </div>
             <div class="swiper-theme-container products-slider">
-                <div class="swiper swiper theme-slider" wire:ignore
+                <div class="swiper swiper theme-slider"
                     data-swiper='{"slidesPerView":1,"spaceBetween":16,"breakpoints":{"450":{"slidesPerView":2,"spaceBetween":16},"768":{"slidesPerView":3,"spaceBetween":16},"992":{"slidesPerView":4,"spaceBetween":16},"1200":{"slidesPerView":5,"spaceBetween":16},"1540":{"slidesPerView":6,"spaceBetween":16}}}'>
                     <div class="swiper-wrapper">
                         @forelse($similarProducts as $p)
@@ -568,6 +580,7 @@
             </div>
         </div><!-- end of .container-->
     </section>
+
     <!-- <section> close ============================-->
     <!-- ============================================-->
 

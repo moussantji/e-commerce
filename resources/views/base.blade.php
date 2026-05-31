@@ -529,6 +529,34 @@
             }
         }
     </style>
+
+    <style>
+        /*forcer le centrage vertical et horizontal du modal*/
+        .modal.fade .modal-dialog {
+            transform: none !important;
+            margin: auto !important;
+        }
+
+        .modal-dialog-centered {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100% - 1rem);
+        }
+
+        /*Sur mobile : garder un peu de marge sur les côtés*/
+        @media (max-width: 576px) {
+            .modal-dialog.modal-lg {
+                max-width: 95% !important;
+                margin: 0 auto !important;
+            }
+        }
+
+        /*Fond sombre semi-transparent*/
+        .modal-backdrop {
+            opacity: 0.5 !important;
+        }
+    </style>
     <script>
         var phoenixIsRTL = window.config.config.phoenixIsRTL;
         if (phoenixIsRTL) {
@@ -608,6 +636,8 @@
     <script src="{{ asset('vendors/swiper/swiper-bundle.min.js') }}"></script>
     <script src="{{ asset('assets/js/dashboards/ecommerce-dashboard.js') }}"></script>
     <script src="{{ asset('vendors/rater-js/index.js') }}"></script>
+
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const toast = document.getElementById('toastNotification');
@@ -714,6 +744,8 @@
 
 
 
+
+
     @livewireScripts
 
     {{-- 🔥 FIX FEATHER + LIVEWIRE --}}
@@ -735,7 +767,35 @@
     </script>
 
 
+
     @stack('scripts')
+
+    <script>
+        const loader = document.querySelector(".page-loader");
+        if (!loader) {
+            document.body.classList.add("fade-ready");
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add("animate");
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.1
+        });
+
+        const header = document.querySelector(".d-flex.flex-between-center.mb-3");
+        if (header) observer.observe(header);
+
+        const slider = document.querySelector(".swiper-theme-container.products-slider");
+        if (slider) observer.observe(slider);
+
+        document.querySelectorAll("[data-hidden]").forEach(el => observer.observe(el));
+        document.querySelectorAll(".top-deals-card").forEach(el => observer.observe(el));
+    </script>
 
 
 </body>

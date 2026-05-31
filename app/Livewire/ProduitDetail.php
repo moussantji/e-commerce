@@ -48,6 +48,7 @@ class ProduitDetail extends Component
     public $selectedItems = [];
     public $bundleTotal = 0;
     public $selectedItemsCount = 0;
+    public $iswishlisted = false;
 
 
 
@@ -86,6 +87,7 @@ class ProduitDetail extends Component
         $this->setRatings();
         $this->hydrateImages();
         $this->loadBundleItems();
+        $this->iswishlisted = Auth::check() && auth()->user()->wishlistProducts()->where('produits_id', $this->product->id)->exists();
     }
 
     private function loadProduct($product)
@@ -237,11 +239,19 @@ class ProduitDetail extends Component
 
         $exists = $user->wishlistProducts()->where('produits_id', $productId)->exists();
 
-        if (!$exists) {
+        $productslug = Product::find($productId)->getSlug(); // ✅ Récupère le slug du produit
+        if ($exists) {
+            $user->wishlistProducts()->detach($productId); // ✅ SUPPRIME ligne DB
+            return redirect()->route('produits.show', ['slug' => $productslug, 'id' => $productId])->with('success', 'Produit retiré de votre liste de souhaits !'); // ✅ Redirige vers la page des favoris après l'action
+
+        } else {
             $user->wishlistProducts()->attach($productId); // ✅ AJOUTE ligne DB
+            return redirect()->route('produits.show', ['slug' => $productslug, 'id' => $productId])->with('success', 'Produit ajouté à votre liste de souhaits !'); // ✅ Redirige vers la page des favoris après l'action
+
         }
-        redirect('/favoris');
+
         // Livewire refresh automatique → vue mise à jour !
+
     }
 
     public function getPrice(): array
@@ -363,6 +373,17 @@ class ProduitDetail extends Component
             'commentaire' => $this->commentaire,
         ]);
 
+        // 🔥 INVALIDER LE CACHE IMMÉDIATEMENT
+        $cacheKey = "product_{$this->product->id}_ratings";
+        Cache::forget($cacheKey);
+
+        // Recharger les ratings
+        $this->setRatings();
+
+        // Reset formulaire
+        $this->rating = 0;
+        $this->commentaire = '';
+        $this->avisimages = [];
 
         // Attaque les images
         $review->attachfiles($this->avisimages);
