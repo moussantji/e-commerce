@@ -8,7 +8,7 @@
         : (int) session('cart_count', 0);
 @endphp
 
-<nav class="mobile-bottom-nav d-lg-none" aria-label="Navigation mobile">
+<nav class="mobile-bottom-nav" aria-label="Navigation mobile">
     <a href="{{ route('home') }}"
        class="mobile-bottom-nav__item {{ request()->routeIs('home') ? 'active' : '' }}">
         <span class="fas fa-home mobile-bottom-nav__icon"></span>
@@ -46,13 +46,17 @@
 </nav>
 
 <style>
-    .mobile-bottom-nav {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        z-index: 1030;
-        display: flex;
+    /* Barre de navigation mobile : règles renforcées pour qu'aucune
+       règle du thème ne puisse la masquer involontairement. */
+    nav.mobile-bottom-nav {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 1030 !important;
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
         justify-content: space-around;
         align-items: stretch;
         background: var(--phoenix-body-emphasis-bg, #fff);
@@ -60,6 +64,15 @@
         box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
         padding-bottom: env(safe-area-inset-bottom, 0px);
         height: calc(60px + env(safe-area-inset-bottom, 0px));
+        margin: 0;
+    }
+
+    /* Visible uniquement sur mobile/tablette (< 992px), masquée sur desktop.
+       On n'utilise plus l'utilitaire .d-lg-none au cas où il serait purgé du thème. */
+    @media (min-width: 992px) {
+        nav.mobile-bottom-nav {
+            display: none !important;
+        }
     }
 
     .mobile-bottom-nav__item {
