@@ -119,7 +119,11 @@ document.addEventListener('DOMContentLoaded', function() {
                             font: {
                                 family: 'Nunito Sans',
                                 size: 11
-                            }
+                            },
+                            autoSkip: true,
+                            maxRotation: 0,
+                            autoSkipPadding: 12,
+                            maxTicksLimit: window.innerWidth < 576 ? 8 : 16
                         }
                     },
                     y: {
@@ -135,6 +139,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                 size: 11
                             },
                             callback: function(value) {
+                                // Sur mobile : abréger les montants pour gagner de la place
+                                if (window.innerWidth < 576) {
+                                    if (value >= 1000000) return (value / 1000000).toLocaleString('fr-FR') + ' M';
+                                    if (value >= 1000) return Math.round(value / 1000) + ' k';
+                                    return value;
+                                }
                                 return value.toLocaleString('fr-FR') + ' FCFA';
                             },
                             maxTicksLimit: 6
