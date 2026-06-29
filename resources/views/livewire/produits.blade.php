@@ -2,7 +2,7 @@
     {{-- Bouton mobile filter --}}
     <button class="btn btn-sm btn-phoenix-secondary text-body-tertiary mb-5 d-lg-none" data-phoenix-toggle="offcanvas"
         data-phoenix-target="#productFilterColumn">
-        <span class="fa-solid fa-filter me-2"></span>Filter
+        <span class="fa-solid fa-filter me-2"></span>Filtrer
     </button>
 
     <div class="row">
@@ -13,7 +13,7 @@
 
                 {{-- Header Filters --}}
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h3 class="mb-0">Filters</h3>
+                    <h3 class="mb-0">Filtres</h3>
                     <button class="btn d-lg-none p-0" data-phoenix-dismiss="offcanvas">
                         <span class="uil uil-times fs-8"></span>
                     </button>
@@ -22,7 +22,7 @@
                 {{-- 1. AVAILABILITY --}}
                 <a class="btn px-0 d-block collapse-indicator" data-bs-toggle="collapse" href="#collapseAvailability">
                     <div class="d-flex align-items-center justify-content-between w-100">
-                        <div class="fs-8 text-body-highlight">Availability</div>
+                        <div class="fs-8 text-body-highlight">Disponibilité</div>
                         <span class="fa-solid fa-angle-down toggle-icon text-body-quaternary"></span>
                     </div>
                 </a>
@@ -33,7 +33,7 @@
                                 wire:model.live="filters.availability.in_stock" name="availability">
                             <label class="form-check-label d-block lh-sm fs-8 text-body fw-normal mb-0"
                                 for="inStockInput">
-                                In stock
+                                En stock
                             </label>
                         </div>
                         <div class="form-check mb-0">
@@ -41,7 +41,7 @@
                                 wire:model.live="filters.availability.pre_book" name="availability">
                             <label class="form-check-label d-block lh-sm fs-8 text-body fw-normal mb-0"
                                 for="preBookInput">
-                                Pre-book
+                                Précommande
                             </label>
                         </div>
                         <div class="form-check mb-0">
@@ -49,7 +49,7 @@
                                 wire:model.live="filters.availability.out_of_stock" name="availability">
                             <label class="form-check-label d-block lh-sm fs-8 text-body fw-normal mb-0"
                                 for="outOfStockInput">
-                                Out of stock
+                                En rupture de stock
                             </label>
                         </div>
                     </div>
@@ -58,7 +58,7 @@
                 {{-- 2. COLOR FAMILY --}}
                 <a class="btn px-0 d-block collapse-indicator" data-bs-toggle="collapse" href="#collapseColorFamily">
                     <div class="d-flex align-items-center justify-content-between w-100">
-                        <div class="fs-8 text-body-highlight">Color family</div>
+                        <div class="fs-8 text-body-highlight">Famille de couleurs</div>
                         <span class="fa-solid fa-angle-down toggle-icon text-body-quaternary"></span>
                     </div>
                 </a>
@@ -243,7 +243,7 @@
                 {{-- 4. PRICE RANGE --}}
                 <a class="btn px-0 d-block collapse-indicator" data-bs-toggle="collapse" href="#collapsePriceRange">
                     <div class="d-flex align-items-center justify-content-between w-100">
-                        <div class="fs-8 text-body-highlight">Price range</div>
+                        <div class="fs-8 text-body-highlight">Fourchette de prix</div>
                         <span class="fa-solid fa-angle-down toggle-icon text-body-quaternary"></span>
                     </div>
                 </a>
@@ -334,7 +334,7 @@
                 {{-- 6. DISPLAY TYPE --}}
                 <a class="btn px-0 d-block collapse-indicator" data-bs-toggle="collapse" href="#collapseDisplayType">
                     <div class="d-flex align-items-center justify-content-between w-100">
-                        <div class="fs-8 text-body-highlight">Display type</div>
+                        <div class="fs-8 text-body-highlight">Type d'écran</div>
                         <span class="fa-solid fa-angle-down toggle-icon text-body-quaternary"></span>
                     </div>
                 </a>
@@ -376,7 +376,7 @@
                 {{-- 7. CONDITION --}}
                 <a class="btn px-0 d-block collapse-indicator" data-bs-toggle="collapse" href="#collapseCondition">
                     <div class="d-flex align-items-center justify-content-between w-100">
-                        <div class="fs-8 text-body-highlight">Condition</div>
+                        <div class="fs-8 text-body-highlight">État</div>
                         <span class="fa-solid fa-angle-down toggle-icon text-body-quaternary"></span>
                     </div>
                 </a>
@@ -386,19 +386,19 @@
                             <input class="form-check-input mt-0" id="newInput" type="checkbox" value="New"
                                 wire:model.live="filters.condition" name="condition">
                             <label class="form-check-label d-block lh-sm fs-8 text-body fw-normal mb-0"
-                                for="newInput">New</label>
+                                for="newInput">Neuf</label>
                         </div>
                         <div class="form-check mb-0">
                             <input class="form-check-input mt-0" id="usedInput" type="checkbox" value="Used"
                                 wire:model.live="filters.condition" name="condition">
                             <label class="form-check-label d-block lh-sm fs-8 text-body fw-normal mb-0"
-                                for="usedInput">Used</label>
+                                for="usedInput">Occasion</label>
                         </div>
                         <div class="form-check mb-0">
                             <input class="form-check-input mt-0" id="refurbishedInput" type="checkbox"
                                 value="Refurbished" wire:model.live="filters.condition" name="condition">
                             <label class="form-check-label d-block lh-sm fs-8 text-body fw-normal mb-0"
-                                for="refurbishedInput">Refurbished</label>
+                                for="refurbishedInput">Reconditionné</label>
                         </div>
                     </div>
                 </div>
@@ -406,7 +406,7 @@
                 {{-- 8. DELIVERY --}}
                 <a class="btn px-0 d-block collapse-indicator" data-bs-toggle="collapse" href="#collapseDelivery">
                     <div class="d-flex align-items-center justify-content-between w-100">
-                        <div class="fs-8 text-body-highlight">Delivery</div>
+                        <div class="fs-8 text-body-highlight">Livraison</div>
                         <span class="fa-solid fa-angle-down toggle-icon text-body-quaternary"></span>
                     </div>
                 </a>
@@ -417,7 +417,7 @@
                                 value="Free Shipping" wire:model.live="filters.delivery" name="delivery">
                             <label class="form-check-label d-block lh-sm fs-8 text-body fw-normal mb-0"
                                 for="freeShippingInput">
-                                Free Shipping
+                                Livraison gratuite
                             </label>
                         </div>
                         <div class="form-check mb-0">
@@ -425,7 +425,7 @@
                                 value="One-day Shipping" wire:model.live="filters.delivery" name="delivery">
                             <label class="form-check-label d-block lh-sm fs-8 text-body fw-normal mb-0"
                                 for="oneDayShippingInput">
-                                One-day Shipping
+                                Livraison en 1 jour
                             </label>
                         </div>
                         <div class="form-check mb-0">
@@ -433,7 +433,7 @@
                                 value="Cash on Delivery" wire:model.live="filters.delivery" name="delivery">
                             <label class="form-check-label d-block lh-sm fs-8 text-body fw-normal mb-0"
                                 for="codInput">
-                                Cash on Delivery
+                                Paiement à la livraison
                             </label>
                         </div>
                     </div>
@@ -442,7 +442,7 @@
                 {{-- 9. CAMPAIGN --}}
                 <a class="btn px-0 d-block collapse-indicator" data-bs-toggle="collapse" href="#collapseCampaign">
                     <div class="d-flex align-items-center justify-content-between w-100">
-                        <div class="fs-8 text-body-highlight">Campaign</div>
+                        <div class="fs-8 text-body-highlight">Campagne</div>
                         <span class="fa-solid fa-angle-down toggle-icon text-body-quaternary"></span>
                     </div>
                 </a>
@@ -453,7 +453,7 @@
                                 value="Summer Sale" wire:model.live="filters.campaign" name="campaign">
                             <label class="form-check-label d-block lh-sm fs-8 text-body fw-normal mb-0"
                                 for="summerSaleInput">
-                                Summer Sale
+                                Soldes d'été
                             </label>
                         </div>
                         <div class="form-check mb-0">
@@ -461,7 +461,7 @@
                                 value="March Madness" wire:model.live="filters.campaign" name="campaign">
                             <label class="form-check-label d-block lh-sm fs-8 text-body fw-normal mb-0"
                                 for="marchMadnessInput">
-                                March Madness
+                                Folie de mars
                             </label>
                         </div>
                         <div class="form-check mb-0">
@@ -469,7 +469,7 @@
                                 value="Flash Sale" wire:model.live="filters.campaign" name="campaign">
                             <label class="form-check-label d-block lh-sm fs-8 text-body fw-normal mb-0"
                                 for="flashSaleInput">
-                                Flash Sale
+                                Vente flash
                             </label>
                         </div>
                         <div class="form-check mb-0">
@@ -477,7 +477,7 @@
                                 value="BOGO Blast" wire:model.live="filters.campaign" name="campaign">
                             <label class="form-check-label d-block lh-sm fs-8 text-body fw-normal mb-0"
                                 for="bogoBlastInput">
-                                BOGO Blast
+                                Offre 1+1
                             </label>
                         </div>
                     </div>
@@ -486,7 +486,7 @@
                 {{-- 10. WARRANTY --}}
                 <a class="btn px-0 d-block collapse-indicator" data-bs-toggle="collapse" href="#collapseWarranty">
                     <div class="d-flex align-items-center justify-content-between w-100">
-                        <div class="fs-8 text-body-highlight">Warranty</div>
+                        <div class="fs-8 text-body-highlight">Garantie</div>
                         <span class="fa-solid fa-angle-down toggle-icon text-body-quaternary"></span>
                     </div>
                 </a>
@@ -496,37 +496,37 @@
                             <input class="form-check-input mt-0" id="threeMonthInput" type="checkbox"
                                 value="3 months" wire:model.live="filters.warranty" name="warranty">
                             <label class="form-check-label d-block lh-sm fs-8 text-body fw-normal mb-0"
-                                for="threeMonthInput">3 months</label>
+                                for="threeMonthInput">3 mois</label>
                         </div>
                         <div class="form-check mb-0">
                             <input class="form-check-input mt-0" id="sixMonthInput" type="checkbox" value="6 months"
                                 wire:model.live="filters.warranty" name="warranty">
                             <label class="form-check-label d-block lh-sm fs-8 text-body fw-normal mb-0"
-                                for="sixMonthInput">6 months</label>
+                                for="sixMonthInput">6 mois</label>
                         </div>
                         <div class="form-check mb-0">
                             <input class="form-check-input mt-0" id="oneYearInput" type="checkbox" value="1 year"
                                 wire:model.live="filters.warranty" name="warranty">
                             <label class="form-check-label d-block lh-sm fs-8 text-body fw-normal mb-0"
-                                for="oneYearInput">1 year</label>
+                                for="oneYearInput">1 an</label>
                         </div>
                         <div class="form-check mb-0">
                             <input class="form-check-input mt-0" id="twoYearsInput" type="checkbox" value="2 years"
                                 wire:model.live="filters.warranty" name="warranty">
                             <label class="form-check-label d-block lh-sm fs-8 text-body fw-normal mb-0"
-                                for="twoYearsInput">2 years</label>
+                                for="twoYearsInput">2 ans</label>
                         </div>
                         <div class="form-check mb-0">
                             <input class="form-check-input mt-0" id="threeYearsInput" type="checkbox"
                                 value="3 years" wire:model.live="filters.warranty" name="warranty">
                             <label class="form-check-label d-block lh-sm fs-8 text-body fw-normal mb-0"
-                                for="threeYearsInput">3 years</label>
+                                for="threeYearsInput">3 ans</label>
                         </div>
                         <div class="form-check mb-0">
                             <input class="form-check-input mt-0" id="fiveYearsInput" type="checkbox" value="5 years"
                                 wire:model.live="filters.warranty" name="warranty">
                             <label class="form-check-label d-block lh-sm fs-8 text-body fw-normal mb-0"
-                                for="fiveYearsInput">5 years</label>
+                                for="fiveYearsInput">5 ans</label>
                         </div>
                     </div>
                 </div>
@@ -535,7 +535,7 @@
                 <a class="btn px-0 d-block collapse-indicator" data-bs-toggle="collapse"
                     href="#collapseWarrantyType">
                     <div class="d-flex align-items-center justify-content-between w-100">
-                        <div class="fs-8 text-body-highlight">Warranty Type</div>
+                        <div class="fs-8 text-body-highlight">Type de garantie</div>
                         <span class="fa-solid fa-angle-down toggle-icon text-body-quaternary"></span>
                     </div>
                 </a>
@@ -545,7 +545,7 @@
                             <input class="form-check-input mt-0" id="replacementInput" type="checkbox"
                                 value="Replacement" wire:model.live="filters.warrantyType" name="warrantyType">
                             <label class="form-check-label d-block lh-sm fs-8 text-body fw-normal mb-0"
-                                for="replacementInput">Replacement</label>
+                                for="replacementInput">Remplacement</label>
                         </div>
                         <div class="form-check mb-0">
                             <input class="form-check-input mt-0" id="serviceInput" type="checkbox" value="Service"
@@ -557,7 +557,7 @@
                             <input class="form-check-input mt-0" id="partialCoverageInput" type="checkbox"
                                 value="Partial Coverage" wire:model.live="filters.warrantyType" name="warrantyType">
                             <label class="form-check-label d-block lh-sm fs-8 text-body fw-normal mb-0"
-                                for="partialCoverageInput">Partial Coverage</label>
+                                for="partialCoverageInput">Couverture partielle</label>
                         </div>
                         <div class="form-check mb-0">
                             <input class="form-check-input mt-0" id="appleCareInput" type="checkbox"
@@ -569,7 +569,7 @@
                             <input class="form-check-input mt-0" id="moneyBackInput" type="checkbox"
                                 value="Money back" wire:model.live="filters.warrantyType" name="warrantyType">
                             <label class="form-check-label d-block lh-sm fs-8 text-body fw-normal mb-0"
-                                for="moneyBackInput">Money back</label>
+                                for="moneyBackInput">Remboursement</label>
                         </div>
                         <div class="form-check mb-0">
                             <input class="form-check-input mt-0" id="extendableInput" type="checkbox"
@@ -606,7 +606,8 @@
                             <input class="form-check-input mt-0" id="conflictInput" type="checkbox"
                                 value="Conflict Free" wire:model.live="filters.certification" name="certification">
                             <label class="form-check-label d-block lh-sm fs-8 text-body fw-normal mb-0"
-                                for="conflictInput">Conflict Free</label>
+                                for="conflictInput">Sans conflit
+                            </label>
                         </div>
                         <div class="form-check mb-0">
                             <input class="form-check-input mt-0" id="isoOneInput" type="checkbox"
@@ -651,7 +652,7 @@
                                                 <button wire:click="toggleWishlist({{ $product->id }})"
                                                     class="btn btn-wish btn-wish-primary z-2 p-2" tabindex="-1"
                                                     style="box-shadow: none; outline: none;"**
-                                                    data-bs-toggle="tooltip" title="Wishlist">
+                                                    data-bs-toggle="tooltip" title="Liste de souhaits">
                                                     <i
                                                         class="{{ auth()->user()->wishlistProducts->contains($product->id) ? 'fas fa-heart text-danger' : 'far fa-heart' }}"></i>
                                                 </button>
@@ -659,7 +660,7 @@
                                                 {{-- ❌ NON CONNECTÉ : bouton disabled --}}
                                                 <a class="btn btn-wish btn-wish-primary z-2 d-toggle-container"
                                                     href="{{ route('login') }}" data-bs-toggle="tooltip"
-                                                    data-bs-placement="top" title="Add to wishlist"><span
+                                                    data-bs-placement="top" title="Ajouter à la liste de souhaits"><span
                                                         class="fas fa-heart d-block-hover"
                                                         data-fa-transform="down-1"></span><span
                                                         class="far fa-heart d-none-hover"
@@ -667,21 +668,11 @@
                                                 </a>
                                             @endif
 
-
-
-                                            @if ($product->primaryPhoto)
-                                                <img class="img-fluid"
-                                                    src="{{ $product->getPhoto()->getImageUrl(530, 530) }}"
-                                                    alt="{{ $product->name }}" />
-                                            @else
-                                                <img class="img-fluid"
-                                                    src="{{ $product->image ?? '/assets/img/products/1.png' }}"
-                                                    alt="{{ $product->name }}" />
-                                            @endif
+                                        <img class="img-fluid" src="{{ $product->getPhoto() ? $product->getPhoto()->getImageUrl(530, 530) : asset('assets/img/products/1.png') }}" alt="{{ $product->name }}" >
 
                                             @if ($product->is_verified)
                                                 <span class="badge text-bg-success fs-10 product-verified-badge">
-                                                    Verified<span class="fas fa-check ms-1"></span>
+                                                    Vérifié<span class="fas fa-check ms-1"></span>
                                                 </span>
                                             @endif
                                         </div>
@@ -700,7 +691,7 @@
                                                 @endif
                                             @endfor
                                             <span class="text-body-quaternary fw-semibold ms-1">
-                                                ({{ $product->reviews_count ?? 67 }} people rated)
+                                                ({{ $product->reviews_count ?? 67 }} avis)
                                             </span>
                                         </p>
                                     </div>
@@ -712,24 +703,26 @@
                                                 {{ $product->sale_badge ?? 'dbrand skin available' }}</p>
                                             <div class="d-flex align-items-center mb-1">
                                                 <p class="me-2 text-body text-decoration-line-through mb-0">
-                                                    ${{ number_format($product->price, 2) }}
+                                                    {{ $this->formatFcfa($product->price) }}
                                                 </p>
                                                 <h3 class="text-body-emphasis mb-0">
-                                                    ${{ number_format($product->sale_price, 2) }}</h3>
+                                                    {{ $this->formatFcfa($product->sale_price) }}
+                                                </h3>
                                             </div>
                                         @else
-                                            <h3 class="text-body-emphasis">${{ number_format($product->price, 2) }}
+                                            <h3 class="text-body-emphasis">
+                                                {{ $this->formatFcfa($product->price) }}
                                             </h3>
                                         @endif
 
                                         @if ($product->stock_status == 'limited')
-                                            <p class="fs-9 text-body-highlight fw-bold mb-2">Stock limited</p>
+                                            <p class="fs-9 text-body-highlight fw-bold mb-2">Stock limité</p>
                                         @elseif($product->sale_ends_soon)
-                                            <p class="text-success fw-bold fs-9 lh-1 mb-0">Deal time ends in days</p>
+                                            <p class="text-success fw-bold fs-9 lh-1 mb-0">Fin de l'offre dans quelques jours</p>
                                         @endif
 
                                         <p class="text-body-tertiary fw-semibold fs-9 lh-1 mb-0">
-                                            {{ $product->colors_count ?? 1 }} colors
+                                            {{ $product->colors_count ?? 1 }} couleurs
                                         </p>
                                     </div>
                                 </div>
@@ -741,19 +734,13 @@
                         <div class="mb-4">
                             <span class="fa-solid fa-magnifying-glass fa-2x text-body-tertiary mb-3 d-block"></span>
                         </div>
-                        <h5 class="mb-3">No products found</h5>
-                        <p class="text-body-secondary mb-4">Try adjusting your filters to see more products</p>
-                        <button class="btn btn-phoenix-primary" wire:click="clearFilters">Clear all filters</button>
+                        <h5 class="mb-3">Aucun produit trouvé</h5>
+                        <p class="text-body-secondary mb-4">Essayez d'ajuster vos filtres pour voir plus de produits</p>
+                        <button class="btn btn-phoenix-primary" wire:click="clearFilters">Effacer tous les filtres</button>
                     </div>
                 @endforelse
             </div>
 
-            {{-- PAGINATION --}}
-            @if ($products->hasPages())
-                <nav>
-                    {{ $products->links() }}
-                </nav>
-            @endif
         </div>
     </div>
 </div>

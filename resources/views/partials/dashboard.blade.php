@@ -3,15 +3,15 @@
         <ul class="nav nav-underline fs-9 flex-nowrap mb-3 pb-1" id="myTab" role="tablist">
             <li class="nav-item me-3"><a class="nav-link text-nowrap active" id="orders-tab" data-bs-toggle="tab"
                     href="#tab-orders" role="tab" aria-controls="tab-orders" aria-selected="true"><span
-                        class="fas fa-shopping-cart me-2"></span>Orders <span class="text-body-tertiary fw-normal">
+                        class="fas fa-shopping-cart me-2"></span>Ordres <span class="text-body-tertiary fw-normal">
                         ({{ $commandes->count() }})</span></a></li>
             <li class="nav-item me-3"><a class="nav-link text-nowrap" id="wishlist-tab" data-bs-toggle="tab"
                     href="#tab-wishlist" role="tab" aria-controls="tab-orders" aria-selected="true"><span
-                        class="fas fa-heart me-2"></span>Wishlist <span class="text-body-tertiary fw-normal">
+                        class="fas fa-heart me-2"></span>Favoris <span class="text-body-tertiary fw-normal">
                         ({{ $wishlist->count() }})</span></a></li>
             <li class="nav-item"><a class="nav-link text-nowrap" id="personal-info-tab" data-bs-toggle="tab"
                     href="#tab-personal-info" role="tab" aria-controls="tab-personal-info"
-                    aria-selected="true"><span class="fas fa-user me-2"></span>Personal info</a></li>
+                    aria-selected="true"><span class="fas fa-user me-2"></span>Informations personnelles</a></li>
             <li class="nav-item">
                 <a class="nav-link text-nowrap" id="password-tab" data-bs-toggle="tab" href="#tab-password"
                     role="tab" aria-controls="tab-password" aria-selected="false">
@@ -29,11 +29,11 @@
                         <thead>
                             <tr>
                                 <th class="sort white-space-nowrap align-middle pe-3 ps-0" scope="col"
-                                    data-sort="order" style="width:15%; min-width:140px">ORDER</th>
+                                    data-sort="order" style="width:15%; min-width:140px">ORDRE</th>
                                 <th class="sort align-middle pe-3" scope="col" data-sort="status"
                                     style="width:15%; min-width:180px">STATUS</th>
                                 <th class="sort align-middle text-start" scope="col" data-sort="delivery"
-                                    style="width:20%; min-width:160px">DELIVERY
+                                    style="width:20%; min-width:160px">LIVRAISON
                                     METHOD</th>
                                 <th class="sort align-middle pe-0 text-end" scope="col" data-sort="date"
                                     style="width:15%; min-width:160px">DATE</th>
@@ -101,7 +101,7 @@
                                     <!-- Total -->
                                     <td
                                         class="date align-middle fw-semibold text-end py-2 {{ $isCancelled ? 'text-body-tertiary text-opacity-85' : 'text-body-highlight' }}">
-                                        ${{ number_format($commande->total, 0) }}
+                                        {{ number_format($commande->total, 0) }} FCFA
                                     </td>
 
                                     <!-- Actions -->

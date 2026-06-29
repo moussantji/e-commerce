@@ -18,6 +18,7 @@ class AddProduct extends Component
 
     // Champs principaux
     public $name, $description, $sku, $category_id, $brand_id;
+    public $tags = [];
     public $images = [];
     public $selected_tags = [];
     public $is_active = true, $is_featured = false;

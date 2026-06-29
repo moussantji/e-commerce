@@ -31,7 +31,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'lieu_naiss',
         'pays',
         'region',
-        'adresse'
+        'adresse',
+        'provider',
+        'provider_id',
     ];
 
     /**

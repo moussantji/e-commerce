@@ -21,31 +21,31 @@
                 <nav class="mb-3" aria-label="breadcrumb">
                     <ol class="breadcrumb mb-0">
                         <li class="breadcrumb-item">
-                            <a href="{{ route('dashboard') }}">Dashboard</a>
+                            <a href="{{ route('dashboard') }}">Tableau de bord</a>
                         </li>
                         <li class="breadcrumb-item active" aria-current="page">
-                            Order Details
+                            Détails de la commande
                         </li>
                     </ol>
                 </nav>
-                <h2 class="mb-5">Check out</h2>
+                <h2 class="mb-5">Détails de la commande</h2>
                 <div class="row justify-content-between">
                     <div class="col-lg-5 col-xl-4">
                         <div class="card mt-3 mt-lg-0">
                             <div class="card-body">
                                 <div class="d-flex align-items-center justify-content-between">
-                                    <h3 class="mb-0">Summary</h3>
+                                    <h3 class="mb-0">Résumé</h3>
                                 </div>
                                 <livewire:frontend.checkout.cart-items :commande="$commande" />
 
-                                {{-- Totals Summary --}}
+                                {{-- Résumé des totaux --}}
                                 <livewire:frontend.checkout.checkout-summary :commande="$commande" />
                             </div>
                         </div>
                     </div>
                     <div class="col-lg-7 col-xl-7">
                         <div class="d-flex align-items-end">
-                            <h3 class="mb-0 me-3">Shipping Details</h3>
+                            <h3 class="mb-0 me-3">Informations de livraison</h3>
                         </div>
                         <table class="table table-borderless mt-4">
                             <tbody>
@@ -59,7 +59,7 @@
                                                                                         ">
                                             </span>
                                             <h5 class="lh-sm me-4">
-                                                Name
+                                                Nom
                                             </h5>
                                         </div>
                                     </td>
@@ -82,7 +82,7 @@
                                                                                         ">
                                             </span>
                                             <h5 class="lh-sm me-4">
-                                                Address
+                                                Adresse
                                             </h5>
                                         </div>
                                     </td>
@@ -105,7 +105,7 @@
                                                                                         ">
                                             </span>
                                             <h5 class="lh-sm me-4">
-                                                Phone
+                                                Téléphone
                                             </h5>
                                         </div>
                                     </td>
@@ -121,11 +121,11 @@
                             </tbody>
                         </table>
                         <hr class="my-6" />
-                        <h3>Billing Details</h3>
+                        <h3>Détails de facturation</h3>
                         <div class="form-check">
                             <input class="form-check-input" id="sameAsShipping" type="checkbox" checked="checked"
-                                disabled /><label class="form-check-label fs-8 fw-normal" for="sameAsShipping">Same as
-                                shipping address
+                                disabled /><label class="form-check-label fs-8 fw-normal" for="sameAsShipping">Même adresse
+                                que pour la livraison
                             </label>
                         </div>
                         <table class="table table-borderless mt-4">
@@ -140,7 +140,7 @@
                                                                                         ">
                                             </span>
                                             <h5 class="lh-sm me-4">
-                                                Name
+                                                Nom
                                             </h5>
                                         </div>
                                     </td>
@@ -163,7 +163,7 @@
                                                                                         ">
                                             </span>
                                             <h5 class="lh-sm me-4">
-                                                Address
+                                                Adresse
                                             </h5>
                                         </div>
                                     </td>
@@ -186,7 +186,7 @@
                                                                                         ">
                                             </span>
                                             <h5 class="lh-sm me-4">
-                                                Phone
+                                                Téléphone
                                             </h5>
                                         </div>
                                     </td>
@@ -202,13 +202,13 @@
                             </tbody>
                         </table>
                         <hr class="my-6" />
-                        <h3 class="mb-5">Delivery Type</h3>
-                        {{-- Replace your static shipping HTML --}}
+                        <h3 class="mb-5">Type de livraison</h3>
+                        {{-- Remplacez votre HTML de livraison statique --}}
                         <livewire:frontend.checkout.shipping-options :commande="$commande" />
                         <hr class="my-6" />
-                        <h3 class="mb-5">Payment Method</h3>
+                        <h3 class="mb-5">Méthode de paiement</h3>
                         <div class="row g-4 mb-7">
-                            {{-- Payment (NEW) --}}
+                            {{-- Paiement (NOUVEAU) --}}
                             <livewire:frontend.checkout.payment-options :commande="$commande" />
                         </div>
                         {{-- ✅ BOUTONS SÉPARÉS --}}

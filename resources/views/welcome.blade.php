@@ -34,50 +34,50 @@
                                     <div class="icon-container mb-2 bg-warning-subtle">
                                         <span class="fs-4 uil uil-star text-warning"></span>
                                     </div>
-                                    <p class="nav-label">Deals</p>
+                                    <p class="nav-label">Offres</p>
                                 </a>
                                 <!-- Add your other 10 links here -->
                                 <a class="icon-nav-item" href="{{ route('products', ['category' => 'grocery']) }}">
                                     <div class="icon-container mb-2" data-bs-theme="undefined"><span
                                             class="fs-4 uil uil-shopping-bag"></span></div>
-                                    <p class="nav-label">Grocery</p>
+                                    <p class="nav-label">Épicerie</p>
                                 </a><a class="icon-nav-item" href="{{ route('products', ['category' => 'mode']) }}">
                                     <div class="icon-container mb-2" data-bs-theme="undefined"><span
                                             class="fs-4 uil uil-watch-alt"></span></div>
-                                    <p class="nav-label">Fashion</p>
+                                    <p class="nav-label">Mode</p>
                                 </a><a class="icon-nav-item"
                                     href="{{ route('products', ['category' => 'telephones-portables']) }}">
                                     <div class="icon-container mb-2" data-bs-theme="undefined"><span
                                             class="fs-4 uil uil-mobile-android"></span></div>
-                                    <p class="nav-label">Mobile</p>
+                                    <p class="nav-label">Téléphones</p>
                                 </a><a class="icon-nav-item" href="{{ route('products', ['category' => 'electronique']) }}">
                                     <div class="icon-container mb-2" data-bs-theme="undefined"><span
                                             class="fs-4 uil uil-monitor"></span></div>
-                                    <p class="nav-label">Electronics</p>
+                                    <p class="nav-label">Électronique</p>
                                 </a><a class="icon-nav-item" href="{{ route('home') }}">
                                     <div class="icon-container mb-2" data-bs-theme="undefined"><span
                                             class="fs-4 uil uil-estate"></span></div>
-                                    <p class="nav-label">Home</p>
+                                    <p class="nav-label">Maison</p>
                                 </a><a class="icon-nav-item" href="{{ route('products', ['category' => 'dining']) }}">
                                     <div class="icon-container mb-2" data-bs-theme="undefined"><span
                                             class="fs-4 uil uil-lamp"></span></div>
-                                    <p class="nav-label">Dining</p>
+                                    <p class="nav-label">Salle à manger</p>
                                 </a><a class="icon-nav-item" href="{{ route('products', ['category' => 'gift']) }}">
                                     <div class="icon-container mb-2" data-bs-theme="undefined"><span
                                             class="fs-4 uil uil-gift"></span></div>
-                                    <p class="nav-label">Gifts</p>
+                                    <p class="nav-label">Cadeaux</p>
                                 </a><a class="icon-nav-item" href="{{ route('products', ['category' => 'tool']) }}">
                                     <div class="icon-container mb-2" data-bs-theme="undefined"><span
                                             class="fs-4 uil uil-wrench"></span></div>
-                                    <p class="nav-label">Tools</p>
+                                    <p class="nav-label">Outillage</p>
                                 </a><a class="icon-nav-item" href="{{ route('products', ['category' => 'travel']) }}">
                                     <div class="icon-container mb-2" data-bs-theme="undefined"><span
                                             class="fs-4 uil uil-plane-departure"></span></div>
-                                    <p class="nav-label">Travel</p>
+                                    <p class="nav-label">Voyage</p>
                                 </a><a class="icon-nav-item" href="{{ route('products', ['category' => 'autres']) }}">
                                     <div class="icon-container mb-2" data-bs-theme="undefined"><span
                                             class="fs-4 uil uil-palette"></span></div>
-                                    <p class="nav-label">Others</p>
+                                    <p class="nav-label">Autres</p>
                                 </a>
                             </div>
                             <!-- Clone will be inserted by JS -->
@@ -108,14 +108,15 @@
                                             <h2 class="text-warning-light fw-bolder fs-lg-3 fs-xxl-2">
                                                 {{ $banner->title1_short }}
                                                 @if ($banner->percentage)
-                                                    <span class="gradient-text">{{ $banner->percentage }}%</span> Off
+                                                    <span class="gradient-text">{{ $banner->percentage }}%</span> de
+                                                    réduction
                                                 @endif
                                             </h2>
                                             <h3 class="fw-bolder fs-lg-5 fs-xxl-3 text-white">
                                                 {{ $banner->title2_short }}</h3>
                                         </div>
                                         <a class="btn btn-lg btn-primary rounded-pill banner-button"
-                                            href="{{ $banner->button_link }}">Shop Now</a>
+                                            href="{{ $banner->button_link }}">Acheter maintenant</a>
                                     </div>
                                 </div>
                             @elseif($index === 1)
@@ -129,11 +130,12 @@
                                             <h2 class="text-white fw-bolder fs-xl-4">
                                                 {{ $banner->title2_short }}
                                                 @if ($banner->percentage)
-                                                    <span class="gradient-text">{{ $banner->percentage }}% Off</span>
+                                                    <span class="gradient-text">{{ $banner->percentage }}% de
+                                                        réduction</span>
                                                 @endif
                                             </h2>
                                             <a class="btn btn-lg btn-primary rounded-pill banner-button"
-                                                href="{{ $banner->button_link }}">Buy Now</a>
+                                                href="{{ $banner->button_link }}">Acheter maintenant</a>
                                         </div>
                                     </div>
                                 </div>
@@ -143,23 +145,16 @@
                                     <div
                                         class="best-in-market-banner d-flex h-100 px-4 px-sm-7 py-5 px-md-11 rounded-3 overflow-hidden">
                                         <div class="bg-holder z-n1 banner-bg"
-                                            style="background-image:url(../../../assets/img/e-commerce/best-in-market-bg.png);">
+                                            style="background-image:url({{ $banner->getPhoto() ? $banner->getPhoto()->getImageUrl(1315, 1006) : asset('assets/img/banners/gift_items_banner.jpg') }});">
                                         </div>
                                         <div class="row align-items-center w-sm-100">
-                                            <div class="col-8">
                                                 <div class="banner-text">
                                                     <h2 class="text-white fw-bolder fs-sm-4 mb-5">
                                                         {{ $banner->title1_short }}<br>
                                                         <span class="fs-7 fs-sm-6">{{ $banner->title2_short }}</span>
                                                     </h2>
                                                     <a class="btn btn-lg btn-warning rounded-pill banner-button"
-                                                        href="{{ $banner->button_link }}">Buy Now</a>
-                                                </div>
-                                            </div>
-                                            <div class="col-4">
-                                                <img class="w-100 w-sm-75"
-                                                    src="{{ $banner->getPhoto() ? $banner->getPhoto()->getImageUrl(166, 355) : asset('assets/img/banners/whooping_banner.jpg') }}"
-                                                    alt="">
+                                                        href="{{ $banner->button_link }}">Acheter maintenant</a>
                                             </div>
                                         </div>
                                     </div>
@@ -172,12 +167,12 @@
                             <div class="d-flex flex-between-center mb-3" data-hidden>
                                 <div class="d-flex">
                                     <span class="fas fa-bolt text-warning fs-6"></span>
-                                    <h3 class="mx-2">Top Deals today</h3>
+                                    <h3 class="mx-2">Meilleures offres du jour</h3>
                                     <span class="fas fa-bolt text-warning fs-6"></span>
                                 </div>
                                 <a class="btn btn-link btn-lg p-0 d-none d-md-block"
-                                    href="{{ route('products') }}">Explore
-                                    more<span class="fas fa-chevron-right fs-9 ms-1"></span>
+                                    href="{{ route('products') }}">Explorer
+                                    plus<span class="fas fa-chevron-right fs-9 ms-1"></span>
                                 </a>
                             </div>
                             <div class="swiper-theme-container products-slider" data-hidden>
@@ -206,7 +201,7 @@
                                     <div class="swiper-button-prev"><span class="fas fa-chevron-left nav-icon"></span>
                                     </div>
                                 </div>
-                            </div><a class="fw-bold d-md-none px-0" href="{{ route('products') }}">Explore more<span
+                            </div><a class="fw-bold d-md-none px-0" href="{{ route('products') }}">Explorer plus<span
                                     class="fas fa-chevron-right fs-9 ms-1"></span></a>
                         </div>
                         <div class="col-lg-3 d-none d-lg-block col-xxl-2">
@@ -221,8 +216,8 @@
                     </div>
                     <div class="mb-6">
                         <div class="d-flex flex-between-center mb-3" data-hidden>
-                            <h3>Top Electronics</h3><a class="fw-bold d-none d-md-block"
-                                href="{{ route('products') }}">Explore more<span
+                            <h3>Électronique populaire</h3><a class="fw-bold d-none d-md-block"
+                                href="{{ route('products') }}">Explorer plus<span
                                     class="fas fa-chevron-right fs-9 ms-1"></span></a>
                         </div>
                         <div class="swiper-theme-container products-slider" data-hidden>
@@ -249,13 +244,13 @@
                                 </div>
                                 <div class="swiper-button-prev"><span class="fas fa-chevron-left nav-icon"></span></div>
                             </div>
-                        </div><a class="fw-bold d-md-none" href="{{ route('products') }}">Explore more<span
+                        </div><a class="fw-bold d-md-none" href="{{ route('products') }}">Explorer plus<span
                                 class="fas fa-chevron-right fs-9 ms-1"></span></a>
                     </div>
                     <div class="mb-6">
                         <div class="d-flex flex-between-center mb-3" data-hidden>
-                            <h3>Best Offers</h3><a class="fw-bold d-none d-md-block"
-                                href="{{ route('products') }}">Explore more<span
+                            <h3>Meilleures offres</h3><a class="fw-bold d-none d-md-block"
+                                href="{{ route('products') }}">Explorer plus<span
                                     class="fas fa-chevron-right fs-9 ms-1"></span></a>
                         </div>
                         <div class="swiper-theme-container products-slider" data-hidden>
@@ -282,7 +277,7 @@
                                 </div>
                                 <div class="swiper-button-prev"><span class="fas fa-chevron-left nav-icon"></span></div>
                             </div>
-                        </div><a class="fw-bold d-md-none" href="{{ route('products') }}">Explore more<span
+                        </div><a class="fw-bold d-md-none" href="{{ route('products') }}">Explorer plus<span
                                 class="fas fa-chevron-right fs-9 ms-1"></span></a>
                     </div>
                     @if (!isset($user))
@@ -295,11 +290,12 @@
                             </div>
                             <div class="col-auto">
                                 <div class="text-center text-lg-start">
-                                    <h3 class="text-body-highlight mb-2"><span class="fw-semibold">Want to have the
-                                        </span>ultimate <br class="d-md-none" />customer experience?</h3>
-                                    <h1 class="display-3 fw-semibold mb-4">Become a <span
-                                            class="text-primary fw-bolder">member </span>today!</h1><a
-                                        class="btn btn-lg btn-primary px-7" href="{{ route('register') }}">Sign up<span
+                                    <h3 class="text-body-highlight mb-2"><span class="fw-semibold">Vous voulez vivre
+                                        </span>la meilleure expérience client ?</h3>
+                                    <h1 class="display-3 fw-semibold mb-4">Devenez <span
+                                            class="text-primary fw-bolder">membre</span> aujourd'hui !</h1><a
+                                        class="btn btn-lg btn-primary px-7"
+                                        href="{{ route('register') }}">S'inscrire<span
                                             class="fas fa-chevron-right ms-2 fs-9"></span></a>
                                 </div>
                             </div>

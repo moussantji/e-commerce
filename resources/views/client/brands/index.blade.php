@@ -32,13 +32,13 @@
                     </ol>
                 </nav>
 
-                <h2 class="mb-1">All Stores</h2>
-                <p class="mb-5 text-body-tertiary fw-semibold">Essential for a better life</p>
+                <h2 class="mb-1">Toutes les boutiques</h2>
+                <p class="mb-5 text-body-tertiary fw-semibold">Essentiel pour une vie meilleure</p>
                 <div class="row gx-3 gy-5">
                     @foreach ($brands as $brand)
                         <div class="col-6 col-sm-4 col-md-3 col-lg-2 hover-actions-trigger btn-reveal-trigger">
-                            <div class="border border-translucent d-flex flex-center rounded-3 mb-3 p-4"
-                                style="height:180px;">
+                            <div class="border border-translucent d-flex flex-center rounded-3 mb-3"
+                                style="height:140px;">
                                 @if ($brand->getPhoto())
                                     <img class="mw-100" src="{{ $brand->getPhoto()->getImageUrl(180, 180) }}"
                                         alt="{{ $brand->name }}" />
@@ -68,7 +68,7 @@
                             </p>
 
                             <a class="btn btn-link p-0" href="{{ route('products', ['brands' => $brand->id]) }}">
-                                Visit Store<span class="fas fa-chevron-right ms-1 fs-10"></span>
+                                Visiter la boutique<span class="fas fa-chevron-right ms-1 fs-10"></span>
                             </a>
 
                             <div class="hover-actions top-0 end-0 mt-2 me-3">
@@ -80,10 +80,9 @@
                                     </button>
                                     <div class="dropdown-menu dropdown-menu-end py-2">
                                         <a class="dropdown-item"
-                                            href="{{ route('products') }}?brand={{ $brand->slug }}">View Products</a>
+                                            href="{{ route('products') }}?brand={{ $brand->slug }}">Voir les produits</a>
                                         @if ($brand->website)
-                                            <a class="dropdown-item" href="{{ $brand->website }}" target="_blank">Visit
-                                                Website</a>
+                                            <a class="dropdown-item" href="{{ $brand->website }}" target="_blank">Visiter le site</a>
                                         @endif
                                     </div>
                                 </div>

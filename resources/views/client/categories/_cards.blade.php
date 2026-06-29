@@ -1,16 +1,17 @@
 {{-- resources/views/client/categories/_card.blade.php --}}
 <div class="col-6 col-sm-4 col-md-3 col-lg-2 hover-actions-trigger btn-reveal-trigger position-relative js-hover-actions">
-    <div class="border border-translucent d-flex flex-center rounded-3 mb-3 p-4" style="height:180px;">
-        @if ($item->getPhoto())
-            <img class="mw-100" src="{{ $item->getPhoto()->getImageUrl(180, 180) }}"
-                 alt="{{ $item->name }}" />
-        @else
-            <div class="bg-light d-flex flex-center rounded-2" style="width:100%;height:100%;">
-                <span class="fas fa-image fs-3 text-body-tertiary"></span>
-            </div>
-        @endif
-    </div>
-
+    <div class="border border-translucent d-flex flex-center rounded-3 mb-3 p-4"
+     style="height:180px; width: 100%;">
+    @if ($item->getPhoto())
+        <img style="width: 100%; height: 100%; object-fit: cover; border-radius: 0.25rem; display: block;" 
+             src="{{ $item->getPhoto()->getImageUrl(700,700) }}"
+             alt="{{ $item->name }}" />
+    @else
+        <div class="bg-light d-flex flex-center rounded-2" style="width:100%; height:100%;">
+            <span class="fas fa-image fs-3 text-body-tertiary"></span>
+        </div>
+    @endif
+</div>
     <h5 class="mb-2">
         <a href="{{ isset($parentSlug) ? route('products', ['category' => $item->slug]) : route('categories.show', $item->slug) }}"
            class="text-decoration-none {{ request()->routeIs('categories.show') && request('category') == $item->slug ? 'text-primary fw-bold' : '' }}">

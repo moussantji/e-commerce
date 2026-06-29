@@ -7,7 +7,6 @@ use App\Models\User;
 use App\Models\Brand;
 use Livewire\Component;
 use App\Models\Categories;
-use Livewire\WithPagination;
 use Illuminate\Support\Facades\Log;
 use App\Models\Produits as Products;
 use App\Notifications\ProductFavoriNotification;
@@ -15,7 +14,6 @@ use Illuminate\Container\Attributes\Auth;
 
 class Produits extends Component
 {
-    use WithPagination;  // ← CETTE LIGNE DOIT ÊTRE APRÈS le use
 
     public array $filters = [
         'category_ids' => [],  // ✅ OBLIGATOIRE
@@ -139,7 +137,6 @@ class Produits extends Component
     public function updatedFilters()
     {
         $this->cleanEmptyFilters();  // ← NOUVEAU
-        $this->resetPage();
     }
 
     public function clearFilters()
@@ -161,9 +158,6 @@ class Produits extends Component
             'warrantyType' => [],
             'certification' => [],
         ];
-
-        // Reset pagination
-        $this->resetPage();
 
         // Émettre un événement pour feedback visuel (optionnel)
         $this->dispatch('filters-cleared');
@@ -209,11 +203,11 @@ class Produits extends Component
             ->where('is_active', true);
 
         $this->applyFilters($query);
-        $products = $query->paginate(12);
+        $products = $query->get();
 
         return view('livewire.produits', [
-            'products' => $query->paginate(12),
-            'brands_list' => $this->brands // ← Passer aux vues
+            'products' => $products,
+            'brands_list' => $this->brands
         ]);
     }
 
@@ -278,6 +272,11 @@ class Produits extends Component
                 $q->where('slug', 'LIKE', "%{$this->filters['tag']}%");
             });
         }
+    }
+
+    public function formatFcfa($amount)
+    {
+        return number_format($amount, 0, ',', ' ') . ' FCFA';
     }
 
     // ✅ Updated pour recherche

@@ -2,7 +2,7 @@
     <div class="container-small d-flex flex-between-center" data-navbar="data-navbar">
         <div class="dropdown"><button class="btn text-body ps-0 pe-5 text-nowrap dropdown-toggle dropdown-caret-none"
                 data-category-btn="data-category-btn" data-bs-toggle="dropdown"><span
-                    class="fas fa-bars me-2"></span>{{ __('Categories') }}</button>
+                    class="fas fa-bars me-2"></span>Catégories</button>
             <div class="dropdown-menu border border-translucent py-0 category-dropdown-menu">
                 <div class="card border-0 scrollbar" style="max-height: 657px;">
                     <div class="card-body p-6 pb-3">
@@ -24,7 +24,7 @@
                             @endforeach
                         </div>
                         <div class="text-center border-top border-translucent pt-3"><a class="fw-bold"
-                                href="{{ route('categories.index') }}">{{ __('See all Categories') }}<span
+                                href="{{ route('categories.index') }}">Voir toutes les catégories<span
                                     class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a></div>
                     </div>
                 </div>
@@ -38,25 +38,25 @@
             </li>
             <li class="nav-item" data-nav-item="data-nav-item"><a
                     class="nav-link {{ request()->routeIs('categories.*') ? 'active' : '' }}"
-                    href="{{ route('categories.index') }}">Categories</a></li>
+                    href="{{ route('categories.index') }}">Catégories</a></li>
             <li class="nav-item" data-nav-item="data-nav-item"><a
-                    class="nav-link {{ request()->routeIs('products') ? 'active' : '' }}"
-                    href="{{ route('products') }}">Products</a></li>
+                    class="nav-link {{ request()->routeIs('produits') ? 'active' : '' }}"
+                    href="{{ route('products') }}">Produits</a></li>
             <li class="nav-item" data-nav-item="data-nav-item"><a
                     class="nav-link pe-0 {{ request()->routeIs('client.brands.*') ? 'active' : '' }}"
-                    href="{{ route('client.brands.index') }}">All Brands</a></li>
+                    href="{{ route('client.brands.index') }}">Toutes les marques</a></li>
             @if (Auth::check())
             <li class="nav-item" data-nav-item="data-nav-item"><a
                     class="nav-link pe-0 {{ request()->routeIs('favoris') ? 'active' : '' }}"
-                    href="{{ route('favoris') }}">Wishlist</a></li>
+                    href="{{ route('favoris') }}">Liste de souhaits</a></li>
             <li class="nav-item" data-nav-item="data-nav-item"><a
                     class="nav-link pe-0 {{ request()->routeIs('dashboard') ? 'active' : '' }}"
-                    href="{{ route('dashboard') }}">Dashboard</a></li>
+                    href="{{ route('dashboard') }}">Tableau de bord</a></li>
             @endif
             <li class="nav-item dropdown" data-nav-item="data-nav-item" data-more-item="data-more-item"><a
                     class="nav-link dropdown-toggle dropdown-caret-none fw-bold pe-0" href="javascript: void(0)"
                     id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false"
-                    data-boundary="window" data-bs-reference="parent"> More<span
+                    data-boundary="window" data-bs-reference="parent"> Plus<span
                         class="fas fa-angle-down ms-2"></span></a>
                 <div class="dropdown-menu dropdown-menu-end category-list" aria-labelledby="navbarDropdown"
                     data-category-list="data-category-list"></div>

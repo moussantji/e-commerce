@@ -1,6 +1,6 @@
 @extends('base')
 
-@section('title', 'Dashboard')
+@section('title', 'Tableau de bord')
 
 @section('content')
 
@@ -31,20 +31,20 @@
                         </li>
                         <li class="breadcrumb-item active" aria-current="page">
                             <i class="fas fa-tachometer-alt me-1"></i>
-                            {{ __('Dashboard') }}
+                            {{ __('Tableau de bord') }}
                         </li>
                     </ol>
                 </nav>
                 <div class="row align-items-center justify-content-between g-3 mb-4">
                     <div class="col-auto">
-                        <h2 class="mb-0">{{ __('Dashboard') }}</h2>
+                        <h2 class="mb-0">{{ __('Tableau de bord') }}</h2>
                     </div>
                     <div class="col-auto">
                         <div class="row g-2 g-sm-3">
                             <div class="col-auto"><button class="btn btn-phoenix-secondary"
                                     onclick="document.querySelector('a[href=\'#tab-password\']').click();
                  document.getElementById('tab-password').scrollIntoView({behavior: 'smooth'})"><span
-                                        class="fas fa-key me-2"></span>{{ __('Reset password') }}</button></div>
+                                        class="fas fa-key me-2"></span>{{ __('Réinitialiser le mot de passe') }}</button></div>
                         </div>
                     </div>
                 </div>
@@ -89,12 +89,12 @@
                                 </div>
                                 <div class="d-flex flex-between-center pt-4">
                                     <div>
-                                        <h6 class="mb-2 text-body-secondary">{{ __('Total Spent') }}</h6>
+                                        <h6 class="mb-2 text-body-secondary">{{ __('Total dépensé') }}</h6>
                                         <h4 class="fs-7 text-body-highlight mb-0">
                                             {{ number_format($user->orders()->sum('total'), 0) }} FCFA</h4>
                                     </div>
                                     <div class="text-end">
-                                        <h6 class="mb-2 text-body-secondary">{{ __('Last Order') }}</h6>
+                                        <h6 class="mb-2 text-body-secondary">{{ __('Dernière commande') }}</h6>
                                         <h4 class="fs-7 text-body-highlight mb-0">
                                             @php
                                                 $lastOrder = $user->orders()->latest()->first();
@@ -105,15 +105,15 @@
                                                     $date = $lastOrder->created_at;
                                                     $days = abs(floor(now()->diffInDays($date)));
                                                     $months = abs(floor(now()->diffInMonths($date)));
+                                                    $years = abs(floor(now()->diffInYears($date)));
                                                 @endphp
 
                                                 @if ($days < 30)
-                                                    {{ $days }} {{ $days == 1 ? 'jour' : 'jours' }} ago
+                                                    il y a {{ $days }} {{ $days == 1 ? 'jour' : 'jours' }}
                                                 @elseif($months < 12)
-                                                    {{ $months }} {{ $months == 1 ? 'mois' : 'mois' }} ago
+                                                    il y a {{ $months }} {{ $months == 1 ? 'mois' : 'mois' }}
                                                 @else
-                                                    {{ abs(floor(now()->diffInYears($date))) }}
-                                                    {{ abs(floor(now()->diffInYears($date))) > 1 ? 'ans' : 'an' }} ago
+                                                    il y a {{ $years }} {{ $years > 1 ? 'ans' : 'an' }}
                                                 @endif
                                             @else
                                                 <span class="text-muted">Aucune commande</span>
@@ -122,7 +122,7 @@
                                         </h4>
                                     </div>
                                     <div class="text-end">
-                                        <h6 class="mb-2 text-body-secondary">{{ __('Total Orders') }}</h6>
+                                        <h6 class="mb-2 text-body-secondary">{{ __('Nombre total de commandes') }}</h6>
                                         <h4 class="fs-7 text-body-highlight mb-0">{{ $user->orders()->count() }} </h4>
                                     </div>
                                 </div>
@@ -133,7 +133,7 @@
                         <div class="card h-100">
                             <div class="card-body">
                                 <div class="border-bottom border-dashed">
-                                    <h4 class="mb-3">{{ __('Default Address') }}<button class="btn btn-link p-0"
+                                    <h4 class="mb-3">{{ __('Adresse par défaut') }}<button class="btn btn-link p-0"
                                             onclick="document.querySelector('a[href=\'#tab-personal-info\']').click();
                                         document.getElementById('tab-personal-info').scrollIntoView({behavior: 'smooth'})"
                                             type="button">
@@ -142,7 +142,7 @@
                                 <div class="pt-4 mb-7 mb-lg-4 mb-xl-7">
                                     <div class="row justify-content-between">
                                         <div class="col-auto">
-                                            <h5 class="text-body-highlight">{{ __('Address') }}</h5>
+                                            <h5 class="text-body-highlight">{{ __('Adresse') }}</h5>
                                         </div>
                                         <div class="col-auto">
                                             <p class="text-body-secondary">
@@ -154,14 +154,14 @@
                                 <div class="border-top border-dashed pt-4">
                                     <div class="row flex-between-center mb-2">
                                         <div class="col-auto">
-                                            <h5 class="text-body-highlight mb-0">Email</h5>
+                                            <h5 class="text-body-highlight mb-0">Courriel</h5>
                                         </div>
                                         <div class="col-auto"><a class="lh-1"
                                                 href="mailto:{{ $user->email }}">{{ $user->email }}</a></div>
                                     </div>
                                     <div class="row flex-between-center">
                                         <div class="col-auto">
-                                            <h5 class="text-body-highlight mb-0">Phone</h5>
+                                            <h5 class="text-body-highlight mb-0">Téléphone</h5>
                                         </div>
                                         <div class="col-auto"><a
                                                 href="tel:{{ $user->tel }}">{{ $user->tel ?? 'Aucun' }}</a></div>
@@ -182,7 +182,7 @@
         @include('admin.partials.search_modal')
 
         @include('partials.footer')
-        
+
     </main><!-- ===============================================-->
     <!--    End of Main Content-->
     <!-- ===============================================-->

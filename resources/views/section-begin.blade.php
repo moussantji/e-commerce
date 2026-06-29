@@ -5,8 +5,7 @@
                 <div class="row gx-0 gy-2 w-100 flex-between-center">
                     <div class="col-auto"><a class="text-decoration-none" href="{{ route('home') }}">
                             <div class="d-flex align-items-center"><img src="{{ asset('assets/img/icons/logo.png') }}"
-                                    alt="phoenix" width="27" />
-                                <h5 class="logo-text ms-2">phoenix</h5>
+                                    alt="phoenix" width="150" />
                             </div>
                         </a></div>
                     <div class="col-auto order-md-1">

@@ -12,7 +12,7 @@ use League\Glide\Signatures\SignatureFactory;
 
 class photos extends Model
 {
-    protected $fillable = ['filename', 'user_id', 'produit_id', 'payment_id', 'livraison_id', 'brand_id', 'banner_id'];
+    protected $fillable = ['filename', 'user_id', 'produit_id', 'payment_id', 'livraison_id', 'brand_id', 'banner_id','categories_id'];
 
     // Photos.php
     protected static function booted(): void

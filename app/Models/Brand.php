@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use App\Models\photos as Photos;
 
 class Brand extends Model
 {
@@ -19,7 +20,7 @@ class Brand extends Model
         'description',
         'logo',
         'website',
-        'is_active',
+                'is_active',
         'sort_order'
     ];
 
@@ -28,7 +29,7 @@ class Brand extends Model
         'sort_order' => 'integer'
     ];
 
-    /**
+    /*
      * Relation avec les produits de cette marque
      */
     public function products(): HasMany

@@ -46,7 +46,7 @@
 
     @if(isset($category) && $category->image)
         <div class="mt-2">
-            <img src="{{ asset('storage/' . $category->image) }}"
+            <img src="{{ $category->getphoto()->geImagUrl(100,100) }}"
                  alt="Image de la catégorie" class="img-thumbnail" style="max-height: 100px;">
         </div>
     @endif

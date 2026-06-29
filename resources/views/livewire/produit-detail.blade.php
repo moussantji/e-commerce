@@ -21,7 +21,7 @@
                             </div>
                             <div class="col-12 col-md-10 col-lg-12 col-xl-10">
                                 <div
-                                    class="d-flex align-items-center border border-translucent rounded-3 text-center p-5 h-100">
+                                    class="d-flex align-items-center border border-translucent rounded-3 text-center h-100">
                                     <div class="swiper swiper theme-slider" data-thumb-target="swiper-products-thumb"
                                         data-products-swiper='{"slidesPerView":1,"spaceBetween":16,"thumbsEl":".swiper-products-thumb"}'
                                         wire:ignore>

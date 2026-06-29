@@ -45,7 +45,7 @@
                                     <div class="auth-form-box">
                                         <div class="text-center mb-7"><a
                                                 class="d-flex flex-center text-decoration-none mb-4"
-                                                href="../../../index.html">
+                                                href="{{ route('home') }}">
                                                 <div class="d-flex align-items-center fw-bolder fs-3 d-inline-block">
                                                     <img src="../../../assets/img/icons/logo.png" alt="phoenix"
                                                         width="58" />
@@ -53,11 +53,11 @@
                                             </a>
                                             <h3 class="text-body-highlight">Sign Up</h3>
                                             <p class="text-body-tertiary">Create your account today</p>
-                                        </div><button class="btn btn-phoenix-secondary w-100 mb-3"><span
+                                        </div><a href="{{ url('/auth/google/redirect') }}" class="btn btn-phoenix-secondary w-100 mb-3"><span
                                                 class="fab fa-google text-danger me-2 fs-9"></span>Sign up with
-                                            google</button><button class="btn btn-phoenix-secondary w-100"><span
+                                            google</a><a hreff="{{ url('/auth/facebook/redirect') }}" class="btn btn-phoenix-secondary w-100"><span
                                                 class="fab fa-facebook text-primary me-2 fs-9"></span>Sign up with
-                                            facebook</button>
+                                            facebook</a>
                                         <div class="position-relative mt-4">
                                             <hr class="bg-body-secondary" />
                                             <div class="divider-content-center bg-body-emphasis">or use email</div>

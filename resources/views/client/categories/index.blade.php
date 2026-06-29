@@ -29,13 +29,13 @@
                                 <a href="{{ route('home') }}">Accueil</a>
                             </li>
                             <li class="breadcrumb-item active" aria-current="page">
-                                Toutes les Categories
+                                Toutes les catégories
                             </li>
                         </ol>
                     </nav>
 
-                    <h2 class="mb-1">All Categories</h2>
-                    <p class="mb-5 text-body-tertiary fw-semibold">Essential for a better life</p>
+                    <h2 class="mb-1">Toutes les catégories</h2>
+                    <p class="mb-5 text-body-tertiary fw-semibold">Essentiel pour une vie meilleure</p>
 
                     <div class="row gx-3 gy-5">
                         @foreach ($categories as $category)
@@ -66,7 +66,7 @@
 
                     <h2 class="mb-1">{{ $category->name }}</h2>
                     <p class="mb-5 text-body-tertiary fw-semibold">
-                        {{ $category->description ?? 'Essential for a better life' }}</p>
+                        {{ $category->description ?? 'Essentiel pour une vie meilleure' }}</p>
 
                     <div class="row gx-3 gy-5">
 

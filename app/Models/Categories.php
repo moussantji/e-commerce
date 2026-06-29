@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\photos as Photos;
 
 class Categories extends Model
 {
@@ -40,6 +41,25 @@ class Categories extends Model
     public function getPhoto(): ?Photos
     {
         return $this->photos()->where('categories_id', $this->id)->first();
+    }
+    
+    public function attachfiles(?array $files)
+    {
+        $pictures = [];
+        if ($files !== null) {
+            foreach ($files as $file) {
+                if ($file->getError()) {
+                    continue;
+                }
+                $filename = $file->store('Category/' . $this->id, 'public');
+                $pictures[] = [
+                    'filename' => $filename,
+                ];
+            }
+        }
+        if (count($pictures) > 0) {
+            $this->photos()->createMany($pictures);
+        }
     }
 
     public function getProductsCountAttribute()

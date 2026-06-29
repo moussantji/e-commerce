@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Models\Tag;
-use App\Models\Photos;
+use App\Models\photos as Photos;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;

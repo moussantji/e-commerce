@@ -25,6 +25,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\SocialLoginController;
 
 $idRegex = '[0-9]+';
 $slugRegex = '[0-9a-z\-]+';
@@ -39,6 +40,9 @@ Route::get('produits/{slug}-{id}', [HomeController::class, 'produits'])->name('p
     'slug' => $slugRegex,
     'id' => $idRegex
 ]);
+
+Route::get('/auth/{provider}/redirect', [SocialLoginController::class, 'redirect']);
+Route::get('/auth/{provider}/callback', [SocialLoginController::class, 'callback']);
 
 Route::post('/paiement/callback', function (Request $request) {
     $transaction_id = $request->transaction_id;

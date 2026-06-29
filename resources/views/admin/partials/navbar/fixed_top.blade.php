@@ -8,8 +8,8 @@
             <a class="navbar-brand me-1 me-sm-3" href="{{ route('admin.dashboard') }}">
                 <div class="d-flex align-items-center">
                     <div class="d-flex align-items-center"><img src="{{ asset('assets/img/icons/logo.png') }}"
-                            alt="phoenix" width="27" />
-                        <h5 class="logo-text ms-2 d-none d-sm-block">phoenix</h5>
+                            alt="phoenix" width="80" />
+                        <h5 class="logo-text ms-2 d-none d-sm-block">MandenBaoubab</h5>
                     </div>
                 </div>
             </a>

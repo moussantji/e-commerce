@@ -5,7 +5,7 @@ namespace App\Livewire\Admin;
 use DB;
 use stdClass;
 use App\Models\Tag;
-use App\models\Brand;
+use App\Models\Brand;
 use App\Models\photos;
 use Livewire\Component;
 use App\Models\Produits;

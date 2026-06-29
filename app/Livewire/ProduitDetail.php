@@ -148,7 +148,7 @@ class ProduitDetail extends Component
 
         // Utilise getImageUrl(350,350) dans le foreach comme demandé
         foreach ($productImages as $img) {
-            $this->images[] = $img->getImageUrl(350, 350);
+            $this->images[] = $img->getImageUrl(600,600);
         }
         // Image unique en fallback
         if (!empty($this->product->image) && !in_array($this->imageUrl($this->product->image), $this->images)) {

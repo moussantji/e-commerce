@@ -28,7 +28,7 @@ class BrandFactory extends Factory
             'name' => $name,
             'slug' => Str::slug($name),
             'description' => $this->faker->paragraph(3),
-            'logo' => 'brands/' . $this->faker->image('public/storage/brands', 200, 200, 'business', false),
+            'logo' => null,
             'website' => $this->faker->url,
             'is_active' => $this->faker->boolean(90), // 90% de chance d'être actif
             'sort_order' => $this->faker->numberBetween(1, 100),
