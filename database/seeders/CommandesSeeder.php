@@ -27,6 +27,16 @@ class CommandesSeeder extends Seeder
 
         $statuses = ['en_attente', 'traitement', 'expedie', 'livre', 'annule'];
         $now = now();
+
+        // Réutilise un paiement / une livraison existant, sinon en crée un minimal
+        $paiementId = \Illuminate\Support\Facades\DB::table('paiements')->value('id')
+            ?? \Illuminate\Support\Facades\DB::table('paiements')->insertGetId([
+                'method_name' => 'Paiement Démo', 'created_at' => now(), 'updated_at' => now(),
+            ]);
+        $livraisonId = \Illuminate\Support\Facades\DB::table('livraisons')->value('id')
+            ?? \Illuminate\Support\Facades\DB::table('livraisons')->insertGetId([
+                'method_name' => 'Livraison Démo', 'created_at' => now(), 'updated_at' => now(),
+            ]);
         
         // Créer des commandes pour les 6 derniers mois
         for ($month = 0; $month < 6; $month++) {
@@ -41,15 +51,16 @@ class CommandesSeeder extends Seeder
                 $status = $statuses[array_rand($statuses)];
                 $total = rand(5000, 50000) / 100; // Montant entre 50 et 500 FCFA
                 
-                // Générer un numéro de commande unique avec un timestamp et un identifiant aléatoire
-                $microtime = microtime(true);
-                $randomString = substr(str_replace(['.', '0'], '', (string)$microtime), 0, 6);
-                $orderNumber = 'CMD' . $orderDate->format('Ymd') . strtoupper($randomString) . $i;
+                // Numéro de commande GARANTI unique (vérifié en base pour éviter
+                // toute violation de contrainte UNIQUE, même sur plusieurs exécutions)
+                do {
+                    $orderNumber = 'CMD' . $orderDate->format('Ymd') . strtoupper(\Illuminate\Support\Str::random(8));
+                } while (Commandes::where('numero_commande', $orderNumber)->exists());
                 
                 $order = Commandes::create([
                     'user_id' => $user->id,
-                    'paiement_id' => 1, // Utiliser un ID de paiement existant
-                    'livraison_id' => 1, // Utiliser un ID de livraison existant
+                    'paiement_id' => $paiementId,
+                    'livraison_id' => $livraisonId,
                     'numero_commande' => $orderNumber,
                     'statut' => $status,
                     'sous_total' => $total * 0.9, // 90% du total
