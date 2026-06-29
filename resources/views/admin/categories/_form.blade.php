@@ -44,9 +44,9 @@
         <div class="invalid-feedback">{{ $message }}</div>
     @enderror
 
-    @if(isset($category) && $category->image)
+    @if(isset($category) && $category->getPhoto())
         <div class="mt-2">
-            <img src="{{ $category->getphoto()->geImagUrl(100,100) }}"
+            <img src="{{ $category->getPhoto()->getImageUrl(100, 100) }}"
                  alt="Image de la catégorie" class="img-thumbnail" style="max-height: 100px;">
         </div>
     @endif

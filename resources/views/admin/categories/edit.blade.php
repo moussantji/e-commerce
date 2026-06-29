@@ -20,9 +20,9 @@
             @endif
         </div>
         <div class="card-body">
-            @if($category->image)
+            @if($category->getPhoto())
                 <div class="mb-4 text-center">
-                    <img src="{{ asset('storage/' . $category->image) }}"
+                    <img src="{{ $category->getPhoto()->getImageUrl(200, 200) }}"
                          alt="{{ $category->name }}" class="img-thumbnail rounded" style="max-width: 200px; max-height: 200px;">
                     <div class="mt-2">
                         <small class="text-muted">Image actuelle</small>
@@ -87,9 +87,7 @@
                 <div class="row">
                     <div class="col-md-8 mb-3">
                         <label class="form-label">Description</label>
-                        <textarea name="description" rows="4" class="form-control @error('description') is-invalid @enderror">
-                            {{ old('description', $category->description) }}
-                        </textarea>
+                        <textarea name="description" rows="4" class="form-control @error('description') is-invalid @enderror">{{ old('description', $category->description) }}</textarea>
                         @error('description')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
