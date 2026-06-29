@@ -5,6 +5,8 @@ namespace App\Http\Controllers\AdminPanel;
 use App\Http\Controllers\Controller;
 use App\Models\Categories as Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class CategoryController extends Controller
 {
@@ -13,7 +15,7 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        $categories = Category::latest()->paginate(10);
+        $categories = Category::with('photos')->latest()->paginate(10);
         return view('admin.categories.index', compact('categories'));
     }
 
@@ -23,7 +25,7 @@ class CategoryController extends Controller
     public function create()
     {
         $categories = Category::whereNull('parent_id')->orderBy('sort_order')->get();
-    return view('admin.categories.create', compact('categories'));
+        return view('admin.categories.create', compact('categories'));
     }
 
     /**
@@ -33,18 +35,23 @@ class CategoryController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:categories',
-            'slug' => 'required|string',
+            'slug' => 'nullable|string|max:255',
             'description' => 'nullable|string',
+            'parent_id' => 'nullable|exists:categories,id',
+            'sort_order' => 'nullable|integer|min:0',
             'image' => 'nullable|image|max:2048',
         ]);
 
-        // Gestion de l'upload de l'image si elle existe
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('categories', 'public');
-            $validated['image_path'] = $path;
-        }
+        // Slug auto-généré si vide
+        $validated['slug'] = $this->uniqueSlug($validated['slug'] ?? null, $validated['name']);
+        $validated['is_active'] = $request->boolean('is_active');
 
-        Category::create($validated);
+        $category = Category::create($validated);
+
+        // Lier l'image via la relation photos (utilisée par getPhoto())
+        if ($request->hasFile('image')) {
+            $this->storeCategoryImage($category, $request->file('image'));
+        }
 
         return redirect()->route('admin.categories.index')
             ->with('success', 'Catégorie créée avec succès');
@@ -64,7 +71,7 @@ class CategoryController extends Controller
     public function edit(Category $category)
     {
         $categories = Category::where('id', '!=', $category->id)->orderBy('sort_order')->get();
-    return view('admin.categories.edit', compact('category', 'categories'));
+        return view('admin.categories.edit', compact('category', 'categories'));
     }
 
     /**
@@ -74,21 +81,22 @@ class CategoryController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
+            'slug' => 'nullable|string|max:255',
             'description' => 'nullable|string',
+            'parent_id' => 'nullable|exists:categories,id',
+            'sort_order' => 'nullable|integer|min:0',
             'image' => 'nullable|image|max:2048',
         ]);
 
-        // Gestion de la mise à jour de l'image
-        if ($request->hasFile('image')) {
-            // Supprimer l'ancienne image si elle existe
-            if ($category->image_path) {
-                \Storage::disk('public')->delete($category->image_path);
-            }
-            $path = $request->file('image')->store('categories', 'public');
-            $validated['image_path'] = $path;
-        }
+        $validated['slug'] = $this->uniqueSlug($validated['slug'] ?? null, $validated['name'], $category->id);
+        $validated['is_active'] = $request->boolean('is_active');
 
         $category->update($validated);
+
+        // Remplacer l'image si une nouvelle est fournie
+        if ($request->hasFile('image')) {
+            $this->storeCategoryImage($category, $request->file('image'), true);
+        }
 
         return redirect()->route('admin.categories.index')
             ->with('success', 'Catégorie mise à jour avec succès');
@@ -105,14 +113,62 @@ class CategoryController extends Controller
                 ->with('error', 'Impossible de supprimer une catégorie contenant des produits');
         }
 
-        // Supprimer l'image associée si elle existe
-        if ($category->image_path) {
-            \Storage::disk('public')->delete($category->image_path);
+        // Supprimer les photos associées (le model Photos supprime aussi le fichier)
+        foreach ($category->photos as $photo) {
+            $photo->delete();
         }
 
         $category->delete();
 
         return redirect()->route('admin.categories.index')
             ->with('success', 'Catégorie supprimée avec succès');
+    }
+
+    /**
+     * Enregistre l'image d'une catégorie : crée un enregistrement dans la table
+     * photos (lu par getPhoto()) et conserve aussi le chemin dans la colonne image.
+     */
+    protected function storeCategoryImage(Category $category, $file, bool $replace = false): void
+    {
+        if (!$file || $file->getError()) {
+            return;
+        }
+
+        // Supprimer l'ancienne image lors d'un remplacement
+        if ($replace) {
+            foreach ($category->photos()->get() as $photo) {
+                $photo->delete();
+            }
+        }
+
+        $filename = $file->store('Category/' . $category->id, 'public');
+
+        $category->photos()->create(['filename' => $filename]);
+
+        // Conserve aussi le chemin dans la colonne image (compatibilité)
+        $category->forceFill(['image' => $filename])->save();
+    }
+
+    /**
+     * Génère un slug unique à partir du slug fourni ou du nom.
+     */
+    protected function uniqueSlug(?string $slug, string $name, ?int $ignoreId = null): string
+    {
+        $base = Str::slug($slug ?: $name);
+        if ($base === '') {
+            $base = Str::slug($name) ?: 'categorie';
+        }
+
+        $slug = $base;
+        $i = 1;
+        while (
+            Category::where('slug', $slug)
+                ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
+                ->exists()
+        ) {
+            $slug = $base . '-' . $i++;
+        }
+
+        return $slug;
     }
 }

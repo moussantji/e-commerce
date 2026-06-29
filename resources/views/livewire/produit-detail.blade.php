@@ -284,7 +284,8 @@
                                                 Write a review
                                             </button>
 
-                                            <!-- Modale principale -->
+                                            <!-- Modale principale (téléportée dans <body> pour un affichage correct) -->
+                                            @teleport('body')
                                             <div class="modal fade" id="reviewModal" tabindex="-1"
                                                 aria-labelledby="reviewModalLabel" aria-hidden="true"
                                                 wire:ignore.self>
@@ -344,6 +345,7 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            @endteleport
 
 
                                         </div>
