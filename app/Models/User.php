@@ -30,7 +30,10 @@ class User extends Authenticatable implements MustVerifyEmail
         'status',
         'lieu_naiss',
         'pays',
+        'ville',
         'region',
+        'latitude',
+        'longitude',
         'adresse',
         'provider',
         'provider_id',
@@ -49,6 +52,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'date_naiss' => 'date',
         'adresse'      => 'array',
         'social_links' => 'array',
+        'latitude' => 'float',
+        'longitude' => 'float',
     ];
 
     /**
