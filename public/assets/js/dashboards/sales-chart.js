@@ -32,7 +32,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (salesChart) {
             salesChart.destroy();
         }
-        
+
+        // Dégradés verticaux pour une jolie aire sous la courbe
+        const gradientHeight = (salesChartElement.parentNode && salesChartElement.parentNode.clientHeight) || 320;
+        const gradientCurrent = ctx.createLinearGradient(0, 0, 0, gradientHeight);
+        gradientCurrent.addColorStop(0, 'rgba(99, 102, 241, 0.40)');
+        gradientCurrent.addColorStop(1, 'rgba(99, 102, 241, 0.00)');
+        const gradientPrevious = ctx.createLinearGradient(0, 0, 0, gradientHeight);
+        gradientPrevious.addColorStop(0, 'rgba(45, 212, 191, 0.25)');
+        gradientPrevious.addColorStop(1, 'rgba(45, 212, 191, 0.00)');
+
         salesChart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -41,25 +50,35 @@ document.addEventListener('DOMContentLoaded', function() {
                     {
                         label: currentMonthLabel || 'Mois en cours',
                         data: currentMonthData,
-                        borderColor: 'rgba(110, 66, 193, 1)',
-                        borderWidth: 2,
-                        backgroundColor: 'rgba(110, 66, 193, 0.1)',
-                        tension: 0.4,
+                        borderColor: '#6366f1',
+                        borderWidth: 3,
+                        backgroundColor: gradientCurrent,
                         fill: true,
+                        tension: 0.4,
+                        cubicInterpolationMode: 'monotone',
                         pointRadius: 0,
-                        pointHoverRadius: 5
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#6366f1',
+                        pointBorderWidth: 2,
+                        pointHoverBackgroundColor: '#6366f1',
+                        pointHoverBorderColor: '#ffffff'
                     },
                     {
                         label: previousMonthLabel || 'Mois précédent',
                         data: previousMonthData,
-                        borderColor: 'rgba(91, 33, 182, 0.5)',
+                        borderColor: '#2dd4bf',
                         borderWidth: 2,
-                        backgroundColor: 'rgba(91, 33, 182, 0.05)',
-                        borderDash: [5, 5],
-                        tension: 0.4,
+                        backgroundColor: gradientPrevious,
+                        borderDash: [6, 6],
                         fill: true,
+                        tension: 0.4,
+                        cubicInterpolationMode: 'monotone',
                         pointRadius: 0,
-                        pointHoverRadius: 5
+                        pointHoverRadius: 5,
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#2dd4bf',
+                        pointBorderWidth: 2
                     }
                 ]
             },
@@ -69,14 +88,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 plugins: {
                     legend: {
                         position: 'top',
+                        align: 'end',
                         labels: {
                             color: getComputedStyle(document.documentElement).getPropertyValue('--phoenix-600'),
                             font: {
                                 family: 'Nunito Sans',
-                                size: 12
+                                size: 12,
+                                weight: '600'
                             },
                             usePointStyle: true,
-                            padding: 20
+                            pointStyle: 'circle',
+                            boxWidth: 8,
+                            boxHeight: 8,
+                            padding: 18
                         }
                     },
                     tooltip: {
