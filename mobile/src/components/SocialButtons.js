@@ -17,73 +17,143 @@ import { GOOGLE_CLIENT_IDS, FACEBOOK_APP_ID } from "../config";
 
 WebBrowser.maybeCompleteAuthSession();
 
-export default function SocialButtons() {
-    const { socialLogin } = useAuth();
-    const [busy, setBusy] = useState(null);
+// Constantes calculées une seule fois (pas de hook conditionnel à l'intérieur d'un composant)
+const GOOGLE_ON = !!(
+    GOOGLE_CLIENT_IDS.android ||
+    GOOGLE_CLIENT_IDS.ios ||
+    GOOGLE_CLIENT_IDS.web ||
+    GOOGLE_CLIENT_IDS.expo
+);
+const FB_ON = !!FACEBOOK_APP_ID;
 
-    const [, gResponse, gPrompt] = Google.useAuthRequest({
-        expoClientId: GOOGLE_CLIENT_IDS.expo || undefined,
+/** Bouton présentationnel (toujours affiché). */
+function ProviderButton({ provider, busy, onPress }) {
+    const isGoogle = provider === "google";
+    return (
+        <TouchableOpacity
+            style={[styles.btn, isGoogle ? styles.google : styles.fb]}
+            onPress={onPress}
+            disabled={busy}
+        >
+            {busy ? (
+                <ActivityIndicator color={isGoogle ? "#111" : "#fff"} />
+            ) : (
+                <>
+                    <Ionicons
+                        name={isGoogle ? "logo-google" : "logo-facebook"}
+                        size={20}
+                        color={isGoogle ? "#EA4335" : "#fff"}
+                    />
+                    <Text style={isGoogle ? styles.googleText : styles.fbText}>
+                        {isGoogle ? "Google" : "Facebook"}
+                    </Text>
+                </>
+            )}
+        </TouchableOpacity>
+    );
+}
+
+/** Bouton Google réel (monté UNIQUEMENT si configuré → pas de crash invariant). */
+function GoogleButton() {
+    const { socialLogin } = useAuth();
+    const [busy, setBusy] = useState(false);
+    const [, response, promptAsync] = Google.useAuthRequest({
         androidClientId: GOOGLE_CLIENT_IDS.android || undefined,
         iosClientId: GOOGLE_CLIENT_IDS.ios || undefined,
-        webClientId: GOOGLE_CLIENT_IDS.web || undefined,
+        webClientId:
+            GOOGLE_CLIENT_IDS.web || GOOGLE_CLIENT_IDS.expo || undefined,
     });
 
-    const [, fbResponse, fbPrompt] = Facebook.useAuthRequest({
-        clientId: FACEBOOK_APP_ID || undefined,
+    useEffect(() => {
+        if (!response) return;
+        if (response.type === "success") {
+            (async () => {
+                try {
+                    await socialLogin(
+                        "google",
+                        response.authentication?.accessToken,
+                    );
+                } catch (e) {
+                    Alert.alert("Google", apiError(e));
+                } finally {
+                    setBusy(false);
+                }
+            })();
+        } else {
+            setBusy(false);
+        }
+    }, [response]);
+
+    return (
+        <ProviderButton
+            provider="google"
+            busy={busy}
+            onPress={() => {
+                setBusy(true);
+                promptAsync();
+            }}
+        />
+    );
+}
+
+/** Bouton Facebook réel (monté UNIQUEMENT si configuré). */
+function FacebookButton() {
+    const { socialLogin } = useAuth();
+    const [busy, setBusy] = useState(false);
+    const [, response, promptAsync] = Facebook.useAuthRequest({
+        clientId: FACEBOOK_APP_ID,
     });
 
-    const finish = async (provider, accessToken) => {
-        if (!accessToken) {
-            setBusy(null);
-            return;
-        }
-        try {
-            await socialLogin(provider, accessToken);
-        } catch (e) {
-            Alert.alert("Connexion sociale", apiError(e));
-        } finally {
-            setBusy(null);
-        }
-    };
-
     useEffect(() => {
-        if (gResponse?.type === "success") {
-            finish("google", gResponse.authentication?.accessToken);
-        } else if (gResponse && gResponse.type !== "success") {
-            setBusy(null);
+        if (!response) return;
+        if (response.type === "success") {
+            (async () => {
+                try {
+                    await socialLogin(
+                        "facebook",
+                        response.authentication?.accessToken,
+                    );
+                } catch (e) {
+                    Alert.alert("Facebook", apiError(e));
+                } finally {
+                    setBusy(false);
+                }
+            })();
+        } else {
+            setBusy(false);
         }
-    }, [gResponse]);
+    }, [response]);
 
-    useEffect(() => {
-        if (fbResponse?.type === "success") {
-            finish("facebook", fbResponse.authentication?.accessToken);
-        } else if (fbResponse && fbResponse.type !== "success") {
-            setBusy(null);
-        }
-    }, [fbResponse]);
+    return (
+        <ProviderButton
+            provider="facebook"
+            busy={busy}
+            onPress={() => {
+                setBusy(true);
+                promptAsync();
+            }}
+        />
+    );
+}
 
-    const start = async (provider) => {
-        const configured =
-            provider === "google"
-                ? Object.values(GOOGLE_CLIENT_IDS).some(Boolean)
-                : !!FACEBOOK_APP_ID;
+/** Bouton non configuré : affiche un rappel (aucun hook OAuth appelé). */
+function NotConfiguredButton({ provider }) {
+    const label = provider === "google" ? "Google" : "Facebook";
+    return (
+        <ProviderButton
+            provider={provider}
+            busy={false}
+            onPress={() =>
+                Alert.alert(
+                    "À configurer",
+                    `Renseignez les identifiants ${label} dans mobile/src/config.js (voir le README).`,
+                )
+            }
+        />
+    );
+}
 
-        if (!configured) {
-            Alert.alert(
-                "À configurer",
-                `Renseignez les identifiants ${provider === "google" ? "Google" : "Facebook"} dans mobile/src/config.js (voir le README).`,
-            );
-            return;
-        }
-        setBusy(provider);
-        try {
-            if (provider === "google") await gPrompt();
-            else await fbPrompt();
-        } catch (e) {
-            setBusy(null);
-        }
-    };
-
+export default function SocialButtons() {
     return (
         <View>
             <View style={styles.divider}>
@@ -93,43 +163,16 @@ export default function SocialButtons() {
             </View>
 
             <View style={styles.row}>
-                <TouchableOpacity
-                    style={[styles.btn, styles.google]}
-                    onPress={() => start("google")}
-                    disabled={!!busy}
-                >
-                    {busy === "google" ? (
-                        <ActivityIndicator color="#111" />
-                    ) : (
-                        <>
-                            <Ionicons
-                                name="logo-google"
-                                size={20}
-                                color="#EA4335"
-                            />
-                            <Text style={styles.googleText}>Google</Text>
-                        </>
-                    )}
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={[styles.btn, styles.fb]}
-                    onPress={() => start("facebook")}
-                    disabled={!!busy}
-                >
-                    {busy === "facebook" ? (
-                        <ActivityIndicator color="#fff" />
-                    ) : (
-                        <>
-                            <Ionicons
-                                name="logo-facebook"
-                                size={20}
-                                color="#fff"
-                            />
-                            <Text style={styles.fbText}>Facebook</Text>
-                        </>
-                    )}
-                </TouchableOpacity>
+                {GOOGLE_ON ? (
+                    <GoogleButton />
+                ) : (
+                    <NotConfiguredButton provider="google" />
+                )}
+                {FB_ON ? (
+                    <FacebookButton />
+                ) : (
+                    <NotConfiguredButton provider="facebook" />
+                )}
             </View>
         </View>
     );
