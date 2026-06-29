@@ -109,7 +109,33 @@ class DashboardController extends Controller
         // Récupérer les données de vente pour le graphique
         $currentMonthSales = $this->getMonthlySalesData(0); // Mois en cours
         $previousMonthSales = $this->getMonthlySalesData(1); // Mois précédent
-        
+
+        // ----- Carte des utilisateurs (position + statut en ligne) -----
+        $onlineThreshold = now()->subMinutes(5)->timestamp;
+        $onlineIds = \Illuminate\Support\Facades\DB::table('sessions')
+            ->whereNotNull('user_id')
+            ->where('last_activity', '>=', $onlineThreshold)
+            ->pluck('user_id')
+            ->unique();
+
+        $mapUsers = \App\Models\User::whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->get(['id', 'name', 'email', 'ville', 'pays', 'latitude', 'longitude', 'last_login', 'role'])
+            ->map(function ($u) use ($onlineIds) {
+                return [
+                    'name' => $u->name,
+                    'email' => $u->email,
+                    'ville' => $u->ville,
+                    'pays' => $u->pays,
+                    'role' => $u->role,
+                    'lat' => (float) $u->latitude,
+                    'lng' => (float) $u->longitude,
+                    'online' => $onlineIds->contains($u->id),
+                    'last_login' => optional($u->last_login)->format('d/m/Y H:i'),
+                ];
+            })
+            ->values();
+
         // Journal de débogage
         \Log::info('Données de vente du mois en cours:', $currentMonthSales);
         \Log::info('Données de vente du mois précédent:', $previousMonthSales);
@@ -125,6 +151,7 @@ class DashboardController extends Controller
             'commandes' => $pendingOrders,
             'currentMonthSales' => $currentMonthSales,
             'previousMonthSales' => $previousMonthSales,
+            'mapUsers' => $mapUsers,
             'pendingOrders' => $pendingOrdersCount,
             'processingOrders' => $processingOrdersCount,
             'shippedOrders' => $shippedOrdersCount,
