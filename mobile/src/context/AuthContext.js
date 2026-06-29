@@ -53,6 +53,15 @@ export function AuthProvider({ children }) {
         return data;
     };
 
+    const socialLogin = async (provider, accessToken) => {
+        const { data } = await api.post("/auth/social", {
+            provider,
+            access_token: accessToken,
+        });
+        await persist(data.token, data.user);
+        return data;
+    };
+
     const logout = async () => {
         try {
             await api.post("/logout");
@@ -67,7 +76,15 @@ export function AuthProvider({ children }) {
 
     return (
         <AuthContext.Provider
-            value={{ user, token, loading, login, register, logout }}
+            value={{
+                user,
+                token,
+                loading,
+                login,
+                register,
+                socialLogin,
+                logout,
+            }}
         >
             {children}
         </AuthContext.Provider>
