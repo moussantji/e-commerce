@@ -26,3 +26,12 @@ export const GOOGLE_CLIENT_IDS = {
 };
 
 export const FACEBOOK_APP_ID = "";
+
+/**
+ * Fond des écrans Connexion / Inscription.
+ *  - URL distante :  "https://....jpg"
+ *  - Image locale :  require("../../assets/login-bg.jpg")
+ *  - null         :  garde le dégradé orange
+ */
+export const LOGIN_BG_IMAGE =
+    "https://images.unsplash.com/photo-1607082349566-187342175e2f?auto=format&fit=crop&w=1080&q=80";

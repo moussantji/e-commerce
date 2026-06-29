@@ -10,11 +10,11 @@ import {
     Platform,
     ScrollView,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
 import { apiError } from "../api/client";
 import SocialButtons from "../components/SocialButtons";
+import AuthBackground from "../components/AuthBackground";
 
 export default function RegisterScreen({ navigation }) {
     const { register } = useAuth();
@@ -67,7 +67,7 @@ export default function RegisterScreen({ navigation }) {
     );
 
     return (
-        <LinearGradient colors={["#FF8A3D", "#FF3D00"]} style={styles.bg}>
+        <AuthBackground>
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
                 behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -132,7 +132,7 @@ export default function RegisterScreen({ navigation }) {
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
-        </LinearGradient>
+        </AuthBackground>
     );
 }
 
