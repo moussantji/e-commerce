@@ -70,7 +70,7 @@ export default function CartScreen() {
     if (loading && cart.items.length === 0) {
         return (
             <View style={styles.center}>
-                <ActivityIndicator size="large" color="#6366f1" />
+                <ActivityIndicator size="large" color="#FF6A00" />
             </View>
         );
     }
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
     },
-    qtySign: { fontSize: 18, color: "#6366f1", fontWeight: "800" },
+    qtySign: { fontSize: 18, color: "#FF6A00", fontWeight: "800" },
     qty: { minWidth: 24, textAlign: "center", fontWeight: "700" },
     remove: { marginLeft: 8 },
     removeText: { color: "#dc2626", fontSize: 12, fontWeight: "600" },

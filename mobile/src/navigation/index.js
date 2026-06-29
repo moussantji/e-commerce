@@ -9,32 +9,43 @@ import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import LoginScreen from "../screens/LoginScreen";
 import RegisterScreen from "../screens/RegisterScreen";
-import ProductsScreen from "../screens/ProductsScreen";
-import ProductDetailScreen from "../screens/ProductDetailScreen";
+import HomeScreen from "../screens/HomeScreen";
+import CategoriesScreen from "../screens/CategoriesScreen";
+import OrdersScreen from "../screens/OrdersScreen";
 import CartScreen from "../screens/CartScreen";
-import ProfileScreen from "../screens/ProfileScreen";
+import AccountScreen from "../screens/AccountScreen";
+import ProductListScreen from "../screens/ProductListScreen";
+import ProductDetailScreen from "../screens/ProductDetailScreen";
 
+const ORANGE = "#FF6A00";
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+
+const ICONS = {
+    Accueil: "home",
+    Catégories: "grid",
+    Commande: "receipt",
+    Panier: "cart",
+    Compte: "person",
+};
 
 function Tabs() {
     const { cart } = useCart();
     return (
         <Tab.Navigator
             screenOptions={({ route }) => ({
-                headerStyle: { backgroundColor: "#6366f1" },
+                headerStyle: { backgroundColor: ORANGE },
                 headerTintColor: "#fff",
-                tabBarActiveTintColor: "#6366f1",
+                headerTitleStyle: { fontWeight: "800" },
+                tabBarActiveTintColor: ORANGE,
                 tabBarInactiveTintColor: "#9ca3af",
-                tabBarIcon: ({ color, size }) => {
-                    const icons = {
-                        Boutique: "storefront-outline",
-                        Panier: "cart-outline",
-                        Profil: "person-outline",
-                    };
+                tabBarStyle: { height: 58, paddingBottom: 6, paddingTop: 6 },
+                tabBarLabelStyle: { fontSize: 11 },
+                tabBarIcon: ({ color, size, focused }) => {
+                    const base = ICONS[route.name] || "ellipse";
                     return (
                         <Ionicons
-                            name={icons[route.name] || "ellipse-outline"}
+                            name={focused ? base : `${base}-outline`}
                             size={size}
                             color={color}
                         />
@@ -42,7 +53,17 @@ function Tabs() {
                 },
             })}
         >
-            <Tab.Screen name="Boutique" component={ProductsScreen} />
+            <Tab.Screen
+                name="Accueil"
+                component={HomeScreen}
+                options={{ headerShown: false }}
+            />
+            <Tab.Screen name="Catégories" component={CategoriesScreen} />
+            <Tab.Screen
+                name="Commande"
+                component={OrdersScreen}
+                options={{ title: "Mes commandes" }}
+            />
             <Tab.Screen
                 name="Panier"
                 component={CartScreen}
@@ -50,7 +71,11 @@ function Tabs() {
                     tabBarBadge: cart.count > 0 ? cart.count : undefined,
                 }}
             />
-            <Tab.Screen name="Profil" component={ProfileScreen} />
+            <Tab.Screen
+                name="Compte"
+                component={AccountScreen}
+                options={{ headerShown: false }}
+            />
         </Tab.Navigator>
     );
 }
@@ -59,14 +84,20 @@ function AppStack() {
     return (
         <Stack.Navigator
             screenOptions={{
-                headerStyle: { backgroundColor: "#6366f1" },
+                headerStyle: { backgroundColor: ORANGE },
                 headerTintColor: "#fff",
+                headerTitleStyle: { fontWeight: "800" },
             }}
         >
             <Stack.Screen
                 name="Tabs"
                 component={Tabs}
                 options={{ headerShown: false }}
+            />
+            <Stack.Screen
+                name="ProductList"
+                component={ProductListScreen}
+                options={{ title: "Produits" }}
             />
             <Stack.Screen
                 name="ProductDetail"
@@ -100,7 +131,7 @@ export default function RootNavigator() {
                     alignItems: "center",
                 }}
             >
-                <ActivityIndicator size="large" color="#6366f1" />
+                <ActivityIndicator size="large" color={ORANGE} />
             </View>
         );
     }
