@@ -20,12 +20,15 @@ class DashboardController extends Controller
         $endDate = now()->subMonths($monthsBack)->endOfMonth();
         
         // Récupérer les ventes du mois
+        // ⚠️ On alias la somme en "ventes" (et NON "total") car le modèle Commandes
+        // possède un accesseur getTotalAttribute() qui recalcule total à partir de
+        // sous_total/frais/remise — absents ici — et renverrait 0.
         $sales = Commandes::whereIn('statut', ['livre', 'expedie'])
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->selectRaw('DATE(created_at) as date, COALESCE(SUM(total), 0) as total')
+            ->selectRaw('DATE(created_at) as date, COALESCE(SUM(total), 0) as ventes')
             ->groupBy('date')
             ->orderBy('date')
-            ->pluck('total', 'date')
+            ->pluck('ventes', 'date')
             ->toArray();
             
         // Créer un tableau pour tous les jours du mois
@@ -244,23 +247,25 @@ class DashboardController extends Controller
         $startDate = $date->copy()->startOfMonth();
         $endDate = $date->copy()->endOfMonth();
         
-        // Récupérer les ventes du mois
+        // Récupérer les ventes du mois (alias "ventes" pour éviter l'accesseur
+        // getTotalAttribute(), et DATE() qui est portable MySQL/SQLite)
         $sales = Commandes::whereIn('statut', ['livre', 'expedie'])
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->selectRaw('DAY(created_at) as day, SUM(total) as total')
-            ->groupBy('day')
-            ->orderBy('day')
-            ->pluck('total', 'day')
+            ->selectRaw('DATE(created_at) as date, COALESCE(SUM(total), 0) as ventes')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->pluck('ventes', 'date')
             ->toArray();
-            
+
         // Créer un tableau pour tous les jours du mois
         $daysInMonth = $startDate->daysInMonth;
         $result = [];
-        
+
         for ($day = 1; $day <= $daysInMonth; $day++) {
-            $result[] = (float) ($sales[$day] ?? 0);
+            $key = $startDate->copy()->day($day)->format('Y-m-d');
+            $result[] = (float) ($sales[$key] ?? 0);
         }
-        
+
         return $result;
     }
 }
