@@ -41,6 +41,7 @@ class TopElectronics extends Component
         $categories = Categories::where('is_active', true)->get();
 
         $topelectronic = Produits::where('is_active', true)
+            ->where('stock', '>', 0)
             ->when($this->category_id, fn($q) => $q->where('category_id', $this->category_id))
             ->with(['reviews'])
             ->limit(8)

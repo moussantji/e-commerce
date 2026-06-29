@@ -45,16 +45,28 @@
 
                                     </button>
                                 @endif
-                                <a class="btn btn-lg btn-warning rounded-pill w-100 fs-9 fs-sm-8"
-                                    onclick="addToCartWithQty({{ $product->id }})"><span
-                                        class="fas fa-shopping-cart me-2"></span>Add to cart</a>
+                                @if ($inStock)
+                                    <a class="btn btn-lg btn-warning rounded-pill w-100 fs-9 fs-sm-8"
+                                        onclick="addToCartWithQty({{ $product->id }})"><span
+                                            class="fas fa-shopping-cart me-2"></span>Add to cart</a>
+                                @else
+                                    <button type="button"
+                                        class="btn btn-lg btn-secondary rounded-pill w-100 fs-9 fs-sm-8" disabled><span
+                                            class="fas fa-ban me-2"></span>Rupture de stock</button>
+                                @endif
                             @else
                                 <a href="{{ route('login') }}"
                                     class="btn btn-lg btn-outline-warning rounded-pill w-100 me-3 px-2 px-sm-4 fs-9 fs-sm-8"><span
                                         class="me-2 far fa-heart"></span>Add to wishlist</a>
-                                <a class="btn btn-lg btn-warning rounded-pill w-100 fs-9 fs-sm-8"
-                                    href="{{ route('login') }}"><span class="fas fa-shopping-cart me-2"></span>Add to
-                                    cart</a>
+                                @if ($inStock)
+                                    <a class="btn btn-lg btn-warning rounded-pill w-100 fs-9 fs-sm-8"
+                                        href="{{ route('login') }}"><span class="fas fa-shopping-cart me-2"></span>Add to
+                                        cart</a>
+                                @else
+                                    <button type="button"
+                                        class="btn btn-lg btn-secondary rounded-pill w-100 fs-9 fs-sm-8" disabled><span
+                                            class="fas fa-ban me-2"></span>Rupture de stock</button>
+                                @endif
                             @endif
                         </div>
                     </div>
