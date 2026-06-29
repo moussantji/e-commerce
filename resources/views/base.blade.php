@@ -475,8 +475,9 @@
     </style>
 
     <style>
-        /* TOUTES les pages : fade in après loader */
-        body.fade-ready,
+        /* TOUTES les pages : fade in après loader.
+           ⚠️ On N'inclut PAS body ici : un transform sur body casserait
+           le position:fixed de la barre de navigation mobile. */
         main,
         .container,
         .produit-main,
