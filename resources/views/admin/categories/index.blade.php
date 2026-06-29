@@ -22,6 +22,7 @@
                     <thead class="table-light">
                         <tr>
                             <th>ID</th>
+                            <th>Photo</th>
                             <th>Nom</th>
                             <th>Description</th>
                             <th>Statut</th>
@@ -32,6 +33,18 @@
                         @forelse($categories as $category)
                             <tr>
                                 <td>{{ $category->id }}</td>
+                                <td>
+                                    @if($category->getPhoto())
+                                        <img src="{{ $category->getPhoto()->getImageUrl(48, 48) }}"
+                                             alt="{{ $category->name }}"
+                                             class="rounded" style="width:48px;height:48px;object-fit:cover;">
+                                    @else
+                                        <span class="d-inline-flex align-items-center justify-content-center rounded bg-body-secondary text-body-tertiary"
+                                              style="width:48px;height:48px;">
+                                            <i class="fas fa-image"></i>
+                                        </span>
+                                    @endif
+                                </td>
                                 <td>{{ $category->name }}</td>
                                 <td>{{ Str::limit($category->description, 50) }}</td>
                                 <td>
@@ -58,7 +71,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center">Aucune catégorie trouvée</td>
+                                <td colspan="6" class="text-center">Aucune catégorie trouvée</td>
                             </tr>
                         @endforelse
                     </tbody>
