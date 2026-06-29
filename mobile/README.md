@@ -147,3 +147,42 @@ mobile/
 ## Pistes d'évolution
 - Paiement (CinetPay / Stripe) à l'étape commande
 - Catégories en écran dédié, favoris/wishlist, notifications push (`expo-notifications`)
+
+
+
+---
+
+## 🔑 Connexion Google / Facebook
+
+L'app propose la connexion sociale (boutons sur Login/Register). Le flux :
+**App (expo-auth-session) → token → `POST /api/auth/social` (Laravel Socialite vérifie le token) → token Sanctum.**
+
+### A. Côté backend (`.env` du projet Laravel)
+```env
+GOOGLE_CLIENT_ID=xxxx.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=xxxx
+GOOGLE_REDIRECT_URI=${APP_URL}/auth/google/callback
+
+FACEBOOK_CLIENT_ID=xxxx
+FACEBOOK_CLIENT_SECRET=xxxx
+FACEBOOK_REDIRECT_URI=${APP_URL}/auth/facebook/callback
+```
+(`config/services.php` contient déjà les entrées `google` et `facebook`.)
+
+### B. Côté mobile (`mobile/src/config.js`)
+```js
+export const GOOGLE_CLIENT_IDS = {
+  expo: 'XXX.apps.googleusercontent.com',     // Web client ID (Expo Go)
+  android: 'XXX.apps.googleusercontent.com',  // Android client ID
+  ios: 'XXX.apps.googleusercontent.com',      // iOS client ID
+  web: 'XXX.apps.googleusercontent.com',      // Web client ID
+};
+export const FACEBOOK_APP_ID = '0000000000';
+```
+
+### Où obtenir les identifiants
+- **Google** : [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → Credentials → « OAuth client ID ». Créez un client par plateforme (Web/Android/iOS). Pour Android, ajoutez l'empreinte SHA-1 (`eas credentials`).
+- **Facebook** : [Meta for Developers](https://developers.facebook.com/) → créez une app → « Facebook Login » → récupérez l'**App ID**.
+
+> Tant que ces identifiants ne sont pas renseignés, les boutons Google/Facebook
+> affichent simplement un rappel — la connexion email/mot de passe fonctionne normalement.

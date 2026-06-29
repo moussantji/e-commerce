@@ -12,3 +12,17 @@
 export const API_BASE_URL = "http://10.0.2.2:8000/api";
 
 export const CURRENCY = "FCFA";
+
+/**
+ * Identifiants OAuth pour la connexion Google / Facebook.
+ * Laissez vides tant que non configurés (les boutons afficheront un rappel).
+ * Voir mobile/README.md (section "Connexion Google / Facebook").
+ */
+export const GOOGLE_CLIENT_IDS = {
+    expo: "", // Web client ID (utilisé dans Expo Go)
+    android: "", // Android client ID
+    ios: "", // iOS client ID
+    web: "", // Web client ID
+};
+
+export const FACEBOOK_APP_ID = "";

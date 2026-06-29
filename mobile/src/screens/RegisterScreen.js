@@ -10,8 +10,11 @@ import {
     Platform,
     ScrollView,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
 import { apiError } from "../api/client";
+import SocialButtons from "../components/SocialButtons";
 
 export default function RegisterScreen({ navigation }) {
     const { register } = useAuth();
@@ -50,101 +53,140 @@ export default function RegisterScreen({ navigation }) {
         }
     };
 
+    const field = (key, placeholder, icon, opts = {}) => (
+        <View style={styles.inputWrap}>
+            <Ionicons name={icon} size={18} color="#9ca3af" />
+            <TextInput
+                style={styles.input}
+                placeholder={placeholder}
+                value={form[key]}
+                onChangeText={set(key)}
+                {...opts}
+            />
+        </View>
+    );
+
     return (
-        <KeyboardAvoidingView
-            style={{ flex: 1, backgroundColor: "#fff" }}
-            behavior={Platform.OS === "ios" ? "padding" : undefined}
-        >
-            <ScrollView
-                contentContainerStyle={styles.container}
-                keyboardShouldPersistTaps="handled"
+        <LinearGradient colors={["#FF8A3D", "#FF3D00"]} style={styles.bg}>
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === "ios" ? "padding" : undefined}
             >
-                <Text style={styles.title}>Créer un compte</Text>
-                <Text style={styles.subtitle}>Rejoignez la boutique</Text>
-
-                <TextInput
-                    style={styles.input}
-                    placeholder="Nom complet"
-                    value={form.name}
-                    onChangeText={set("name")}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Email"
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                    value={form.email}
-                    onChangeText={set("email")}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Mot de passe (min. 6)"
-                    secureTextEntry
-                    value={form.password}
-                    onChangeText={set("password")}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Confirmer le mot de passe"
-                    secureTextEntry
-                    value={form.password_confirmation}
-                    onChangeText={set("password_confirmation")}
-                />
-
-                <TouchableOpacity
-                    style={[styles.button, loading && styles.disabled]}
-                    onPress={submit}
-                    disabled={loading}
+                <ScrollView
+                    contentContainerStyle={styles.scroll}
+                    keyboardShouldPersistTaps="handled"
                 >
-                    <Text style={styles.buttonText}>
-                        {loading ? "Création..." : "S'inscrire"}
-                    </Text>
-                </TouchableOpacity>
+                    <View style={styles.brand}>
+                        <View style={styles.logoCircle}>
+                            <Ionicons
+                                name="person-add"
+                                size={32}
+                                color="#FF4500"
+                            />
+                        </View>
+                        <Text style={styles.brandTitle}>Créer un compte</Text>
+                        <Text style={styles.brandSub}>
+                            Rejoignez la boutique en quelques secondes
+                        </Text>
+                    </View>
 
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Text style={styles.link}>
-                        Déjà un compte ?{" "}
-                        <Text style={styles.linkBold}>Se connecter</Text>
-                    </Text>
-                </TouchableOpacity>
-            </ScrollView>
-        </KeyboardAvoidingView>
+                    <View style={styles.card}>
+                        {field("name", "Nom complet", "person-outline")}
+                        {field("email", "Email", "mail-outline", {
+                            autoCapitalize: "none",
+                            keyboardType: "email-address",
+                        })}
+                        {field(
+                            "password",
+                            "Mot de passe (min. 6)",
+                            "lock-closed-outline",
+                            { secureTextEntry: true },
+                        )}
+                        {field(
+                            "password_confirmation",
+                            "Confirmer le mot de passe",
+                            "lock-closed-outline",
+                            { secureTextEntry: true },
+                        )}
+
+                        <TouchableOpacity
+                            style={[styles.button, loading && styles.disabled]}
+                            onPress={submit}
+                            disabled={loading}
+                        >
+                            <Text style={styles.buttonText}>
+                                {loading ? "Création..." : "S'inscrire"}
+                            </Text>
+                        </TouchableOpacity>
+
+                        <SocialButtons />
+
+                        <TouchableOpacity onPress={() => navigation.goBack()}>
+                            <Text style={styles.link}>
+                                Déjà un compte ?{" "}
+                                <Text style={styles.linkBold}>
+                                    Se connecter
+                                </Text>
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </ScrollView>
+            </KeyboardAvoidingView>
+        </LinearGradient>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flexGrow: 1, justifyContent: "center", padding: 24 },
-    title: {
-        fontSize: 26,
-        fontWeight: "800",
-        textAlign: "center",
-        color: "#111827",
+    bg: { flex: 1 },
+    scroll: { flexGrow: 1, justifyContent: "center", padding: 24 },
+    brand: { alignItems: "center", marginBottom: 20 },
+    logoCircle: {
+        width: 70,
+        height: 70,
+        borderRadius: 35,
+        backgroundColor: "#fff",
+        justifyContent: "center",
+        alignItems: "center",
+        marginBottom: 12,
+        elevation: 4,
     },
-    subtitle: {
-        fontSize: 14,
-        color: "#6b7280",
+    brandTitle: { fontSize: 24, fontWeight: "900", color: "#fff" },
+    brandSub: {
+        color: "rgba(255,255,255,0.95)",
+        marginTop: 4,
         textAlign: "center",
-        marginBottom: 28,
     },
-    input: {
+    card: {
+        backgroundColor: "#fff",
+        borderRadius: 20,
+        padding: 22,
+        elevation: 6,
+        shadowColor: "#000",
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 4 },
+    },
+    inputWrap: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
         borderWidth: 1,
         borderColor: "#e5e7eb",
         borderRadius: 12,
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-        fontSize: 15,
+        paddingHorizontal: 14,
         marginBottom: 14,
         backgroundColor: "#f9fafb",
     },
+    input: { flex: 1, paddingVertical: 14, fontSize: 15 },
     button: {
-        backgroundColor: "#FF6A00",
+        backgroundColor: "#FF4500",
         borderRadius: 12,
         paddingVertical: 16,
         alignItems: "center",
-        marginTop: 6,
+        marginTop: 4,
     },
     disabled: { opacity: 0.6 },
-    buttonText: { color: "#fff", fontWeight: "700", fontSize: 16 },
-    link: { textAlign: "center", marginTop: 20, color: "#6b7280" },
-    linkBold: { color: "#FF6A00", fontWeight: "700" },
+    buttonText: { color: "#fff", fontWeight: "800", fontSize: 16 },
+    link: { textAlign: "center", marginTop: 18, color: "#6b7280" },
+    linkBold: { color: "#FF4500", fontWeight: "800" },
 });
