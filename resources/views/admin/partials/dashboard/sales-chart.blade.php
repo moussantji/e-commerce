@@ -24,8 +24,8 @@
 </div>
 
 @push('scripts')
-    <!-- Inclure Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js en LOCAL (évite les échecs de CDN / CSP) -->
+    <script src="{{ asset('vendors/chart/chart.umd.js') }}"></script>
     
     <!-- Inclure le fichier JavaScript du graphique -->
     <script src="{{ asset('assets/js/dashboards/sales-chart.js') }}"></script>

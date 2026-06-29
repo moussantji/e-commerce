@@ -217,17 +217,29 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
-    // Initialiser le graphique avec les données initiales
+    // 1) Rendu IMMÉDIAT à partir des données inline (s'affiche même si l'AJAX échoue)
+    function renderInlineData() {
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js non chargé : le graphe des ventes ne peut pas s\'afficher.');
+            return;
+        }
+        try {
+            const currentMonthSales = JSON.parse(salesChartElement.dataset.currentMonthSales || '[]');
+            const previousMonthSales = JSON.parse(salesChartElement.dataset.previousMonthSales || '[]');
+            const daysInMonth = Math.max(currentMonthSales.length, previousMonthSales.length, 1);
+            const labels = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+            initChart(labels, currentMonthSales, previousMonthSales, 'Mois en cours', 'Mois précédent');
+        } catch (e) {
+            console.error('Données inline du graphe invalides:', e);
+        }
+    }
+
+    renderInlineData();
+
+    // 2) Puis on rafraîchit avec des données à jour via AJAX (sans bloquer l'affichage)
     const initialMonth = monthSelector ? monthSelector.value : '';
     if (initialMonth) {
-        // S'assurer que le DOM est complètement chargé
-        if (document.readyState === 'complete') {
-            loadSalesData(initialMonth);
-        } else {
-            window.addEventListener('load', function() {
-                loadSalesData(initialMonth);
-            });
-        }
+        loadSalesData(initialMonth);
     }
     
     // Écouter les changements du sélecteur de mois
