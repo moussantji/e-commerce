@@ -186,3 +186,42 @@ export const FACEBOOK_APP_ID = '0000000000';
 
 > Tant que ces identifiants ne sont pas renseignés, les boutons Google/Facebook
 > affichent simplement un rappel — la connexion email/mot de passe fonctionne normalement.
+
+
+
+---
+
+## 🖼️ Fond des écrans Connexion / Inscription
+
+Par défaut, un **fond image** (avec voile orange pour la lisibilité) est utilisé.
+Réglable dans `mobile/src/config.js` :
+
+```js
+// Image distante :
+export const LOGIN_BG_IMAGE = "https://…/photo.jpg";
+// Image locale (placez le fichier dans mobile/assets/) :
+export const LOGIN_BG_IMAGE = require("../../assets/login-bg.jpg");
+// Revenir au dégradé orange :
+export const LOGIN_BG_IMAGE = null;
+```
+
+### 🎬 Fond vidéo (optionnel)
+La vidéo nécessite la librairie `expo-av` :
+```bash
+cd mobile
+npx expo install expo-av
+```
+Puis dans `src/components/AuthBackground.js`, remplacez l'`ImageBackground` par :
+```jsx
+import { Video, ResizeMode } from "expo-av";
+
+<Video
+  source={{ uri: "https://votre-domaine.com/login-bg.mp4" }}  // ou require("../../assets/login.mp4")
+  style={StyleSheet.absoluteFill}
+  resizeMode={ResizeMode.COVER}
+  shouldPlay
+  isLooping
+  isMuted
+/>
+```
+(gardez le voile `LinearGradient` au‑dessus pour la lisibilité). ⚠️ Une vidéo en boucle consomme plus de batterie/données ; une image est recommandée pour un écran de connexion.
