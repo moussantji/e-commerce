@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
         backgroundColor: "#f9fafb",
     },
     button: {
-        backgroundColor: "#6366f1",
+        backgroundColor: "#FF6A00",
         borderRadius: 12,
         paddingVertical: 16,
         alignItems: "center",
@@ -121,5 +121,5 @@ const styles = StyleSheet.create({
     disabled: { opacity: 0.6 },
     buttonText: { color: "#fff", fontWeight: "700", fontSize: 16 },
     link: { textAlign: "center", marginTop: 20, color: "#6b7280" },
-    linkBold: { color: "#6366f1", fontWeight: "700" },
+    linkBold: { color: "#FF6A00", fontWeight: "700" },
 });

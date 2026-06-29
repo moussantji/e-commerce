@@ -13,53 +13,55 @@ import {
 import api, { apiError } from "../api/client";
 import { formatPrice } from "../utils";
 
-export default function ProductsScreen({ navigation }) {
+const ORANGE = "#FF6A00";
+
+export default function ProductListScreen({ route, navigation }) {
+    const params = route.params || {};
+    const [search, setSearch] = useState(params.search || "");
     const [products, setProducts] = useState([]);
-    const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
     const [lastPage, setLastPage] = useState(1);
     const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState(null);
 
-    const load = useCallback(async (pageToLoad = 1, q = "") => {
-        setLoading(true);
-        setError(null);
-        try {
-            const { data } = await api.get("/products", {
-                params: { page: pageToLoad, per_page: 10, search: q },
-            });
-            setLastPage(data.meta?.last_page ?? 1);
-            setPage(data.meta?.current_page ?? pageToLoad);
-            setProducts((prev) =>
-                pageToLoad === 1 ? data.data : [...prev, ...data.data],
-            );
-        } catch (e) {
-            setError(apiError(e));
-        } finally {
-            setLoading(false);
-            setRefreshing(false);
-        }
-    }, []);
+    useEffect(() => {
+        navigation.setOptions({ title: params.title || "Produits" });
+    }, [navigation, params.title]);
+
+    const load = useCallback(
+        async (pageToLoad = 1, q = "") => {
+            setLoading(true);
+            setError(null);
+            try {
+                const { data } = await api.get("/products", {
+                    params: {
+                        page: pageToLoad,
+                        per_page: 12,
+                        search: q || undefined,
+                        category_id: params.categoryId || undefined,
+                        featured: params.featured || undefined,
+                    },
+                });
+                setLastPage(data.meta?.last_page ?? 1);
+                setPage(data.meta?.current_page ?? pageToLoad);
+                setProducts((prev) =>
+                    pageToLoad === 1 ? data.data : [...prev, ...data.data],
+                );
+            } catch (e) {
+                setError(apiError(e));
+            } finally {
+                setLoading(false);
+                setRefreshing(false);
+            }
+        },
+        [params.categoryId, params.featured],
+    );
 
     useEffect(() => {
-        load(1, "");
-    }, [load]);
-
-    // Recherche avec léger debounce
-    useEffect(() => {
-        const t = setTimeout(() => load(1, search), 400);
+        const t = setTimeout(() => load(1, search), 350);
         return () => clearTimeout(t);
     }, [search, load]);
-
-    const onRefresh = () => {
-        setRefreshing(true);
-        load(1, search);
-    };
-
-    const loadMore = () => {
-        if (!loading && page < lastPage) load(page + 1, search);
-    };
 
     const renderItem = ({ item }) => (
         <TouchableOpacity
@@ -71,11 +73,7 @@ export default function ProductsScreen({ navigation }) {
                 })
             }
         >
-            <Image
-                source={{ uri: item.image }}
-                style={styles.image}
-                resizeMode="cover"
-            />
+            <Image source={{ uri: item.image }} style={styles.image} />
             {item.sale_price ? (
                 <View style={styles.badge}>
                     <Text style={styles.badgeText}>Promo</Text>
@@ -102,57 +100,62 @@ export default function ProductsScreen({ navigation }) {
         </TouchableOpacity>
     );
 
-    if (error) {
-        return (
-            <View style={styles.center}>
-                <Text style={styles.errorText}>{error}</Text>
-                <TouchableOpacity
-                    style={styles.retry}
-                    onPress={() => load(1, search)}
-                >
-                    <Text style={styles.retryText}>Réessayer</Text>
-                </TouchableOpacity>
-            </View>
-        );
-    }
-
     return (
         <View style={styles.container}>
             <TextInput
                 style={styles.searchBar}
-                placeholder="🔍 Rechercher un produit..."
+                placeholder="🔍 Rechercher..."
                 value={search}
                 onChangeText={setSearch}
+                autoFocus={!!params.focusSearch}
             />
-            <FlatList
-                data={products}
-                keyExtractor={(item) => String(item.id)}
-                renderItem={renderItem}
-                numColumns={2}
-                columnWrapperStyle={{ gap: 12, paddingHorizontal: 12 }}
-                contentContainerStyle={{ gap: 12, paddingVertical: 12 }}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                    />
-                }
-                onEndReached={loadMore}
-                onEndReachedThreshold={0.4}
-                ListEmptyComponent={
-                    !loading ? (
-                        <Text style={styles.empty}>Aucun produit.</Text>
-                    ) : null
-                }
-                ListFooterComponent={
-                    loading ? (
-                        <ActivityIndicator
-                            style={{ margin: 16 }}
-                            color="#6366f1"
+            {error ? (
+                <View style={styles.center}>
+                    <Text style={styles.errorText}>{error}</Text>
+                    <TouchableOpacity
+                        style={styles.retry}
+                        onPress={() => load(1, search)}
+                    >
+                        <Text style={styles.retryText}>Réessayer</Text>
+                    </TouchableOpacity>
+                </View>
+            ) : (
+                <FlatList
+                    data={products}
+                    keyExtractor={(i) => String(i.id)}
+                    renderItem={renderItem}
+                    numColumns={2}
+                    columnWrapperStyle={{ gap: 12, paddingHorizontal: 12 }}
+                    contentContainerStyle={{ gap: 12, paddingVertical: 12 }}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={() => {
+                                setRefreshing(true);
+                                load(1, search);
+                            }}
+                            colors={[ORANGE]}
                         />
-                    ) : null
-                }
-            />
+                    }
+                    onEndReached={() => {
+                        if (!loading && page < lastPage) load(page + 1, search);
+                    }}
+                    onEndReachedThreshold={0.4}
+                    ListEmptyComponent={
+                        !loading ? (
+                            <Text style={styles.empty}>Aucun produit.</Text>
+                        ) : null
+                    }
+                    ListFooterComponent={
+                        loading ? (
+                            <ActivityIndicator
+                                style={{ margin: 16 }}
+                                color={ORANGE}
+                            />
+                        ) : null
+                    }
+                />
+            )}
         </View>
     );
 }
@@ -183,7 +186,7 @@ const styles = StyleSheet.create({
         overflow: "hidden",
         elevation: 2,
     },
-    image: { width: "100%", height: 140, backgroundColor: "#e5e7eb" },
+    image: { width: "100%", height: 150, backgroundColor: "#e5e7eb" },
     badge: {
         position: "absolute",
         top: 8,
@@ -203,7 +206,7 @@ const styles = StyleSheet.create({
         marginTop: 4,
         flexWrap: "wrap",
     },
-    price: { fontSize: 15, fontWeight: "800", color: "#6366f1" },
+    price: { fontSize: 15, fontWeight: "800", color: ORANGE },
     oldPrice: {
         fontSize: 12,
         color: "#9ca3af",
@@ -213,7 +216,7 @@ const styles = StyleSheet.create({
     empty: { textAlign: "center", color: "#6b7280", marginTop: 40 },
     errorText: { color: "#b91c1c", textAlign: "center", marginBottom: 16 },
     retry: {
-        backgroundColor: "#6366f1",
+        backgroundColor: ORANGE,
         borderRadius: 10,
         paddingHorizontal: 20,
         paddingVertical: 10,

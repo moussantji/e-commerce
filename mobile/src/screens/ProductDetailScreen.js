@@ -57,7 +57,7 @@ export default function ProductDetailScreen({ route, navigation }) {
     if (loading)
         return (
             <View style={styles.center}>
-                <ActivityIndicator size="large" color="#6366f1" />
+                <ActivityIndicator size="large" color="#FF6A00" />
             </View>
         );
     if (!product)
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
         gap: 10,
         marginTop: 14,
     },
-    price: { fontSize: 26, fontWeight: "900", color: "#6366f1" },
+    price: { fontSize: 26, fontWeight: "900", color: "#FF6A00" },
     oldPrice: {
         fontSize: 16,
         color: "#9ca3af",
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     description: { marginTop: 8, color: "#374151", lineHeight: 21 },
     footer: { padding: 16, borderTopWidth: 1, borderTopColor: "#f0f0f0" },
     button: {
-        backgroundColor: "#6366f1",
+        backgroundColor: "#FF6A00",
         borderRadius: 14,
         paddingVertical: 16,
         alignItems: "center",
