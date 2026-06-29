@@ -39,6 +39,7 @@ class BestOffers extends Component
     public function render()
     {
         $bestOffers = Produits::where('is_active', true)
+            ->where('stock', '>', 0)
             ->whereNotNull('sale_price')
             ->orderBy('sale_price', 'asc')
             ->with(['reviews'])

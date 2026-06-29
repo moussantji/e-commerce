@@ -83,6 +83,10 @@ class ProduitDetail extends Component
         }
 
         $this->similarProducts = Product::where('category_id', $this->product->category_id)
+            ->where('id', '!=', $this->product->id)
+            ->where('is_active', true)
+            ->where('stock', '>', 0)
+            ->limit(12)
             ->get();
         $this->setRatings();
         $this->hydrateImages();
@@ -193,6 +197,12 @@ class ProduitDetail extends Component
     {
         $product = Product::findOrFail($productId);
         $prixUnitaire = $product->price; // ou votre champ prix
+
+        // ✅ Garde stock : on ne peut pas ajouter plus que le stock disponible
+        if ((int) $product->stock < (int) $quantity) {
+            session()->flash('error', "Stock insuffisant pour {$product->name} (disponible : {$product->stock}).");
+            return;
+        }
 
         // 1. Récupère / crée le panier
         // 2. Récupère / crée le panier actif

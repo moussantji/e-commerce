@@ -8,12 +8,13 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
 
 
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasApiTokens;
 
     /**
      * The attributes that are mass assignable.
@@ -30,7 +31,10 @@ class User extends Authenticatable implements MustVerifyEmail
         'status',
         'lieu_naiss',
         'pays',
+        'ville',
         'region',
+        'latitude',
+        'longitude',
         'adresse',
         'provider',
         'provider_id',
@@ -49,6 +53,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'date_naiss' => 'date',
         'adresse'      => 'array',
         'social_links' => 'array',
+        'latitude' => 'float',
+        'longitude' => 'float',
     ];
 
     /**

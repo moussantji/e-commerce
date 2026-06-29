@@ -14,6 +14,12 @@
 
         <div class="row g-3 mb-3">
             <div class="col-12">
+                @include('admin.partials.dashboard.users-map')
+            </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-12">
                 @include('admin.partials.dashboard.table')
             </div>
         </div>

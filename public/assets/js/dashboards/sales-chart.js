@@ -7,13 +7,41 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialiser le graphique avec des données vides
     const ctx = salesChartElement.getContext('2d');
     let salesChart = null;
-    
+
+    // Affiche un message lisible quand il n'y a aucune vente (au lieu d'un graphe "vide")
+    function toggleNoDataMessage(a, b) {
+        const sum = (arr) => (arr || []).reduce((s, v) => s + (parseFloat(v) || 0), 0);
+        const empty = sum(a) === 0 && sum(b) === 0;
+        const container = salesChartElement.parentNode; // .chart-container (position:relative)
+        let msg = document.getElementById('sales-no-data');
+        if (empty) {
+            if (!msg) {
+                msg = document.createElement('div');
+                msg.id = 'sales-no-data';
+                msg.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:.9rem;text-align:center;padding:1rem;pointer-events:none;';
+                msg.textContent = "Aucune vente (commandes livrées/expédiées) sur cette période.";
+                container.appendChild(msg);
+            }
+        } else if (msg) {
+            msg.remove();
+        }
+    }
+
     // Fonction pour initialiser le graphique
     function initChart(labels, currentMonthData, previousMonthData, currentMonthLabel, previousMonthLabel) {
         if (salesChart) {
             salesChart.destroy();
         }
-        
+
+        // Dégradés verticaux pour une jolie aire sous la courbe
+        const gradientHeight = (salesChartElement.parentNode && salesChartElement.parentNode.clientHeight) || 320;
+        const gradientCurrent = ctx.createLinearGradient(0, 0, 0, gradientHeight);
+        gradientCurrent.addColorStop(0, 'rgba(99, 102, 241, 0.40)');
+        gradientCurrent.addColorStop(1, 'rgba(99, 102, 241, 0.00)');
+        const gradientPrevious = ctx.createLinearGradient(0, 0, 0, gradientHeight);
+        gradientPrevious.addColorStop(0, 'rgba(45, 212, 191, 0.25)');
+        gradientPrevious.addColorStop(1, 'rgba(45, 212, 191, 0.00)');
+
         salesChart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -22,25 +50,35 @@ document.addEventListener('DOMContentLoaded', function() {
                     {
                         label: currentMonthLabel || 'Mois en cours',
                         data: currentMonthData,
-                        borderColor: 'rgba(110, 66, 193, 1)',
-                        borderWidth: 2,
-                        backgroundColor: 'rgba(110, 66, 193, 0.1)',
-                        tension: 0.4,
+                        borderColor: '#6366f1',
+                        borderWidth: 3,
+                        backgroundColor: gradientCurrent,
                         fill: true,
+                        tension: 0.4,
+                        cubicInterpolationMode: 'monotone',
                         pointRadius: 0,
-                        pointHoverRadius: 5
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#6366f1',
+                        pointBorderWidth: 2,
+                        pointHoverBackgroundColor: '#6366f1',
+                        pointHoverBorderColor: '#ffffff'
                     },
                     {
                         label: previousMonthLabel || 'Mois précédent',
                         data: previousMonthData,
-                        borderColor: 'rgba(91, 33, 182, 0.5)',
+                        borderColor: '#2dd4bf',
                         borderWidth: 2,
-                        backgroundColor: 'rgba(91, 33, 182, 0.05)',
-                        borderDash: [5, 5],
-                        tension: 0.4,
+                        backgroundColor: gradientPrevious,
+                        borderDash: [6, 6],
                         fill: true,
+                        tension: 0.4,
+                        cubicInterpolationMode: 'monotone',
                         pointRadius: 0,
-                        pointHoverRadius: 5
+                        pointHoverRadius: 5,
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#2dd4bf',
+                        pointBorderWidth: 2
                     }
                 ]
             },
@@ -50,14 +88,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 plugins: {
                     legend: {
                         position: 'top',
+                        align: 'end',
                         labels: {
                             color: getComputedStyle(document.documentElement).getPropertyValue('--phoenix-600'),
                             font: {
                                 family: 'Nunito Sans',
-                                size: 12
+                                size: 12,
+                                weight: '600'
                             },
                             usePointStyle: true,
-                            padding: 20
+                            pointStyle: 'circle',
+                            boxWidth: 8,
+                            boxHeight: 8,
+                            padding: 18
                         }
                     },
                     tooltip: {
@@ -111,21 +154,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 scales: {
                     x: {
                         grid: {
-                            display: false,
-                            drawBorder: false
+                            display: false
+                        },
+                        border: {
+                            display: false
                         },
                         ticks: {
                             color: getComputedStyle(document.documentElement).getPropertyValue('--phoenix-600'),
                             font: {
                                 family: 'Nunito Sans',
                                 size: 11
-                            }
+                            },
+                            autoSkip: true,
+                            maxRotation: 0,
+                            autoSkipPadding: 12,
+                            maxTicksLimit: window.innerWidth < 576 ? 8 : 16
                         }
                     },
                     y: {
                         grid: {
-                            color: getComputedStyle(document.documentElement).getPropertyValue('--phoenix-100'),
-                            drawBorder: false
+                            color: getComputedStyle(document.documentElement).getPropertyValue('--phoenix-100')
+                        },
+                        border: {
+                            display: false
                         },
                         beginAtZero: true,
                         ticks: {
@@ -135,6 +186,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                 size: 11
                             },
                             callback: function(value) {
+                                // Sur mobile : abréger les montants pour gagner de la place
+                                if (window.innerWidth < 576) {
+                                    if (value >= 1000000) return (value / 1000000).toLocaleString('fr-FR') + ' M';
+                                    if (value >= 1000) return Math.round(value / 1000) + ' k';
+                                    return value;
+                                }
                                 return value.toLocaleString('fr-FR') + ' FCFA';
                             },
                             maxTicksLimit: 6
@@ -149,6 +206,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
+        // Message si aucune donnée sur la période (évite un graphe vide déroutant)
+        toggleNoDataMessage(currentMonthData, previousMonthData);
+
         // Mettre à jour le graphique lors du changement de mois
         const monthSelect = document.getElementById('month-selector');
         if (monthSelect) {
@@ -207,17 +267,29 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
-    // Initialiser le graphique avec les données initiales
+    // 1) Rendu IMMÉDIAT à partir des données inline (s'affiche même si l'AJAX échoue)
+    function renderInlineData() {
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js non chargé : le graphe des ventes ne peut pas s\'afficher.');
+            return;
+        }
+        try {
+            const currentMonthSales = JSON.parse(salesChartElement.dataset.currentMonthSales || '[]');
+            const previousMonthSales = JSON.parse(salesChartElement.dataset.previousMonthSales || '[]');
+            const daysInMonth = Math.max(currentMonthSales.length, previousMonthSales.length, 1);
+            const labels = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+            initChart(labels, currentMonthSales, previousMonthSales, 'Mois en cours', 'Mois précédent');
+        } catch (e) {
+            console.error('Données inline du graphe invalides:', e);
+        }
+    }
+
+    renderInlineData();
+
+    // 2) Puis on rafraîchit avec des données à jour via AJAX (sans bloquer l'affichage)
     const initialMonth = monthSelector ? monthSelector.value : '';
     if (initialMonth) {
-        // S'assurer que le DOM est complètement chargé
-        if (document.readyState === 'complete') {
-            loadSalesData(initialMonth);
-        } else {
-            window.addEventListener('load', function() {
-                loadSalesData(initialMonth);
-            });
-        }
+        loadSalesData(initialMonth);
     }
     
     // Écouter les changements du sélecteur de mois
