@@ -587,7 +587,8 @@
     <!-- ============================================-->
 
     <script>
-        document.getElementById('shareBtn').addEventListener('click', async () => {
+        const shareBtn = document.getElementById('shareBtn');
+        if (shareBtn) shareBtn.addEventListener('click', async () => {
             const productData = {
                 title: '{{ $product->name }}',
                 url: '{{ route('produits.show', ['slug' => $product->getSlug(), 'id' => $product->id]) }}',
@@ -640,6 +641,8 @@
             const starsContainer = document.getElementById('stars');
             const ratingSpan = document.getElementById('rating-value');
             const ratingInput = document.getElementById('rating-input');
+
+            if (!starsContainer || !ratingSpan || !ratingInput) return;
 
             // Transforme le texte en spans
             function initStars() {
