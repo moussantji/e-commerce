@@ -24,3 +24,44 @@
 .dropdown-menu {
     z-index: 1070 !important;
 }
+
+
+
+/* ===================================================================
+   Notation par étoiles — adaptation mobile (évite le débordement)
+   =================================================================== */
+
+/* Le rater interactif du modal d'avis (les grosses étoiles ★★★★★) */
+.rating-stars {
+    max-width: 100%;
+    line-height: 1.2;
+}
+
+@media (max-width: 575.98px) {
+    /* Rater du modal : plus petit et moins espacé pour tenir sur l'écran */
+    .rating-stars {
+        font-size: 1.6rem !important;
+        letter-spacing: 4px !important;
+    }
+
+    /* Les lignes de notation passent à la ligne au lieu de déborder */
+    .d-flex.flex-wrap.align-items-center,
+    .d-flex.align-items-center.flex-wrap {
+        row-gap: 0.25rem;
+    }
+
+    /* Les étoiles FontAwesome trop grandes (fs-6 et plus) sont ramenées
+       à une taille raisonnable sur téléphone pour ne pas déborder */
+    .fs-6.fa-star,
+    .fs-6.fa-star-half-alt,
+    h2 + div .fa-star,
+    .fa-star.fs-6 {
+        font-size: 1rem !important;
+    }
+}
+
+/* Filet de sécurité : aucun groupe d'étoiles ne crée de scroll horizontal */
+.product-card .fs-9,
+.product-rating {
+    flex-wrap: wrap;
+}
