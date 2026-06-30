@@ -12,8 +12,9 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import api, { apiError } from "../api/client";
 import { formatPrice } from "../utils";
+import { COLORS } from "../theme";
 
-const ORANGE = "#FF6A00";
+const ORANGE = COLORS.primaryDark;
 
 const STATUS_COLORS = {
     en_attente: "#f59e0b",
@@ -181,7 +182,7 @@ const styles = StyleSheet.create({
         paddingTop: 10,
     },
     totalLabel: { color: "#6b7280" },
-    total: { color: ORANGE, fontWeight: "900", fontSize: 18 },
+    total: { color: COLORS.accent, fontWeight: "900", fontSize: 18 },
     empty: { color: "#6b7280", marginTop: 12, fontSize: 15 },
     errorText: { color: "#b91c1c", textAlign: "center", marginBottom: 16 },
     retry: {

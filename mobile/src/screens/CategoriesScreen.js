@@ -11,8 +11,9 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import api, { apiError } from "../api/client";
+import { COLORS } from "../theme";
 
-const ORANGE = "#FF6A00";
+const ORANGE = COLORS.primaryDark;
 
 export default function CategoriesScreen({ navigation }) {
     const [categories, setCategories] = useState([]);
@@ -128,7 +129,7 @@ const styles = StyleSheet.create({
         width: 60,
         height: 60,
         borderRadius: 30,
-        backgroundColor: "#fff5ec",
+        backgroundColor: COLORS.soft,
         justifyContent: "center",
         alignItems: "center",
         overflow: "hidden",

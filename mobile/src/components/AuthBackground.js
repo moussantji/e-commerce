@@ -2,6 +2,7 @@ import React from "react";
 import { ImageBackground, StyleSheet, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { LOGIN_BG_IMAGE } from "../config";
+import { COLORS } from "../theme";
 
 /**
  * Fond des écrans Connexion / Inscription.
@@ -23,9 +24,9 @@ export default function AuthBackground({ children }) {
                 style={styles.fill}
                 resizeMode="cover"
             >
-                {/* Voile orange semi-transparent : garde le texte/la carte lisibles */}
+                {/* Voile violet semi-transparent : garde le texte/la carte lisibles */}
                 <LinearGradient
-                    colors={["rgba(255,138,61,0.55)", "rgba(255,61,0,0.82)"]}
+                    colors={["rgba(102,126,234,0.55)", "rgba(118,75,162,0.85)"]}
                     style={StyleSheet.absoluteFill}
                 />
                 <View style={styles.fill}>{children}</View>
@@ -34,7 +35,12 @@ export default function AuthBackground({ children }) {
     }
 
     return (
-        <LinearGradient colors={["#FF8A3D", "#FF3D00"]} style={styles.fill}>
+        <LinearGradient
+            colors={COLORS.gradient}
+            start={COLORS.gradientStart}
+            end={COLORS.gradientEnd}
+            style={styles.fill}
+        >
             {children}
         </LinearGradient>
     );

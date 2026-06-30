@@ -12,8 +12,9 @@ import {
 } from "react-native";
 import api, { apiError } from "../api/client";
 import { formatPrice } from "../utils";
+import { COLORS } from "../theme";
 
-const ORANGE = "#FF6A00";
+const ORANGE = COLORS.primaryDark;
 
 export default function ProductListScreen({ route, navigation }) {
     const params = route.params || {};
@@ -191,7 +192,7 @@ const styles = StyleSheet.create({
         position: "absolute",
         top: 8,
         left: 8,
-        backgroundColor: "#22c55e",
+        backgroundColor: COLORS.accent,
         borderRadius: 6,
         paddingHorizontal: 6,
         paddingVertical: 2,
@@ -206,7 +207,7 @@ const styles = StyleSheet.create({
         marginTop: 4,
         flexWrap: "wrap",
     },
-    price: { fontSize: 15, fontWeight: "800", color: ORANGE },
+    price: { fontSize: 15, fontWeight: "800", color: COLORS.accent },
     oldPrice: {
         fontSize: 12,
         color: "#9ca3af",

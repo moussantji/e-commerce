@@ -7,6 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
+import { COLORS, GradientBackground } from "../theme";
 import LoginScreen from "../screens/LoginScreen";
 import RegisterScreen from "../screens/RegisterScreen";
 import HomeScreen from "../screens/HomeScreen";
@@ -16,8 +17,8 @@ import CartScreen from "../screens/CartScreen";
 import AccountScreen from "../screens/AccountScreen";
 import ProductListScreen from "../screens/ProductListScreen";
 import ProductDetailScreen from "../screens/ProductDetailScreen";
+import NotificationsScreen from "../screens/NotificationsScreen";
 
-const ORANGE = "#FF6A00";
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -25,7 +26,7 @@ const ICONS = {
     Accueil: "home",
     Catégories: "grid",
     Commande: "receipt",
-    Panier: "cart",
+    Panier: "bag",
     Compte: "person",
 };
 
@@ -34,13 +35,14 @@ function Tabs() {
     return (
         <Tab.Navigator
             screenOptions={({ route }) => ({
-                headerStyle: { backgroundColor: ORANGE },
+                headerTransparent: true,
+                headerBackground: () => <GradientBackground />,
                 headerTintColor: "#fff",
                 headerTitleStyle: { fontWeight: "800" },
-                tabBarActiveTintColor: ORANGE,
+                tabBarActiveTintColor: COLORS.primaryDark,
                 tabBarInactiveTintColor: "#9ca3af",
                 tabBarStyle: { height: 58, paddingBottom: 6, paddingTop: 6 },
-                tabBarLabelStyle: { fontSize: 11 },
+                tabBarLabelStyle: { fontSize: 11, fontWeight: "600" },
                 tabBarIcon: ({ color, size, focused }) => {
                     const base = ICONS[route.name] || "ellipse";
                     return (
@@ -68,7 +70,9 @@ function Tabs() {
                 name="Panier"
                 component={CartScreen}
                 options={{
+                    title: "Mon panier",
                     tabBarBadge: cart.count > 0 ? cart.count : undefined,
+                    tabBarBadgeStyle: { backgroundColor: COLORS.badge },
                 }}
             />
             <Tab.Screen
@@ -84,7 +88,7 @@ function AppStack() {
     return (
         <Stack.Navigator
             screenOptions={{
-                headerStyle: { backgroundColor: ORANGE },
+                headerStyle: { backgroundColor: COLORS.primary },
                 headerTintColor: "#fff",
                 headerTitleStyle: { fontWeight: "800" },
             }}
@@ -105,6 +109,11 @@ function AppStack() {
                 options={({ route }) => ({
                     title: route.params?.name || "Produit",
                 })}
+            />
+            <Stack.Screen
+                name="Notifications"
+                component={NotificationsScreen}
+                options={{ title: "Notifications" }}
             />
         </Stack.Navigator>
     );
@@ -131,7 +140,7 @@ export default function RootNavigator() {
                     alignItems: "center",
                 }}
             >
-                <ActivityIndicator size="large" color={ORANGE} />
+                <ActivityIndicator size="large" color={COLORS.primary} />
             </View>
         );
     }

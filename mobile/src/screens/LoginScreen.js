@@ -15,6 +15,7 @@ import { useAuth } from "../context/AuthContext";
 import { apiError } from "../api/client";
 import SocialButtons from "../components/SocialButtons";
 import AuthBackground from "../components/AuthBackground";
+import { COLORS } from "../theme";
 
 export default function LoginScreen({ navigation }) {
     const { login } = useAuth();
@@ -56,7 +57,7 @@ export default function LoginScreen({ navigation }) {
                             <Ionicons
                                 name="bag-handle"
                                 size={36}
-                                color="#FF4500"
+                                color={COLORS.primaryDark}
                             />
                         </View>
                         <Text style={styles.brandTitle}>Bienvenue 👋</Text>
@@ -178,7 +179,7 @@ const styles = StyleSheet.create({
     },
     input: { flex: 1, paddingVertical: 14, fontSize: 15 },
     button: {
-        backgroundColor: "#FF4500",
+        backgroundColor: COLORS.primaryDark,
         borderRadius: 12,
         paddingVertical: 16,
         alignItems: "center",
@@ -187,5 +188,5 @@ const styles = StyleSheet.create({
     disabled: { opacity: 0.6 },
     buttonText: { color: "#fff", fontWeight: "800", fontSize: 16 },
     link: { textAlign: "center", marginTop: 18, color: "#6b7280" },
-    linkBold: { color: "#FF4500", fontWeight: "800" },
+    linkBold: { color: COLORS.primaryDark, fontWeight: "800" },
 });

@@ -11,12 +11,21 @@ import {
     RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api from "../api/client";
 import { formatPrice } from "../utils";
+import { COLORS, RADIUS } from "../theme";
 
-const ORANGE = "#FF6A00";
+const FILTERS = [
+    { key: "for_you", label: "Pour vous", icon: null },
+    { key: "new", label: "Nouveautés", icon: "sparkles-outline" },
+    { key: "deals", label: "Promos", icon: "pricetag-outline" },
+    { key: "best", label: "Top ventes", icon: "flame-outline" },
+];
 
 export default function HomeScreen({ navigation }) {
+    const insets = useSafeAreaInsets();
     const [categories, setCategories] = useState([]);
     const [flash, setFlash] = useState([]);
     const [products, setProducts] = useState([]);
@@ -24,6 +33,8 @@ export default function HomeScreen({ navigation }) {
     const [lastPage, setLastPage] = useState(1);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [activeCat, setActiveCat] = useState(null);
+    const [activeFilter, setActiveFilter] = useState("for_you");
 
     const loadAll = useCallback(async () => {
         try {
@@ -68,10 +79,16 @@ export default function HomeScreen({ navigation }) {
 
     const Header = (
         <View>
-            {/* Bannière promo */}
-            <View style={styles.banner}>
+            {/* Bannière promo en dégradé */}
+            <LinearGradient
+                colors={COLORS.gradient}
+                start={COLORS.gradientStart}
+                end={COLORS.gradientEnd}
+                style={styles.banner}
+            >
                 <View style={{ flex: 1 }}>
-                    <Text style={styles.bannerTitle}>Méga soldes 🎉</Text>
+                    <Text style={styles.bannerTag}>#MégaSoldes</Text>
+                    <Text style={styles.bannerTitle}>ÉCONOMISEZ GROS 🎉</Text>
                     <Text style={styles.bannerSub}>
                         Jusqu'à -50% sur une sélection
                     </Text>
@@ -84,55 +101,81 @@ export default function HomeScreen({ navigation }) {
                             })
                         }
                     >
-                        <Text style={styles.bannerBtnText}>J'en profite</Text>
+                        <Text style={styles.bannerBtnText}>
+                            ACHETEZ MAINTENANT
+                        </Text>
                     </TouchableOpacity>
                 </View>
                 <Ionicons
                     name="pricetags"
-                    size={64}
-                    color="rgba(255,255,255,0.85)"
+                    size={62}
+                    color="rgba(255,255,255,0.9)"
                 />
+            </LinearGradient>
+
+            {/* Barre infos : livraison + vente flash */}
+            <View style={styles.infoBar}>
+                <View style={styles.infoItem}>
+                    <Ionicons
+                        name="car-outline"
+                        size={18}
+                        color={COLORS.primary}
+                    />
+                    <View>
+                        <Text style={styles.infoTitle}>Livraison offerte</Text>
+                        <Text style={styles.infoSub}>Dès 25 000 FCFA</Text>
+                    </View>
+                </View>
+                <View style={styles.infoDivider} />
+                <View style={styles.infoItem}>
+                    <Ionicons name="flash" size={18} color={COLORS.accent} />
+                    <View>
+                        <Text style={styles.infoTitle}>Vente Flash</Text>
+                        <Text style={styles.infoSub}>Voir plus</Text>
+                    </View>
+                </View>
             </View>
 
-            {/* Catégories horizontales */}
+            {/* Catégories horizontales en cercles */}
             {categories.length > 0 && (
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={styles.catRow}
-                    contentContainerStyle={{ paddingHorizontal: 12 }}
-                >
-                    {categories.map((c) => (
-                        <TouchableOpacity
-                            key={c.id}
-                            style={styles.catItem}
-                            onPress={() =>
-                                navigation.navigate("ProductList", {
-                                    categoryId: c.id,
-                                    title: c.name,
-                                })
-                            }
-                        >
-                            <View style={styles.catCircle}>
-                                {c.image ? (
-                                    <Image
-                                        source={{ uri: c.image }}
-                                        style={styles.catImg}
-                                    />
-                                ) : (
-                                    <Ionicons
-                                        name="cube-outline"
-                                        size={26}
-                                        color={ORANGE}
-                                    />
-                                )}
-                            </View>
-                            <Text style={styles.catLabel} numberOfLines={1}>
-                                {c.name}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
+                <View style={styles.catCard}>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={{ paddingHorizontal: 4 }}
+                    >
+                        {categories.map((c) => (
+                            <TouchableOpacity
+                                key={c.id}
+                                style={styles.catItem}
+                                onPress={() =>
+                                    navigation.navigate("ProductList", {
+                                        categoryId: c.id,
+                                        title: c.name,
+                                    })
+                                }
+                            >
+                                <View style={styles.catCircle}>
+                                    {c.image ? (
+                                        <Image
+                                            source={{ uri: c.image }}
+                                            style={styles.catImg}
+                                        />
+                                    ) : (
+                                        <Ionicons
+                                            name="cube-outline"
+                                            size={24}
+                                            color={COLORS.primaryDark}
+                                        />
+                                    )}
+                                </View>
+                                <Text style={styles.catLabel} numberOfLines={1}>
+                                    {c.name}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                </View>
             )}
 
             {/* Offres flash */}
@@ -169,6 +212,13 @@ export default function HomeScreen({ navigation }) {
                                     source={{ uri: p.image }}
                                     style={styles.flashImg}
                                 />
+                                {p.sale_price ? (
+                                    <View style={styles.flashBadge}>
+                                        <Text style={styles.flashBadgeText}>
+                                            PROMO
+                                        </Text>
+                                    </View>
+                                ) : null}
                                 <Text style={styles.flashPrice}>
                                     {formatPrice(p.sale_price ?? p.price)}
                                 </Text>
@@ -184,25 +234,56 @@ export default function HomeScreen({ navigation }) {
                 </View>
             )}
 
-            <Text
-                style={[
-                    styles.sectionTitle,
-                    { marginHorizontal: 12, marginTop: 6, marginBottom: 4 },
-                ]}
+            {/* Filtres */}
+            <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.filterRow}
             >
-                Pour vous
-            </Text>
+                {FILTERS.map((f) => {
+                    const on = activeFilter === f.key;
+                    return (
+                        <TouchableOpacity
+                            key={f.key}
+                            style={[styles.chip, on && styles.chipOn]}
+                            onPress={() => setActiveFilter(f.key)}
+                        >
+                            {f.icon && (
+                                <Ionicons
+                                    name={f.icon}
+                                    size={14}
+                                    color={on ? "#fff" : COLORS.text}
+                                />
+                            )}
+                            <Text
+                                style={[styles.chipText, on && styles.chipTextOn]}
+                            >
+                                {f.label}
+                            </Text>
+                        </TouchableOpacity>
+                    );
+                })}
+            </ScrollView>
         </View>
     );
 
     const renderProduct = ({ item }) => (
         <TouchableOpacity style={styles.card} onPress={() => goDetail(item)}>
-            <Image source={{ uri: item.image }} style={styles.image} />
-            {item.sale_price ? (
-                <View style={styles.badge}>
-                    <Text style={styles.badgeText}>Promo</Text>
+            <View>
+                <Image source={{ uri: item.image }} style={styles.image} />
+                {item.sale_price ? (
+                    <View style={styles.badge}>
+                        <Text style={styles.badgeText}>Promo</Text>
+                    </View>
+                ) : null}
+                <View style={styles.heart}>
+                    <Ionicons
+                        name="heart-outline"
+                        size={15}
+                        color={COLORS.primaryDark}
+                    />
                 </View>
-            ) : null}
+            </View>
             <View style={styles.cardBody}>
                 <Text style={styles.name} numberOfLines={2}>
                     {item.name}
@@ -224,48 +305,65 @@ export default function HomeScreen({ navigation }) {
         </TouchableOpacity>
     );
 
-    if (loading) {
-        return (
-            <View style={styles.container}>
-                <SearchBar navigation={navigation} />
-                <View style={styles.center}>
-                    <ActivityIndicator size="large" color={ORANGE} />
-                </View>
-            </View>
-        );
-    }
-
     return (
         <View style={styles.container}>
-            <SearchBar navigation={navigation} />
-            <FlatList
-                data={products}
-                keyExtractor={(i) => String(i.id)}
-                renderItem={renderProduct}
-                numColumns={2}
-                columnWrapperStyle={{ gap: 12, paddingHorizontal: 12 }}
-                contentContainerStyle={{ gap: 12, paddingBottom: 16 }}
-                ListHeaderComponent={Header}
-                onEndReached={loadMore}
-                onEndReachedThreshold={0.4}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={() => {
-                            setRefreshing(true);
-                            loadAll();
-                        }}
-                        colors={[ORANGE]}
-                    />
-                }
-            />
+            <HomeTopBar navigation={navigation} insets={insets} />
+            {loading ? (
+                <View style={styles.center}>
+                    <ActivityIndicator size="large" color={COLORS.primary} />
+                </View>
+            ) : (
+                <FlatList
+                    data={products}
+                    keyExtractor={(i) => String(i.id)}
+                    renderItem={renderProduct}
+                    numColumns={2}
+                    columnWrapperStyle={{ gap: 12, paddingHorizontal: 12 }}
+                    contentContainerStyle={{ gap: 12, paddingBottom: 16 }}
+                    ListHeaderComponent={Header}
+                    onEndReached={loadMore}
+                    onEndReachedThreshold={0.4}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={() => {
+                                setRefreshing(true);
+                                loadAll();
+                            }}
+                            colors={[COLORS.primary]}
+                            tintColor={COLORS.primary}
+                        />
+                    }
+                />
+            )}
         </View>
     );
 }
 
-function SearchBar({ navigation }) {
+/** En-tête en dégradé : notifications (place réservée) + recherche + panier. */
+function HomeTopBar({ navigation, insets }) {
     return (
-        <View style={styles.searchHeader}>
+        <LinearGradient
+            colors={COLORS.gradient}
+            start={COLORS.gradientStart}
+            end={COLORS.gradientEnd}
+            style={[styles.topBar, { paddingTop: insets.top + 8 }]}
+        >
+            {/* Espace notifications : cloche + badge */}
+            <TouchableOpacity
+                style={styles.iconBtn}
+                onPress={() => navigation.navigate("Notifications")}
+            >
+                <Ionicons
+                    name="notifications-outline"
+                    size={24}
+                    color="#fff"
+                />
+                <View style={styles.notifBadge}>
+                    <Text style={styles.notifBadgeText}>2</Text>
+                </View>
+            </TouchableOpacity>
+
             <TouchableOpacity
                 style={styles.search}
                 onPress={() =>
@@ -279,34 +377,55 @@ function SearchBar({ navigation }) {
                 <Text style={styles.searchPlaceholder}>
                     Rechercher un produit...
                 </Text>
+                <Ionicons name="camera-outline" size={20} color="#9ca3af" />
             </TouchableOpacity>
+
             <TouchableOpacity
-                style={styles.cartIcon}
+                style={styles.iconBtn}
                 onPress={() => navigation.navigate("Panier")}
             >
-                <Ionicons name="cart-outline" size={24} color="#fff" />
+                <Ionicons name="bag-outline" size={24} color="#fff" />
             </TouchableOpacity>
-        </View>
+        </LinearGradient>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: "#f3f4f6" },
+    container: { flex: 1, backgroundColor: COLORS.bg },
     center: {
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
         paddingTop: 60,
     },
-    searchHeader: {
+    topBar: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 10,
-        backgroundColor: ORANGE,
+        gap: 8,
         paddingHorizontal: 12,
-        paddingTop: 12,
         paddingBottom: 12,
     },
+    iconBtn: {
+        width: 38,
+        height: 38,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    notifBadge: {
+        position: "absolute",
+        top: 2,
+        right: 2,
+        minWidth: 16,
+        height: 16,
+        paddingHorizontal: 3,
+        borderRadius: 8,
+        backgroundColor: COLORS.badge,
+        alignItems: "center",
+        justifyContent: "center",
+        borderWidth: 1.5,
+        borderColor: COLORS.primary,
+    },
+    notifBadgeText: { color: "#fff", fontSize: 9, fontWeight: "800" },
     search: {
         flex: 1,
         flexDirection: "row",
@@ -314,20 +433,24 @@ const styles = StyleSheet.create({
         gap: 8,
         backgroundColor: "#fff",
         borderRadius: 22,
-        paddingHorizontal: 16,
-        paddingVertical: 10,
+        paddingHorizontal: 14,
+        paddingVertical: 9,
     },
-    searchPlaceholder: { color: "#9ca3af", fontSize: 14 },
-    cartIcon: { padding: 4 },
+    searchPlaceholder: { flex: 1, color: "#9ca3af", fontSize: 14 },
     banner: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#FF8A3D",
         margin: 12,
-        borderRadius: 16,
+        borderRadius: RADIUS.lg,
         padding: 18,
     },
-    bannerTitle: { color: "#fff", fontSize: 20, fontWeight: "900" },
+    bannerTag: { color: "#ffd6e7", fontWeight: "700", fontSize: 12 },
+    bannerTitle: {
+        color: "#fff",
+        fontSize: 20,
+        fontWeight: "900",
+        marginTop: 2,
+    },
     bannerSub: { color: "rgba(255,255,255,0.95)", marginTop: 4 },
     bannerBtn: {
         backgroundColor: "#fff",
@@ -337,18 +460,41 @@ const styles = StyleSheet.create({
         paddingVertical: 7,
         marginTop: 12,
     },
-    bannerBtnText: { color: ORANGE, fontWeight: "800" },
-    catRow: { marginBottom: 4 },
-    catItem: { alignItems: "center", width: 72, marginRight: 4 },
+    bannerBtnText: { color: COLORS.primaryDark, fontWeight: "800", fontSize: 12 },
+    infoBar: {
+        flexDirection: "row",
+        backgroundColor: COLORS.soft,
+        marginHorizontal: 12,
+        borderRadius: RADIUS.md,
+        padding: 12,
+    },
+    infoItem: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8 },
+    infoDivider: {
+        width: 1,
+        backgroundColor: COLORS.softBorder,
+        marginHorizontal: 8,
+    },
+    infoTitle: { fontWeight: "700", color: COLORS.text, fontSize: 12.5 },
+    infoSub: { color: COLORS.textLight, fontSize: 11 },
+    catCard: {
+        backgroundColor: "#fff",
+        marginHorizontal: 12,
+        marginTop: 12,
+        borderRadius: RADIUS.lg,
+        paddingVertical: 14,
+        paddingHorizontal: 6,
+    },
+    catItem: { alignItems: "center", width: 72 },
     catCircle: {
         width: 56,
         height: 56,
         borderRadius: 28,
-        backgroundColor: "#fff",
+        backgroundColor: COLORS.soft,
+        borderWidth: 1.5,
+        borderColor: COLORS.softBorder,
         justifyContent: "center",
         alignItems: "center",
         overflow: "hidden",
-        elevation: 1,
     },
     catImg: { width: 56, height: 56 },
     catLabel: {
@@ -357,7 +503,7 @@ const styles = StyleSheet.create({
         marginTop: 6,
         textAlign: "center",
     },
-    section: { marginTop: 8 },
+    section: { marginTop: 14 },
     sectionHead: {
         flexDirection: "row",
         justifyContent: "space-between",
@@ -366,7 +512,7 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     sectionTitle: { fontSize: 16, fontWeight: "800", color: "#111827" },
-    seeAll: { color: ORANGE, fontWeight: "600" },
+    seeAll: { color: COLORS.primaryDark, fontWeight: "700" },
     flashCard: {
         width: 120,
         backgroundColor: "#fff",
@@ -379,8 +525,41 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         backgroundColor: "#e5e7eb",
     },
-    flashPrice: { color: ORANGE, fontWeight: "900", marginTop: 6 },
+    flashBadge: {
+        position: "absolute",
+        top: 14,
+        left: 14,
+        backgroundColor: COLORS.accent,
+        borderRadius: 6,
+        paddingHorizontal: 6,
+        paddingVertical: 1,
+    },
+    flashBadgeText: { color: "#fff", fontSize: 9, fontWeight: "800" },
+    flashPrice: { color: COLORS.accent, fontWeight: "900", marginTop: 6 },
     flashName: { fontSize: 12, color: "#374151", marginTop: 2 },
+    filterRow: {
+        gap: 8,
+        paddingHorizontal: 12,
+        paddingTop: 16,
+        paddingBottom: 4,
+    },
+    chip: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 5,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: RADIUS.pill,
+        backgroundColor: "#fff",
+        borderWidth: 1,
+        borderColor: COLORS.border,
+    },
+    chipOn: {
+        backgroundColor: COLORS.primaryDark,
+        borderColor: COLORS.primaryDark,
+    },
+    chipText: { color: COLORS.text, fontWeight: "600", fontSize: 13 },
+    chipTextOn: { color: "#fff" },
     card: {
         flex: 1,
         backgroundColor: "#fff",
@@ -393,12 +572,23 @@ const styles = StyleSheet.create({
         position: "absolute",
         top: 8,
         left: 8,
-        backgroundColor: "#22c55e",
+        backgroundColor: COLORS.accent,
         borderRadius: 6,
         paddingHorizontal: 6,
         paddingVertical: 2,
     },
     badgeText: { color: "#fff", fontSize: 10, fontWeight: "700" },
+    heart: {
+        position: "absolute",
+        top: 8,
+        right: 8,
+        width: 26,
+        height: 26,
+        borderRadius: 13,
+        backgroundColor: "rgba(255,255,255,0.92)",
+        alignItems: "center",
+        justifyContent: "center",
+    },
     cardBody: { padding: 10 },
     name: { fontSize: 13, fontWeight: "600", color: "#111827", minHeight: 34 },
     priceRow: {
@@ -408,7 +598,7 @@ const styles = StyleSheet.create({
         marginTop: 4,
         flexWrap: "wrap",
     },
-    price: { fontSize: 15, fontWeight: "800", color: ORANGE },
+    price: { fontSize: 15, fontWeight: "800", color: COLORS.accent },
     oldPrice: {
         fontSize: 12,
         color: "#9ca3af",

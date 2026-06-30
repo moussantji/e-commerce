@@ -9,8 +9,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
-import * as Google from "expo-auth-session/providers/Google";
-import * as Facebook from "expo-auth-session/providers/Facebook";
+import * as Google from "expo-auth-session/providers/google";
+import * as Facebook from "expo-auth-session/providers/facebook";
 import { useAuth } from "../context/AuthContext";
 import { apiError } from "../api/client";
 import { GOOGLE_CLIENT_IDS, FACEBOOK_APP_ID } from "../config";
