@@ -254,7 +254,7 @@ export default function CategoriesScreen({ navigation }) {
     );
 }
 
-const SIDEBAR_W = 5;
+const SIDEBAR_W = 30;
 
 const styles = StyleSheet.create({
     root: { flex: 1, backgroundColor: COLORS.bg },
