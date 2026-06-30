@@ -52,6 +52,40 @@
     @endif
 </div>
 
+<div class="mb-3">
+    <label class="form-label">Images de bannière (accueil mobile)</label>
+    <p class="text-muted small mb-2">
+        Deux images de fond cliquables, affichées sur l'accueil de l'application
+        mobile quand cette catégorie est sélectionnée.
+    </p>
+    <div class="row g-3">
+        <div class="col-6">
+            <label for="banner_image_1" class="form-label small">Bannière 1</label>
+            <input type="file" class="form-control @error('banner_image_1') is-invalid @enderror"
+                   id="banner_image_1" name="banner_image_1" accept="image/*">
+            @error('banner_image_1')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+            @if(isset($category) && $category->bannerImageUrl(1))
+                <img src="{{ $category->bannerImageUrl(1) }}"
+                     alt="Bannière 1" class="img-thumbnail mt-2" style="max-height: 90px;">
+            @endif
+        </div>
+        <div class="col-6">
+            <label for="banner_image_2" class="form-label small">Bannière 2</label>
+            <input type="file" class="form-control @error('banner_image_2') is-invalid @enderror"
+                   id="banner_image_2" name="banner_image_2" accept="image/*">
+            @error('banner_image_2')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+            @if(isset($category) && $category->bannerImageUrl(2))
+                <img src="{{ $category->bannerImageUrl(2) }}"
+                     alt="Bannière 2" class="img-thumbnail mt-2" style="max-height: 90px;">
+            @endif
+        </div>
+    </div>
+</div>
+
 <div class="form-check form-switch mb-3">
     <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="1"
         {{ old('is_active', isset($category) ? $category->is_active : true) ? 'checked' : '' }}>

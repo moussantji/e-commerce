@@ -24,6 +24,14 @@ const FILTERS = [
     { key: "best", label: "Top ventes", icon: "flame-outline" },
 ];
 
+// Paramètres API correspondant à chaque filtre (tri via /products?sort=...)
+const FILTER_PARAMS = {
+    for_you: {},
+    new: { sort: "latest" },
+    deals: { on_sale: 1 },
+    best: { sort: "popular" },
+};
+
 const ALL_TAB = { id: "all", name: "All" };
 
 export default function HomeScreen({ navigation }) {
@@ -40,8 +48,12 @@ export default function HomeScreen({ navigation }) {
     const [activeFilter, setActiveFilter] = useState("for_you");
     const [notifCount, setNotifCount] = useState(0);
 
-    const fetchProducts = useCallback(async (catId, pageNum = 1) => {
-        const params = { per_page: 10, page: pageNum };
+    const fetchProducts = useCallback(async (catId, filterKey, pageNum = 1) => {
+        const params = {
+            per_page: 10,
+            page: pageNum,
+            ...(FILTER_PARAMS[filterKey] || {}),
+        };
         if (catId && catId !== "all") params.category_id = catId;
         const { data } = await api.get("/products", { params });
         return data;
@@ -52,7 +64,7 @@ export default function HomeScreen({ navigation }) {
             const [cats, deals, grid] = await Promise.all([
                 api.get("/categories"),
                 api.get("/products", { params: { featured: 1, per_page: 10 } }),
-                fetchProducts(activeCat, 1),
+                fetchProducts(activeCat, activeFilter, 1),
             ]);
             setCategories(cats.data.data ?? []);
             setFlash(deals.data.data ?? []);
@@ -71,7 +83,7 @@ export default function HomeScreen({ navigation }) {
         } catch (e) {
             /* endpoint indisponible : badge masqué */
         }
-    }, [activeCat, fetchProducts]);
+    }, [activeCat, activeFilter, fetchProducts]);
 
     useEffect(() => {
         loadAll();
@@ -85,7 +97,7 @@ export default function HomeScreen({ navigation }) {
             setActiveCat(catId);
             setGridLoading(true);
             try {
-                const data = await fetchProducts(catId, 1);
+                const data = await fetchProducts(catId, activeFilter, 1);
                 setProducts(data.data ?? []);
                 setPage(data.meta?.current_page ?? 1);
                 setLastPage(data.meta?.last_page ?? 1);
@@ -95,14 +107,34 @@ export default function HomeScreen({ navigation }) {
                 setGridLoading(false);
             }
         },
-        [activeCat, fetchProducts],
+        [activeCat, activeFilter, fetchProducts],
+    );
+
+    // Sélection d'un filtre (Pour vous / Nouveautés / Promos / Top ventes)
+    const selectFilter = useCallback(
+        async (key) => {
+            if (key === activeFilter) return;
+            setActiveFilter(key);
+            setGridLoading(true);
+            try {
+                const data = await fetchProducts(activeCat, key, 1);
+                setProducts(data.data ?? []);
+                setPage(data.meta?.current_page ?? 1);
+                setLastPage(data.meta?.last_page ?? 1);
+            } catch (e) {
+                setProducts([]);
+            } finally {
+                setGridLoading(false);
+            }
+        },
+        [activeCat, activeFilter, fetchProducts],
     );
 
     const loadMore = async () => {
         if (loading || gridLoading || page >= lastPage) return;
         try {
             const next = page + 1;
-            const data = await fetchProducts(activeCat, next);
+            const data = await fetchProducts(activeCat, activeFilter, next);
             setProducts((p) => [...p, ...(data.data ?? [])]);
             setPage(data.meta?.current_page ?? next);
         } catch (e) {
@@ -119,10 +151,21 @@ export default function HomeScreen({ navigation }) {
             ? "MégaSoldes"
             : categories.find((c) => c.id === activeCat)?.name || "Sélection";
 
-    // Deux photos de fond cliquables pour la "partie" active
-    const heroSource =
-        activeCat === "all" && flash.length ? flash : products;
-    const heroPhotos = heroSource.slice(0, 2);
+    // Deux photos de fond cliquables pour la "partie" active.
+    // Priorité aux bannières choisies manuellement dans l'admin pour la catégorie.
+    const activeCategory = categories.find((c) => c.id === activeCat);
+    const bannerImages = activeCategory?.banner_images ?? [];
+    const heroTiles =
+        activeCat !== "all" && bannerImages.length
+            ? bannerImages.map((uri, i) => ({ key: `b${i}`, uri, banner: true }))
+            : (activeCat === "all" && flash.length ? flash : products)
+                  .slice(0, 2)
+                  .map((p) => ({
+                      key: String(p.id),
+                      uri: p.image,
+                      product: p,
+                      price: p.sale_price ?? p.price,
+                  }));
 
     const Header = (
         <View>
@@ -237,25 +280,34 @@ export default function HomeScreen({ navigation }) {
                     </View>
 
                     <View style={styles.heroPhotos}>
-                        {heroPhotos.map((p) => (
+                        {heroTiles.map((tile) => (
                             <TouchableOpacity
-                                key={p.id}
+                                key={tile.key}
                                 style={styles.heroTile}
                                 activeOpacity={0.85}
-                                onPress={() => goDetail(p)}
+                                onPress={() =>
+                                    tile.banner
+                                        ? navigation.navigate("ProductList", {
+                                              title: activeName,
+                                              categoryId: activeCat,
+                                          })
+                                        : goDetail(tile.product)
+                                }
                             >
                                 <Image
-                                    source={{ uri: p.image }}
+                                    source={{ uri: tile.uri }}
                                     style={StyleSheet.absoluteFill}
                                 />
-                                <View style={styles.heroPriceTag}>
-                                    <Text style={styles.heroPriceText}>
-                                        {formatPrice(p.sale_price ?? p.price)}
-                                    </Text>
-                                </View>
+                                {tile.price != null && (
+                                    <View style={styles.heroPriceTag}>
+                                        <Text style={styles.heroPriceText}>
+                                            {formatPrice(tile.price)}
+                                        </Text>
+                                    </View>
+                                )}
                             </TouchableOpacity>
                         ))}
-                        {heroPhotos.length === 0 && (
+                        {heroTiles.length === 0 && (
                             <View
                                 style={[
                                     styles.heroTile,
@@ -416,7 +468,7 @@ export default function HomeScreen({ navigation }) {
                         <TouchableOpacity
                             key={f.key}
                             style={[styles.chip, on && styles.chipOn]}
-                            onPress={() => setActiveFilter(f.key)}
+                            onPress={() => selectFilter(f.key)}
                         >
                             {f.icon && (
                                 <Ionicons

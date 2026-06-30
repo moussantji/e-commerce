@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\photos as Photos;
@@ -14,6 +15,8 @@ class Categories extends Model
         'description',
         'slug',
         'image',
+        'banner_image_1',
+        'banner_image_2',
         'is_active',
         'parent_id'
     ];
@@ -41,6 +44,16 @@ class Categories extends Model
     public function getPhoto(): ?Photos
     {
         return $this->photos()->where('categories_id', $this->id)->first();
+    }
+
+    /**
+     * URL publique d'une image de bannière (1 ou 2), ou null si absente.
+     */
+    public function bannerImageUrl(int $n): ?string
+    {
+        $path = $n === 2 ? $this->banner_image_2 : $this->banner_image_1;
+
+        return $path ? Storage::disk('public')->url($path) : null;
     }
     
     public function attachfiles(?array $files)
