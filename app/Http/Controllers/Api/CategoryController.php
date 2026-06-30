@@ -11,7 +11,15 @@ class CategoryController extends Controller
     public function index()
     {
         $categories = Categories::where('is_active', true)
-            ->with('photos')
+            ->whereNull('parent_id')
+            ->with([
+                'photos',
+                'children' => function ($q) {
+                    $q->where('is_active', true)
+                        ->with('photos')
+                        ->orderBy('sort_order');
+                },
+            ])
             ->withCount('products')
             ->orderBy('sort_order')
             ->get();

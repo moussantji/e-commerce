@@ -21,6 +21,7 @@ export default function CategoriesScreen({ navigation }) {
     const [categories, setCategories] = useState([]);
     const [active, setActive] = useState("all");
     const [items, setItems] = useState([]);
+    const [mode, setMode] = useState("products"); // 'products' | 'cats'
     const [loading, setLoading] = useState(true);
     const [gridLoading, setGridLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -57,6 +58,19 @@ export default function CategoriesScreen({ navigation }) {
         async (catId) => {
             if (catId === active) return;
             setActive(catId);
+
+            // Si la catégorie a des sous-catégories, on les affiche
+            if (catId !== "all") {
+                const cat = categories.find((c) => c.id === catId);
+                if (cat?.children?.length) {
+                    setMode("cats");
+                    setItems(cat.children);
+                    return;
+                }
+            }
+
+            // Sinon : repli sur les produits de la catégorie
+            setMode("products");
             setGridLoading(true);
             try {
                 setItems(await fetchItems(catId));
@@ -66,7 +80,7 @@ export default function CategoriesScreen({ navigation }) {
                 setGridLoading(false);
             }
         },
-        [active, fetchItems],
+        [active, categories, fetchItems],
     );
 
     const tabs = [ALL, ...categories];
@@ -206,7 +220,17 @@ export default function CategoriesScreen({ navigation }) {
                                     key={p.id}
                                     style={styles.tile}
                                     activeOpacity={0.8}
-                                    onPress={() => goDetail(p)}
+                                    onPress={() =>
+                                        mode === "cats"
+                                            ? navigation.navigate(
+                                                  "ProductList",
+                                                  {
+                                                      categoryId: p.id,
+                                                      title: p.name,
+                                                  },
+                                              )
+                                            : goDetail(p)
+                                    }
                                 >
                                     <View style={styles.tileCircle}>
                                         <Image
