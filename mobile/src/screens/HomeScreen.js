@@ -35,6 +35,7 @@ export default function HomeScreen({ navigation }) {
     const [refreshing, setRefreshing] = useState(false);
     const [activeCat, setActiveCat] = useState(null);
     const [activeFilter, setActiveFilter] = useState("for_you");
+    const [notifCount, setNotifCount] = useState(0);
 
     const loadAll = useCallback(async () => {
         try {
@@ -53,6 +54,13 @@ export default function HomeScreen({ navigation }) {
         } finally {
             setLoading(false);
             setRefreshing(false);
+        }
+        // Compteur de notifications non lues (n'empêche pas l'affichage si échec)
+        try {
+            const { data } = await api.get("/notifications/unread-count");
+            setNotifCount(data.unread_count ?? 0);
+        } catch (e) {
+            /* endpoint indisponible : badge masqué */
         }
     }, []);
 
@@ -307,7 +315,11 @@ export default function HomeScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <HomeTopBar navigation={navigation} insets={insets} />
+            <HomeTopBar
+                navigation={navigation}
+                insets={insets}
+                notifCount={notifCount}
+            />
             {loading ? (
                 <View style={styles.center}>
                     <ActivityIndicator size="large" color={COLORS.primary} />
@@ -341,7 +353,7 @@ export default function HomeScreen({ navigation }) {
 }
 
 /** En-tête en dégradé : notifications (place réservée) + recherche + panier. */
-function HomeTopBar({ navigation, insets }) {
+function HomeTopBar({ navigation, insets, notifCount = 0 }) {
     return (
         <LinearGradient
             colors={COLORS.gradient}
@@ -359,9 +371,13 @@ function HomeTopBar({ navigation, insets }) {
                     size={24}
                     color="#fff"
                 />
-                <View style={styles.notifBadge}>
-                    <Text style={styles.notifBadgeText}>2</Text>
-                </View>
+                {notifCount > 0 && (
+                    <View style={styles.notifBadge}>
+                        <Text style={styles.notifBadgeText}>
+                            {notifCount > 9 ? "9+" : notifCount}
+                        </Text>
+                    </View>
+                )}
             </TouchableOpacity>
 
             <TouchableOpacity
