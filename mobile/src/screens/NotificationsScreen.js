@@ -62,11 +62,12 @@ export default function NotificationsScreen() {
         try {
             const { data } = await api.get("/notifications");
             const list = data.data ?? data ?? [];
-            if (Array.isArray(list) && list.length) {
+            if (Array.isArray(list)) {
+                // L'API a répondu : on affiche les vraies données (même vides).
                 setItems(list.map(normalize));
             }
         } catch (e) {
-            // endpoint non disponible : on garde le repli de démonstration
+            // endpoint indisponible : on garde le repli de démonstration
         } finally {
             setLoading(false);
             setRefreshing(false);
