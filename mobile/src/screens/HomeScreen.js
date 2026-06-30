@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
     View,
     Text,
-    FlatList,
     Image,
     TouchableOpacity,
     StyleSheet,
@@ -35,6 +34,57 @@ const FILTER_PARAMS = {
 
 const ALL_TAB = { id: "all", name: "All" };
 
+/**
+ * Carte produit "waterfall" : la hauteur de l'image s'adapte à ses dimensions
+ * réelles (via onLoad) et le texte n'est pas tronqué → cadre à taille variable.
+ */
+function MasonryCard({ item, onPress }) {
+    const [ar, setAr] = useState(0.8);
+    return (
+        <TouchableOpacity style={styles.mCard} activeOpacity={0.9} onPress={onPress}>
+            <View>
+                <Image
+                    source={{ uri: item.image }}
+                    style={[styles.mImage, { aspectRatio: ar }]}
+                    resizeMode="cover"
+                    onLoad={(e) => {
+                        const s = e?.nativeEvent?.source;
+                        if (s?.width && s?.height) setAr(s.width / s.height);
+                    }}
+                />
+                {item.sale_price ? (
+                    <View style={styles.badge}>
+                        <Text style={styles.badgeText}>Promo</Text>
+                    </View>
+                ) : null}
+                <View style={styles.heart}>
+                    <Ionicons
+                        name="heart-outline"
+                        size={15}
+                        color={COLORS.primaryDark}
+                    />
+                </View>
+            </View>
+            <View style={styles.cardBody}>
+                <Text style={styles.name}>{item.name}</Text>
+                <View style={styles.priceRow}>
+                    <Text style={styles.price}>
+                        {formatPrice(item.sale_price ?? item.price)}
+                    </Text>
+                    {item.sale_price ? (
+                        <Text style={styles.oldPrice}>
+                            {formatPrice(item.price)}
+                        </Text>
+                    ) : null}
+                </View>
+                <Text style={styles.rating}>
+                    ⭐ {item.rating_avg ?? 0} ({item.rating_count ?? 0})
+                </Text>
+            </View>
+        </TouchableOpacity>
+    );
+}
+
 export default function HomeScreen({ navigation }) {
     const insets = useSafeAreaInsets();
     const [categories, setCategories] = useState([]);
@@ -49,6 +99,7 @@ export default function HomeScreen({ navigation }) {
     const [activeFilter, setActiveFilter] = useState("for_you");
     const [notifCount, setNotifCount] = useState(0);
     const [sticky, setSticky] = useState(false);
+    const loadingMoreRef = useRef(false);
 
     // Barre de recherche collante quand on scrolle vers le bas
     const stickyAnim = useRef(new Animated.Value(0)).current;
@@ -61,9 +112,15 @@ export default function HomeScreen({ navigation }) {
     }, [sticky, stickyAnim]);
 
     const onScroll = (e) => {
-        const y = e.nativeEvent.contentOffset.y;
+        const { contentOffset, contentSize, layoutMeasurement } =
+            e.nativeEvent;
+        const y = contentOffset.y;
         const should = y > 150;
         setSticky((prev) => (prev === should ? prev : should));
+        // Chargement de la page suivante à l'approche du bas
+        if (y + layoutMeasurement.height >= contentSize.height - 400) {
+            loadMore();
+        }
     };
 
     const fetchProducts = useCallback(async (catId, filterKey, pageNum = 1) => {
@@ -149,7 +206,14 @@ export default function HomeScreen({ navigation }) {
     );
 
     const loadMore = async () => {
-        if (loading || gridLoading || page >= lastPage) return;
+        if (
+            loadingMoreRef.current ||
+            loading ||
+            gridLoading ||
+            page >= lastPage
+        )
+            return;
+        loadingMoreRef.current = true;
         try {
             const next = page + 1;
             const data = await fetchProducts(activeCat, activeFilter, next);
@@ -157,6 +221,8 @@ export default function HomeScreen({ navigation }) {
             setPage(data.meta?.current_page ?? next);
         } catch (e) {
             /* ignore */
+        } finally {
+            loadingMoreRef.current = false;
         }
     };
 
@@ -234,6 +300,30 @@ export default function HomeScreen({ navigation }) {
         </View>
     );
 
+    const renderTabs = () => (
+        <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.tabsRow}
+        >
+            {tabs.map((t) => {
+                const on = activeCat === t.id;
+                return (
+                    <TouchableOpacity
+                        key={String(t.id)}
+                        style={styles.tab}
+                        onPress={() => selectCat(t.id)}
+                    >
+                        <Text style={[styles.tabText, on && styles.tabTextOn]}>
+                            {t.name}
+                        </Text>
+                        {on && <View style={styles.tabUnderline} />}
+                    </TouchableOpacity>
+                );
+            })}
+        </ScrollView>
+    );
+
     const Header = (
         <View>
             {/* === BLOC DÉGRADÉ : recherche + onglets catégories + bannière === */}
@@ -269,32 +359,7 @@ export default function HomeScreen({ navigation }) {
                 {renderSearchRow()}
 
                 {/* Onglets catégories : All, Women, Shoes, Men, Curve... */}
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.tabsRow}
-                >
-                    {tabs.map((t) => {
-                        const on = activeCat === t.id;
-                        return (
-                            <TouchableOpacity
-                                key={String(t.id)}
-                                style={styles.tab}
-                                onPress={() => selectCat(t.id)}
-                            >
-                                <Text
-                                    style={[
-                                        styles.tabText,
-                                        on && styles.tabTextOn,
-                                    ]}
-                                >
-                                    {t.name}
-                                </Text>
-                                {on && <View style={styles.tabUnderline} />}
-                            </TouchableOpacity>
-                        );
-                    })}
-                </ScrollView>
+                {renderTabs()}
 
                 {/* Bannière de la partie active + 2 photos de fond cliquables */}
                 <View style={styles.bannerRow}>
@@ -537,43 +602,8 @@ export default function HomeScreen({ navigation }) {
         </View>
     );
 
-    const renderProduct = ({ item }) => (
-        <TouchableOpacity style={styles.card} onPress={() => goDetail(item)}>
-            <View>
-                <Image source={{ uri: item.image }} style={styles.image} />
-                {item.sale_price ? (
-                    <View style={styles.badge}>
-                        <Text style={styles.badgeText}>Promo</Text>
-                    </View>
-                ) : null}
-                <View style={styles.heart}>
-                    <Ionicons
-                        name="heart-outline"
-                        size={15}
-                        color={COLORS.primaryDark}
-                    />
-                </View>
-            </View>
-            <View style={styles.cardBody}>
-                <Text style={styles.name} numberOfLines={2}>
-                    {item.name}
-                </Text>
-                <View style={styles.priceRow}>
-                    <Text style={styles.price}>
-                        {formatPrice(item.sale_price ?? item.price)}
-                    </Text>
-                    {item.sale_price ? (
-                        <Text style={styles.oldPrice}>
-                            {formatPrice(item.price)}
-                        </Text>
-                    ) : null}
-                </View>
-                <Text style={styles.rating}>
-                    ⭐ {item.rating_avg ?? 0} ({item.rating_count ?? 0})
-                </Text>
-            </View>
-        </TouchableOpacity>
-    );
+    const leftCol = products.filter((_, i) => i % 2 === 0);
+    const rightCol = products.filter((_, i) => i % 2 === 1);
 
     if (loading) {
         return (
@@ -585,32 +615,12 @@ export default function HomeScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <FlatList
-                data={products}
-                keyExtractor={(i) => String(i.id)}
-                renderItem={renderProduct}
-                numColumns={2}
-                columnWrapperStyle={{ gap: 12, paddingHorizontal: 12 }}
-                contentContainerStyle={{ gap: 12, paddingBottom: 16 }}
-                ListHeaderComponent={Header}
+            <ScrollView
+                style={{ flex: 1 }}
                 onScroll={onScroll}
                 scrollEventThrottle={16}
-                ListEmptyComponent={
-                    <View style={styles.gridEmpty}>
-                        {gridLoading ? (
-                            <ActivityIndicator
-                                size="large"
-                                color={COLORS.primary}
-                            />
-                        ) : (
-                            <Text style={styles.gridEmptyText}>
-                                Aucun produit dans cette catégorie
-                            </Text>
-                        )}
-                    </View>
-                }
-                onEndReached={loadMore}
-                onEndReachedThreshold={0.4}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 16 }}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
@@ -622,9 +632,51 @@ export default function HomeScreen({ navigation }) {
                         tintColor={COLORS.primary}
                     />
                 }
-            />
+            >
+                {Header}
 
-            {/* Barre de recherche collante animée (apparaît au scroll) */}
+                {gridLoading ? (
+                    <View style={styles.gridEmpty}>
+                        <ActivityIndicator size="large" color={COLORS.primary} />
+                    </View>
+                ) : products.length === 0 ? (
+                    <View style={styles.gridEmpty}>
+                        <Text style={styles.gridEmptyText}>
+                            Aucun produit dans cette catégorie
+                        </Text>
+                    </View>
+                ) : (
+                    <View style={styles.masonry}>
+                        <View style={styles.col}>
+                            {leftCol.map((p) => (
+                                <MasonryCard
+                                    key={p.id}
+                                    item={p}
+                                    onPress={() => goDetail(p)}
+                                />
+                            ))}
+                        </View>
+                        <View style={styles.col}>
+                            {rightCol.map((p) => (
+                                <MasonryCard
+                                    key={p.id}
+                                    item={p}
+                                    onPress={() => goDetail(p)}
+                                />
+                            ))}
+                        </View>
+                    </View>
+                )}
+
+                {page < lastPage && products.length > 0 && (
+                    <ActivityIndicator
+                        color={COLORS.primary}
+                        style={{ marginVertical: 16 }}
+                    />
+                )}
+            </ScrollView>
+
+            {/* Barre collante animée : recherche + onglets catégories */}
             <Animated.View
                 pointerEvents={sticky ? "auto" : "none"}
                 style={[
@@ -650,6 +702,7 @@ export default function HomeScreen({ navigation }) {
                     style={StyleSheet.absoluteFill}
                 />
                 {renderSearchRow()}
+                {renderTabs()}
             </Animated.View>
         </View>
     );
@@ -877,6 +930,20 @@ const styles = StyleSheet.create({
     chipTextOn: { color: "#fff" },
     gridEmpty: { paddingVertical: 40, alignItems: "center" },
     gridEmptyText: { color: COLORS.textLight, fontSize: 14 },
+    masonry: {
+        flexDirection: "row",
+        paddingHorizontal: 12,
+        gap: 12,
+        marginTop: 4,
+    },
+    col: { flex: 1, gap: 12 },
+    mCard: {
+        backgroundColor: "#fff",
+        borderRadius: 14,
+        overflow: "hidden",
+        elevation: 2,
+    },
+    mImage: { width: "100%", backgroundColor: "#e5e7eb" },
     card: {
         flex: 1,
         backgroundColor: "#fff",
@@ -907,7 +974,7 @@ const styles = StyleSheet.create({
         justifyContent: "center",
     },
     cardBody: { padding: 10 },
-    name: { fontSize: 13, fontWeight: "600", color: "#111827", minHeight: 34 },
+    name: { fontSize: 13, fontWeight: "600", color: "#111827" },
     priceRow: {
         flexDirection: "row",
         alignItems: "center",
