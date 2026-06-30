@@ -12,6 +12,7 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         $orders = Commandes::where('user_id', $request->user()->id)
+            ->with('produits.photos')
             ->withCount('produits')
             ->latest()
             ->paginate((int) $request->query('per_page', 15));
