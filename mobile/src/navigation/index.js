@@ -68,7 +68,7 @@ function Tabs() {
             <Tab.Screen
                 name="Commande"
                 component={OrdersScreen}
-                options={{ title: "Mes commandes" }}
+                options={{ headerShown: false }}
             />
             <Tab.Screen
                 name="Panier"
