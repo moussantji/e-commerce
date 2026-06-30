@@ -13,6 +13,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useCart } from "../context/CartContext";
 import { apiError } from "../api/client";
 import { formatPrice } from "../utils";
+import { COLORS } from "../theme";
 
 export default function CartScreen() {
     const { cart, loading, refresh, update, remove } = useCart();
@@ -70,7 +71,7 @@ export default function CartScreen() {
     if (loading && cart.items.length === 0) {
         return (
             <View style={styles.center}>
-                <ActivityIndicator size="large" color="#FF6A00" />
+                <ActivityIndicator size="large" color={COLORS.primary} />
             </View>
         );
     }
@@ -150,7 +151,7 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
     },
-    qtySign: { fontSize: 18, color: "#FF6A00", fontWeight: "800" },
+    qtySign: { fontSize: 18, color: COLORS.primaryDark, fontWeight: "800" },
     qty: { minWidth: 24, textAlign: "center", fontWeight: "700" },
     remove: { marginLeft: 8 },
     removeText: { color: "#dc2626", fontSize: 12, fontWeight: "600" },

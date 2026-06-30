@@ -15,6 +15,7 @@ import { useAuth } from "../context/AuthContext";
 import { apiError } from "../api/client";
 import SocialButtons from "../components/SocialButtons";
 import AuthBackground from "../components/AuthBackground";
+import { COLORS } from "../theme";
 
 export default function RegisterScreen({ navigation }) {
     const { register } = useAuth();
@@ -81,7 +82,7 @@ export default function RegisterScreen({ navigation }) {
                             <Ionicons
                                 name="person-add"
                                 size={32}
-                                color="#FF4500"
+                                color={COLORS.primaryDark}
                             />
                         </View>
                         <Text style={styles.brandTitle}>Créer un compte</Text>
@@ -179,7 +180,7 @@ const styles = StyleSheet.create({
     },
     input: { flex: 1, paddingVertical: 14, fontSize: 15 },
     button: {
-        backgroundColor: "#FF4500",
+        backgroundColor: COLORS.primaryDark,
         borderRadius: 12,
         paddingVertical: 16,
         alignItems: "center",
@@ -188,5 +189,5 @@ const styles = StyleSheet.create({
     disabled: { opacity: 0.6 },
     buttonText: { color: "#fff", fontWeight: "800", fontSize: 16 },
     link: { textAlign: "center", marginTop: 18, color: "#6b7280" },
-    linkBold: { color: "#FF4500", fontWeight: "800" },
+    linkBold: { color: COLORS.primaryDark, fontWeight: "800" },
 });

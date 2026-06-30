@@ -13,6 +13,8 @@ import api, { apiError } from "../api/client";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { formatPrice } from "../utils";
+import { LinearGradient } from "expo-linear-gradient";
+import { COLORS } from "../theme";
 
 export default function ProductDetailScreen({ route, navigation }) {
     const { id } = route.params;
@@ -57,7 +59,7 @@ export default function ProductDetailScreen({ route, navigation }) {
     if (loading)
         return (
             <View style={styles.center}>
-                <ActivityIndicator size="large" color="#FF6A00" />
+                <ActivityIndicator size="large" color={COLORS.primary} />
             </View>
         );
     if (!product)
@@ -120,20 +122,29 @@ export default function ProductDetailScreen({ route, navigation }) {
 
             <View style={styles.footer}>
                 <TouchableOpacity
-                    style={[
-                        styles.button,
-                        (!product.in_stock || adding) && styles.disabled,
-                    ]}
+                    style={styles.buttonWrap}
                     onPress={addToCart}
                     disabled={!product.in_stock || adding}
+                    activeOpacity={0.85}
                 >
-                    <Text style={styles.buttonText}>
-                        {!product.in_stock
-                            ? "Indisponible"
-                            : adding
-                              ? "Ajout..."
-                              : "🛒 Ajouter au panier"}
-                    </Text>
+                    <LinearGradient
+                        colors={
+                            !product.in_stock || adding
+                                ? ["#cbd5e1", "#9ca3af"]
+                                : COLORS.gradient
+                        }
+                        start={COLORS.gradientStart}
+                        end={COLORS.gradientEnd}
+                        style={styles.button}
+                    >
+                        <Text style={styles.buttonText}>
+                            {!product.in_stock
+                                ? "Indisponible"
+                                : adding
+                                  ? "Ajout..."
+                                  : "🛒 Ajouter au panier"}
+                        </Text>
+                    </LinearGradient>
                 </TouchableOpacity>
             </View>
         </View>
@@ -152,7 +163,7 @@ const styles = StyleSheet.create({
         gap: 10,
         marginTop: 14,
     },
-    price: { fontSize: 26, fontWeight: "900", color: "#FF6A00" },
+    price: { fontSize: 26, fontWeight: "900", color: COLORS.accent },
     oldPrice: {
         fontSize: 16,
         color: "#9ca3af",
@@ -167,12 +178,12 @@ const styles = StyleSheet.create({
     },
     description: { marginTop: 8, color: "#374151", lineHeight: 21 },
     footer: { padding: 16, borderTopWidth: 1, borderTopColor: "#f0f0f0" },
+    buttonWrap: { borderRadius: 14, overflow: "hidden" },
     button: {
-        backgroundColor: "#FF6A00",
         borderRadius: 14,
         paddingVertical: 16,
         alignItems: "center",
     },
-    disabled: { backgroundColor: "#9ca3af" },
+    disabled: { opacity: 0.7 },
     buttonText: { color: "#fff", fontWeight: "800", fontSize: 16 },
 });

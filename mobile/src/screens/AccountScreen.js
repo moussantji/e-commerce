@@ -7,9 +7,11 @@ import {
     ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../context/AuthContext";
+import { COLORS } from "../theme";
 
-const ORANGE = "#FF6A00";
+const ORANGE = COLORS.primaryDark;
 
 export default function AccountScreen({ navigation }) {
     const { user, logout } = useAuth();
@@ -36,7 +38,12 @@ export default function AccountScreen({ navigation }) {
 
     return (
         <ScrollView style={{ flex: 1, backgroundColor: "#f3f4f6" }}>
-            <View style={styles.header}>
+            <LinearGradient
+                colors={COLORS.gradient}
+                start={COLORS.gradientStart}
+                end={COLORS.gradientEnd}
+                style={styles.header}
+            >
                 <View style={styles.avatar}>
                     <Text style={styles.avatarText}>
                         {(user?.name || "?").charAt(0).toUpperCase()}
@@ -58,7 +65,7 @@ export default function AccountScreen({ navigation }) {
                         </Text>
                     ) : null}
                 </View>
-            </View>
+            </LinearGradient>
 
             <View style={styles.menu}>
                 {menu.map((m, i) => (
