@@ -74,7 +74,7 @@ function Tabs() {
                 name="Panier"
                 component={CartScreen}
                 options={{
-                    title: "Mon panier",
+                    headerShown: false,
                     tabBarBadge: cart.count > 0 ? cart.count : undefined,
                     tabBarBadgeStyle: { backgroundColor: COLORS.badge },
                 }}
