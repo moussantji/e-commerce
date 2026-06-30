@@ -88,6 +88,27 @@
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
+                        <label class="form-label">Bannière 1 (accueil mobile)</label>
+                        <input type="file" name="banner_image_1" accept="image/*"
+                               class="form-control @error('banner_image_1') is-invalid @enderror">
+                        @error('banner_image_1')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <div class="form-text">Image de fond cliquable affichée dans l'app mobile</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Bannière 2 (accueil mobile)</label>
+                        <input type="file" name="banner_image_2" accept="image/*"
+                               class="form-control @error('banner_image_2') is-invalid @enderror">
+                        @error('banner_image_2')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <div class="form-text">Deuxième image de fond cliquable</div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
                         <label class="form-label">Statut</label>
                         <div class="form-check form-switch">
                             <input type="checkbox" name="is_active" class="form-check-input"
