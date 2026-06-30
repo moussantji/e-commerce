@@ -29,4 +29,29 @@ class OrderController extends Controller
 
         return new OrderResource($order);
     }
+
+    public function cancel(Request $request, $id)
+    {
+        $order = Commandes::where('user_id', $request->user()->id)->findOrFail($id);
+
+        if (!in_array($order->statut, ['en_attente', 'traitement'], true)) {
+            return response()->json(
+                ['message' => 'Cette commande ne peut plus être annulée.'],
+                422,
+            );
+        }
+
+        $reason = $request->input('reason');
+        $order->statut = 'annule';
+        if ($reason) {
+            $order->notes = trim(
+                ($order->notes ? $order->notes . "\n" : '') . 'Annulation : ' . $reason,
+            );
+        }
+        $order->save();
+
+        $order->loadCount('produits')->load('produits.photos');
+
+        return new OrderResource($order);
+    }
 }
