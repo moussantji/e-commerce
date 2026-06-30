@@ -46,9 +46,14 @@ export default function ProductListScreen({ route, navigation }) {
                 });
                 setLastPage(data.meta?.last_page ?? 1);
                 setPage(data.meta?.current_page ?? pageToLoad);
-                setProducts((prev) =>
-                    pageToLoad === 1 ? data.data : [...prev, ...data.data],
-                );
+                setProducts((prev) => {
+                    if (pageToLoad === 1) return data.data ?? [];
+                    const seen = new Set(prev.map((x) => x.id));
+                    return [
+                        ...prev,
+                        ...(data.data ?? []).filter((x) => !seen.has(x.id)),
+                    ];
+                });
             } catch (e) {
                 setError(apiError(e));
             } finally {
