@@ -254,7 +254,7 @@ export default function CategoriesScreen({ navigation }) {
     );
 }
 
-const SIDEBAR_W = 104;
+const SIDEBAR_W = 84;
 
 const styles = StyleSheet.create({
     root: { flex: 1, backgroundColor: COLORS.bg },
@@ -306,8 +306,8 @@ const styles = StyleSheet.create({
     body: { flex: 1, flexDirection: "row" },
     sidebar: { width: SIDEBAR_W, backgroundColor: "#efeff5" },
     navItem: {
-        paddingVertical: 16,
-        paddingHorizontal: 10,
+        paddingVertical: 14,
+        paddingHorizontal: 6,
         justifyContent: "center",
     },
     navItemOn: { backgroundColor: COLORS.bg },
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
         borderRadius: 3,
         backgroundColor: COLORS.primaryDark,
     },
-    navText: { fontSize: 12.5, color: "#4b5563", fontWeight: "500" },
+    navText: { fontSize: 11.5, color: "#4b5563", fontWeight: "500" },
     navTextOn: { color: COLORS.primaryDark, fontWeight: "800" },
     content: { flex: 1, paddingHorizontal: 12 },
     sectionTitle: {
