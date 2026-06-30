@@ -3,8 +3,7 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+use League\Glide\Urls\UrlBuilderFactory;
 
 class CategoryResource extends JsonResource
 {
@@ -27,20 +26,18 @@ class CategoryResource extends JsonResource
     }
 
     /**
-     * Construit l'URL publique absolue d'une image de bannière.
+     * URL absolue d'une image de bannière, servie via Glide (redimensionnée),
+     * comme le champ `image` ci-dessus.
      */
-    private function bannerUrl(?string $path): ?string
+    private function bannerUrl(?string $filename): ?string
     {
-        if (!$path) {
+        if (!$filename) {
             return null;
         }
 
-        $url = Storage::disk('public')->url($path);
+        $glide = UrlBuilderFactory::create('/images/', config('glide.key'))
+            ->getUrl($filename, ['w' => 800, 'h' => 600, 'fit' => 'crop']);
 
-        if (Str::startsWith($url, ['http://', 'https://'])) {
-            return $url;
-        }
-
-        return rtrim(config('app.url'), '/') . '/' . ltrim($url, '/');
+        return rtrim(config('app.url'), '/') . '/' . ltrim($glide, '/');
     }
 }

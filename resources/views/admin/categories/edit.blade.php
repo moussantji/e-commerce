@@ -105,6 +105,35 @@
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
+                        <label class="form-label">Bannière 1 (accueil mobile)</label>
+                        <input type="file" name="banner_image_1" accept="image/*"
+                               class="form-control @error('banner_image_1') is-invalid @enderror">
+                        @error('banner_image_1')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <div class="form-text">Laisser vide = garder la bannière actuelle</div>
+                        @if($category->bannerImageUrl(1, 200, 120))
+                            <img src="{{ $category->bannerImageUrl(1, 200, 120) }}"
+                                 alt="Bannière 1" class="img-thumbnail mt-2" style="max-height: 90px;">
+                        @endif
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Bannière 2 (accueil mobile)</label>
+                        <input type="file" name="banner_image_2" accept="image/*"
+                               class="form-control @error('banner_image_2') is-invalid @enderror">
+                        @error('banner_image_2')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <div class="form-text">Laisser vide = garder la bannière actuelle</div>
+                        @if($category->bannerImageUrl(2, 200, 120))
+                            <img src="{{ $category->bannerImageUrl(2, 200, 120) }}"
+                                 alt="Bannière 2" class="img-thumbnail mt-2" style="max-height: 90px;">
+                        @endif
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
                         <label class="form-label">Statut</label>
                         <div class="form-check form-switch">
                             <input type="checkbox" name="is_active" class="form-check-input"

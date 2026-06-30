@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use League\Glide\Urls\UrlBuilderFactory;
 use App\Models\photos as Photos;
 
 class Categories extends Model
@@ -47,13 +48,28 @@ class Categories extends Model
     }
 
     /**
-     * URL publique d'une image de bannière (1 ou 2), ou null si absente.
+     * URL d'une image de bannière (1 ou 2), servie via Glide comme les
+     * autres images du site. Retourne null si absente.
      */
-    public function bannerImageUrl(int $n): ?string
+    public function bannerImageUrl(int $n, ?int $width = null, ?int $height = null): ?string
     {
-        $path = $n === 2 ? $this->banner_image_2 : $this->banner_image_1;
+        $filename = $n === 2 ? $this->banner_image_2 : $this->banner_image_1;
 
-        return $path ? Storage::disk('public')->url($path) : null;
+        if (!$filename) {
+            return null;
+        }
+
+        if ($width === null) {
+            return Storage::disk('public')->url($filename);
+        }
+
+        $urlBuilder = UrlBuilderFactory::create('/images/', config('glide.key'));
+
+        return $urlBuilder->getUrl($filename, [
+            'w' => $width,
+            'h' => $height,
+            'fit' => 'crop',
+        ]);
     }
     
     public function attachfiles(?array $files)
