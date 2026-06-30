@@ -217,7 +217,11 @@ export default function HomeScreen({ navigation }) {
         try {
             const next = page + 1;
             const data = await fetchProducts(activeCat, activeFilter, next);
-            setProducts((p) => [...p, ...(data.data ?? [])]);
+            setProducts((p) => {
+                const seen = new Set(p.map((x) => x.id));
+                const fresh = (data.data ?? []).filter((x) => !seen.has(x.id));
+                return [...p, ...fresh];
+            });
             setPage(data.meta?.current_page ?? next);
         } catch (e) {
             /* ignore */
