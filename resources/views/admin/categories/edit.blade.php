@@ -46,20 +46,29 @@
 
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Catégorie parente</label>
-                        <select name="parent_id" class="form-select @error('parent_id') is-invalid @enderror">
-                            <option value="">-- Catégorie racine --</option>
-                            @foreach($categories as $parentCategory)
-                                @if($parentCategory->id != $category->id)
+                        @if($category->children()->exists())
+                            <select class="form-select" disabled>
+                                <option>-- Catégorie principale (racine) --</option>
+                            </select>
+                            <input type="hidden" name="parent_id" value="">
+                            <div class="form-text text-warning">
+                                Cette catégorie possède des sous-catégories : elle reste une catégorie principale.
+                            </div>
+                        @else
+                            <select name="parent_id" class="form-select @error('parent_id') is-invalid @enderror">
+                                <option value="">-- Catégorie principale (racine) --</option>
+                                @foreach($categories as $parentCategory)
                                     <option value="{{ $parentCategory->id }}"
                                             {{ old('parent_id', $category->parent_id) == $parentCategory->id ? 'selected' : '' }}>
                                         {{ $parentCategory->name }}
                                     </option>
-                                @endif
-                            @endforeach
-                        </select>
-                        @error('parent_id')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                                @endforeach
+                            </select>
+                            @error('parent_id')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <div class="form-text">Laissez vide pour une catégorie principale (2 niveaux maximum).</div>
+                        @endif
                     </div>
                 </div>
 
