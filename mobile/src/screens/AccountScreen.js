@@ -28,6 +28,8 @@ export default function AccountScreen({ navigation }) {
     const { user, logout } = useAuth();
     const [thumbs, setThumbs] = useState([]);
     const [orders, setOrders] = useState([]);
+    const [couponCount, setCouponCount] = useState(0);
+    const [balance, setBalance] = useState(0);
 
     const load = useCallback(async () => {
         try {
@@ -39,6 +41,18 @@ export default function AccountScreen({ navigation }) {
             setOrders(o.data.data ?? []);
         } catch (e) {
             /* silencieux */
+        }
+        try {
+            const { data } = await api.get("/coupons");
+            setCouponCount(data.count ?? (data.data ?? []).length);
+        } catch (e) {
+            /* ignore */
+        }
+        try {
+            const { data } = await api.get("/wallet");
+            setBalance(data.balance ?? 0);
+        } catch (e) {
+            /* ignore */
         }
     }, []);
 
@@ -87,19 +101,23 @@ export default function AccountScreen({ navigation }) {
         {
             icon: "ribbon-outline",
             label: "Mes bons",
-            right: <Text style={styles.rightInfo}>Disponible : 0</Text>,
-            onPress: () => soon("Mes bons"),
+            right: <Text style={styles.rightInfo}>Disponible : {couponCount}</Text>,
+            onPress: () => navigation.navigate("Coupons"),
         },
         {
             icon: "wallet-outline",
             label: "Mon portefeuille",
-            right: <Text style={styles.rightInfo}>Solde : 0.00</Text>,
-            onPress: () => soon("Portefeuille"),
+            right: (
+                <Text style={styles.rightInfo}>
+                    Solde : {Number(balance).toFixed(2)}
+                </Text>
+            ),
+            onPress: () => navigation.navigate("Wallet"),
         },
         {
             icon: "home-outline",
             label: "Gestion des adresses",
-            onPress: () => soon("Gestion des adresses"),
+            onPress: () => navigation.navigate("Addresses"),
         },
     ];
 

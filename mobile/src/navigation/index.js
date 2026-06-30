@@ -19,6 +19,9 @@ import ProductListScreen from "../screens/ProductListScreen";
 import ProductDetailScreen from "../screens/ProductDetailScreen";
 import OrderDetailScreen from "../screens/OrderDetailScreen";
 import NotificationsScreen from "../screens/NotificationsScreen";
+import AddressesScreen from "../screens/AddressesScreen";
+import CouponsScreen from "../screens/CouponsScreen";
+import WalletScreen from "../screens/WalletScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -124,6 +127,21 @@ function AppStack() {
                 name="OrderDetail"
                 component={OrderDetailScreen}
                 options={{ headerShown: false }}
+            />
+            <Stack.Screen
+                name="Addresses"
+                component={AddressesScreen}
+                options={{ title: "Gestion des adresses" }}
+            />
+            <Stack.Screen
+                name="Coupons"
+                component={CouponsScreen}
+                options={{ title: "Mes bons" }}
+            />
+            <Stack.Screen
+                name="Wallet"
+                component={WalletScreen}
+                options={{ title: "Mon portefeuille" }}
             />
         </Stack.Navigator>
     );
