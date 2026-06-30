@@ -254,7 +254,7 @@ export default function CategoriesScreen({ navigation }) {
     );
 }
 
-const SIDEBAR_W = 70;
+const SIDEBAR_W = 30;
 
 const styles = StyleSheet.create({
     root: { flex: 1, backgroundColor: COLORS.bg },
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
     sidebar: { width: SIDEBAR_W, backgroundColor: "#efeff5" },
     navItem: {
         paddingVertical: 12,
-        paddingHorizontal: 4,
+        paddingHorizontal: 2,
         justifyContent: "center",
     },
     navItemOn: { backgroundColor: COLORS.bg },
@@ -321,8 +321,8 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.primaryDark,
     },
     navText: {
-        fontSize: 10.5,
-        lineHeight: 13,
+        fontSize: 9,
+        lineHeight: 11,
         color: "#4b5563",
         fontWeight: "500",
         textAlign: "center",
