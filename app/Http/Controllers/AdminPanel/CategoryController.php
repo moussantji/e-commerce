@@ -40,7 +40,12 @@ class CategoryController extends Controller
             'parent_id' => 'nullable|exists:categories,id',
             'sort_order' => 'nullable|integer|min:0',
             'image' => 'nullable|image|max:2048',
+            'banner_image_1' => 'nullable|image|max:2048',
+            'banner_image_2' => 'nullable|image|max:2048',
         ]);
+
+        // Les fichiers sont gérés séparément (pas en mass-assignment)
+        unset($validated['banner_image_1'], $validated['banner_image_2']);
 
         // Slug auto-généré si vide
         $validated['slug'] = $this->uniqueSlug($validated['slug'] ?? null, $validated['name']);
@@ -52,6 +57,10 @@ class CategoryController extends Controller
         if ($request->hasFile('image')) {
             $this->storeCategoryImage($category, $request->file('image'));
         }
+
+        // Images de bannière (choisies manuellement)
+        $this->storeBannerImage($category, $request->file('banner_image_1'), 'banner_image_1');
+        $this->storeBannerImage($category, $request->file('banner_image_2'), 'banner_image_2');
 
         return redirect()->route('admin.categories.index')
             ->with('success', 'Catégorie créée avec succès');
@@ -86,7 +95,12 @@ class CategoryController extends Controller
             'parent_id' => 'nullable|exists:categories,id',
             'sort_order' => 'nullable|integer|min:0',
             'image' => 'nullable|image|max:2048',
+            'banner_image_1' => 'nullable|image|max:2048',
+            'banner_image_2' => 'nullable|image|max:2048',
         ]);
+
+        // Les fichiers sont gérés séparément (pas en mass-assignment)
+        unset($validated['banner_image_1'], $validated['banner_image_2']);
 
         $validated['slug'] = $this->uniqueSlug($validated['slug'] ?? null, $validated['name'], $category->id);
         $validated['is_active'] = $request->boolean('is_active');
@@ -97,6 +111,10 @@ class CategoryController extends Controller
         if ($request->hasFile('image')) {
             $this->storeCategoryImage($category, $request->file('image'), true);
         }
+
+        // Images de bannière (remplacées si de nouvelles sont fournies)
+        $this->storeBannerImage($category, $request->file('banner_image_1'), 'banner_image_1');
+        $this->storeBannerImage($category, $request->file('banner_image_2'), 'banner_image_2');
 
         return redirect()->route('admin.categories.index')
             ->with('success', 'Catégorie mise à jour avec succès');
@@ -147,6 +165,26 @@ class CategoryController extends Controller
 
         // Conserve aussi le chemin dans la colonne image (compatibilité)
         $category->forceFill(['image' => $filename])->save();
+    }
+
+    /**
+     * Enregistre une image de bannière dans la colonne dédiée (banner_image_1 / 2).
+     * Remplace l'ancienne si présente.
+     */
+    protected function storeBannerImage(Category $category, $file, string $column): void
+    {
+        if (!$file || $file->getError()) {
+            return;
+        }
+
+        // Supprime l'ancien fichier s'il existe
+        if ($category->$column) {
+            Storage::disk('public')->delete($category->$column);
+        }
+
+        $path = $file->store('Category/' . $category->id . '/banners', 'public');
+
+        $category->forceFill([$column => $path])->save();
     }
 
     /**

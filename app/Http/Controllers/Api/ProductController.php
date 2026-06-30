@@ -34,6 +34,11 @@ class ProductController extends Controller
             $query->where('is_featured', true);
         }
 
+        // Uniquement les produits en promotion (prix soldé renseigné)
+        if ($request->boolean('on_sale')) {
+            $query->whereNotNull('sale_price');
+        }
+
         $sort = $request->query('sort', 'latest');
         match ($sort) {
             'price_asc' => $query->orderBy('price', 'asc'),
