@@ -3,7 +3,6 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use League\Glide\Urls\UrlBuilderFactory;
 
 class CategoryResource extends JsonResource
 {
@@ -16,28 +15,32 @@ class CategoryResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'slug' => $this->slug,
-            'image' => $img ? rtrim(config('app.url'), '/') . '/' . ltrim($img, '/') : null,
+            'image' => $this->abs($img),
             'banner_images' => array_values(array_filter([
-                $this->bannerUrl($this->banner_image_1),
-                $this->bannerUrl($this->banner_image_2),
+                $this->abs($this->bannerPath($this->banner_image_1)),
+                $this->abs($this->bannerPath($this->banner_image_2)),
             ])),
             'products_count' => (int) ($this->products_count ?? 0),
         ];
     }
 
-    /**
-     * URL absolue d'une image de bannière, servie via Glide (redimensionnée),
-     * comme le champ `image` ci-dessus.
-     */
-    private function bannerUrl(?string $filename): ?string
+    /** Chemin relatif (/storage/...) de l'image de bannière sur le disque public.
+     *  On reste volontairement relatif pour que abs() applique l'hôte de la requête
+     *  (Storage::url() préfixerait avec APP_URL=localhost, injoignable sur mobile). */
+    private function bannerPath(?string $filename): ?string
     {
-        if (!$filename) {
+        return $filename ? '/storage/' . ltrim($filename, '/') : null;
+    }
+
+    /** URL absolue basée sur l'hôte de la requête (joignable depuis l'app mobile). */
+    private function abs(?string $path): ?string
+    {
+        if (!$path) {
             return null;
         }
-
-        $glide = UrlBuilderFactory::create('/images/', config('glide.key'))
-            ->getUrl($filename, ['w' => 800, 'h' => 600, 'fit' => 'crop']);
-
-        return rtrim(config('app.url'), '/') . '/' . ltrim($glide, '/');
+        if (str_starts_with($path, 'http')) {
+            return $path;
+        }
+        return rtrim(request()->getSchemeAndHttpHost(), '/') . '/' . ltrim($path, '/');
     }
 }
