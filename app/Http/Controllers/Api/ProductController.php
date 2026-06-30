@@ -51,6 +51,9 @@ class ProductController extends Controller
             'popular' => $query->orderByDesc('reviews_count'),
             default => $query->latest(),
         };
+        // Tri secondaire déterministe : évite qu'un même produit réapparaisse
+        // sur deux pages (égalités) -> clés dupliquées côté client.
+        $query->orderByDesc('id');
 
         $products = $query->paginate((int) $request->query('per_page', 15));
 
