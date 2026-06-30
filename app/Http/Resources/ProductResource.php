@@ -34,7 +34,8 @@ class ProductResource extends JsonResource
         ];
     }
 
-    /** Transforme un chemin Glide relatif en URL absolue (indispensable côté mobile). */
+    /** Transforme un chemin relatif en URL absolue basée sur l'hôte de la requête
+     *  (indispensable côté mobile : émulateur/téléphone n'atteignent pas APP_URL=localhost). */
     private function abs(?string $path): ?string
     {
         if (!$path) {
@@ -43,6 +44,6 @@ class ProductResource extends JsonResource
         if (str_starts_with($path, 'http')) {
             return $path;
         }
-        return rtrim(config('app.url'), '/') . '/' . ltrim($path, '/');
+        return rtrim(request()->getSchemeAndHttpHost(), '/') . '/' . ltrim($path, '/');
     }
 }

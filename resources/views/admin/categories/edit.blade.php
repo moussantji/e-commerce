@@ -112,8 +112,8 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                         <div class="form-text">Laisser vide = garder la bannière actuelle</div>
-                        @if($category->bannerImageUrl(1, 200, 120))
-                            <img src="{{ $category->bannerImageUrl(1, 200, 120) }}"
+                        @if($category->bannerImageUrl(1))
+                            <img src="{{ $category->bannerImageUrl(1) }}"
                                  alt="Bannière 1" class="img-thumbnail mt-2" style="max-height: 90px;">
                         @endif
                     </div>
@@ -125,8 +125,8 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                         <div class="form-text">Laisser vide = garder la bannière actuelle</div>
-                        @if($category->bannerImageUrl(2, 200, 120))
-                            <img src="{{ $category->bannerImageUrl(2, 200, 120) }}"
+                        @if($category->bannerImageUrl(2))
+                            <img src="{{ $category->bannerImageUrl(2) }}"
                                  alt="Bannière 2" class="img-thumbnail mt-2" style="max-height: 90px;">
                         @endif
                     </div>
