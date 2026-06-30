@@ -47,6 +47,14 @@ export default function HomeScreen({ navigation }) {
     const [activeCat, setActiveCat] = useState("all");
     const [activeFilter, setActiveFilter] = useState("for_you");
     const [notifCount, setNotifCount] = useState(0);
+    const [sticky, setSticky] = useState(false);
+
+    // Barre de recherche collante quand on scrolle vers le bas
+    const onScroll = (e) => {
+        const y = e.nativeEvent.contentOffset.y;
+        const should = y > 150;
+        setSticky((prev) => (prev === should ? prev : should));
+    };
 
     const fetchProducts = useCallback(async (catId, filterKey, pageNum = 1) => {
         const params = {
@@ -167,62 +175,88 @@ export default function HomeScreen({ navigation }) {
                       price: p.sale_price ?? p.price,
                   }));
 
+    // Image de fond de l'en-tête, qui change selon la catégorie sélectionnée
+    const heroBgUri =
+        (activeCat !== "all" &&
+            (activeCategory?.banner_images?.[0] || activeCategory?.image)) ||
+        flash[0]?.image ||
+        products[0]?.image ||
+        null;
+
+    const renderSearchRow = () => (
+        <View style={styles.topRow}>
+            <TouchableOpacity
+                style={styles.iconBtn}
+                onPress={() => navigation.navigate("Notifications")}
+            >
+                <Ionicons name="notifications-outline" size={24} color="#fff" />
+                {notifCount > 0 && (
+                    <View style={styles.notifBadge}>
+                        <Text style={styles.notifBadgeText}>
+                            {notifCount > 9 ? "9+" : notifCount}
+                        </Text>
+                    </View>
+                )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={styles.search}
+                onPress={() =>
+                    navigation.navigate("ProductList", {
+                        title: "Recherche",
+                        focusSearch: true,
+                    })
+                }
+            >
+                <Ionicons name="search" size={18} color="#9ca3af" />
+                <Text style={styles.searchPlaceholder}>
+                    Rechercher un produit...
+                </Text>
+                <Ionicons name="camera-outline" size={20} color="#9ca3af" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={styles.iconBtn}
+                onPress={() => navigation.navigate("Panier")}
+            >
+                <Ionicons name="bag-outline" size={24} color="#fff" />
+            </TouchableOpacity>
+        </View>
+    );
+
     const Header = (
         <View>
             {/* === BLOC DÉGRADÉ : recherche + onglets catégories + bannière === */}
-            <LinearGradient
-                colors={COLORS.gradient}
-                start={COLORS.gradientStart}
-                end={COLORS.gradientEnd}
-                style={[styles.hero, { paddingTop: insets.top + 8 }]}
-            >
-                {/* Ligne du haut : notifications + recherche + panier */}
-                <View style={styles.topRow}>
-                    <TouchableOpacity
-                        style={styles.iconBtn}
-                        onPress={() => navigation.navigate("Notifications")}
-                    >
-                        <Ionicons
-                            name="notifications-outline"
-                            size={24}
-                            color="#fff"
+            <View style={styles.hero}>
+                {/* Dégradé de base */}
+                <LinearGradient
+                    colors={COLORS.gradient}
+                    start={COLORS.gradientStart}
+                    end={COLORS.gradientEnd}
+                    style={StyleSheet.absoluteFill}
+                />
+                {/* Image de fond (selon la catégorie) + voile violet pour la lisibilité */}
+                {heroBgUri && (
+                    <>
+                        <Image
+                            source={{ uri: heroBgUri }}
+                            style={StyleSheet.absoluteFill}
+                            resizeMode="cover"
                         />
-                        {notifCount > 0 && (
-                            <View style={styles.notifBadge}>
-                                <Text style={styles.notifBadgeText}>
-                                    {notifCount > 9 ? "9+" : notifCount}
-                                </Text>
-                            </View>
-                        )}
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={styles.search}
-                        onPress={() =>
-                            navigation.navigate("ProductList", {
-                                title: "Recherche",
-                                focusSearch: true,
-                            })
-                        }
-                    >
-                        <Ionicons name="search" size={18} color="#9ca3af" />
-                        <Text style={styles.searchPlaceholder}>
-                            Rechercher un produit...
-                        </Text>
-                        <Ionicons
-                            name="camera-outline"
-                            size={20}
-                            color="#9ca3af"
+                        <LinearGradient
+                            colors={[
+                                "rgba(102,126,234,0.82)",
+                                "rgba(118,75,162,0.92)",
+                            ]}
+                            start={COLORS.gradientStart}
+                            end={COLORS.gradientEnd}
+                            style={StyleSheet.absoluteFill}
                         />
-                    </TouchableOpacity>
+                    </>
+                )}
 
-                    <TouchableOpacity
-                        style={styles.iconBtn}
-                        onPress={() => navigation.navigate("Panier")}
-                    >
-                        <Ionicons name="bag-outline" size={24} color="#fff" />
-                    </TouchableOpacity>
-                </View>
+                <View style={{ paddingTop: insets.top + 8 }}>
+                {renderSearchRow()}
 
                 {/* Onglets catégories : All, Women, Shoes, Men, Curve... */}
                 <ScrollView
@@ -317,7 +351,8 @@ export default function HomeScreen({ navigation }) {
                         )}
                     </View>
                 </View>
-            </LinearGradient>
+                </View>
+            </View>
 
             {/* Barre infos : livraison + vente flash */}
             <View style={styles.infoBar}>
@@ -548,6 +583,8 @@ export default function HomeScreen({ navigation }) {
                 columnWrapperStyle={{ gap: 12, paddingHorizontal: 12 }}
                 contentContainerStyle={{ gap: 12, paddingBottom: 16 }}
                 ListHeaderComponent={Header}
+                onScroll={onScroll}
+                scrollEventThrottle={16}
                 ListEmptyComponent={
                     <View style={styles.gridEmpty}>
                         {gridLoading ? (
@@ -576,6 +613,18 @@ export default function HomeScreen({ navigation }) {
                     />
                 }
             />
+
+            {/* Barre de recherche collante (apparaît au scroll) avec fond violet */}
+            {sticky && (
+                <LinearGradient
+                    colors={COLORS.gradient}
+                    start={COLORS.gradientStart}
+                    end={COLORS.gradientEnd}
+                    style={[styles.stickyBar, { paddingTop: insets.top + 6 }]}
+                >
+                    {renderSearchRow()}
+                </LinearGradient>
+            )}
         </View>
     );
 }
@@ -593,6 +642,16 @@ const styles = StyleSheet.create({
         paddingBottom: 16,
         borderBottomLeftRadius: RADIUS.xl,
         borderBottomRightRadius: RADIUS.xl,
+        overflow: "hidden",
+    },
+    stickyBar: {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 30,
+        paddingHorizontal: 12,
+        paddingBottom: 10,
     },
     topRow: { flexDirection: "row", alignItems: "center", gap: 8 },
     iconBtn: {
