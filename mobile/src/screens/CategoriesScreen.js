@@ -254,7 +254,7 @@ export default function CategoriesScreen({ navigation }) {
     );
 }
 
-const SIDEBAR_W = 30;
+const SIDEBAR_W = 70;
 
 const styles = StyleSheet.create({
     root: { flex: 1, backgroundColor: COLORS.bg },
@@ -321,8 +321,8 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.primaryDark,
     },
     navText: {
-        fontSize: 9,
-        lineHeight: 11,
+        fontSize: 11,
+        lineHeight: 14,
         color: "#4b5563",
         fontWeight: "500",
         textAlign: "center",
