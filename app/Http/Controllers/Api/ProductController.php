@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductResource;
+use App\Models\Categories;
 use App\Models\Produits;
 use Illuminate\Http\Request;
 
@@ -27,7 +28,11 @@ class ProductController extends Controller
         }
 
         if ($categoryId = $request->query('category_id')) {
-            $query->where('category_id', $categoryId);
+            // Inclut les produits de la catégorie ET de ses sous-catégories
+            $ids = Categories::where('id', $categoryId)
+                ->orWhere('parent_id', $categoryId)
+                ->pluck('id');
+            $query->whereIn('category_id', $ids);
         }
 
         if ($request->boolean('featured')) {
