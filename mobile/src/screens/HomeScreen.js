@@ -35,59 +35,13 @@ const FILTER_PARAMS = {
 const ALL_TAB = { id: "all", name: "All" };
 
 /**
- * Carte produit en mosaïque :
- *  - `full` (pleine largeur) : présentation horizontale (image + infos) ;
- *  - sinon (demi-largeur) : carte verticale dont l'image prend son ratio réel.
- * Les largeurs varient donc selon la position, et les hauteurs selon l'image/texte.
+ * Carte produit "waterfall" : la hauteur de l'image s'adapte à ses dimensions
+ * réelles (via onLoad) et le texte n'est pas tronqué → cadre à taille variable.
  */
-function MosaicCard({ item, full, onPress }) {
+function MasonryCard({ item, onPress }) {
     const [ar, setAr] = useState(0.8);
-
-    if (full) {
-        return (
-            <TouchableOpacity
-                style={styles.fullCard}
-                activeOpacity={0.9}
-                onPress={onPress}
-            >
-                <Image
-                    source={{ uri: item.image }}
-                    style={styles.fullImg}
-                    resizeMode="cover"
-                />
-                {item.sale_price ? (
-                    <View style={styles.badge}>
-                        <Text style={styles.badgeText}>Promo</Text>
-                    </View>
-                ) : null}
-                <View style={styles.fullBody}>
-                    <Text style={styles.name} numberOfLines={2}>
-                        {item.name}
-                    </Text>
-                    <View style={styles.priceRow}>
-                        <Text style={styles.price}>
-                            {formatPrice(item.sale_price ?? item.price)}
-                        </Text>
-                        {item.sale_price ? (
-                            <Text style={styles.oldPrice}>
-                                {formatPrice(item.price)}
-                            </Text>
-                        ) : null}
-                    </View>
-                    <Text style={styles.rating}>
-                        ⭐ {item.rating_avg ?? 0} ({item.rating_count ?? 0})
-                    </Text>
-                </View>
-            </TouchableOpacity>
-        );
-    }
-
     return (
-        <TouchableOpacity
-            style={styles.halfCard}
-            activeOpacity={0.9}
-            onPress={onPress}
-        >
+        <TouchableOpacity style={styles.mCard} activeOpacity={0.9} onPress={onPress}>
             <View>
                 <Image
                     source={{ uri: item.image }}
@@ -648,6 +602,9 @@ export default function HomeScreen({ navigation }) {
         </View>
     );
 
+    const leftCol = products.filter((_, i) => i % 2 === 0);
+    const rightCol = products.filter((_, i) => i % 2 === 1);
+
     if (loading) {
         return (
             <View style={styles.center}>
@@ -689,15 +646,25 @@ export default function HomeScreen({ navigation }) {
                         </Text>
                     </View>
                 ) : (
-                    <View style={styles.mosaic}>
-                        {products.map((p, i) => (
-                            <MosaicCard
-                                key={p.id}
-                                item={p}
-                                full={i % 5 === 0}
-                                onPress={() => goDetail(p)}
-                            />
-                        ))}
+                    <View style={styles.masonry}>
+                        <View style={styles.col}>
+                            {leftCol.map((p) => (
+                                <MasonryCard
+                                    key={p.id}
+                                    item={p}
+                                    onPress={() => goDetail(p)}
+                                />
+                            ))}
+                        </View>
+                        <View style={styles.col}>
+                            {rightCol.map((p) => (
+                                <MasonryCard
+                                    key={p.id}
+                                    item={p}
+                                    onPress={() => goDetail(p)}
+                                />
+                            ))}
+                        </View>
                     </View>
                 )}
 
@@ -965,37 +932,17 @@ const styles = StyleSheet.create({
     gridEmptyText: { color: COLORS.textLight, fontSize: 14 },
     masonry: {
         flexDirection: "row",
-        flexWrap: "wrap",
         paddingHorizontal: 12,
-        justifyContent: "space-between",
-        alignItems: "flex-start",
+        gap: 12,
+        marginTop: 4,
     },
-    mosaic: {
-        flexDirection: "row",
-        flexWrap: "wrap",
-        paddingHorizontal: 12,
-        justifyContent: "space-between",
-        alignItems: "flex-start",
-    },
-    halfCard: {
-        width: "48.5%",
+    col: { flex: 1, gap: 12 },
+    mCard: {
         backgroundColor: "#fff",
         borderRadius: 14,
         overflow: "hidden",
         elevation: 2,
-        marginBottom: 12,
     },
-    fullCard: {
-        width: "100%",
-        flexDirection: "row",
-        backgroundColor: "#fff",
-        borderRadius: 14,
-        overflow: "hidden",
-        elevation: 2,
-        marginBottom: 12,
-    },
-    fullImg: { width: 150, height: 150, backgroundColor: "#e5e7eb" },
-    fullBody: { flex: 1, padding: 12, justifyContent: "center" },
     mImage: { width: "100%", backgroundColor: "#e5e7eb" },
     card: {
         flex: 1,
