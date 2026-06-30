@@ -2,75 +2,90 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
     View,
     Text,
-    FlatList,
+    ScrollView,
     Image,
     TouchableOpacity,
     StyleSheet,
     ActivityIndicator,
-    RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api, { apiError } from "../api/client";
-import { COLORS } from "../theme";
+import { COLORS, RADIUS } from "../theme";
 
-const ORANGE = COLORS.primaryDark;
+const ALL = { id: "all", name: "Pour vous" };
 
 export default function CategoriesScreen({ navigation }) {
+    const insets = useSafeAreaInsets();
     const [categories, setCategories] = useState([]);
+    const [active, setActive] = useState("all");
+    const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
+    const [gridLoading, setGridLoading] = useState(false);
     const [error, setError] = useState(null);
+
+    const fetchItems = useCallback(async (catId) => {
+        const params = { per_page: 18 };
+        if (catId && catId !== "all") params.category_id = catId;
+        else params.featured = 1;
+        const { data } = await api.get("/products", { params });
+        return data.data ?? [];
+    }, []);
 
     const load = useCallback(async () => {
         setError(null);
         try {
-            const { data } = await api.get("/categories");
-            setCategories(data.data ?? []);
+            const [cats, grid] = await Promise.all([
+                api.get("/categories"),
+                fetchItems("all"),
+            ]);
+            setCategories(cats.data.data ?? []);
+            setItems(grid);
         } catch (e) {
             setError(apiError(e));
         } finally {
             setLoading(false);
-            setRefreshing(false);
         }
-    }, []);
+    }, [fetchItems]);
 
     useEffect(() => {
         load();
     }, [load]);
 
-    const renderItem = ({ item }) => (
-        <TouchableOpacity
-            style={styles.card}
-            onPress={() =>
-                navigation.navigate("ProductList", {
-                    categoryId: item.id,
-                    title: item.name,
-                })
+    const select = useCallback(
+        async (catId) => {
+            if (catId === active) return;
+            setActive(catId);
+            setGridLoading(true);
+            try {
+                setItems(await fetchItems(catId));
+            } catch (e) {
+                setItems([]);
+            } finally {
+                setGridLoading(false);
             }
-        >
-            <View style={styles.iconWrap}>
-                {item.image ? (
-                    <Image source={{ uri: item.image }} style={styles.image} />
-                ) : (
-                    <Ionicons name="cube-outline" size={30} color={ORANGE} />
-                )}
-            </View>
-            <Text style={styles.name} numberOfLines={2}>
-                {item.name}
-            </Text>
-            <Text style={styles.count}>
-                {item.products_count} produit
-                {item.products_count > 1 ? "s" : ""}
-            </Text>
-        </TouchableOpacity>
+        },
+        [active, fetchItems],
     );
 
-    if (loading)
+    const tabs = [ALL, ...categories];
+    const sidebar = [ALL, ...categories];
+    const activeName =
+        active === "all"
+            ? "Pour vous"
+            : categories.find((c) => c.id === active)?.name || "Sélection";
+
+    const goDetail = (item) =>
+        navigation.navigate("ProductDetail", { id: item.id, name: item.name });
+
+    if (loading) {
         return (
             <View style={styles.center}>
-                <ActivityIndicator size="large" color={ORANGE} />
+                <ActivityIndicator size="large" color={COLORS.primary} />
             </View>
         );
+    }
 
     if (error) {
         return (
@@ -84,70 +99,236 @@ export default function CategoriesScreen({ navigation }) {
     }
 
     return (
-        <FlatList
-            style={{ backgroundColor: "#f3f4f6" }}
-            data={categories}
-            keyExtractor={(i) => String(i.id)}
-            renderItem={renderItem}
-            numColumns={3}
-            columnWrapperStyle={{ gap: 12, paddingHorizontal: 12 }}
-            contentContainerStyle={{ gap: 12, paddingVertical: 12 }}
-            refreshControl={
-                <RefreshControl
-                    refreshing={refreshing}
-                    onRefresh={() => {
-                        setRefreshing(true);
-                        load();
-                    }}
-                    colors={[ORANGE]}
-                />
-            }
-            ListEmptyComponent={
-                <Text style={styles.empty}>Aucune catégorie.</Text>
-            }
-        />
+        <View style={styles.root}>
+            {/* En-tête : recherche + onglets catégories */}
+            <LinearGradient
+                colors={COLORS.gradient}
+                start={COLORS.gradientStart}
+                end={COLORS.gradientEnd}
+                style={[styles.header, { paddingTop: insets.top + 8 }]}
+            >
+                <View style={styles.searchRow}>
+                    <Ionicons name="mail-outline" size={22} color="#fff" />
+                    <TouchableOpacity
+                        style={styles.search}
+                        onPress={() =>
+                            navigation.navigate("ProductList", {
+                                title: "Recherche",
+                                focusSearch: true,
+                            })
+                        }
+                    >
+                        <Ionicons name="search" size={18} color="#9ca3af" />
+                        <Text style={styles.searchText}>Rechercher</Text>
+                        <View style={styles.searchBtn}>
+                            <Ionicons name="search" size={16} color="#fff" />
+                        </View>
+                    </TouchableOpacity>
+                    <Ionicons name="heart-outline" size={22} color="#fff" />
+                </View>
+
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.tabsRow}
+                >
+                    {tabs.map((t) => {
+                        const on = active === t.id;
+                        return (
+                            <TouchableOpacity
+                                key={String(t.id)}
+                                style={styles.tab}
+                                onPress={() => select(t.id)}
+                            >
+                                <Text
+                                    style={[
+                                        styles.tabText,
+                                        on && styles.tabTextOn,
+                                    ]}
+                                >
+                                    {t.name}
+                                </Text>
+                                {on && <View style={styles.tabUnderline} />}
+                            </TouchableOpacity>
+                        );
+                    })}
+                </ScrollView>
+            </LinearGradient>
+
+            {/* Corps : sidebar gauche + grille droite */}
+            <View style={styles.body}>
+                <ScrollView
+                    style={styles.sidebar}
+                    showsVerticalScrollIndicator={false}
+                >
+                    {sidebar.map((c) => {
+                        const on = active === c.id;
+                        return (
+                            <TouchableOpacity
+                                key={String(c.id)}
+                                style={[styles.navItem, on && styles.navItemOn]}
+                                onPress={() => select(c.id)}
+                                activeOpacity={0.8}
+                            >
+                                {on && <View style={styles.navBar} />}
+                                <Text
+                                    style={[
+                                        styles.navText,
+                                        on && styles.navTextOn,
+                                    ]}
+                                    numberOfLines={2}
+                                >
+                                    {c.name}
+                                </Text>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </ScrollView>
+
+                <ScrollView
+                    style={styles.content}
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{ paddingBottom: 24 }}
+                >
+                    <Text style={styles.sectionTitle}>{activeName}</Text>
+
+                    {gridLoading ? (
+                        <ActivityIndicator
+                            color={COLORS.primary}
+                            style={{ marginTop: 30 }}
+                        />
+                    ) : items.length === 0 ? (
+                        <Text style={styles.empty}>Aucun produit.</Text>
+                    ) : (
+                        <View style={styles.grid}>
+                            {items.map((p) => (
+                                <TouchableOpacity
+                                    key={p.id}
+                                    style={styles.tile}
+                                    activeOpacity={0.8}
+                                    onPress={() => goDetail(p)}
+                                >
+                                    <View style={styles.tileCircle}>
+                                        <Image
+                                            source={{ uri: p.image }}
+                                            style={styles.tileImg}
+                                        />
+                                    </View>
+                                    <Text
+                                        style={styles.tileLabel}
+                                        numberOfLines={2}
+                                    >
+                                        {p.name}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    )}
+                </ScrollView>
+            </View>
+        </View>
     );
 }
 
+const SIDEBAR_W = 104;
+
 const styles = StyleSheet.create({
+    root: { flex: 1, backgroundColor: COLORS.bg },
     center: {
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
         padding: 24,
-        backgroundColor: "#f3f4f6",
+        backgroundColor: COLORS.bg,
     },
-    card: {
+    header: { paddingHorizontal: 12, paddingBottom: 10 },
+    searchRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+    search: {
         flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
         backgroundColor: "#fff",
-        borderRadius: 14,
-        padding: 12,
-        alignItems: "center",
-        elevation: 1,
+        borderRadius: 22,
+        paddingLeft: 14,
+        paddingRight: 4,
+        paddingVertical: 4,
+        height: 40,
     },
-    iconWrap: {
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        backgroundColor: COLORS.soft,
+    searchText: { flex: 1, color: "#9ca3af", fontSize: 14 },
+    searchBtn: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: COLORS.primaryDark,
+        alignItems: "center",
         justifyContent: "center",
-        alignItems: "center",
-        overflow: "hidden",
     },
-    image: { width: 60, height: 60 },
-    name: {
-        fontSize: 12,
+    tabsRow: { gap: 18, paddingTop: 12, paddingRight: 12, alignItems: "center" },
+    tab: { alignItems: "center" },
+    tabText: {
+        color: "rgba(255,255,255,0.75)",
+        fontSize: 15,
         fontWeight: "600",
-        color: "#111827",
-        textAlign: "center",
-        marginTop: 8,
-        minHeight: 30,
+        paddingBottom: 5,
     },
-    count: { fontSize: 10, color: "#9ca3af" },
+    tabTextOn: { color: "#fff", fontWeight: "800" },
+    tabUnderline: {
+        height: 3,
+        width: 20,
+        borderRadius: 3,
+        backgroundColor: "#fff",
+    },
+    body: { flex: 1, flexDirection: "row" },
+    sidebar: { width: SIDEBAR_W, backgroundColor: "#efeff5" },
+    navItem: {
+        paddingVertical: 16,
+        paddingHorizontal: 10,
+        justifyContent: "center",
+    },
+    navItemOn: { backgroundColor: COLORS.bg },
+    navBar: {
+        position: "absolute",
+        left: 0,
+        top: "28%",
+        bottom: "28%",
+        width: 3,
+        borderRadius: 3,
+        backgroundColor: COLORS.primaryDark,
+    },
+    navText: { fontSize: 12.5, color: "#4b5563", fontWeight: "500" },
+    navTextOn: { color: COLORS.primaryDark, fontWeight: "800" },
+    content: { flex: 1, paddingHorizontal: 12 },
+    sectionTitle: {
+        fontSize: 16,
+        fontWeight: "800",
+        color: COLORS.text,
+        marginTop: 14,
+        marginBottom: 10,
+    },
+    grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" },
+    tile: { width: "31%", alignItems: "center", marginBottom: 16 },
+    tileCircle: {
+        width: 78,
+        height: 78,
+        borderRadius: 39,
+        backgroundColor: "#fff",
+        overflow: "hidden",
+        borderWidth: 1,
+        borderColor: COLORS.border,
+    },
+    tileImg: { width: "100%", height: "100%" },
+    tileLabel: {
+        fontSize: 11,
+        color: COLORS.text,
+        textAlign: "center",
+        marginTop: 6,
+        fontWeight: "500",
+    },
     empty: { textAlign: "center", color: "#6b7280", marginTop: 40 },
     errorText: { color: "#b91c1c", textAlign: "center", marginBottom: 16 },
     retry: {
-        backgroundColor: ORANGE,
+        backgroundColor: COLORS.primaryDark,
         borderRadius: 10,
         paddingHorizontal: 20,
         paddingVertical: 10,

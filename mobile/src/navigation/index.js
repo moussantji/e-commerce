@@ -60,7 +60,11 @@ function Tabs() {
                 component={HomeScreen}
                 options={{ headerShown: false }}
             />
-            <Tab.Screen name="Catégories" component={CategoriesScreen} />
+            <Tab.Screen
+                name="Catégories"
+                component={CategoriesScreen}
+                options={{ headerShown: false }}
+            />
             <Tab.Screen
                 name="Commande"
                 component={OrdersScreen}
