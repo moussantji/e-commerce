@@ -15,7 +15,15 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        $categories = Category::with('photos')->latest()->paginate(10);
+        // Affichage arborescent : racines + leurs sous-catégories
+        $categories = Category::whereNull('parent_id')
+            ->with([
+                'photos',
+                'children' => fn ($q) => $q->with('photos')->orderBy('sort_order'),
+            ])
+            ->orderBy('sort_order')
+            ->paginate(10);
+
         return view('admin.categories.index', compact('categories'));
     }
 
@@ -51,6 +59,10 @@ class CategoryController extends Controller
         $validated['slug'] = $this->uniqueSlug($validated['slug'] ?? null, $validated['name']);
         $validated['is_active'] = $request->boolean('is_active');
 
+        if ($error = $this->hierarchyError($request->integer('parent_id') ?: null)) {
+            return back()->withInput()->withErrors(['parent_id' => $error]);
+        }
+
         $category = Category::create($validated);
 
         // Lier l'image via la relation photos (utilisée par getPhoto())
@@ -79,7 +91,13 @@ class CategoryController extends Controller
      */
     public function edit(Category $category)
     {
-        $categories = Category::where('id', '!=', $category->id)->orderBy('sort_order')->get();
+        // Seules les catégories principales (racines) peuvent être parentes,
+        // et jamais la catégorie elle-même.
+        $categories = Category::whereNull('parent_id')
+            ->where('id', '!=', $category->id)
+            ->orderBy('sort_order')
+            ->get();
+
         return view('admin.categories.edit', compact('category', 'categories'));
     }
 
@@ -105,6 +123,10 @@ class CategoryController extends Controller
         $validated['slug'] = $this->uniqueSlug($validated['slug'] ?? null, $validated['name'], $category->id);
         $validated['is_active'] = $request->boolean('is_active');
 
+        if ($error = $this->hierarchyError($request->integer('parent_id') ?: null, $category)) {
+            return back()->withInput()->withErrors(['parent_id' => $error]);
+        }
+
         $category->update($validated);
 
         // Remplacer l'image si une nouvelle est fournie
@@ -129,6 +151,12 @@ class CategoryController extends Controller
         if ($category->products()->count() > 0) {
             return redirect()->route('admin.categories.index')
                 ->with('error', 'Impossible de supprimer une catégorie contenant des produits');
+        }
+
+        // Empêcher la suppression d'une catégorie ayant des sous-catégories
+        if ($category->children()->exists()) {
+            return redirect()->route('admin.categories.index')
+                ->with('error', 'Supprimez ou déplacez d\'abord les sous-catégories de cette catégorie');
         }
 
         // Supprimer les photos associées (le model Photos supprime aussi le fichier)
@@ -185,6 +213,37 @@ class CategoryController extends Controller
         $path = $file->store('Category/' . $category->id . '/banners', 'public');
 
         $category->forceFill([$column => $path])->save();
+    }
+
+    /**
+     * Valide la cohérence de la hiérarchie parent → enfant.
+     * Retourne un message d'erreur, ou null si tout est valide.
+     *
+     * Règles :
+     *  - une catégorie ne peut pas être sa propre parente ;
+     *  - la parente doit être une catégorie principale (hiérarchie limitée à 2 niveaux) ;
+     *  - une catégorie possédant des sous-catégories ne peut pas devenir une sous-catégorie.
+     */
+    protected function hierarchyError(?int $parentId, ?Category $category = null): ?string
+    {
+        if (!$parentId) {
+            return null;
+        }
+
+        if ($category && $parentId === $category->id) {
+            return "Une catégorie ne peut pas être sa propre catégorie parente.";
+        }
+
+        $parent = Category::find($parentId);
+        if (!$parent || $parent->parent_id !== null) {
+            return "La catégorie parente doit être une catégorie principale (hiérarchie limitée à 2 niveaux).";
+        }
+
+        if ($category && $category->children()->exists()) {
+            return "Cette catégorie possède des sous-catégories : elle ne peut pas devenir elle-même une sous-catégorie.";
+        }
+
+        return null;
     }
 
     /**
