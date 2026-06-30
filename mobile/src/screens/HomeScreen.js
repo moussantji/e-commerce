@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
     View,
     Text,
@@ -9,6 +9,7 @@ import {
     ScrollView,
     ActivityIndicator,
     RefreshControl,
+    Animated,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -50,6 +51,15 @@ export default function HomeScreen({ navigation }) {
     const [sticky, setSticky] = useState(false);
 
     // Barre de recherche collante quand on scrolle vers le bas
+    const stickyAnim = useRef(new Animated.Value(0)).current;
+    useEffect(() => {
+        Animated.timing(stickyAnim, {
+            toValue: sticky ? 1 : 0,
+            duration: 220,
+            useNativeDriver: true,
+        }).start();
+    }, [sticky, stickyAnim]);
+
     const onScroll = (e) => {
         const y = e.nativeEvent.contentOffset.y;
         const should = y > 150;
@@ -614,17 +624,33 @@ export default function HomeScreen({ navigation }) {
                 }
             />
 
-            {/* Barre de recherche collante (apparaît au scroll) avec fond violet */}
-            {sticky && (
+            {/* Barre de recherche collante animée (apparaît au scroll) */}
+            <Animated.View
+                pointerEvents={sticky ? "auto" : "none"}
+                style={[
+                    styles.stickyBar,
+                    {
+                        paddingTop: insets.top + 6,
+                        opacity: stickyAnim,
+                        transform: [
+                            {
+                                translateY: stickyAnim.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: [-24, 0],
+                                }),
+                            },
+                        ],
+                    },
+                ]}
+            >
                 <LinearGradient
                     colors={COLORS.gradient}
                     start={COLORS.gradientStart}
                     end={COLORS.gradientEnd}
-                    style={[styles.stickyBar, { paddingTop: insets.top + 6 }]}
-                >
-                    {renderSearchRow()}
-                </LinearGradient>
-            )}
+                    style={StyleSheet.absoluteFill}
+                />
+                {renderSearchRow()}
+            </Animated.View>
         </View>
     );
 }
