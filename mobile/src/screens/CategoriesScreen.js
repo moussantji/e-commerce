@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
         backgroundColor: "#fff",
     },
     body: { flex: 1, flexDirection: "row" },
-    sidebar: { width: SIDEBAR_W, backgroundColor: "#efeff5" },
+    sidebar: { width: SIDEBAR_W, flexShrink: 0, flexGrow: 0, backgroundColor: "#efeff5" },
     navItem: {
         paddingVertical: 12,
         paddingHorizontal: 2,
