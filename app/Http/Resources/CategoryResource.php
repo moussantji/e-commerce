@@ -20,6 +20,7 @@ class CategoryResource extends JsonResource
                 $this->abs($this->bannerPath($this->banner_image_1)),
                 $this->abs($this->bannerPath($this->banner_image_2)),
             ])),
+            'children' => CategoryResource::collection($this->whenLoaded('children')),
             'products_count' => (int) ($this->products_count ?? 0),
         ];
     }
