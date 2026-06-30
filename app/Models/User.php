@@ -57,6 +57,11 @@ class User extends Authenticatable implements MustVerifyEmail
         'longitude' => 'float',
     ];
 
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(Address::class);
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *
