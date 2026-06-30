@@ -9,6 +9,8 @@ import {
     ActivityIndicator,
     Alert,
     Linking,
+    Modal,
+    Pressable,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
@@ -26,6 +28,13 @@ const STATUS_LABELS = {
     annule: "Commande annulée",
 };
 
+const CANCEL_REASONS = [
+    "Je n'en veux pas / Mauvais achat / Trop d'articles",
+    "C'est trop lent pour livrer les produits",
+    "Erreur de spécification / taille / couleur",
+    "Mauvaise adresse de livraison sélectionnée",
+];
+
 function addrField(a, keys) {
     if (!a) return null;
     for (const k of keys) {
@@ -40,6 +49,18 @@ export default function OrderDetailScreen({ route, navigation }) {
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [cancelOpen, setCancelOpen] = useState(false);
+
+    const cancelOrder = async (reason) => {
+        setCancelOpen(false);
+        try {
+            const { data } = await api.post(`/orders/${id}/cancel`, { reason });
+            setOrder(data.data ?? data);
+            Alert.alert("Commande annulée", "Votre commande a bien été annulée.");
+        } catch (e) {
+            Alert.alert("Impossible", apiError(e));
+        }
+    };
 
     const load = useCallback(async () => {
         setError(null);
@@ -253,12 +274,7 @@ export default function OrderDetailScreen({ route, navigation }) {
                     <TouchableOpacity
                         style={styles.cancelBtn}
                         activeOpacity={0.85}
-                        onPress={() =>
-                            Alert.alert(
-                                "Annuler la commande",
-                                "L'annulation sera bientôt disponible.",
-                            )
-                        }
+                        onPress={() => setCancelOpen(true)}
                     >
                         <Text style={styles.cancelText}>Annuler</Text>
                     </TouchableOpacity>
@@ -283,6 +299,40 @@ export default function OrderDetailScreen({ route, navigation }) {
                     </TouchableOpacity>
                 </View>
             )}
+            {/* Bottom-sheet : raisons d'annulation */}
+            <Modal
+                visible={cancelOpen}
+                transparent
+                animationType="slide"
+                onRequestClose={() => setCancelOpen(false)}
+            >
+                <Pressable
+                    style={styles.backdrop}
+                    onPress={() => setCancelOpen(false)}
+                />
+                <View style={[styles.sheet, { paddingBottom: insets.bottom + 8 }]}>
+                    <Text style={styles.sheetTitle}>
+                        Sélectionner la raison d'annulation
+                    </Text>
+                    {CANCEL_REASONS.map((r) => (
+                        <TouchableOpacity
+                            key={r}
+                            style={styles.reasonRow}
+                            activeOpacity={0.7}
+                            onPress={() => cancelOrder(r)}
+                        >
+                            <Text style={styles.reasonText}>{r}</Text>
+                        </TouchableOpacity>
+                    ))}
+                    <TouchableOpacity
+                        style={styles.rejectBtn}
+                        onPress={() => setCancelOpen(false)}
+                        activeOpacity={0.8}
+                    >
+                        <Text style={styles.rejectText}>REJETER</Text>
+                    </TouchableOpacity>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -400,4 +450,35 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
     },
     retryText: { color: "#fff", fontWeight: "700" },
+
+    backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.45)" },
+    sheet: {
+        backgroundColor: "#fff",
+        borderTopLeftRadius: RADIUS.lg,
+        borderTopRightRadius: RADIUS.lg,
+        paddingTop: 18,
+    },
+    sheetTitle: {
+        textAlign: "center",
+        fontSize: 15,
+        fontWeight: "700",
+        color: COLORS.text,
+        marginBottom: 8,
+    },
+    reasonRow: {
+        paddingVertical: 16,
+        paddingHorizontal: 20,
+        borderTopWidth: 1,
+        borderTopColor: "#f3f4f6",
+        alignItems: "center",
+    },
+    reasonText: { color: COLORS.accent, fontSize: 14, fontWeight: "600", textAlign: "center" },
+    rejectBtn: {
+        marginTop: 6,
+        paddingVertical: 16,
+        alignItems: "center",
+        borderTopWidth: 6,
+        borderTopColor: "#f3f4f6",
+    },
+    rejectText: { color: COLORS.primaryDark, fontWeight: "800", fontSize: 15 },
 });
