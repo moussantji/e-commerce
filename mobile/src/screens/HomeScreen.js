@@ -24,6 +24,8 @@ const FILTERS = [
     { key: "best", label: "Top ventes", icon: "flame-outline" },
 ];
 
+const ALL_TAB = { id: "all", name: "All" };
+
 export default function HomeScreen({ navigation }) {
     const insets = useSafeAreaInsets();
     const [categories, setCategories] = useState([]);
@@ -32,49 +34,75 @@ export default function HomeScreen({ navigation }) {
     const [page, setPage] = useState(1);
     const [lastPage, setLastPage] = useState(1);
     const [loading, setLoading] = useState(true);
+    const [gridLoading, setGridLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
-    const [activeCat, setActiveCat] = useState(null);
+    const [activeCat, setActiveCat] = useState("all");
     const [activeFilter, setActiveFilter] = useState("for_you");
     const [notifCount, setNotifCount] = useState(0);
+
+    const fetchProducts = useCallback(async (catId, pageNum = 1) => {
+        const params = { per_page: 10, page: pageNum };
+        if (catId && catId !== "all") params.category_id = catId;
+        const { data } = await api.get("/products", { params });
+        return data;
+    }, []);
 
     const loadAll = useCallback(async () => {
         try {
             const [cats, deals, grid] = await Promise.all([
                 api.get("/categories"),
                 api.get("/products", { params: { featured: 1, per_page: 10 } }),
-                api.get("/products", { params: { per_page: 10, page: 1 } }),
+                fetchProducts(activeCat, 1),
             ]);
             setCategories(cats.data.data ?? []);
             setFlash(deals.data.data ?? []);
-            setProducts(grid.data.data ?? []);
-            setPage(grid.data.meta?.current_page ?? 1);
-            setLastPage(grid.data.meta?.last_page ?? 1);
+            setProducts(grid.data ?? []);
+            setPage(grid.meta?.current_page ?? 1);
+            setLastPage(grid.meta?.last_page ?? 1);
         } catch (e) {
             // silencieux : l'UI affiche l'état vide
         } finally {
             setLoading(false);
             setRefreshing(false);
         }
-        // Compteur de notifications non lues (n'empêche pas l'affichage si échec)
         try {
             const { data } = await api.get("/notifications/unread-count");
             setNotifCount(data.unread_count ?? 0);
         } catch (e) {
             /* endpoint indisponible : badge masqué */
         }
-    }, []);
+    }, [activeCat, fetchProducts]);
 
     useEffect(() => {
         loadAll();
-    }, [loadAll]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Sélection d'une catégorie : on filtre la grille SANS quitter l'accueil
+    const selectCat = useCallback(
+        async (catId) => {
+            if (catId === activeCat) return;
+            setActiveCat(catId);
+            setGridLoading(true);
+            try {
+                const data = await fetchProducts(catId, 1);
+                setProducts(data.data ?? []);
+                setPage(data.meta?.current_page ?? 1);
+                setLastPage(data.meta?.last_page ?? 1);
+            } catch (e) {
+                setProducts([]);
+            } finally {
+                setGridLoading(false);
+            }
+        },
+        [activeCat, fetchProducts],
+    );
 
     const loadMore = async () => {
-        if (loading || page >= lastPage) return;
+        if (loading || gridLoading || page >= lastPage) return;
         try {
             const next = page + 1;
-            const { data } = await api.get("/products", {
-                params: { per_page: 10, page: next },
-            });
+            const data = await fetchProducts(activeCat, next);
             setProducts((p) => [...p, ...(data.data ?? [])]);
             setPage(data.meta?.current_page ?? next);
         } catch (e) {
@@ -85,40 +113,158 @@ export default function HomeScreen({ navigation }) {
     const goDetail = (item) =>
         navigation.navigate("ProductDetail", { id: item.id, name: item.name });
 
+    const tabs = [ALL_TAB, ...categories];
+    const activeName =
+        activeCat === "all"
+            ? "MégaSoldes"
+            : categories.find((c) => c.id === activeCat)?.name || "Sélection";
+
+    // Deux photos de fond cliquables pour la "partie" active
+    const heroSource =
+        activeCat === "all" && flash.length ? flash : products;
+    const heroPhotos = heroSource.slice(0, 2);
+
     const Header = (
         <View>
-            {/* Bannière promo en dégradé */}
+            {/* === BLOC DÉGRADÉ : recherche + onglets catégories + bannière === */}
             <LinearGradient
                 colors={COLORS.gradient}
                 start={COLORS.gradientStart}
                 end={COLORS.gradientEnd}
-                style={styles.banner}
+                style={[styles.hero, { paddingTop: insets.top + 8 }]}
             >
-                <View style={{ flex: 1 }}>
-                    <Text style={styles.bannerTag}>#MégaSoldes</Text>
-                    <Text style={styles.bannerTitle}>ÉCONOMISEZ GROS 🎉</Text>
-                    <Text style={styles.bannerSub}>
-                        Jusqu'à -50% sur une sélection
-                    </Text>
+                {/* Ligne du haut : notifications + recherche + panier */}
+                <View style={styles.topRow}>
                     <TouchableOpacity
-                        style={styles.bannerBtn}
+                        style={styles.iconBtn}
+                        onPress={() => navigation.navigate("Notifications")}
+                    >
+                        <Ionicons
+                            name="notifications-outline"
+                            size={24}
+                            color="#fff"
+                        />
+                        {notifCount > 0 && (
+                            <View style={styles.notifBadge}>
+                                <Text style={styles.notifBadgeText}>
+                                    {notifCount > 9 ? "9+" : notifCount}
+                                </Text>
+                            </View>
+                        )}
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.search}
                         onPress={() =>
                             navigation.navigate("ProductList", {
-                                title: "Promotions",
-                                featured: 1,
+                                title: "Recherche",
+                                focusSearch: true,
                             })
                         }
                     >
-                        <Text style={styles.bannerBtnText}>
-                            ACHETEZ MAINTENANT
+                        <Ionicons name="search" size={18} color="#9ca3af" />
+                        <Text style={styles.searchPlaceholder}>
+                            Rechercher un produit...
                         </Text>
+                        <Ionicons
+                            name="camera-outline"
+                            size={20}
+                            color="#9ca3af"
+                        />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.iconBtn}
+                        onPress={() => navigation.navigate("Panier")}
+                    >
+                        <Ionicons name="bag-outline" size={24} color="#fff" />
                     </TouchableOpacity>
                 </View>
-                <Ionicons
-                    name="pricetags"
-                    size={62}
-                    color="rgba(255,255,255,0.9)"
-                />
+
+                {/* Onglets catégories : All, Women, Shoes, Men, Curve... */}
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.tabsRow}
+                >
+                    {tabs.map((t) => {
+                        const on = activeCat === t.id;
+                        return (
+                            <TouchableOpacity
+                                key={String(t.id)}
+                                style={styles.tab}
+                                onPress={() => selectCat(t.id)}
+                            >
+                                <Text
+                                    style={[
+                                        styles.tabText,
+                                        on && styles.tabTextOn,
+                                    ]}
+                                >
+                                    {t.name}
+                                </Text>
+                                {on && <View style={styles.tabUnderline} />}
+                            </TouchableOpacity>
+                        );
+                    })}
+                </ScrollView>
+
+                {/* Bannière de la partie active + 2 photos de fond cliquables */}
+                <View style={styles.bannerRow}>
+                    <View style={styles.bannerText}>
+                        <Text style={styles.bannerTag}>#{activeName}</Text>
+                        <Text style={styles.bannerTitle}>ÉCONOMISEZ GROS</Text>
+                        <Text style={styles.bannerSub}>
+                            Jusqu'à -50% sur la sélection
+                        </Text>
+                        <TouchableOpacity
+                            style={styles.bannerBtn}
+                            onPress={() =>
+                                navigation.navigate("ProductList", {
+                                    title: activeName,
+                                    categoryId:
+                                        activeCat === "all"
+                                            ? undefined
+                                            : activeCat,
+                                    featured: activeCat === "all" ? 1 : undefined,
+                                })
+                            }
+                        >
+                            <Text style={styles.bannerBtnText}>
+                                ACHETEZ MAINTENANT
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.heroPhotos}>
+                        {heroPhotos.map((p) => (
+                            <TouchableOpacity
+                                key={p.id}
+                                style={styles.heroTile}
+                                activeOpacity={0.85}
+                                onPress={() => goDetail(p)}
+                            >
+                                <Image
+                                    source={{ uri: p.image }}
+                                    style={StyleSheet.absoluteFill}
+                                />
+                                <View style={styles.heroPriceTag}>
+                                    <Text style={styles.heroPriceText}>
+                                        {formatPrice(p.sale_price ?? p.price)}
+                                    </Text>
+                                </View>
+                            </TouchableOpacity>
+                        ))}
+                        {heroPhotos.length === 0 && (
+                            <View
+                                style={[
+                                    styles.heroTile,
+                                    { backgroundColor: "rgba(255,255,255,0.15)" },
+                                ]}
+                            />
+                        )}
+                    </View>
+                </View>
             </LinearGradient>
 
             {/* Barre infos : livraison + vente flash */}
@@ -144,7 +290,7 @@ export default function HomeScreen({ navigation }) {
                 </View>
             </View>
 
-            {/* Catégories horizontales en cercles */}
+            {/* Catégories en cercles (filtrage inline également) */}
             {categories.length > 0 && (
                 <View style={styles.catCard}>
                     <ScrollView
@@ -152,36 +298,45 @@ export default function HomeScreen({ navigation }) {
                         showsHorizontalScrollIndicator={false}
                         contentContainerStyle={{ paddingHorizontal: 4 }}
                     >
-                        {categories.map((c) => (
-                            <TouchableOpacity
-                                key={c.id}
-                                style={styles.catItem}
-                                onPress={() =>
-                                    navigation.navigate("ProductList", {
-                                        categoryId: c.id,
-                                        title: c.name,
-                                    })
-                                }
-                            >
-                                <View style={styles.catCircle}>
-                                    {c.image ? (
-                                        <Image
-                                            source={{ uri: c.image }}
-                                            style={styles.catImg}
-                                        />
-                                    ) : (
-                                        <Ionicons
-                                            name="cube-outline"
-                                            size={24}
-                                            color={COLORS.primaryDark}
-                                        />
-                                    )}
-                                </View>
-                                <Text style={styles.catLabel} numberOfLines={1}>
-                                    {c.name}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
+                        {categories.map((c) => {
+                            const on = activeCat === c.id;
+                            return (
+                                <TouchableOpacity
+                                    key={c.id}
+                                    style={styles.catItem}
+                                    onPress={() => selectCat(c.id)}
+                                >
+                                    <View
+                                        style={[
+                                            styles.catCircle,
+                                            on && styles.catCircleOn,
+                                        ]}
+                                    >
+                                        {c.image ? (
+                                            <Image
+                                                source={{ uri: c.image }}
+                                                style={styles.catImg}
+                                            />
+                                        ) : (
+                                            <Ionicons
+                                                name="cube-outline"
+                                                size={24}
+                                                color={COLORS.primaryDark}
+                                            />
+                                        )}
+                                    </View>
+                                    <Text
+                                        style={[
+                                            styles.catLabel,
+                                            on && styles.catLabelOn,
+                                        ]}
+                                        numberOfLines={1}
+                                    >
+                                        {c.name}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
                     </ScrollView>
                 </View>
             )}
@@ -242,6 +397,13 @@ export default function HomeScreen({ navigation }) {
                 </View>
             )}
 
+            {/* Titre de la grille selon la catégorie active */}
+            <View style={styles.sectionHead}>
+                <Text style={styles.sectionTitle}>
+                    {activeCat === "all" ? "Pour vous" : activeName}
+                </Text>
+            </View>
+
             {/* Filtres */}
             <ScrollView
                 horizontal
@@ -264,7 +426,10 @@ export default function HomeScreen({ navigation }) {
                                 />
                             )}
                             <Text
-                                style={[styles.chipText, on && styles.chipTextOn]}
+                                style={[
+                                    styles.chipText,
+                                    on && styles.chipTextOn,
+                                ]}
                             >
                                 {f.label}
                             </Text>
@@ -313,96 +478,53 @@ export default function HomeScreen({ navigation }) {
         </TouchableOpacity>
     );
 
+    if (loading) {
+        return (
+            <View style={styles.center}>
+                <ActivityIndicator size="large" color={COLORS.primary} />
+            </View>
+        );
+    }
+
     return (
         <View style={styles.container}>
-            <HomeTopBar
-                navigation={navigation}
-                insets={insets}
-                notifCount={notifCount}
-            />
-            {loading ? (
-                <View style={styles.center}>
-                    <ActivityIndicator size="large" color={COLORS.primary} />
-                </View>
-            ) : (
-                <FlatList
-                    data={products}
-                    keyExtractor={(i) => String(i.id)}
-                    renderItem={renderProduct}
-                    numColumns={2}
-                    columnWrapperStyle={{ gap: 12, paddingHorizontal: 12 }}
-                    contentContainerStyle={{ gap: 12, paddingBottom: 16 }}
-                    ListHeaderComponent={Header}
-                    onEndReached={loadMore}
-                    onEndReachedThreshold={0.4}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={() => {
-                                setRefreshing(true);
-                                loadAll();
-                            }}
-                            colors={[COLORS.primary]}
-                            tintColor={COLORS.primary}
-                        />
-                    }
-                />
-            )}
-        </View>
-    );
-}
-
-/** En-tête en dégradé : notifications (place réservée) + recherche + panier. */
-function HomeTopBar({ navigation, insets, notifCount = 0 }) {
-    return (
-        <LinearGradient
-            colors={COLORS.gradient}
-            start={COLORS.gradientStart}
-            end={COLORS.gradientEnd}
-            style={[styles.topBar, { paddingTop: insets.top + 8 }]}
-        >
-            {/* Espace notifications : cloche + badge */}
-            <TouchableOpacity
-                style={styles.iconBtn}
-                onPress={() => navigation.navigate("Notifications")}
-            >
-                <Ionicons
-                    name="notifications-outline"
-                    size={24}
-                    color="#fff"
-                />
-                {notifCount > 0 && (
-                    <View style={styles.notifBadge}>
-                        <Text style={styles.notifBadgeText}>
-                            {notifCount > 9 ? "9+" : notifCount}
-                        </Text>
+            <FlatList
+                data={products}
+                keyExtractor={(i) => String(i.id)}
+                renderItem={renderProduct}
+                numColumns={2}
+                columnWrapperStyle={{ gap: 12, paddingHorizontal: 12 }}
+                contentContainerStyle={{ gap: 12, paddingBottom: 16 }}
+                ListHeaderComponent={Header}
+                ListEmptyComponent={
+                    <View style={styles.gridEmpty}>
+                        {gridLoading ? (
+                            <ActivityIndicator
+                                size="large"
+                                color={COLORS.primary}
+                            />
+                        ) : (
+                            <Text style={styles.gridEmptyText}>
+                                Aucun produit dans cette catégorie
+                            </Text>
+                        )}
                     </View>
-                )}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-                style={styles.search}
-                onPress={() =>
-                    navigation.navigate("ProductList", {
-                        title: "Recherche",
-                        focusSearch: true,
-                    })
                 }
-            >
-                <Ionicons name="search" size={18} color="#9ca3af" />
-                <Text style={styles.searchPlaceholder}>
-                    Rechercher un produit...
-                </Text>
-                <Ionicons name="camera-outline" size={20} color="#9ca3af" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-                style={styles.iconBtn}
-                onPress={() => navigation.navigate("Panier")}
-            >
-                <Ionicons name="bag-outline" size={24} color="#fff" />
-            </TouchableOpacity>
-        </LinearGradient>
+                onEndReached={loadMore}
+                onEndReachedThreshold={0.4}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={() => {
+                            setRefreshing(true);
+                            loadAll();
+                        }}
+                        colors={[COLORS.primary]}
+                        tintColor={COLORS.primary}
+                    />
+                }
+            />
+        </View>
     );
 }
 
@@ -412,15 +534,15 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
-        paddingTop: 60,
+        backgroundColor: COLORS.bg,
     },
-    topBar: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
+    hero: {
         paddingHorizontal: 12,
-        paddingBottom: 12,
+        paddingBottom: 16,
+        borderBottomLeftRadius: RADIUS.xl,
+        borderBottomRightRadius: RADIUS.xl,
     },
+    topRow: { flexDirection: "row", alignItems: "center", gap: 8 },
     iconBtn: {
         width: 38,
         height: 38,
@@ -453,13 +575,28 @@ const styles = StyleSheet.create({
         paddingVertical: 9,
     },
     searchPlaceholder: { flex: 1, color: "#9ca3af", fontSize: 14 },
-    banner: {
-        flexDirection: "row",
-        alignItems: "center",
-        margin: 12,
-        borderRadius: RADIUS.lg,
-        padding: 18,
+    tabsRow: { gap: 18, paddingTop: 14, paddingRight: 12, alignItems: "center" },
+    tab: { alignItems: "center" },
+    tabText: {
+        color: "rgba(255,255,255,0.75)",
+        fontSize: 15,
+        fontWeight: "600",
+        paddingBottom: 5,
     },
+    tabTextOn: { color: "#fff", fontWeight: "800" },
+    tabUnderline: {
+        height: 3,
+        width: 22,
+        borderRadius: 3,
+        backgroundColor: "#fff",
+    },
+    bannerRow: {
+        flexDirection: "row",
+        marginTop: 16,
+        gap: 12,
+        alignItems: "center",
+    },
+    bannerText: { flex: 1.1 },
     bannerTag: { color: "#ffd6e7", fontWeight: "700", fontSize: 12 },
     bannerTitle: {
         color: "#fff",
@@ -467,20 +604,43 @@ const styles = StyleSheet.create({
         fontWeight: "900",
         marginTop: 2,
     },
-    bannerSub: { color: "rgba(255,255,255,0.95)", marginTop: 4 },
+    bannerSub: { color: "rgba(255,255,255,0.95)", marginTop: 4, fontSize: 12 },
     bannerBtn: {
         backgroundColor: "#fff",
         alignSelf: "flex-start",
         borderRadius: 20,
-        paddingHorizontal: 16,
+        paddingHorizontal: 14,
         paddingVertical: 7,
         marginTop: 12,
     },
-    bannerBtnText: { color: COLORS.primaryDark, fontWeight: "800", fontSize: 12 },
+    bannerBtnText: {
+        color: COLORS.primaryDark,
+        fontWeight: "800",
+        fontSize: 11,
+    },
+    heroPhotos: { flex: 1, flexDirection: "row", gap: 8 },
+    heroTile: {
+        flex: 1,
+        height: 120,
+        borderRadius: RADIUS.md,
+        overflow: "hidden",
+        backgroundColor: "rgba(255,255,255,0.2)",
+        justifyContent: "flex-end",
+    },
+    heroPriceTag: {
+        margin: 6,
+        alignSelf: "flex-start",
+        backgroundColor: COLORS.accent,
+        borderRadius: 999,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+    },
+    heroPriceText: { color: "#fff", fontWeight: "800", fontSize: 11 },
     infoBar: {
         flexDirection: "row",
         backgroundColor: COLORS.soft,
         marginHorizontal: 12,
+        marginTop: 12,
         borderRadius: RADIUS.md,
         padding: 12,
     },
@@ -512,6 +672,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         overflow: "hidden",
     },
+    catCircleOn: { borderColor: COLORS.primaryDark, borderWidth: 2 },
     catImg: { width: 56, height: 56 },
     catLabel: {
         fontSize: 11,
@@ -519,12 +680,14 @@ const styles = StyleSheet.create({
         marginTop: 6,
         textAlign: "center",
     },
+    catLabelOn: { color: COLORS.primaryDark, fontWeight: "800" },
     section: { marginTop: 14 },
     sectionHead: {
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
         paddingHorizontal: 12,
+        marginTop: 14,
         marginBottom: 8,
     },
     sectionTitle: { fontSize: 16, fontWeight: "800", color: "#111827" },
@@ -556,7 +719,6 @@ const styles = StyleSheet.create({
     filterRow: {
         gap: 8,
         paddingHorizontal: 12,
-        paddingTop: 16,
         paddingBottom: 4,
     },
     chip: {
@@ -576,6 +738,8 @@ const styles = StyleSheet.create({
     },
     chipText: { color: COLORS.text, fontWeight: "600", fontSize: 13 },
     chipTextOn: { color: "#fff" },
+    gridEmpty: { paddingVertical: 40, alignItems: "center" },
+    gridEmptyText: { color: COLORS.textLight, fontSize: 14 },
     card: {
         flex: 1,
         backgroundColor: "#fff",
