@@ -84,7 +84,14 @@ export default function OrdersScreen({ navigation }) {
         const items = order.items ?? [];
         const cancelled = order.statut === "annule";
         return (
-            <View key={String(order.id)} style={styles.card}>
+            <TouchableOpacity
+                key={String(order.id)}
+                style={styles.card}
+                activeOpacity={0.9}
+                onPress={() =>
+                    navigation.navigate("OrderDetail", { id: order.id })
+                }
+            >
                 {/* En-tête : numéro + statut */}
                 <View style={styles.cardHead}>
                     <Text style={styles.vendor} numberOfLines={1}>
@@ -198,7 +205,7 @@ export default function OrdersScreen({ navigation }) {
                         </TouchableOpacity>
                     )}
                 </View>
-            </View>
+            </TouchableOpacity>
         );
     };
 

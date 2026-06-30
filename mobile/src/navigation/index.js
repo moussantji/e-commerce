@@ -17,6 +17,7 @@ import CartScreen from "../screens/CartScreen";
 import AccountScreen from "../screens/AccountScreen";
 import ProductListScreen from "../screens/ProductListScreen";
 import ProductDetailScreen from "../screens/ProductDetailScreen";
+import OrderDetailScreen from "../screens/OrderDetailScreen";
 import NotificationsScreen from "../screens/NotificationsScreen";
 
 const Stack = createNativeStackNavigator();
@@ -118,6 +119,11 @@ function AppStack() {
                 name="Notifications"
                 component={NotificationsScreen}
                 options={{ title: "Notifications" }}
+            />
+            <Stack.Screen
+                name="OrderDetail"
+                component={OrderDetailScreen}
+                options={{ headerShown: false }}
             />
         </Stack.Navigator>
     );

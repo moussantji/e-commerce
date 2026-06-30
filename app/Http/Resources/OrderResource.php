@@ -16,6 +16,8 @@ class OrderResource extends JsonResource
             'total' => (float) $this->total,
             'sous_total' => (float) $this->sous_total,
             'frais_livraison' => (float) $this->frais_livraison,
+            'adresse_livraison' => $this->adresse_livraison,
+            'notes' => $this->notes,
             'date' => optional($this->created_at)->format('d/m/Y H:i'),
             'items_count' => $this->whenCounted('produits'),
             'items' => $this->whenLoaded('produits', fn () => $this->produits->map(function ($p) {
