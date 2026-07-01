@@ -64,6 +64,30 @@ class AuthController extends Controller
         return response()->json(['user' => $this->userPayload($request->user())]);
     }
 
+    /** Mise à jour du profil (mobile). */
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $data = $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'prenom' => 'nullable|string|max:255',
+            'email' => 'sometimes|required|email|max:255|unique:users,email,' . $user->id,
+            'tel' => 'nullable|string|max:30',
+            'ville' => 'nullable|string|max:120',
+            'pays' => 'nullable|string|max:120',
+            'region' => 'nullable|string|max:120',
+            'lieu_naiss' => 'nullable|string|max:120',
+        ]);
+
+        $user->fill($data)->save();
+
+        return response()->json([
+            'message' => 'Profil mis à jour.',
+            'user' => $this->userPayload($user->fresh()),
+        ]);
+    }
+
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
@@ -76,10 +100,14 @@ class AuthController extends Controller
         return [
             'id' => $user->id,
             'name' => $user->name,
+            'prenom' => $user->prenom,
             'email' => $user->email,
+            'tel' => $user->tel,
             'role' => $user->role,
             'ville' => $user->ville,
             'pays' => $user->pays,
+            'region' => $user->region,
+            'lieu_naiss' => $user->lieu_naiss,
         ];
     }
 }

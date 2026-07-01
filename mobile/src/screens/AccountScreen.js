@@ -6,7 +6,6 @@ import {
     TouchableOpacity,
     StyleSheet,
     ScrollView,
-    Alert,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
@@ -69,8 +68,6 @@ export default function AccountScreen({ navigation }) {
 
     const countByStatus = (key) =>
         orders.filter((o) => o.statut === key).length;
-
-    const soon = (t) => Alert.alert(t, "Bientôt disponible.");
 
     const ThumbRow = ({ from }) => (
         <View style={styles.thumbRow}>
@@ -143,7 +140,7 @@ export default function AccountScreen({ navigation }) {
                         <View style={{ flex: 1 }} />
                         <TouchableOpacity
                             style={styles.topIcon}
-                            onPress={() => soon("Paramètres")}
+                            onPress={() => navigation.navigate("Settings")}
                         >
                             <Ionicons name="settings-outline" size={22} color="#fff" />
                         </TouchableOpacity>
@@ -169,7 +166,7 @@ export default function AccountScreen({ navigation }) {
                                 <Text style={styles.name} numberOfLines={1}>
                                     {user?.name || "Mon compte"}
                                 </Text>
-                                <TouchableOpacity onPress={() => soon("Modifier le profil")}>
+                                <TouchableOpacity onPress={() => navigation.navigate("EditProfile")}>
                                     <Ionicons name="create-outline" size={18} color={COLORS.textLight} />
                                 </TouchableOpacity>
                             </View>
