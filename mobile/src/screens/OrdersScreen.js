@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
     View,
     Text,
@@ -37,13 +37,20 @@ const STATUS_LABELS = {
     annule: "Commande annulée",
 };
 
-export default function OrdersScreen({ navigation }) {
+export default function OrdersScreen({ navigation, route }) {
     const insets = useSafeAreaInsets();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState(null);
-    const [tab, setTab] = useState("all");
+    const [tab, setTab] = useState(route?.params?.initialTab || "all");
+
+    // Change d'onglet si on arrive avec un initialTab (depuis le Compte)
+    useEffect(() => {
+        if (route?.params?.initialTab) {
+            setTab(route.params.initialTab);
+        }
+    }, [route?.params?.initialTab]);
 
     const load = useCallback(async () => {
         setError(null);
