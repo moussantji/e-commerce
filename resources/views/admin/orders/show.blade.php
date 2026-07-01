@@ -172,16 +172,20 @@
                         </div>
                     </div>
 
-                    <div class="mt-4">
+                    <div class="mt-4 d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
                         <a href="{{ route('admin.orders.index') }}" class="btn btn-light">
                             <i class="fas fa-arrow-left me-2"></i> Retour à la liste
                         </a>
-                        @if($order->paiement)
-                            <div class="float-start ms-3">
-                                <strong>Preuve de paiement:</strong>
-                                <div class="mt-2">
+                        @if($order->paiement && $order->paiement->photos->count())
+                            <div class="w-100 w-md-auto">
+                                <strong class="d-block mb-2">Preuve de paiement :</strong>
+                                <div class="d-flex flex-wrap gap-2">
                                     @foreach($order->paiement->photos as $photo)
-                                        <img src="{{ asset('storage/' . $photo->filename) }}" alt="preuve" class="img-thumbnail me-2" style="max-width:120px" />
+                                        <a href="{{ asset('storage/' . $photo->filename) }}" target="_blank">
+                                            <img src="{{ asset('storage/' . $photo->filename) }}" alt="preuve"
+                                                class="img-thumbnail"
+                                                style="width:96px;height:96px;object-fit:cover;" />
+                                        </a>
                                     @endforeach
                                 </div>
                             </div>
