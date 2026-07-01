@@ -23,8 +23,8 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-// Public — auth routes with strict rate limiting (5 attempts per minute)
-Route::middleware('throttle:5,1')->group(function () {
+// Public — auth routes with rate limiting (20 attempts per minute)
+Route::middleware('throttle:20,1')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/auth/social', [SocialAuthController::class, 'social']);
