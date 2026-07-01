@@ -6,18 +6,43 @@ import {
     StyleSheet,
     ScrollView,
     Alert,
+    Linking,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
 import { COLORS, RADIUS } from "../theme";
+import { API_BASE_URL } from "../config";
+
+// URL du site (déduite de l'API en retirant /api)
+const SITE_URL = String(API_BASE_URL || "").replace(/\/api\/?$/, "");
 
 export default function SettingsScreen({ navigation }) {
     const insets = useSafeAreaInsets();
     const { user, logout } = useAuth();
 
-    const soon = (t) => Alert.alert(t, "Bientôt disponible.");
+    const openUrl = (path) => {
+        const url = SITE_URL ? `${SITE_URL}${path}` : null;
+        if (!url) {
+            Alert.alert("Indisponible", "Lien non configuré.");
+            return;
+        }
+        Linking.openURL(url).catch(() => Alert.alert("Erreur", "Impossible d'ouvrir le lien."));
+    };
+
+    const showAbout = () =>
+        Alert.alert(
+            "À propos",
+            "Application mobile de la boutique.\nVersion 1.0.0\n\nAchetez, payez par mobile money et suivez vos commandes.",
+        );
+
+    const showInfo = (title, message) => Alert.alert(title, message);
+
+    const supportContact = () =>
+        Linking.openURL("mailto:support@example.com?subject=Aide%20application").catch(() =>
+            Alert.alert("Contact", "Écrivez-nous à support@example.com"),
+        );
 
     const confirmLogout = () => {
         Alert.alert("Déconnexion", "Voulez-vous vous déconnecter ?", [
@@ -68,13 +93,13 @@ export default function SettingsScreen({ navigation }) {
                     icon: "language-outline",
                     label: "Langue",
                     value: "Français",
-                    onPress: () => soon("Langue"),
+                    onPress: () => showInfo("Langue", "L'application est disponible en Français."),
                 },
                 {
                     icon: "cash-outline",
                     label: "Devise",
                     value: "FCFA",
-                    onPress: () => soon("Devise"),
+                    onPress: () => showInfo("Devise", "Les prix sont affichés en FCFA."),
                 },
                 {
                     icon: "trash-bin-outline",
@@ -91,22 +116,22 @@ export default function SettingsScreen({ navigation }) {
                     icon: "information-circle-outline",
                     label: "À propos de l'application",
                     value: "v1.0.0",
-                    onPress: () => soon("À propos"),
+                    onPress: showAbout,
                 },
                 {
                     icon: "document-text-outline",
                     label: "Conditions d'utilisation",
-                    onPress: () => soon("Conditions d'utilisation"),
+                    onPress: () => openUrl("/conditions"),
                 },
                 {
                     icon: "shield-checkmark-outline",
                     label: "Politique de confidentialité",
-                    onPress: () => soon("Politique de confidentialité"),
+                    onPress: () => openUrl("/confidentialite"),
                 },
                 {
                     icon: "help-circle-outline",
                     label: "Aide & support",
-                    onPress: () => soon("Aide & support"),
+                    onPress: supportContact,
                 },
             ],
         },
