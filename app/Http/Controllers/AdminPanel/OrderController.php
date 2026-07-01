@@ -4,6 +4,7 @@ namespace App\Http\Controllers\AdminPanel;
 
 use App\Http\Controllers\Controller;
 use App\Models\Commandes as Order;
+use App\Support\OrderStatus;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
@@ -27,9 +28,10 @@ class OrderController extends Controller
         $query = Order::with(['user', 'produits'])
             ->latest('created_at');
 
-        // Filtre par statut si présent dans la requête
+        // Filtre par statut si présent dans la requête (normalisé pour tolérer
+        // d'anciennes valeurs éventuelles dans l'URL)
         if ($request->filled('status')) {
-            $query->where('statut', $request->status);
+            $query->where('statut', OrderStatus::normalize($request->status));
         }
 
         // Filtre par recherche si présent
@@ -46,16 +48,8 @@ class OrderController extends Controller
 
         $commandes = $query->get();
 
-        // Récupérer les statuts disponibles pour le filtre
-        $statuses = [
-            'en_attente' => 'En attente de paiement',
-            'paiement_declare' => 'Paiement à vérifier',
-            'payee' => 'Payée',
-            'traitement' => 'En préparation',
-            'expedie' => 'Expédiée',
-            'livre' => 'Livrée',
-            'annule' => 'Annulée'
-        ];
+        // Récupérer les statuts disponibles pour le filtre (source unique)
+        $statuses = OrderStatus::LABELS;
 
         return view('admin.orders.index', compact('commandes', 'statuses'));
     }
@@ -80,48 +74,27 @@ class OrderController extends Controller
             return back()->with('error', 'Statut requis.');
         }
 
-        $allowed = [
-            'en_attente', 'paiement_declare', 'payee', 'traitement',
-            'en_traitement', 'en_cours', 'expediee', 'expedie',
-            'livree', 'livre', 'annulee', 'annule',
-        ];
-        if (! in_array($status, $allowed, true)) {
+        // Normalise vers le vocabulaire canonique (en_cours -> traitement, etc.)
+        $status = OrderStatus::normalize($status);
+
+        if (! array_key_exists($status, OrderStatus::LABELS)) {
             return back()->with('error', 'Statut invalide.');
         }
 
         $order->update(['statut' => $status]);
 
-        // Mise à jour des dates en fonction du statut
-        $now = now();
-        $updates = [];
-        switch ($status) {
-            case 'en_attente':
-                $updates['date_en_attente'] = $now;
-                break;
-            case 'en_traitement':
-            case 'en_cours':
-            case 'traitement':
-                $updates['date_traitement'] = $now;
-                break;
-            case 'expediee':
-            case 'expedie':
-                $updates['date_expedition'] = $now;
-                break;
-            case 'livree':
-            case 'livre':
-                $updates['date_livraison'] = $now;
-                break;
-            case 'annulee':
-            case 'annule':
-                $updates['date_annulation'] = $now;
-                break;
-            case 'payee':
-                $updates['date_traitement'] = $now;
-                break;
-        }
+        // Mise à jour des dates de suivi en fonction du statut
+        $dateField = [
+            OrderStatus::EN_ATTENTE => 'date_en_attente',
+            OrderStatus::PAYEE => 'date_traitement',
+            OrderStatus::TRAITEMENT => 'date_traitement',
+            OrderStatus::EXPEDIE => 'date_expedition',
+            OrderStatus::LIVRE => 'date_livraison',
+            OrderStatus::ANNULE => 'date_annulation',
+        ][$status] ?? null;
 
-        if (! empty($updates)) {
-            $order->update($updates);
+        if ($dateField) {
+            $order->update([$dateField => now()]);
         }
 
         // Ici, vous pourriez ajouter une notification à l'utilisateur
