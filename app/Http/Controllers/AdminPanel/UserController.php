@@ -153,7 +153,7 @@ class UserController extends Controller
             }
         }
 
-        return redirect()->route('admin.users.show', $user)
+        return redirect()->route('admin.users.index')
             ->with('success', 'Utilisateur mis à jour avec succès');
     }
 
