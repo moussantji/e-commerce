@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import api from "../api/client";
 import { COLORS, RADIUS } from "../theme";
 import { getReadIds, addReadIds } from "../notifRead";
+import FadeInView from "../components/FadeInView";
 
 // Notifications de démonstration affichées tant que l'API /notifications
 // n'est pas branchée côté Laravel (repli automatique).
@@ -131,27 +132,29 @@ export default function NotificationsScreen({ navigation }) {
         }, [load]),
     );
 
-    const renderItem = ({ item }) => (
-        <TouchableOpacity
-            style={[styles.card, item.unread && styles.cardUnread]}
-            activeOpacity={0.7}
-            onPress={() => openNotification(item)}
-        >
-            <View style={styles.icon}>
-                <Ionicons name={item.icon} size={20} color={COLORS.primaryDark} />
-            </View>
-            <View style={{ flex: 1 }}>
-                <View style={styles.titleRow}>
-                    <Text style={styles.title}>{item.title}</Text>
-                    {item.unread && <View style={styles.dot} />}
+    const renderItem = ({ item, index }) => (
+        <FadeInView delay={Math.min(index, 12) * 55}>
+            <TouchableOpacity
+                style={[styles.card, item.unread && styles.cardUnread]}
+                activeOpacity={0.7}
+                onPress={() => openNotification(item)}
+            >
+                <View style={styles.icon}>
+                    <Ionicons name={item.icon} size={20} color={COLORS.primaryDark} />
                 </View>
-                {!!item.body && <Text style={styles.body}>{item.body}</Text>}
-                {!!item.time && <Text style={styles.time}>{item.time}</Text>}
-            </View>
-            {item.link && item.link.type && item.link.type !== "none" ? (
-                <Ionicons name="chevron-forward" size={18} color="#c4c4c4" />
-            ) : null}
-        </TouchableOpacity>
+                <View style={{ flex: 1 }}>
+                    <View style={styles.titleRow}>
+                        <Text style={styles.title}>{item.title}</Text>
+                        {item.unread && <View style={styles.dot} />}
+                    </View>
+                    {!!item.body && <Text style={styles.body}>{item.body}</Text>}
+                    {!!item.time && <Text style={styles.time}>{item.time}</Text>}
+                </View>
+                {item.link && item.link.type && item.link.type !== "none" ? (
+                    <Ionicons name="chevron-forward" size={18} color="#c4c4c4" />
+                ) : null}
+            </TouchableOpacity>
+        </FadeInView>
     );
 
     if (loading) {

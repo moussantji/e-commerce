@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { Animated } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -47,6 +48,28 @@ const ICONS = {
     Compte: "person",
 };
 
+/** Icône d'onglet animée : léger rebond/agrandissement quand elle devient active. */
+function AnimatedTabIcon({ base, color, size, focused }) {
+    const scale = useRef(new Animated.Value(1)).current;
+    useEffect(() => {
+        Animated.spring(scale, {
+            toValue: focused ? 1.18 : 1,
+            friction: 5,
+            tension: 160,
+            useNativeDriver: true,
+        }).start();
+    }, [focused, scale]);
+    return (
+        <Animated.View style={{ transform: [{ scale }] }}>
+            <Ionicons
+                name={focused ? base : `${base}-outline`}
+                size={size}
+                color={color}
+            />
+        </Animated.View>
+    );
+}
+
 function Tabs() {
     const { cart } = useCart();
     return (
@@ -60,16 +83,15 @@ function Tabs() {
                 tabBarInactiveTintColor: "#9ca3af",
                 tabBarStyle: { height: 58, paddingBottom: 6, paddingTop: 6 },
                 tabBarLabelStyle: { fontSize: 11, fontWeight: "600" },
-                tabBarIcon: ({ color, size, focused }) => {
-                    const base = ICONS[route.name] || "ellipse";
-                    return (
-                        <Ionicons
-                            name={focused ? base : `${base}-outline`}
-                            size={size}
-                            color={color}
-                        />
-                    );
-                },
+                tabBarHideOnKeyboard: true,
+                tabBarIcon: ({ color, size, focused }) => (
+                    <AnimatedTabIcon
+                        base={ICONS[route.name] || "ellipse"}
+                        color={color}
+                        size={size}
+                        focused={focused}
+                    />
+                ),
             })}
         >
             <Tab.Screen
@@ -112,6 +134,8 @@ function AppStack() {
                 headerStyle: { backgroundColor: COLORS.primary },
                 headerTintColor: "#fff",
                 headerTitleStyle: { fontWeight: "800" },
+                animation: "slide_from_right",
+                animationDuration: 260,
             }}
         >
             <Stack.Screen
@@ -215,7 +239,7 @@ function AppStack() {
 
 function AuthStack() {
     return (
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Navigator screenOptions={{ headerShown: false, animation: "fade" }}>
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />
         </Stack.Navigator>

@@ -3,6 +3,7 @@
     "name": "E-Commerce",
     "slug": "ecommerce-mobile",
     "version": "1.0.0",
+    "icon": "./assets/icon.png",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "scheme": "ecommerce",
@@ -22,7 +23,8 @@
     "android": {
       "package": "com.ecommerce.mobile",
       "adaptiveIcon": {
-        "backgroundColor": "#6366f1"
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#ffffff"
       },
       "permissions": [
         "INTERNET"

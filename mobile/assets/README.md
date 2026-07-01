@@ -20,8 +20,18 @@ sous le nom exact `logo.png`.
 > « Unable to resolve module ../../assets/logo.png ». Ajoutez simplement l'image
 > pour résoudre cela.
 
-### (Optionnel) Icône de l'application
+### Icône de l'application : `icon.png`
 
-Pour utiliser aussi le logo comme icône d'app, ajoutez `icon.png` (1024×1024)
-puis référencez-le dans `app.json` via `expo.icon` et
-`expo.android.adaptiveIcon.foregroundImage`.
+L'icône d'app (`app.json` → `expo.icon` et `expo.android.adaptiveIcon.foregroundImage`)
+utilise :
+
+```
+mobile/assets/icon.png
+```
+
+**Action requise :** déposez une version **carrée** du logo (1024×1024 px recommandé,
+fond transparent ou blanc) sous le nom `icon.png`.
+
+- Sur Android (adaptive icon), le logo est affiché sur un fond blanc.
+- Astuce : ajoutez un peu de marge autour du logo pour éviter qu'il soit rogné
+  par le masque circulaire/arrondi d'Android.
