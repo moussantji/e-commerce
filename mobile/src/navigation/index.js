@@ -121,9 +121,7 @@ function AppStack() {
             <Stack.Screen
                 name="ProductDetail"
                 component={ProductDetailScreen}
-                options={({ route }) => ({
-                    title: route.params?.name || "Produit",
-                })}
+                options={{ headerShown: false }}
             />
             <Stack.Screen
                 name="Notifications"

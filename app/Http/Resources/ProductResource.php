@@ -11,13 +11,20 @@ class ProductResource extends JsonResource
         $photo = $this->getPhoto();
         $images = $this->relationLoaded('photos') ? $this->photos : collect();
 
+        $price = (float) $this->price;
+        $salePrice = $this->sale_price ? (float) $this->sale_price : null;
+        $discount = ($salePrice && $price > 0 && $salePrice < $price)
+            ? (int) round((($price - $salePrice) / $price) * 100)
+            : 0;
+
         return [
             'id' => $this->id,
             'name' => $this->name,
             'slug' => method_exists($this->resource, 'getSlug') ? $this->getSlug() : null,
             'description' => $this->description,
-            'price' => (float) $this->price,
-            'sale_price' => $this->sale_price ? (float) $this->sale_price : null,
+            'price' => $price,
+            'sale_price' => $salePrice,
+            'discount_percent' => $discount,
             'stock' => (int) $this->stock,
             'in_stock' => (int) $this->stock > 0,
             'sku' => $this->sku,
@@ -29,6 +36,33 @@ class ProductResource extends JsonResource
                 'name' => $this->category->name,
                 'slug' => $this->category->slug,
             ] : null),
+            'brand' => $this->whenLoaded('brand', fn () => $this->brand ? [
+                'id' => $this->brand->id,
+                'name' => $this->brand->name,
+                'slug' => $this->brand->slug,
+            ] : null),
+            // Spécifications (caractéristiques) : nom + valeur + unité
+            'specifications' => $this->whenLoaded('caracteristiques', fn () => $this->caracteristiques->map(fn ($c) => [
+                'name' => $c->name,
+                'type' => $c->type,
+                'value' => $c->pivot->value ?? null,
+                'unite' => $c->unite,
+            ])->values()),
+            // Avis clients (liste)
+            'reviews' => $this->whenLoaded('reviews', fn () => $this->reviews->map(fn ($r) => [
+                'id' => $r->id,
+                'author' => optional($r->user)->name ?? 'Client',
+                'rating' => (int) ($r->nb_etoiles ?? 0),
+                'comment' => $r->commentaire,
+                'date' => optional($r->created_at)->diffForHumans(),
+                'images' => $r->relationLoaded('photos')
+                    ? $r->photos->map(fn ($p) => $this->abs($p->getImageUrl(300, 300)))->values()
+                    : [],
+                'response' => $r->relationLoaded('response') && $r->response ? [
+                    'message' => $r->response->message,
+                    'date' => optional($r->response->created_at)->diffForHumans(),
+                ] : null,
+            ])->values()),
             'rating_avg' => round((float) ($this->reviews_avg_nb_etoiles ?? 0), 1),
             'rating_count' => (int) ($this->reviews_count ?? 0),
         ];

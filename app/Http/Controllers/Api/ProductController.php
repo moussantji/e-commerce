@@ -40,12 +40,34 @@ class ProductController extends Controller
 
     public function show($id)
     {
-        $product = Produits::with(['category', 'photos', 'caracteristiques'])
+        $product = Produits::with([
+            'category',
+            'photos',
+            'brand',
+            'caracteristiques',
+            'reviews' => fn ($q) => $q
+                ->with(['user', 'response', 'photos'])
+                ->latest()
+                ->limit(10),
+        ])
             ->withCount('reviews')
             ->withAvg('reviews', 'nb_etoiles')
             ->findOrFail($id);
 
-        return new ProductResource($product);
+        // Produits similaires (même catégorie, en stock) — comme le site web
+        $similar = Produits::where('category_id', $product->category_id)
+            ->where('id', '!=', $product->id)
+            ->where('is_active', true)
+            ->where('stock', '>', 0)
+            ->with(['photos', 'category'])
+            ->withCount('reviews')
+            ->withAvg('reviews', 'nb_etoiles')
+            ->limit(10)
+            ->get();
+
+        return (new ProductResource($product))->additional([
+            'similar' => ProductResource::collection($similar),
+        ]);
     }
 
     /**
