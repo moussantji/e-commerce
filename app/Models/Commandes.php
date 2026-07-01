@@ -90,11 +90,16 @@ class Commandes extends Model
     public function getStatusLabelAttribute(): string
     {
         $labels = [
-            'en_attente' => 'En attente',
-            'traitement' => 'En traitement',
+            'en_attente' => 'En attente de paiement',
+            'paiement_declare' => 'Paiement en vérification',
+            'payee' => 'Payée',
+            'traitement' => 'En préparation',
             'expedition' => 'Expédiée',
+            'expedie' => 'Expédiée',
             'livree' => 'Livrée',
+            'livre' => 'Livrée',
             'annulee' => 'Annulée',
+            'annule' => 'Annulée',
             'partiellement_livree' => 'Partiellement livrée',
         ];
 
