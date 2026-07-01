@@ -112,6 +112,25 @@ class AuthController extends Controller
         return response()->json(['message' => 'Mot de passe mis à jour.']);
     }
 
+    /** Changement de photo de profil (avatar). */
+    public function updateAvatar(Request $request)
+    {
+        $request->validate([
+            'avatar' => 'required|image|max:20480',
+        ]);
+
+        $user = $request->user();
+
+        // Supprime l'ancienne photo (fichier + ligne) puis attache la nouvelle
+        $user->photos()->get()->each(fn ($p) => $p->delete());
+        $user->attachfiles([$request->file('avatar')]);
+
+        return response()->json([
+            'message' => 'Photo de profil mise à jour.',
+            'user' => $this->userPayload($user->fresh()),
+        ]);
+    }
+
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
@@ -132,6 +151,24 @@ class AuthController extends Controller
             'pays' => $user->pays,
             'region' => $user->region,
             'lieu_naiss' => $user->lieu_naiss,
+            'avatar' => $this->avatarUrl($user),
         ];
+    }
+
+    /** URL absolue de la photo de profil, ou null. */
+    private function avatarUrl(User $user): ?string
+    {
+        $photo = method_exists($user, 'getPhoto') ? $user->getPhoto() : null;
+        if (!$photo) {
+            return null;
+        }
+        $url = $photo->getImageUrl(300, 300);
+        if (!$url) {
+            return null;
+        }
+        if (str_starts_with($url, 'http')) {
+            return $url;
+        }
+        return rtrim(request()->getSchemeAndHttpHost(), '/') . '/' . ltrim($url, '/');
     }
 }

@@ -10,12 +10,14 @@ import {
     ActivityIndicator,
     KeyboardAvoidingView,
     Platform,
+    Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "../context/AuthContext";
-import { apiError } from "../api/client";
+import api, { apiError } from "../api/client";
 import { COLORS, RADIUS } from "../theme";
 
 const FIELDS = [
@@ -30,7 +32,10 @@ const FIELDS = [
 
 export default function EditProfileScreen({ navigation }) {
     const insets = useSafeAreaInsets();
-    const { user, updateProfile } = useAuth();
+    const { user, updateProfile, updateUserData } = useAuth();
+
+    const [avatar, setAvatar] = useState(user?.avatar || null);
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
     const [form, setForm] = useState({
         name: user?.name || "",
@@ -44,6 +49,42 @@ export default function EditProfileScreen({ navigation }) {
     const [saving, setSaving] = useState(false);
 
     const set = (key, value) => setForm((f) => ({ ...f, [key]: value }));
+
+    const pickAvatar = async () => {
+        const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!perm.granted) {
+            Alert.alert("Permission requise", "Autorisez l'accès aux photos.");
+            return;
+        }
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.7,
+        });
+        if (result.canceled) return;
+
+        const asset = result.assets[0];
+        const ext = (asset.uri.split(".").pop() || "jpg").toLowerCase();
+        setUploadingAvatar(true);
+        try {
+            const fd = new FormData();
+            fd.append("avatar", {
+                uri: Platform.OS === "ios" ? asset.uri.replace("file://", "") : asset.uri,
+                name: asset.fileName || `avatar.${ext}`,
+                type: asset.mimeType || `image/${ext === "jpg" ? "jpeg" : ext}`,
+            });
+            const { data } = await api.post("/me/avatar", fd, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+            updateUserData(data.user);
+            setAvatar(data.user.avatar);
+        } catch (e) {
+            Alert.alert("Impossible", apiError(e));
+        } finally {
+            setUploadingAvatar(false);
+        }
+    };
 
     const save = async () => {
         if (!form.name?.trim()) {
@@ -88,12 +129,22 @@ export default function EditProfileScreen({ navigation }) {
                 <ScrollView contentContainerStyle={{ paddingBottom: 30 }} keyboardShouldPersistTaps="handled">
                     {/* Avatar */}
                     <View style={styles.avatarWrap}>
-                        <View style={styles.avatar}>
-                            <Text style={styles.avatarText}>{initial}</Text>
-                        </View>
+                        {avatar ? (
+                            <Image source={{ uri: avatar }} style={styles.avatar} />
+                        ) : (
+                            <View style={styles.avatar}>
+                                <Text style={styles.avatarText}>{initial}</Text>
+                            </View>
+                        )}
+                        {uploadingAvatar && (
+                            <View style={styles.avatarLoading}>
+                                <ActivityIndicator color="#fff" />
+                            </View>
+                        )}
                         <TouchableOpacity
                             style={styles.avatarEdit}
-                            onPress={() => Alert.alert("Photo de profil", "Bientôt disponible.")}
+                            onPress={pickAvatar}
+                            disabled={uploadingAvatar}
                         >
                             <Ionicons name="camera" size={16} color="#fff" />
                         </TouchableOpacity>
@@ -171,6 +222,15 @@ const styles = StyleSheet.create({
         justifyContent: "center",
     },
     avatarText: { color: "#fff", fontSize: 34, fontWeight: "900" },
+    avatarLoading: {
+        position: "absolute",
+        width: 88,
+        height: 88,
+        borderRadius: 44,
+        backgroundColor: "rgba(0,0,0,0.4)",
+        alignItems: "center",
+        justifyContent: "center",
+    },
     avatarEdit: {
         position: "absolute",
         right: -2,

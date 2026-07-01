@@ -81,6 +81,11 @@ export function AuthProvider({ children }) {
         return data.user;
     };
 
+    // Remplace les données utilisateur (ex: après upload d'avatar)
+    const updateUserData = (newUser) => {
+        setUser(newUser);
+    };
+
     return (
         <AuthContext.Provider
             value={{
@@ -92,6 +97,7 @@ export function AuthProvider({ children }) {
                 socialLogin,
                 logout,
                 updateProfile,
+                updateUserData,
             }}
         >
             {children}
