@@ -9,6 +9,9 @@ import {
     ActivityIndicator,
     Alert,
     Dimensions,
+    Modal,
+    Pressable,
+    TextInput,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -54,6 +57,12 @@ export default function ProductDetailScreen({ route, navigation }) {
     const [activeImg, setActiveImg] = useState(0);
     const galleryRef = useRef(null);
 
+    // Formulaire d'avis
+    const [reviewOpen, setReviewOpen] = useState(false);
+    const [reviewRating, setReviewRating] = useState(0);
+    const [reviewComment, setReviewComment] = useState("");
+    const [submitting, setSubmitting] = useState(false);
+
     useEffect(() => {
         (async () => {
             setLoading(true);
@@ -85,6 +94,46 @@ export default function ProductDetailScreen({ route, navigation }) {
             Alert.alert("Impossible", apiError(e));
         } finally {
             setAdding(false);
+        }
+    };
+
+    const submitReview = async () => {
+        if (!token) {
+            setReviewOpen(false);
+            Alert.alert("Connexion requise", "Connectez-vous pour laisser un avis.");
+            return;
+        }
+        if (reviewRating < 0.5) {
+            Alert.alert("Note requise", "Sélectionnez une note (1 à 5 étoiles).");
+            return;
+        }
+        setSubmitting(true);
+        try {
+            const { data } = await api.post(`/products/${id}/reviews`, {
+                rating: reviewRating,
+                comment: reviewComment.trim() || undefined,
+            });
+            // Ajoute l'avis en tête + met à jour le compteur/moyenne localement
+            setProduct((prev) => {
+                const reviews = [data.data, ...(prev.reviews ?? [])];
+                const count = (prev.rating_count ?? 0) + 1;
+                const avg =
+                    ((prev.rating_avg ?? 0) * (prev.rating_count ?? 0) + reviewRating) / count;
+                return {
+                    ...prev,
+                    reviews,
+                    rating_count: count,
+                    rating_avg: Math.round(avg * 10) / 10,
+                };
+            });
+            setReviewOpen(false);
+            setReviewRating(0);
+            setReviewComment("");
+            Alert.alert("Merci !", "Votre avis a bien été publié.");
+        } catch (e) {
+            Alert.alert("Impossible", apiError(e));
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -298,6 +347,35 @@ export default function ProductDetailScreen({ route, navigation }) {
 
                     {tab === "reviews" && (
                         <View>
+                            {/* Résumé + bouton écrire un avis */}
+                            <View style={styles.reviewsSummary}>
+                                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                                    <Text style={styles.reviewsAvg}>
+                                        {Number(product.rating_avg ?? 0).toFixed(1)}
+                                        <Text style={styles.reviewsAvgMax}>/5</Text>
+                                    </Text>
+                                    <View>
+                                        <Stars value={product.rating_avg ?? 0} size={14} />
+                                        <Text style={styles.reviewsCount}>
+                                            {product.rating_count ?? 0} note{(product.rating_count ?? 0) > 1 ? "s" : ""}
+                                        </Text>
+                                    </View>
+                                </View>
+                                <TouchableOpacity
+                                    style={styles.writeBtn}
+                                    onPress={() => {
+                                        if (!token) {
+                                            Alert.alert("Connexion requise", "Connectez-vous pour laisser un avis.");
+                                            return;
+                                        }
+                                        setReviewOpen(true);
+                                    }}
+                                >
+                                    <Ionicons name="create-outline" size={16} color={COLORS.primaryDark} />
+                                    <Text style={styles.writeBtnText}>Écrire un avis</Text>
+                                </TouchableOpacity>
+                            </View>
+
                             {reviews.length === 0 ? (
                                 <Text style={styles.muted}>Aucun avis pour le moment.</Text>
                             ) : (
@@ -384,6 +462,56 @@ export default function ProductDetailScreen({ route, navigation }) {
                     </LinearGradient>
                 </TouchableOpacity>
             </View>
+
+            {/* Modal : écrire un avis */}
+            <Modal visible={reviewOpen} transparent animationType="slide" onRequestClose={() => setReviewOpen(false)}>
+                <Pressable style={styles.backdrop} onPress={() => setReviewOpen(false)}>
+                    <Pressable style={[styles.reviewSheet, { paddingBottom: insets.bottom + 16 }]}>
+                        <View style={styles.reviewSheetHead}>
+                            <Text style={styles.reviewSheetTitle}>Votre avis</Text>
+                            <TouchableOpacity onPress={() => setReviewOpen(false)}>
+                                <Ionicons name="close" size={24} color={COLORS.text} />
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Étoiles cliquables */}
+                        <View style={styles.starPicker}>
+                            {[1, 2, 3, 4, 5].map((n) => (
+                                <TouchableOpacity key={n} onPress={() => setReviewRating(n)} hitSlop={6}>
+                                    <Ionicons
+                                        name={reviewRating >= n ? "star" : "star-outline"}
+                                        size={38}
+                                        color="#f59e0b"
+                                    />
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                        <Text style={styles.starHint}>
+                            {reviewRating > 0 ? `${reviewRating} / 5` : "Touchez pour noter"}
+                        </Text>
+
+                        <TextInput
+                            style={styles.reviewInput}
+                            placeholder="Partagez votre expérience (optionnel)"
+                            placeholderTextColor="#9ca3af"
+                            value={reviewComment}
+                            onChangeText={setReviewComment}
+                            multiline
+                            maxLength={1000}
+                        />
+
+                        <TouchableOpacity
+                            style={[styles.submitBtn, submitting && { opacity: 0.6 }]}
+                            onPress={submitReview}
+                            disabled={submitting}
+                        >
+                            <Text style={styles.submitText}>
+                                {submitting ? "Envoi..." : "Publier mon avis"}
+                            </Text>
+                        </TouchableOpacity>
+                    </Pressable>
+                </Pressable>
+            </Modal>
         </View>
     );
 }
@@ -498,6 +626,64 @@ const styles = StyleSheet.create({
     specValue: { flex: 0.58, color: "#111827", fontSize: 13 },
     review: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: "#f3f4f6" },
     reviewHead: { flexDirection: "row", alignItems: "center", gap: 8 },
+    reviewsSummary: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        backgroundColor: "#f9fafb",
+        borderRadius: RADIUS.md,
+        padding: 14,
+        marginTop: 14,
+    },
+    reviewsAvg: { fontSize: 26, fontWeight: "900", color: COLORS.text },
+    reviewsAvgMax: { fontSize: 13, color: "#9ca3af", fontWeight: "700" },
+    reviewsCount: { fontSize: 12, color: COLORS.textLight, marginTop: 2 },
+    writeBtn: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 5,
+        borderWidth: 1.5,
+        borderColor: COLORS.primaryDark,
+        borderRadius: RADIUS.pill,
+        paddingHorizontal: 14,
+        paddingVertical: 9,
+    },
+    writeBtnText: { color: COLORS.primaryDark, fontWeight: "700", fontSize: 13 },
+    reviewSheet: {
+        backgroundColor: "#fff",
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        paddingTop: 16,
+        paddingHorizontal: 20,
+    },
+    reviewSheetHead: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        marginBottom: 16,
+    },
+    reviewSheetTitle: { fontSize: 17, fontWeight: "800", color: COLORS.text },
+    starPicker: { flexDirection: "row", justifyContent: "center", gap: 8 },
+    starHint: { textAlign: "center", color: COLORS.textLight, marginTop: 8, fontWeight: "600" },
+    reviewInput: {
+        borderWidth: 1,
+        borderColor: "#e5e7eb",
+        borderRadius: RADIUS.md,
+        padding: 14,
+        minHeight: 100,
+        textAlignVertical: "top",
+        fontSize: 14,
+        color: COLORS.text,
+        marginTop: 16,
+    },
+    submitBtn: {
+        backgroundColor: COLORS.primaryDark,
+        borderRadius: 14,
+        paddingVertical: 15,
+        alignItems: "center",
+        marginTop: 16,
+    },
+    submitText: { color: "#fff", fontWeight: "800", fontSize: 15 },
     reviewAuthor: { fontSize: 13, fontWeight: "700", color: COLORS.text },
     reviewDate: { fontSize: 11, color: "#9ca3af", marginTop: 3 },
     reviewComment: { fontSize: 13.5, color: "#374151", marginTop: 6, lineHeight: 19 },
