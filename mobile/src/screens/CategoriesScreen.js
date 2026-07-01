@@ -29,7 +29,9 @@ export default function CategoriesScreen({ navigation }) {
     const fetchItems = useCallback(async (catId) => {
         const params = { per_page: 18 };
         if (catId && catId !== "all") params.category_id = catId;
-        else params.featured = 1;
+        // "Pour vous" : produits populaires (pas seulement les featured, pour
+        // éviter un onglet vide s'il n'y a aucun produit mis en avant)
+        else params.sort = "popular";
         const { data } = await api.get("/products", { params });
         return data.data ?? [];
     }, []);
@@ -122,7 +124,12 @@ export default function CategoriesScreen({ navigation }) {
                 style={[styles.header, { paddingTop: insets.top + 8 }]}
             >
                 <View style={styles.searchRow}>
-                    <Ionicons name="mail-outline" size={22} color="#fff" />
+                    <TouchableOpacity
+                        onPress={() => navigation.navigate("Notifications")}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                        <Ionicons name="mail-outline" size={22} color="#fff" />
+                    </TouchableOpacity>
                     <TouchableOpacity
                         style={styles.search}
                         onPress={() =>
@@ -137,7 +144,12 @@ export default function CategoriesScreen({ navigation }) {
                             <Ionicons name="search" size={16} color="#fff" />
                         </View>
                     </TouchableOpacity>
-                    <Ionicons name="heart-outline" size={22} color="#fff" />
+                    <TouchableOpacity
+                        onPress={() => navigation.navigate("Wishlist")}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                        <Ionicons name="heart-outline" size={22} color="#fff" />
+                    </TouchableOpacity>
                 </View>
 
                 <ScrollView
