@@ -53,6 +53,11 @@ export default function PaymentScreen({ route, navigation }) {
         }
         setPaying(true);
         try {
+            if (!selected.cod && !phone.trim()) {
+                Alert.alert("Numéro requis", "Renseignez le numéro utilisé pour le paiement.");
+                setPaying(false);
+                return;
+            }
             await api.post(`/orders/${orderId}/pay`, {
                 payment_method_id: selected.id,
                 provider: selected.name,
@@ -172,7 +177,7 @@ export default function PaymentScreen({ route, navigation }) {
                                         <Ionicons name="call-outline" size={18} color={COLORS.textLight} />
                                         <TextInput
                                             style={styles.input}
-                                            placeholder="Numéro utilisé (optionnel)"
+                                            placeholder="Numéro utilisé (obligatoire)"
                                             placeholderTextColor="#9ca3af"
                                             keyboardType="phone-pad"
                                             value={phone}
