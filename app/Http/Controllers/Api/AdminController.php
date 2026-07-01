@@ -71,19 +71,10 @@ class AdminController extends Controller
         DB::transaction(function () use ($proof) {
             $proof->update(['status' => 'confirme']);
             if ($proof->order) {
+                // Le changement de statut déclenche la notification (hook modèle Commandes)
                 $proof->order->update(['statut' => 'payee', 'date_traitement' => now()]);
             }
         });
-
-        if ($proof->user) {
-            $numero = optional($proof->order)->numero_commande ?? ('#' . $proof->order_id);
-            $proof->user->notify(new PaymentStatusNotification(
-                'Paiement confirmé',
-                "Votre paiement pour la commande {$numero} a été confirmé. Merci !",
-                true,
-                ['type' => 'order', 'id' => $proof->order_id],
-            ));
-        }
 
         return response()->json(['message' => 'Paiement confirmé.']);
     }
