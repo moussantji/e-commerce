@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
     View,
     Text,
@@ -21,6 +21,21 @@ import { COLORS, RADIUS } from "../theme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
+// Filtres de la section "Vous aimerez aussi" (façon SHEIN)
+const RECO_FILTERS = [
+    { key: "for_you", label: "Pour vous" },
+    { key: "popular", label: "Populaires" },
+    { key: "new", label: "Nouveautés" },
+    { key: "deals", label: "Promos" },
+];
+
+const RECO_PARAMS = {
+    for_you: {},
+    popular: { sort: "popular" },
+    new: { sort: "latest" },
+    deals: { on_sale: 1 },
+};
+
 // Étoiles (pleines / demie / vides) comme sur le site
 function Stars({ value = 0, size = 14 }) {
     const items = [];
@@ -39,6 +54,44 @@ function Stars({ value = 0, size = 14 }) {
     return <View style={{ flexDirection: "row", gap: 1 }}>{items}</View>;
 }
 
+// Carte produit de la grille "Vous aimerez aussi"
+function RecoCard({ item, navigation }) {
+    const hasDiscount = item.sale_price && item.sale_price < item.price;
+    const discount = hasDiscount
+        ? Math.round(((item.price - item.sale_price) / item.price) * 100)
+        : 0;
+    return (
+        <TouchableOpacity
+            style={styles.recoCard}
+            activeOpacity={0.9}
+            onPress={() => navigation.push("ProductDetail", { id: item.id, name: item.name })}
+        >
+            <View>
+                <Image source={{ uri: item.image }} style={styles.recoImg} />
+                {hasDiscount ? (
+                    <View style={styles.recoBadge}>
+                        <Text style={styles.recoBadgeText}>-{discount}%</Text>
+                    </View>
+                ) : null}
+            </View>
+            <View style={styles.recoBody}>
+                <Text style={styles.recoName} numberOfLines={2}>
+                    {item.name}
+                </Text>
+                <View style={styles.recoPriceRow}>
+                    <Text style={styles.recoPrice}>{formatPrice(item.sale_price ?? item.price)}</Text>
+                    {hasDiscount ? (
+                        <Text style={styles.recoOldPrice}>{formatPrice(item.price)}</Text>
+                    ) : null}
+                </View>
+                {item.rating_count > 0 ? (
+                    <Text style={styles.recoRating}>⭐ {item.rating_avg ?? 0} ({item.rating_count})</Text>
+                ) : null}
+            </View>
+        </TouchableOpacity>
+    );
+}
+
 export default function ProductDetailScreen({ route, navigation }) {
     const { id } = route.params;
     const insets = useSafeAreaInsets();
@@ -46,7 +99,6 @@ export default function ProductDetailScreen({ route, navigation }) {
     const { token } = useAuth();
 
     const [product, setProduct] = useState(null);
-    const [similar, setSimilar] = useState([]);
     const [loading, setLoading] = useState(true);
     const [adding, setAdding] = useState(false);
     const [qty, setQty] = useState(1);
@@ -56,13 +108,20 @@ export default function ProductDetailScreen({ route, navigation }) {
     const [favLoading, setFavLoading] = useState(false);
     const galleryRef = useRef(null);
 
+    // Section "Vous aimerez aussi" avec filtres + grille + pagination
+    const [recoFilter, setRecoFilter] = useState("for_you");
+    const [reco, setReco] = useState([]);
+    const [recoLoading, setRecoLoading] = useState(false);
+    const [recoPage, setRecoPage] = useState(1);
+    const [recoHasMore, setRecoHasMore] = useState(true);
+    const recoLoadingRef = useRef(false);
+
     useEffect(() => {
         (async () => {
             setLoading(true);
             try {
                 const { data } = await api.get(`/products/${id}`);
                 setProduct(data.data);
-                setSimilar(data.similar?.data ?? data.similar ?? []);
             } catch (e) {
                 Alert.alert("Erreur", apiError(e));
             } finally {
@@ -101,6 +160,71 @@ export default function ProductDetailScreen({ route, navigation }) {
             Alert.alert("Impossible", apiError(e));
         } finally {
             setFavLoading(false);
+        }
+    };
+
+    // --- Section "Vous aimerez aussi" ---
+    const fetchReco = useCallback(
+        async (filter, page, categoryId) => {
+            const params = { per_page: 10, page, ...(RECO_PARAMS[filter] || {}) };
+            // "Pour vous" : privilégie la même catégorie
+            if (filter === "for_you" && categoryId) {
+                params.category_id = categoryId;
+            }
+            const { data } = await api.get("/products", { params });
+            return data;
+        },
+        [],
+    );
+
+    // (Re)charge la 1ère page quand le produit ou le filtre change
+    useEffect(() => {
+        if (!product) return;
+        let cancelled = false;
+        (async () => {
+            setRecoLoading(true);
+            try {
+                const data = await fetchReco(recoFilter, 1, product.category?.id);
+                if (cancelled) return;
+                const list = (data.data ?? []).filter((p) => p.id !== product.id);
+                setReco(list);
+                setRecoPage(1);
+                setRecoHasMore((data.meta?.current_page ?? 1) < (data.meta?.last_page ?? 1));
+            } catch (e) {
+                if (!cancelled) setReco([]);
+            } finally {
+                if (!cancelled) setRecoLoading(false);
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [product?.id, recoFilter, fetchReco]);
+
+    const loadMoreReco = async () => {
+        if (recoLoadingRef.current || !recoHasMore || recoLoading || !product) return;
+        recoLoadingRef.current = true;
+        try {
+            const next = recoPage + 1;
+            const data = await fetchReco(recoFilter, next, product.category?.id);
+            const list = (data.data ?? []).filter((p) => p.id !== product.id);
+            setReco((prev) => {
+                const seen = new Set(prev.map((x) => x.id));
+                return [...prev, ...list.filter((x) => !seen.has(x.id))];
+            });
+            setRecoPage(next);
+            setRecoHasMore((data.meta?.current_page ?? next) < (data.meta?.last_page ?? next));
+        } catch (e) {
+            /* ignore */
+        } finally {
+            recoLoadingRef.current = false;
+        }
+    };
+
+    const onMainScroll = (e) => {
+        const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+        if (contentOffset.y + layoutMeasurement.height >= contentSize.height - 500) {
+            loadMoreReco();
         }
     };
 
@@ -203,7 +327,12 @@ export default function ProductDetailScreen({ route, navigation }) {
                 </View>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 100 }}
+                onScroll={onMainScroll}
+                scrollEventThrottle={16}
+            >
                 {/* Galerie d'images */}
                 <View>
                     <ScrollView
@@ -424,32 +553,52 @@ export default function ProductDetailScreen({ route, navigation }) {
                         </View>
                     )}
 
-                    {/* Produits similaires */}
-                    {similar.length > 0 && (
-                        <View style={styles.similarSection}>
-                            <Text style={styles.sectionTitle}>Vous aimerez aussi</Text>
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
-                                {similar.map((p) => (
+                    {/* Vous aimerez aussi — filtres + grille (façon SHEIN) */}
+                    <View style={styles.similarSection}>
+                        <Text style={styles.sectionTitle}>Vous aimerez aussi</Text>
+
+                        {/* Filtres */}
+                        <View style={styles.recoChips}>
+                            {RECO_FILTERS.map((f) => {
+                                const on = recoFilter === f.key;
+                                return (
                                     <TouchableOpacity
-                                        key={p.id}
-                                        style={styles.similarCard}
-                                        activeOpacity={0.9}
-                                        onPress={() =>
-                                            navigation.push("ProductDetail", { id: p.id, name: p.name })
-                                        }
+                                        key={f.key}
+                                        style={[styles.recoChip, on && styles.recoChipOn]}
+                                        onPress={() => setRecoFilter(f.key)}
                                     >
-                                        <Image source={{ uri: p.image }} style={styles.similarImg} />
-                                        <Text style={styles.similarName} numberOfLines={2}>
-                                            {p.name}
-                                        </Text>
-                                        <Text style={styles.similarPrice}>
-                                            {formatPrice(p.sale_price ?? p.price)}
+                                        <Text style={[styles.recoChipText, on && styles.recoChipTextOn]}>
+                                            {f.label}
                                         </Text>
                                     </TouchableOpacity>
-                                ))}
-                            </ScrollView>
+                                );
+                            })}
                         </View>
-                    )}
+
+                        {/* Grille 2 colonnes */}
+                        {recoLoading && reco.length === 0 ? (
+                            <ActivityIndicator style={{ marginTop: 24 }} color={COLORS.primary} />
+                        ) : reco.length === 0 ? (
+                            <Text style={styles.muted}>Aucun produit à recommander.</Text>
+                        ) : (
+                            <View style={styles.recoGrid}>
+                                <View style={styles.recoCol}>
+                                    {reco.filter((_, i) => i % 2 === 0).map((p) => (
+                                        <RecoCard key={p.id} item={p} navigation={navigation} />
+                                    ))}
+                                </View>
+                                <View style={styles.recoCol}>
+                                    {reco.filter((_, i) => i % 2 === 1).map((p) => (
+                                        <RecoCard key={p.id} item={p} navigation={navigation} />
+                                    ))}
+                                </View>
+                            </View>
+                        )}
+
+                        {recoHasMore && reco.length > 0 && (
+                            <ActivityIndicator style={{ marginVertical: 16 }} color={COLORS.primary} />
+                        )}
+                    </View>
                 </View>
             </ScrollView>
 
@@ -669,10 +818,38 @@ const styles = StyleSheet.create({
     responseMsg: { fontSize: 12.5, color: "#374151", marginTop: 2 },
     similarSection: { marginTop: 26 },
     sectionTitle: { fontSize: 16, fontWeight: "800", color: "#111827", marginBottom: 12 },
-    similarCard: { width: 130 },
-    similarImg: { width: 130, height: 130, borderRadius: 10, backgroundColor: "#e5e7eb" },
-    similarName: { fontSize: 12, color: "#374151", marginTop: 6, lineHeight: 16 },
-    similarPrice: { fontSize: 14, fontWeight: "900", color: COLORS.accent, marginTop: 2 },
+    recoChips: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 14 },
+    recoChip: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: RADIUS.pill,
+        backgroundColor: "#f3f4f6",
+        borderWidth: 1,
+        borderColor: "#eee",
+    },
+    recoChipOn: { backgroundColor: COLORS.primaryDark, borderColor: COLORS.primaryDark },
+    recoChipText: { fontSize: 12.5, color: COLORS.text, fontWeight: "600" },
+    recoChipTextOn: { color: "#fff" },
+    recoGrid: { flexDirection: "row", gap: 10 },
+    recoCol: { flex: 1, gap: 10 },
+    recoCard: { backgroundColor: "#fff", borderRadius: 10, overflow: "hidden", elevation: 1 },
+    recoImg: { width: "100%", aspectRatio: 0.85, backgroundColor: "#e5e7eb" },
+    recoBadge: {
+        position: "absolute",
+        top: 6,
+        left: 6,
+        backgroundColor: "#ef4444",
+        borderRadius: 4,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+    },
+    recoBadgeText: { color: "#fff", fontSize: 10, fontWeight: "800" },
+    recoBody: { padding: 8 },
+    recoName: { fontSize: 12.5, color: "#1f2937", lineHeight: 16, minHeight: 32 },
+    recoPriceRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 4 },
+    recoPrice: { fontSize: 15, fontWeight: "900", color: COLORS.accent },
+    recoOldPrice: { fontSize: 11, color: "#9ca3af", textDecorationLine: "line-through" },
+    recoRating: { fontSize: 11, color: "#6b7280", marginTop: 4 },
     footer: {
         flexDirection: "row",
         alignItems: "center",
