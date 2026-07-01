@@ -373,6 +373,23 @@
                     </div>
                 </li>
 
+                <!-- Paiements à vérifier -->
+                <li class="nav-item">
+                    <div class="nav-item-wrapper">
+                        <a class="nav-link label-1 {{ request()->routeIs('admin.payments.moderation') ? 'active' : '' }}"
+                            href="{{ route('admin.payments.moderation') }}" role="button">
+                            <div class="d-flex align-items-center">
+                                <span class="nav-link-icon">
+                                    <span data-feather="dollar-sign"></span>
+                                </span>
+                                <span class="nav-link-text-wrapper">
+                                    <span class="nav-link-text">Paiements à vérifier</span>
+                                </span>
+                            </div>
+                        </a>
+                    </div>
+                </li>
+
                 <!-- Paramètres de la boutique -->
                 <p class="navbar-vertical-label">PARAMÈTRES DE LA BOUTIQUE</p>
                 <hr class="navbar-vertical-line" />
