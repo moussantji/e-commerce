@@ -60,6 +60,7 @@ class NotificationController extends Controller
                     'time' => optional($n->created_at)->diffForHumans(),
                     'unread' => is_null($n->read_at),
                     'icon' => $data['icon'] ?? 'notifications-outline',
+                    'link' => $this->linkFromData($data),
                 ];
             }
         }
@@ -82,6 +83,7 @@ class NotificationController extends Controller
                 'time' => optional($order->created_at)->diffForHumans(),
                 'unread' => in_array($order->statut, ['en_attente', 'traitement', 'expedie'], true),
                 'icon' => $icon,
+                'link' => ['type' => 'order', 'id' => $order->id],
             ];
         }
 
@@ -94,9 +96,26 @@ class NotificationController extends Controller
             'time' => optional($user->created_at)->diffForHumans(),
             'unread' => false,
             'icon' => 'gift-outline',
+            'link' => ['type' => 'home'],
         ];
 
         return $items;
+    }
+
+    /** Détermine la cible de redirection d'une notification persistée. */
+    private function linkFromData(array $data): array
+    {
+        if (!empty($data['product_id'])) {
+            return ['type' => 'product', 'id' => (int) $data['product_id']];
+        }
+        if (!empty($data['order_id'])) {
+            return ['type' => 'order', 'id' => (int) $data['order_id']];
+        }
+        // Notification liée au panier
+        if (($data['icon'] ?? '') === 'cart-outline') {
+            return ['type' => 'cart'];
+        }
+        return ['type' => 'none'];
     }
 
     private function orderMeta(?string $statut): array
