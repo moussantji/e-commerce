@@ -1,5 +1,4 @@
-import React, { useEffect, useRef } from "react";
-import { View, ActivityIndicator } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -8,6 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { COLORS, GradientBackground } from "../theme";
+import AppLoader from "../components/AppLoader";
 import LoginScreen from "../screens/LoginScreen";
 import RegisterScreen from "../screens/RegisterScreen";
 import HomeScreen from "../screens/HomeScreen";
@@ -252,6 +252,13 @@ export default function RootNavigator() {
     const { token, loading } = useAuth();
     const navRef = useRef(null);
 
+    // Temps d'affichage minimum du loader (logo) pour un rendu soigné
+    const [minReady, setMinReady] = useState(false);
+    useEffect(() => {
+        const t = setTimeout(() => setMinReady(true), 1500);
+        return () => clearTimeout(t);
+    }, []);
+
     // Enregistre le token push dès qu'on est connecté
     useEffect(() => {
         if (token) {
@@ -268,18 +275,8 @@ export default function RootNavigator() {
         return () => sub.remove();
     }, []);
 
-    if (loading) {
-        return (
-            <View
-                style={{
-                    flex: 1,
-                    justifyContent: "center",
-                    alignItems: "center",
-                }}
-            >
-                <ActivityIndicator size="large" color={COLORS.primary} />
-            </View>
-        );
+    if (loading || !minReady) {
+        return <AppLoader />;
     }
 
     return (

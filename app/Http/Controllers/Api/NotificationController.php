@@ -105,6 +105,10 @@ class NotificationController extends Controller
     /** Détermine la cible de redirection d'une notification persistée. */
     private function linkFromData(array $data): array
     {
+        // Lien déjà structuré (notifs récentes : order / payment / home / wallet…)
+        if (isset($data['link']) && is_array($data['link']) && ! empty($data['link']['type'])) {
+            return $data['link'];
+        }
         if (!empty($data['product_id'])) {
             return ['type' => 'product', 'id' => (int) $data['product_id']];
         }
