@@ -163,7 +163,7 @@ export default function DealsScreen({ navigation }) {
         </View>
     );
 
-    const renderProduct = ({ item }) => {
+    const renderProduct = ({ item, index }) => {
         const hasDiscount = item.sale_price && item.sale_price < item.price;
         const discount = hasDiscount
             ? Math.round(((item.price - item.sale_price) / item.price) * 100)
@@ -173,6 +173,7 @@ export default function DealsScreen({ navigation }) {
             <AnimatedPressable
                 style={[styles.card, { width: (SCREEN_WIDTH - 32) / 2 }]}
                 scaleTo={0.97}
+                index={index}
                 onPress={() =>
                     navigation.navigate("ProductDetail", {
                         id: item.id,

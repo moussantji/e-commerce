@@ -51,10 +51,11 @@ export default function WishlistScreen({ navigation }) {
         }
     };
 
-    const renderItem = ({ item }) => (
+    const renderItem = ({ item, index }) => (
         <AnimatedPressable
             style={styles.card}
             scaleTo={0.97}
+            index={index}
             onPress={() => navigation.navigate("ProductDetail", { id: item.id, name: item.name })}
         >
             <Image source={{ uri: item.image }} style={styles.image} />
