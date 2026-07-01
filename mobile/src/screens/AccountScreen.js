@@ -131,11 +131,12 @@ export default function AccountScreen({ navigation }) {
     return (
         <View style={{ flex: 1, backgroundColor: COLORS.bg }}>
             <ScrollView showsVerticalScrollIndicator={false}>
-                {/* En-tête : image de fond + voile violet (comme l'accueil) */}
+                {/* En-tête : photo de profil en fond + voile violet */}
                 <ImageBackground
-                    source={{ uri: ACCOUNT_BG_IMAGE }}
+                    source={{ uri: user?.avatar || ACCOUNT_BG_IMAGE }}
                     style={[styles.header, { paddingTop: insets.top + 8 }]}
                     resizeMode="cover"
+                    blurRadius={user?.avatar ? 12 : 0}
                 >
                     <LinearGradient
                         colors={["rgba(102,126,234,0.82)", "rgba(118,75,162,0.92)"]}
