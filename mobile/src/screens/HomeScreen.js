@@ -19,6 +19,7 @@ import { COLORS, RADIUS } from "../theme";
 import { useWishlist } from "../context/WishlistContext";
 import { useAuth } from "../context/AuthContext";
 import { Alert } from "react-native";
+import { getReadIds } from "../notifRead";
 
 const FILTERS = [
     { key: "for_you", label: "Pour vous", icon: null },
@@ -174,8 +175,15 @@ export default function HomeScreen({ navigation }) {
             setRefreshing(false);
         }
         try {
-            const { data } = await api.get("/notifications/unread-count");
-            setNotifCount(data.unread_count ?? 0);
+            const [{ data }, readIds] = await Promise.all([
+                api.get("/notifications"),
+                getReadIds(),
+            ]);
+            const list = data.data ?? [];
+            const count = list.filter(
+                (n) => n.unread && !readIds.includes(String(n.id)),
+            ).length;
+            setNotifCount(count);
         } catch (e) {
             /* endpoint indisponible : badge masqué */
         }
@@ -185,6 +193,26 @@ export default function HomeScreen({ navigation }) {
         loadAll();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // Rafraîchit le compteur de notifications au retour sur l'accueil
+    // (ex : après avoir lu des notifications) pour que le badge diminue.
+    useEffect(() => {
+        const unsub = navigation.addListener("focus", async () => {
+            try {
+                const [{ data }, readIds] = await Promise.all([
+                    api.get("/notifications"),
+                    getReadIds(),
+                ]);
+                const list = data.data ?? [];
+                setNotifCount(
+                    list.filter((n) => n.unread && !readIds.includes(String(n.id))).length,
+                );
+            } catch (e) {
+                /* ignore */
+            }
+        });
+        return unsub;
+    }, [navigation]);
 
     // Sélection d'une catégorie : on filtre la grille SANS quitter l'accueil
     const selectCat = useCallback(

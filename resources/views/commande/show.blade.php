@@ -29,6 +29,55 @@
                     </ol>
                 </nav>
                 <h2 class="mb-5">Détails de la commande</h2>
+
+                {{-- Suivi du statut de la commande --}}
+                @php
+                    $flow = ['en_attente', 'paiement_declare', 'payee', 'traitement', 'expedie', 'livre'];
+                    $stepLabels = [
+                        'en_attente' => 'En attente de paiement',
+                        'paiement_declare' => 'Paiement en vérification',
+                        'payee' => 'Payée',
+                        'traitement' => 'En préparation',
+                        'expedie' => 'Expédiée',
+                        'livre' => 'Livrée',
+                    ];
+                    $normalized = [
+                        'expedition' => 'expedie',
+                        'livree' => 'livre',
+                    ][$commande->statut] ?? $commande->statut;
+                    $isCancelled = in_array($commande->statut, ['annule', 'annulee']);
+                    $currentIndex = array_search($normalized, $flow);
+                    if ($currentIndex === false) { $currentIndex = 0; }
+                @endphp
+
+                @if ($isCancelled)
+                    <div class="alert alert-danger d-flex align-items-center mb-5">
+                        <span class="fas fa-times-circle me-2"></span>
+                        Cette commande a été annulée.
+                    </div>
+                @else
+                    <div class="card mb-5">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between text-center flex-wrap gap-2">
+                                @foreach ($flow as $i => $st)
+                                    <div class="flex-fill" style="min-width:90px;">
+                                        <div class="mx-auto mb-2 d-flex align-items-center justify-content-center rounded-circle {{ $i <= $currentIndex ? 'bg-primary text-white' : 'bg-body-secondary text-body-tertiary' }}"
+                                            style="width:36px;height:36px;font-weight:700;">
+                                            @if ($i < $currentIndex)
+                                                <span class="fas fa-check"></span>
+                                            @else
+                                                {{ $i + 1 }}
+                                            @endif
+                                        </div>
+                                        <small class="{{ $i <= $currentIndex ? 'fw-bold text-body' : 'text-body-tertiary' }}">
+                                            {{ $stepLabels[$st] }}
+                                        </small>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endif
                 <div class="row justify-content-between">
                     <div class="col-lg-5 col-xl-4">
                         <div class="card mt-3 mt-lg-0">
@@ -202,17 +251,29 @@
                             </tbody>
                         </table>
                         <hr class="my-6" />
-                        <h3 class="mb-5">Type de livraison</h3>
-                        {{-- Remplacez votre HTML de livraison statique --}}
-                        <livewire:frontend.checkout.shipping-options :commande="$commande" />
-                        <hr class="my-6" />
-                        <h3 class="mb-5">Méthode de paiement</h3>
-                        <div class="row g-4 mb-7">
-                            {{-- Paiement (NOUVEAU) --}}
-                            <livewire:frontend.checkout.payment-options :commande="$commande" />
-                        </div>
-                        {{-- ✅ BOUTONS SÉPARÉS --}}
-                        <livewire:frontend.checkout.checkout-actions :commande="$commande" />
+                        @if ($commande->statut === 'en_attente')
+                            <h3 class="mb-5">Type de livraison</h3>
+                            {{-- Remplacez votre HTML de livraison statique --}}
+                            <livewire:frontend.checkout.shipping-options :commande="$commande" />
+                            <hr class="my-6" />
+                            <h3 class="mb-5">Méthode de paiement</h3>
+                            <div class="row g-4 mb-7">
+                                {{-- Paiement (NOUVEAU) --}}
+                                <livewire:frontend.checkout.payment-options :commande="$commande" />
+                            </div>
+                            {{-- ✅ BOUTONS SÉPARÉS --}}
+                            <livewire:frontend.checkout.checkout-actions :commande="$commande" />
+                        @elseif ($commande->statut === 'paiement_declare')
+                            <div class="alert alert-warning d-flex align-items-center">
+                                <span class="fas fa-clock me-2"></span>
+                                Votre paiement a été déclaré. Il est en cours de vérification par le vendeur.
+                            </div>
+                        @elseif (!$isCancelled)
+                            <div class="alert alert-success d-flex align-items-center">
+                                <span class="fas fa-check-circle me-2"></span>
+                                Paiement confirmé — statut : <strong class="ms-1">{{ $commande->status_label }}</strong>.
+                            </div>
+                        @endif
                     </div>
 
                 </div>
