@@ -19,6 +19,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api from "../api/client";
 import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
+import { useWishlist } from "../context/WishlistContext";
+import { useAuth } from "../context/AuthContext";
+import { Alert } from "react-native";
 
 const HERO_IMAGE =
     "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1080&q=80";
@@ -39,6 +42,8 @@ const TAB_PARAMS = {
 
 export default function DealsScreen({ navigation }) {
     const insets = useSafeAreaInsets();
+    const { isFav, toggle } = useWishlist();
+    const { token } = useAuth();
     const [activeTab, setActiveTab] = useState("on_sale");
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -102,6 +107,18 @@ export default function DealsScreen({ navigation }) {
     const onEndReached = () => {
         if (!loading && hasMore) {
             fetchProducts(page + 1);
+        }
+    };
+
+    const onToggleFav = async (productId) => {
+        if (!token) {
+            Alert.alert("Connexion requise", "Connectez-vous pour gérer vos favoris.");
+            return;
+        }
+        try {
+            await toggle(productId);
+        } catch (e) {
+            /* ignore */
         }
     };
 
@@ -173,6 +190,17 @@ export default function DealsScreen({ navigation }) {
                             <Text style={styles.discountText}>-{discount}%</Text>
                         </View>
                     )}
+                    <TouchableOpacity
+                        style={styles.heart}
+                        onPress={() => onToggleFav(item.id)}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                        <Ionicons
+                            name={isFav(item.id) ? "heart" : "heart-outline"}
+                            size={16}
+                            color={isFav(item.id) ? COLORS.badge : COLORS.primaryDark}
+                        />
+                    </TouchableOpacity>
                 </View>
                 <View style={styles.cardBody}>
                     <Text style={styles.productName} numberOfLines={2}>
@@ -516,6 +544,17 @@ const styles = StyleSheet.create({
         color: "#fff",
         fontSize: 10,
         fontWeight: "700",
+    },
+    heart: {
+        position: "absolute",
+        top: 6,
+        right: 6,
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: "rgba(255,255,255,0.92)",
+        alignItems: "center",
+        justifyContent: "center",
     },
     cardBody: {
         padding: 8,
