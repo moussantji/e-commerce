@@ -282,8 +282,7 @@ export default function HomeScreen({ navigation }) {
             <TouchableOpacity
                 style={styles.search}
                 onPress={() =>
-                    navigation.navigate("ProductList", {
-                        title: "Recherche",
+                    navigation.navigate("Search", {
                         focusSearch: true,
                     })
                 }
