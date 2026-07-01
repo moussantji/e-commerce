@@ -38,6 +38,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'adresse',
         'provider',
         'provider_id',
+        'wallet_balance',
     ];
 
     /**
@@ -60,6 +61,17 @@ class User extends Authenticatable implements MustVerifyEmail
     public function addresses(): HasMany
     {
         return $this->hasMany(Address::class);
+    }
+
+    public function walletTransactions(): HasMany
+    {
+        return $this->hasMany(WalletTransaction::class);
+    }
+
+    /** L'utilisateur est-il administrateur ? */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
     }
 
     /**

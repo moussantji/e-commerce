@@ -12,7 +12,16 @@ class Paiements extends Model
         'user_id',
         'amount',
         'method_name',
+        'provider_name',
         'description',
+        'instructions',
+        'account_number',
+        'fee',
+        'fee_percentage',
+        'logo',
+        'is_active',
+        'sort_order',
+        'config',
         'status',
         'payment_date',
         'transaction_id',
@@ -23,8 +32,17 @@ class Paiements extends Model
     protected $casts = [
         'amount' => 'decimal:2',
         'payment_date' => 'datetime',
-        'details' => 'array'
+        'details' => 'array',
+        'config' => 'array',
+        'is_active' => 'boolean',
     ];
+
+    /** URL du logo (via la relation photos), ou null. */
+    public function logoUrl(): ?string
+    {
+        $photo = $this->photos()->first();
+        return $photo ? $photo->getImageUrl(200, 200) : null;
+    }
 
     public function orders(): HasMany
     {
