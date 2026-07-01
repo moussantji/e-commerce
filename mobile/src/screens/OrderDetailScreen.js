@@ -22,8 +22,9 @@ import { COLORS, RADIUS } from "../theme";
 
 const STATUS_LABELS = {
     en_attente: "En attente de paiement",
+    paiement_declare: "Paiement en vérification",
     payee: "Payée — en préparation",
-    traitement: "En traitement",
+    traitement: "En préparation",
     expedie: "Expédiée",
     livre: "Livrée",
     annule: "Commande annulée",
@@ -130,6 +131,7 @@ export default function OrderDetailScreen({ route, navigation }) {
     const country = addrField(a, ["pays", "country"]);
     const fullAddr = [line, city, region, country].filter(Boolean).join(", ");
     const isPending = order.statut === "en_attente";
+    const isDeclared = order.statut === "paiement_declare";
     const cancelled = order.statut === "annule";
 
     const openMap = () => {
@@ -142,7 +144,7 @@ export default function OrderDetailScreen({ route, navigation }) {
             {Header}
             <ScrollView
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: isPending ? 100 : 24 }}
+                contentContainerStyle={{ paddingBottom: isPending || isDeclared ? 100 : 24 }}
             >
                 {/* Avertissement délai de paiement */}
                 {isPending && (
@@ -151,6 +153,16 @@ export default function OrderDetailScreen({ route, navigation }) {
                         <Text style={styles.warningText}>
                             La commande sera annulée si le paiement n'est pas
                             effectué à temps.
+                        </Text>
+                    </View>
+                )}
+
+                {/* Paiement déclaré : en attente de confirmation */}
+                {isDeclared && (
+                    <View style={styles.infoBanner}>
+                        <Ionicons name="time-outline" size={18} color={COLORS.primaryDark} />
+                        <Text style={styles.infoBannerText}>
+                            Paiement déclaré. En attente de confirmation par le vendeur.
                         </Text>
                     </View>
                 )}
@@ -301,6 +313,19 @@ export default function OrderDetailScreen({ route, navigation }) {
                     </TouchableOpacity>
                 </View>
             )}
+
+            {/* Pied d'action (paiement déclaré : possibilité d'annuler) */}
+            {isDeclared && (
+                <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
+                    <TouchableOpacity
+                        style={[styles.cancelBtn, { flex: 1 }]}
+                        activeOpacity={0.85}
+                        onPress={() => setCancelOpen(true)}
+                    >
+                        <Text style={styles.cancelText}>Annuler la commande</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
             {/* Bottom-sheet : raisons d'annulation */}
             <Modal
                 visible={cancelOpen}
@@ -363,6 +388,16 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
     },
     warningText: { flex: 1, color: "#374151", fontSize: 12.5, lineHeight: 17 },
+
+    infoBanner: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+        backgroundColor: COLORS.soft,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+    },
+    infoBannerText: { flex: 1, color: COLORS.primaryDark, fontSize: 12.5, lineHeight: 17, fontWeight: "600" },
 
     statusBanner: { paddingHorizontal: 18, paddingVertical: 18 },
     bannerNum: { color: "rgba(255,255,255,0.9)", fontSize: 13 },

@@ -38,9 +38,10 @@ class OrderResource extends JsonResource
     private function statutLabel(): string
     {
         return match ($this->statut) {
-            'en_attente' => 'En attente',
+            'en_attente' => 'En attente de paiement',
+            'paiement_declare' => 'Paiement en vérification',
             'payee' => 'Payée',
-            'traitement' => 'En traitement',
+            'traitement' => 'En préparation',
             'expedie' => 'Expédiée',
             'livre' => 'Livrée',
             'annule' => 'Annulée',
