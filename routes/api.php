@@ -43,6 +43,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::put('/me', [AuthController::class, 'updateProfile']);
     Route::put('/me/password', [AuthController::class, 'changePassword']);
+    Route::post('/me/avatar', [AuthController::class, 'updateAvatar']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
     // Avis clients
