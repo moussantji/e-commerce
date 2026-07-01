@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from "react";
 import { View, Image, Animated, ActivityIndicator, StyleSheet } from "react-native";
-import { COLORS } from "../theme";
 
 /**
  * Écran de chargement de l'application affichant le logo Maden Baoubab.
@@ -37,7 +36,7 @@ export default function AppLoader() {
             />
             <ActivityIndicator
                 size="small"
-                color={COLORS.primaryDark ?? COLORS.primary}
+                color="#ffffff"
                 style={styles.spinner}
             />
         </View>
@@ -47,7 +46,7 @@ export default function AppLoader() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#ffffff",
+        backgroundColor: "#764ba2",
         justifyContent: "center",
         alignItems: "center",
         paddingHorizontal: 32,

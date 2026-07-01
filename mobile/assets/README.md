@@ -12,7 +12,7 @@ mobile/assets/logo.png
 **Action requise :** déposez le logo Maden Baoubab (le PNG fourni) à cet emplacement,
 sous le nom exact `logo.png`.
 
-- Format : PNG (fond transparent ou blanc)
+- Format : PNG à **fond transparent** (le splash et le loader s'affichent sur un fond **violet** `#764ba2`)
 - Recommandé : largeur ~1200 px pour un rendu net sur tous les écrans
 - Le même fichier sert à la fois pour le loader in-app et pour le splash natif Expo.
 
@@ -30,8 +30,8 @@ mobile/assets/icon.png
 ```
 
 **Action requise :** déposez une version **carrée** du logo (1024×1024 px recommandé,
-fond transparent ou blanc) sous le nom `icon.png`.
+**fond transparent**) sous le nom `icon.png`.
 
-- Sur Android (adaptive icon), le logo est affiché sur un fond blanc.
+- Sur Android (adaptive icon), le logo est affiché sur un fond **violet** `#764ba2`.
 - Astuce : ajoutez un peu de marge autour du logo pour éviter qu'il soit rogné
   par le masque circulaire/arrondi d'Android.

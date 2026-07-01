@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#764ba2"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -24,7 +24,7 @@
       "package": "com.ecommerce.mobile",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#764ba2"
       },
       "permissions": [
         "INTERNET"
