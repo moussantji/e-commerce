@@ -92,6 +92,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/topups', [AdminController::class, 'topups']);
         Route::post('/topups/{id}/confirm', [AdminController::class, 'confirmTopup']);
         Route::post('/topups/{id}/reject', [AdminController::class, 'rejectTopup']);
+        // Gestion des commandes (état)
+        Route::get('/orders', [AdminController::class, 'orders']);
+        Route::post('/orders/{id}/status', [AdminController::class, 'updateOrderStatus']);
     });
 
     // Adresses de livraison

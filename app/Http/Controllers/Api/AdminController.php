@@ -178,4 +178,82 @@ class AdminController extends Controller
 
         return response()->json(['message' => 'Rechargement rejeté.']);
     }
+
+    /**
+     * Liste des commandes (avec filtre de statut optionnel) pour l'admin mobile.
+     */
+    public function orders(Request $request)
+    {
+        $this->ensureAdmin($request);
+
+        $query = Commandes::with(['user'])->latest();
+
+        if ($request->filled('status')) {
+            $query->where('statut', $request->query('status'));
+        }
+        if ($request->filled('search')) {
+            $search = $request->query('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('numero_commande', 'like', "%{$search}%")
+                    ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%"));
+            });
+        }
+
+        $orders = $query->paginate((int) $request->query('per_page', 20));
+
+        return response()->json([
+            'data' => $orders->getCollection()->map(fn ($o) => [
+                'id' => $o->id,
+                'numero' => $o->numero_commande ?? ('#' . $o->id),
+                'client' => optional($o->user)->name ?? 'Client',
+                'statut' => $o->statut,
+                'statut_label' => $o->status_label ?? ucfirst(str_replace('_', ' ', (string) $o->statut)),
+                'total' => (float) $o->total,
+                'date' => optional($o->created_at)->format('d/m/Y H:i'),
+            ]),
+            'meta' => ['current_page' => $orders->currentPage(), 'last_page' => $orders->lastPage(), 'total' => $orders->total()],
+        ]);
+    }
+
+    /**
+     * Modifie l'état d'une commande. Le client est notifié (hook modèle Commandes).
+     */
+    public function updateOrderStatus(Request $request, $id)
+    {
+        $this->ensureAdmin($request);
+
+        $allowed = [
+            'en_attente', 'paiement_declare', 'payee', 'traitement',
+            'expedie', 'livre', 'annule',
+        ];
+
+        $validated = $request->validate([
+            'statut' => 'required|string|in:' . implode(',', $allowed),
+        ]);
+        $statut = $validated['statut'];
+
+        $order = Commandes::findOrFail($id);
+        $order->update(['statut' => $statut]);
+
+        // Dates de suivi
+        $now = now();
+        $dateField = [
+            'en_attente' => 'date_en_attente',
+            'traitement' => 'date_traitement',
+            'payee' => 'date_traitement',
+            'expedie' => 'date_expedition',
+            'livre' => 'date_livraison',
+            'annule' => 'date_annulation',
+        ][$statut] ?? null;
+        if ($dateField) {
+            $order->update([$dateField => $now]);
+        }
+
+        return response()->json([
+            'message' => 'Statut de la commande mis à jour.',
+            'statut' => $order->statut,
+            'statut_label' => $order->status_label ?? ucfirst(str_replace('_', ' ', (string) $order->statut)),
+        ]);
+    }
 }

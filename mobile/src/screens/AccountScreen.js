@@ -134,6 +134,12 @@ export default function AccountScreen({ navigation }) {
             right: <Text style={styles.rightInfo}>Admin</Text>,
             onPress: () => navigation.navigate("AdminPayments"),
         });
+        menu.push({
+            icon: "cube-outline",
+            label: "Gestion des commandes",
+            right: <Text style={styles.rightInfo}>Admin</Text>,
+            onPress: () => navigation.navigate("AdminOrders"),
+        });
     }
 
     const initial = (user?.name || "?").charAt(0).toUpperCase();
