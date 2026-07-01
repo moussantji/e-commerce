@@ -20,6 +20,8 @@ import { useWishlist } from "../context/WishlistContext";
 import { useAuth } from "../context/AuthContext";
 import { Alert } from "react-native";
 import { getReadIds } from "../notifRead";
+import FadeInView from "../components/FadeInView";
+import AnimatedPressable from "../components/AnimatedPressable";
 
 const FILTERS = [
     { key: "for_you", label: "Pour vous", icon: null },
@@ -45,7 +47,7 @@ const ALL_TAB = { id: "all", name: "All" };
 function MasonryCard({ item, onPress, favorited, onToggleFav }) {
     const [ar, setAr] = useState(0.8);
     return (
-        <TouchableOpacity style={styles.mCard} activeOpacity={0.9} onPress={onPress}>
+        <AnimatedPressable style={styles.mCard} scaleTo={0.97} onPress={onPress}>
             <View>
                 <Image
                     source={{ uri: item.image }}
@@ -89,7 +91,7 @@ function MasonryCard({ item, onPress, favorited, onToggleFav }) {
                     ⭐ {item.rating_avg ?? 0} ({item.rating_count ?? 0})
                 </Text>
             </View>
-        </TouchableOpacity>
+        </AnimatedPressable>
     );
 }
 
@@ -700,25 +702,27 @@ export default function HomeScreen({ navigation }) {
                 ) : (
                     <View style={styles.masonry}>
                         <View style={styles.col}>
-                            {leftCol.map((p) => (
-                                <MasonryCard
-                                    key={p.id}
-                                    item={p}
-                                    onPress={() => goDetail(p)}
-                                    favorited={isFav(p.id)}
-                                    onToggleFav={() => onToggleFav(p.id)}
-                                />
+                            {leftCol.map((p, i) => (
+                                <FadeInView key={p.id} delay={Math.min(i, 8) * 70}>
+                                    <MasonryCard
+                                        item={p}
+                                        onPress={() => goDetail(p)}
+                                        favorited={isFav(p.id)}
+                                        onToggleFav={() => onToggleFav(p.id)}
+                                    />
+                                </FadeInView>
                             ))}
                         </View>
                         <View style={styles.col}>
-                            {rightCol.map((p) => (
-                                <MasonryCard
-                                    key={p.id}
-                                    item={p}
-                                    onPress={() => goDetail(p)}
-                                    favorited={isFav(p.id)}
-                                    onToggleFav={() => onToggleFav(p.id)}
-                                />
+                            {rightCol.map((p, i) => (
+                                <FadeInView key={p.id} delay={Math.min(i, 8) * 70 + 35}>
+                                    <MasonryCard
+                                        item={p}
+                                        onPress={() => goDetail(p)}
+                                        favorited={isFav(p.id)}
+                                        onToggleFav={() => onToggleFav(p.id)}
+                                    />
+                                </FadeInView>
                             ))}
                         </View>
                     </View>
