@@ -12,6 +12,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import api from "../api/client";
 import { COLORS, RADIUS } from "../theme";
+import { getReadIds, addReadIds } from "../notifRead";
 
 // Notifications de démonstration affichées tant que l'API /notifications
 // n'est pas branchée côté Laravel (repli automatique).
@@ -60,10 +61,11 @@ export default function NotificationsScreen({ navigation }) {
     const [refreshing, setRefreshing] = useState(false);
 
     const openNotification = (item) => {
-        // Marque comme lue localement au tap
+        // Marque comme lue (local persistant) au tap
         setItems((prev) =>
             prev.map((n) => (n.id === item.id ? { ...n, unread: false } : n)),
         );
+        addReadIds(item.id);
         const link = item.link || { type: "none" };
         switch (link.type) {
             case "order":
@@ -92,6 +94,7 @@ export default function NotificationsScreen({ navigation }) {
 
     const markAllRead = async () => {
         setItems((prev) => prev.map((n) => ({ ...n, unread: false })));
+        addReadIds(items.map((n) => n.id));
         try {
             await api.post("/notifications/read-all");
         } catch (e) {
@@ -100,12 +103,19 @@ export default function NotificationsScreen({ navigation }) {
     };
 
     const load = useCallback(async () => {
+        const readIds = await getReadIds();
         try {
             const { data } = await api.get("/notifications");
             const list = data.data ?? data ?? [];
             if (Array.isArray(list)) {
-                // L'API a répondu : on affiche les vraies données (même vides).
-                setItems(list.map(normalize));
+                // Applique l'état "lu" persisté localement
+                setItems(
+                    list.map((it) => {
+                        const n = normalize(it);
+                        if (readIds.includes(String(n.id))) n.unread = false;
+                        return n;
+                    }),
+                );
             }
         } catch (e) {
             // endpoint indisponible : on garde le repli de démonstration

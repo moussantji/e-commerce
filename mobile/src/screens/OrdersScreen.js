@@ -163,10 +163,11 @@ export default function OrdersScreen({ navigation }) {
                         <TouchableOpacity
                             activeOpacity={0.85}
                             onPress={() =>
-                                Alert.alert(
-                                    "Paiement",
-                                    "Le paiement en ligne sera bientôt disponible.",
-                                )
+                                navigation.navigate("Payment", {
+                                    orderId: order.id,
+                                    numero: order.numero,
+                                    total: order.total,
+                                })
                             }
                         >
                             <LinearGradient
@@ -193,10 +194,7 @@ export default function OrdersScreen({ navigation }) {
                             style={styles.trackBtn}
                             activeOpacity={0.8}
                             onPress={() =>
-                                Alert.alert(
-                                    "Suivi",
-                                    "Suivi de commande bientôt disponible.",
-                                )
+                                navigation.navigate("OrderDetail", { id: order.id })
                             }
                         >
                             <Text style={styles.trackText}>
