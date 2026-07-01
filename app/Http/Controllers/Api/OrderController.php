@@ -233,8 +233,42 @@ class OrderController extends Controller
         if (!empty($data['payment_method_id'])) {
             $method = Paiements::find($data['payment_method_id']);
         }
+        $isCod = $method && $method->isCashOnDelivery();
         $providerLabel = $data['provider'] ?? ($method->method_name ?? 'Mobile Money');
 
+        // === Paiement à la livraison : commande confirmée directement ===
+        if ($isCod) {
+            $order->paiement_id = $method->id ?? $order->paiement_id;
+            $order->statut = 'traitement';
+            $order->date_traitement = now();
+            $order->notes = trim(($order->notes ? $order->notes . "\n" : '')
+                . 'Paiement à la livraison (espèces).');
+            $order->save();
+
+            PaymentProof::create([
+                'user_id' => $user->id,
+                'order_id' => $order->id,
+                'provider' => 'À la livraison',
+                'amount' => $order->total,
+                'status' => 'cod',
+            ]);
+
+            $numero = $order->numero_commande ?? ('#' . $order->id);
+            AdminNotifier::notifyPayment(
+                'Nouvelle commande (paiement à la livraison)',
+                "{$user->name} a passé la commande {$numero} à payer à la livraison — "
+                    . number_format((float) $order->total, 0, ',', ' ') . ' FCFA.',
+                ['type' => 'admin_payment', 'id' => $order->id],
+            );
+
+            $order->loadCount('produits')->load('produits.photos');
+
+            return (new OrderResource($order))->additional([
+                'message' => 'Commande confirmée. Vous paierez à la livraison.',
+            ]);
+        }
+
+        // === Paiement mobile money : déclaration à vérifier ===
         // Enregistre la méthode choisie sur la commande + statut : paiement déclaré
         $order->paiement_id = $method->id ?? $order->paiement_id;
         $order->statut = 'paiement_declare';

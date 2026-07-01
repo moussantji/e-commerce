@@ -24,6 +24,7 @@ class PaymentMethodController extends Controller
                 'description' => $m->description,
                 'instructions' => $m->instructions,
                 'account_number' => $m->account_number,
+                'cod' => $m->isCashOnDelivery(),
                 'fee' => (float) ($m->fee ?? 0),
                 'fee_percentage' => (float) ($m->fee_percentage ?? 0),
                 'logo' => $this->abs($m->logoUrl()),

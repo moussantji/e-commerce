@@ -50,6 +50,15 @@ class PaymentMethodSeeder extends Seeder
                     . "5. Saisissez cette référence puis cliquez sur « J'ai payé ».",
                 'sort_order' => 3,
             ],
+            [
+                'method_name' => 'Paiement à la livraison',
+                'provider_name' => 'cash',
+                'account_number' => null,
+                'description' => 'Payez en espèces à la réception de votre commande.',
+                'instructions' => "Vous réglez votre commande en espèces au moment de la livraison.\n"
+                    . "Préparez le montant exact ; le livreur vous remettra un reçu.",
+                'sort_order' => 4,
+            ],
         ];
 
         $keep = [];

@@ -59,9 +59,12 @@ export default function PaymentScreen({ route, navigation }) {
                 phone: phone.trim() || undefined,
                 transaction_id: reference.trim() || undefined,
             });
+            const codMsg = selected.cod
+                ? "Commande confirmée. Vous paierez à la livraison."
+                : "Votre paiement est en attente de confirmation par le vendeur. Vous recevrez une notification.";
             Alert.alert(
-                "Paiement déclaré ✅",
-                "Votre paiement est en attente de confirmation par le vendeur. Vous recevrez une notification.",
+                selected.cod ? "Commande confirmée ✅" : "Paiement déclaré ✅",
+                codMsg,
                 [
                     {
                         text: "Voir ma commande",
@@ -143,42 +146,51 @@ export default function PaymentScreen({ route, navigation }) {
                             {/* Instructions de la méthode choisie */}
                             {selected ? (
                                 <View style={styles.instructionsCard}>
-                                    {selected.account_number ? (
+                                    {!selected.cod && selected.account_number ? (
                                         <View style={styles.accountRow}>
                                             <Text style={styles.accountLabel}>Numéro à créditer</Text>
                                             <Text style={styles.accountNumber}>{selected.account_number}</Text>
                                         </View>
                                     ) : null}
-                                    <Text style={styles.instructionsTitle}>Instructions</Text>
+                                    <Text style={styles.instructionsTitle}>
+                                        {selected.cod ? "Paiement à la livraison" : "Instructions"}
+                                    </Text>
                                     <Text style={styles.instructionsText}>
-                                        {selected.instructions || "Envoyez le montant exact puis marquez comme payé."}
+                                        {selected.instructions ||
+                                            (selected.cod
+                                                ? "Vous réglez en espèces à la réception."
+                                                : "Envoyez le montant exact puis marquez comme payé.")}
                                     </Text>
                                 </View>
                             ) : null}
 
-                            {/* Champs de confirmation */}
-                            <Text style={styles.sectionTitle}>Confirmez votre paiement</Text>
-                            <View style={styles.field}>
-                                <Ionicons name="call-outline" size={18} color={COLORS.textLight} />
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="Numéro utilisé (optionnel)"
-                                    placeholderTextColor="#9ca3af"
-                                    keyboardType="phone-pad"
-                                    value={phone}
-                                    onChangeText={setPhone}
-                                />
-                            </View>
-                            <View style={styles.field}>
-                                <Ionicons name="receipt-outline" size={18} color={COLORS.textLight} />
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="Référence de transaction (optionnel)"
-                                    placeholderTextColor="#9ca3af"
-                                    value={reference}
-                                    onChangeText={setReference}
-                                />
-                            </View>
+                            {/* Champs de confirmation (mobile money uniquement) */}
+                            {selected && !selected.cod ? (
+                                <>
+                                    <Text style={styles.sectionTitle}>Confirmez votre paiement</Text>
+                                    <View style={styles.field}>
+                                        <Ionicons name="call-outline" size={18} color={COLORS.textLight} />
+                                        <TextInput
+                                            style={styles.input}
+                                            placeholder="Numéro utilisé (optionnel)"
+                                            placeholderTextColor="#9ca3af"
+                                            keyboardType="phone-pad"
+                                            value={phone}
+                                            onChangeText={setPhone}
+                                        />
+                                    </View>
+                                    <View style={styles.field}>
+                                        <Ionicons name="receipt-outline" size={18} color={COLORS.textLight} />
+                                        <TextInput
+                                            style={styles.input}
+                                            placeholder="Référence de transaction (optionnel)"
+                                            placeholderTextColor="#9ca3af"
+                                            value={reference}
+                                            onChangeText={setReference}
+                                        />
+                                    </View>
+                                </>
+                            ) : null}
                         </>
                     )}
                 </ScrollView>
@@ -194,7 +206,9 @@ export default function PaymentScreen({ route, navigation }) {
                         {paying ? (
                             <ActivityIndicator color="#fff" />
                         ) : (
-                            <Text style={styles.payText}>J'ai payé</Text>
+                            <Text style={styles.payText}>
+                                {selected?.cod ? "Confirmer la commande" : "J'ai payé"}
+                            </Text>
                         )}
                     </TouchableOpacity>
                 </View>
