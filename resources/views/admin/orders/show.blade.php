@@ -35,36 +35,7 @@
                         </div>
                         <div class="col-md-6 text-md-end">
                             <h6>Statut de la commande</h6>
-                            @php
-                                $statusClass = [
-                                    'en_attente' => 'warning',
-                                    'paiement_declare' => 'warning',
-                                    'payee' => 'primary',
-                                    'traitement' => 'info',
-                                    'en_cours' => 'info',
-                                    'expediee' => 'primary',
-                                    'expedie' => 'primary',
-                                    'livree' => 'success',
-                                    'livre' => 'success',
-                                    'annulee' => 'danger',
-                                    'annule' => 'danger'
-                                ][$order->statut] ?? 'secondary';
-
-                                $statusText = [
-                                    'en_attente' => 'En attente de paiement',
-                                    'paiement_declare' => 'Paiement en vérification',
-                                    'payee' => 'Payée',
-                                    'traitement' => 'En préparation',
-                                    'en_cours' => 'En préparation',
-                                    'expediee' => 'Expédiée',
-                                    'expedie' => 'Expédiée',
-                                    'livree' => 'Livrée',
-                                    'livre' => 'Livrée',
-                                    'annulee' => 'Annulée',
-                                    'annule' => 'Annulée'
-                                ][$order->statut] ?? $order->statut;
-                            @endphp
-                            <span class="badge bg-{{ $statusClass }} fs-6">{{ $statusText }}</span>
+                            <span class="badge bg-{{ $order->status_badge_class }} fs-6">{{ $order->status_label }}</span>
 
                             <div class="mt-2">
                                 <small class="text-muted">
@@ -195,8 +166,8 @@
 
                     {{-- Workflow de traitement de la commande --}}
                     @php
-                        $st = $order->statut;
-                        $terminal = in_array($st, ['livre', 'livree', 'annule', 'annulee']);
+                        $st = \App\Support\OrderStatus::normalize($order->statut);
+                        $terminal = \App\Support\OrderStatus::isTerminal($order->statut);
                     @endphp
                     @unless($terminal)
                         <div class="card mt-4 border">
@@ -238,7 +209,7 @@
                                     @endif
 
                                     {{-- Étape livraison --}}
-                                    @if(in_array($st, ['traitement', 'expedie', 'expedition']))
+                                    @if(in_array($st, ['traitement', 'expedie']))
                                         <form action="{{ route('admin.orders.update-status', $order) }}" method="POST">
                                             @csrf @method('PATCH')
                                             <input type="hidden" name="status" value="livre">

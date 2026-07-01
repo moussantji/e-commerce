@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Notifications\OrderStatusNotification;
+use App\Support\OrderStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -103,26 +104,30 @@ class Commandes extends Model
     // Add to your Commandes model
     public function getIsCancelledAttribute(): bool
     {
-        return $this->statut === 'annulee';
+        return OrderStatus::normalize($this->statut) === OrderStatus::ANNULE;
     }
 
     public function getStatusLabelAttribute(): string
     {
-        $labels = [
-            'en_attente' => 'En attente de paiement',
-            'paiement_declare' => 'Paiement en vérification',
-            'payee' => 'Payée',
-            'traitement' => 'En préparation',
-            'expedition' => 'Expédiée',
-            'expedie' => 'Expédiée',
-            'livree' => 'Livrée',
-            'livre' => 'Livrée',
-            'annulee' => 'Annulée',
-            'annule' => 'Annulée',
-            'partiellement_livree' => 'Partiellement livrée',
-        ];
+        return OrderStatus::label($this->statut);
+    }
 
-        return $labels[$this->statut] ?? ucfirst($this->statut);
+    /** Classe de couleur Bootstrap / badge Phoenix du statut (site web). */
+    public function getStatusBadgeClassAttribute(): string
+    {
+        return OrderStatus::badgeClass($this->statut);
+    }
+
+    /** Icône Feather du statut. */
+    public function getStatusIconAttribute(): string
+    {
+        return OrderStatus::icon($this->statut);
+    }
+
+    /** Couleur hexadécimale du statut. */
+    public function getStatusColorAttribute(): string
+    {
+        return OrderStatus::color($this->statut);
     }
     public function getTotalAttribute()
     {
