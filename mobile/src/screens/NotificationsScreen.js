@@ -50,13 +50,34 @@ function normalize(item) {
         time: item.time ?? item.created_at ?? "",
         unread: item.unread ?? !item.read_at,
         icon: item.icon ?? "notifications-outline",
+        link: item.link ?? { type: "none" },
     };
 }
 
-export default function NotificationsScreen() {
+export default function NotificationsScreen({ navigation }) {
     const [items, setItems] = useState(FALLBACK);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+
+    const openNotification = (item) => {
+        const link = item.link || { type: "none" };
+        switch (link.type) {
+            case "order":
+                navigation.navigate("OrderDetail", { id: link.id });
+                break;
+            case "product":
+                navigation.navigate("ProductDetail", { id: link.id });
+                break;
+            case "cart":
+                navigation.navigate("Tabs", { screen: "Panier" });
+                break;
+            case "home":
+                navigation.navigate("Tabs", { screen: "Accueil" });
+                break;
+            default:
+                break;
+        }
+    };
 
     const load = useCallback(async () => {
         try {
@@ -81,7 +102,11 @@ export default function NotificationsScreen() {
     );
 
     const renderItem = ({ item }) => (
-        <View style={[styles.card, item.unread && styles.cardUnread]}>
+        <TouchableOpacity
+            style={[styles.card, item.unread && styles.cardUnread]}
+            activeOpacity={0.7}
+            onPress={() => openNotification(item)}
+        >
             <View style={styles.icon}>
                 <Ionicons name={item.icon} size={20} color={COLORS.primaryDark} />
             </View>
@@ -93,7 +118,10 @@ export default function NotificationsScreen() {
                 {!!item.body && <Text style={styles.body}>{item.body}</Text>}
                 {!!item.time && <Text style={styles.time}>{item.time}</Text>}
             </View>
-        </View>
+            {item.link && item.link.type && item.link.type !== "none" ? (
+                <Ionicons name="chevron-forward" size={18} color="#c4c4c4" />
+            ) : null}
+        </TouchableOpacity>
     );
 
     if (loading) {
