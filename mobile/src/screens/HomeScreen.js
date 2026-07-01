@@ -485,7 +485,15 @@ export default function HomeScreen({ navigation }) {
 
             {/* Barre infos : livraison + vente flash */}
             <View style={styles.infoBar}>
-                <View style={styles.infoItem}>
+                <TouchableOpacity
+                    style={styles.infoItem}
+                    activeOpacity={0.7}
+                    onPress={() =>
+                        navigation.navigate("ProductList", {
+                            title: "Nos produits",
+                        })
+                    }
+                >
                     <Ionicons
                         name="car-outline"
                         size={18}
@@ -495,15 +503,24 @@ export default function HomeScreen({ navigation }) {
                         <Text style={styles.infoTitle}>Livraison offerte</Text>
                         <Text style={styles.infoSub}>Dès 25 000 FCFA</Text>
                     </View>
-                </View>
+                </TouchableOpacity>
                 <View style={styles.infoDivider} />
-                <View style={styles.infoItem}>
+                <TouchableOpacity
+                    style={styles.infoItem}
+                    activeOpacity={0.7}
+                    onPress={() =>
+                        navigation.navigate("ProductList", {
+                            title: "Offres flash",
+                            featured: 1,
+                        })
+                    }
+                >
                     <Ionicons name="flash" size={18} color={COLORS.accent} />
                     <View>
                         <Text style={styles.infoTitle}>Vente Flash</Text>
                         <Text style={styles.infoSub}>Voir plus</Text>
                     </View>
-                </View>
+                </TouchableOpacity>
             </View>
 
             {/* Catégories en cercles (filtrage inline également) */}
