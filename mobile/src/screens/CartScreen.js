@@ -4,6 +4,7 @@ import {
     Text,
     ScrollView,
     Image,
+    TextInput,
     TouchableOpacity,
     StyleSheet,
     ActivityIndicator,
@@ -83,6 +84,10 @@ export default function CartScreen({ navigation }) {
     const [recos, setRecos] = useState([]);
     const [recoFilter, setRecoFilter] = useState("all");
     const [recoLoading, setRecoLoading] = useState(false);
+    const [defaultAddress, setDefaultAddress] = useState(null);
+    const [coupon, setCoupon] = useState(null);
+    const [couponInput, setCouponInput] = useState("");
+    const [placing, setPlacing] = useState(false);
 
     const city =
         user?.ville || user?.city || user?.region || user?.pays || null;
@@ -101,11 +106,22 @@ export default function CartScreen({ navigation }) {
         }
     }, []);
 
+    const loadAddress = useCallback(async () => {
+        try {
+            const { data } = await api.get("/addresses");
+            const list = data.data ?? [];
+            setDefaultAddress(list.find((a) => a.is_default) || list[0] || null);
+        } catch (e) {
+            /* ignore */
+        }
+    }, []);
+
     useFocusEffect(
         useCallback(() => {
             refresh();
             loadRecos(recoFilter);
-        }, [refresh, loadRecos, recoFilter]),
+            loadAddress();
+        }, [refresh, loadRecos, recoFilter, loadAddress]),
     );
 
     const selectReco = (key) => {
@@ -134,6 +150,54 @@ export default function CartScreen({ navigation }) {
 
     const goDetail = (p) =>
         navigation.navigate("ProductDetail", { id: p.id, name: p.name });
+
+    const applyCoupon = async () => {
+        const code = couponInput.trim();
+        if (!code) return;
+        try {
+            const { data } = await api.post("/coupons/apply", {
+                code,
+                subtotal: cart.total,
+            });
+            setCoupon({ code: data.code, discount: data.discount });
+            Alert.alert("Coupon appliqué", `Réduction : ${formatPrice(data.discount)}`);
+        } catch (e) {
+            setCoupon(null);
+            Alert.alert("Code invalide", apiError(e));
+        }
+    };
+
+    const removeCoupon = () => {
+        setCoupon(null);
+        setCouponInput("");
+    };
+
+    const checkout = async () => {
+        if (placing) return;
+        setPlacing(true);
+        try {
+            const { data } = await api.post("/orders", {
+                address_id: defaultAddress?.id,
+                coupon_code: coupon?.code,
+            });
+            const order = data.data ?? data;
+            setCoupon(null);
+            setCouponInput("");
+            await refresh();
+            Alert.alert("Commande passée", "Votre commande a bien été créée.", [
+                {
+                    text: "Voir la commande",
+                    onPress: () =>
+                        navigation.navigate("OrderDetail", { id: order.id }),
+                },
+                { text: "OK" },
+            ]);
+        } catch (e) {
+            Alert.alert("Impossible", apiError(e));
+        } finally {
+            setPlacing(false);
+        }
+    };
 
     const isEmpty = cart.items.length === 0;
     const leftCol = recos.filter((_, i) => i % 2 === 0);
@@ -316,6 +380,91 @@ export default function CartScreen({ navigation }) {
                                 </Text>
                             </View>
                         ))}
+
+                        {/* Adresse de livraison */}
+                        <TouchableOpacity
+                            style={styles.addrCard}
+                            activeOpacity={0.8}
+                            onPress={() => navigation.navigate("Addresses")}
+                        >
+                            <Ionicons
+                                name="location-outline"
+                                size={20}
+                                color={COLORS.primaryDark}
+                            />
+                            <View style={{ flex: 1 }}>
+                                {defaultAddress ? (
+                                    <>
+                                        <Text style={styles.addrName}>
+                                            {defaultAddress.nom} ·{" "}
+                                            {defaultAddress.telephone}
+                                        </Text>
+                                        <Text
+                                            style={styles.addrLine}
+                                            numberOfLines={1}
+                                        >
+                                            {[
+                                                defaultAddress.adresse,
+                                                defaultAddress.ville,
+                                                defaultAddress.pays,
+                                            ]
+                                                .filter(Boolean)
+                                                .join(", ")}
+                                        </Text>
+                                    </>
+                                ) : (
+                                    <Text style={styles.addrName}>
+                                        Ajouter une adresse de livraison
+                                    </Text>
+                                )}
+                            </View>
+                            <Ionicons
+                                name="chevron-forward"
+                                size={18}
+                                color={COLORS.textLight}
+                            />
+                        </TouchableOpacity>
+
+                        {/* Code promo */}
+                        <View style={styles.couponCard}>
+                            <Ionicons
+                                name="pricetag-outline"
+                                size={20}
+                                color={COLORS.primaryDark}
+                            />
+                            {coupon ? (
+                                <>
+                                    <Text style={styles.couponApplied}>
+                                        {coupon.code} · −
+                                        {formatPrice(coupon.discount)}
+                                    </Text>
+                                    <TouchableOpacity onPress={removeCoupon}>
+                                        <Text style={styles.couponRemove}>
+                                            Retirer
+                                        </Text>
+                                    </TouchableOpacity>
+                                </>
+                            ) : (
+                                <>
+                                    <TextInput
+                                        style={styles.couponInput}
+                                        placeholder="Code promo"
+                                        placeholderTextColor="#9ca3af"
+                                        autoCapitalize="characters"
+                                        value={couponInput}
+                                        onChangeText={setCouponInput}
+                                    />
+                                    <TouchableOpacity
+                                        style={styles.couponBtn}
+                                        onPress={applyCoupon}
+                                    >
+                                        <Text style={styles.couponBtnText}>
+                                            Appliquer
+                                        </Text>
+                                    </TouchableOpacity>
+                                </>
+                            )}
+                        </View>
                     </View>
                 )}
             </ScrollView>
@@ -327,25 +476,38 @@ export default function CartScreen({ navigation }) {
                         { paddingBottom: insets.bottom + 12 },
                     ]}
                 >
+                    <View style={styles.sumLine}>
+                        <Text style={styles.sumLabel}>Sous-total</Text>
+                        <Text style={styles.sumVal}>
+                            {formatPrice(cart.total)}
+                        </Text>
+                    </View>
+                    {coupon ? (
+                        <View style={styles.sumLine}>
+                            <Text style={styles.sumLabel}>Réduction</Text>
+                            <Text style={[styles.sumVal, { color: COLORS.accent }]}>
+                                −{formatPrice(coupon.discount)}
+                            </Text>
+                        </View>
+                    ) : null}
                     <View style={styles.totalRow}>
                         <Text style={styles.totalLabel}>
-                            Total ({cart.count} articles)
+                            Total ({cart.count})
                         </Text>
                         <Text style={styles.totalValue}>
-                            {formatPrice(cart.total)}
+                            {formatPrice(
+                                Math.max(0, cart.total - (coupon?.discount || 0)),
+                            )}
                         </Text>
                     </View>
                     <TouchableOpacity
                         style={styles.checkout}
-                        onPress={() =>
-                            Alert.alert(
-                                "Commande",
-                                "Le paiement sera ajouté prochainement.",
-                            )
-                        }
+                        onPress={checkout}
+                        disabled={placing}
+                        activeOpacity={0.9}
                     >
                         <Text style={styles.checkoutText}>
-                            Passer la commande
+                            {placing ? "Traitement..." : "Passer la commande"}
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -483,6 +645,48 @@ const styles = StyleSheet.create({
     remove: { marginLeft: 8 },
     removeText: { color: "#dc2626", fontSize: 12, fontWeight: "600" },
     lineTotal: { fontWeight: "800", color: "#111827", alignSelf: "center" },
+    addrCard: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 10,
+        backgroundColor: "#fff",
+        borderRadius: 14,
+        padding: 14,
+        elevation: 1,
+    },
+    addrName: { fontWeight: "700", color: COLORS.text, fontSize: 13.5 },
+    addrLine: { color: COLORS.textLight, fontSize: 12.5, marginTop: 3 },
+    couponCard: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 10,
+        backgroundColor: "#fff",
+        borderRadius: 14,
+        padding: 12,
+        elevation: 1,
+    },
+    couponInput: {
+        flex: 1,
+        fontSize: 14,
+        color: COLORS.text,
+        paddingVertical: 6,
+    },
+    couponBtn: {
+        backgroundColor: COLORS.primaryDark,
+        borderRadius: RADIUS.pill,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+    },
+    couponBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
+    couponApplied: { flex: 1, color: COLORS.text, fontWeight: "700", fontSize: 13.5 },
+    couponRemove: { color: "#dc2626", fontWeight: "700", fontSize: 13 },
+    sumLine: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        marginBottom: 6,
+    },
+    sumLabel: { color: "#6b7280", fontSize: 13 },
+    sumVal: { color: COLORS.text, fontSize: 13, fontWeight: "600" },
     footer: {
         position: "absolute",
         bottom: 0,

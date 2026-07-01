@@ -108,7 +108,7 @@ class CartController extends Controller
             return [
                 'product_id' => $p->id,
                 'name' => $p->name,
-                'image' => str_starts_with($img, 'http') ? $img : rtrim(config('app.url'), '/') . '/' . ltrim($img, '/'),
+                'image' => str_starts_with($img, 'http') ? $img : rtrim(request()->getSchemeAndHttpHost(), '/') . '/' . ltrim($img, '/'),
                 'quantity' => (int) $p->pivot->quantite,
                 'unit_price' => (float) $p->pivot->prix_unitaire,
                 'line_total' => (float) $p->pivot->total_ligne,
