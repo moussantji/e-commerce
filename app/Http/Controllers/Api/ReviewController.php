@@ -45,17 +45,6 @@ class ReviewController extends Controller
 
         $user = $request->user();
 
-        // Un seul avis par utilisateur et par produit
-        $existing = AvisClient::where('produits_id', $product->id)
-            ->where('user_id', $user->id)
-            ->first();
-
-        if ($existing) {
-            return response()->json([
-                'message' => 'Vous avez déjà laissé un avis pour ce produit.',
-            ], 422);
-        }
-
         $review = AvisClient::create([
             'produits_id' => $product->id,
             'user_id' => $user->id,
