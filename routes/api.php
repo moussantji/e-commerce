@@ -18,14 +18,19 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-// Public
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/auth/social', [SocialAuthController::class, 'social']);
+// Public — auth routes with strict rate limiting (5 attempts per minute)
+Route::middleware('throttle:5,1')->group(function () {
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/auth/social', [SocialAuthController::class, 'social']);
+});
 
-Route::get('/products', [ProductController::class, 'index']);
-Route::get('/products/{id}', [ProductController::class, 'show']);
-Route::get('/categories', [CategoryController::class, 'index']);
+// Public — listing routes with moderate rate limiting (60 requests per minute)
+Route::middleware('throttle:60,1')->group(function () {
+    Route::get('/products', [ProductController::class, 'index']);
+    Route::get('/products/{id}', [ProductController::class, 'show']);
+    Route::get('/categories', [CategoryController::class, 'index']);
+});
 
 // Protégé (Bearer token)
 Route::middleware('auth:sanctum')->group(function () {

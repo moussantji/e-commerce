@@ -24,7 +24,8 @@ class ProductController extends Controller
         }
 
         if ($search = $request->query('search')) {
-            $query->where('name', 'like', "%{$search}%");
+            $escaped = addcslashes($search, '%_');
+            $query->where('name', 'like', "%{$escaped}%");
         }
 
         if ($categoryId = $request->query('category_id')) {
