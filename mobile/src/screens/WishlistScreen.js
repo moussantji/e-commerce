@@ -65,7 +65,7 @@ export default function WishlistScreen({ navigation }) {
                     <Text style={styles.price}>{formatPrice(item.sale_price ?? item.price)}</Text>
                     <TouchableOpacity
                         style={styles.addBtn}
-                        onPress={() => add(item.id, 1).then(() => navigation.navigate("Panier")).catch(() => {})}
+                        onPress={() => add(item.id, 1).then(() => navigation.navigate("Tabs", { screen: "Panier" })).catch(() => {})}
                     >
                         <Ionicons name="cart" size={16} color="#fff" />
                     </TouchableOpacity>
