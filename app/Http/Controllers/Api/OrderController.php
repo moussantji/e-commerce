@@ -43,6 +43,7 @@ class OrderController extends Controller
         $data = $request->validate([
             'address_id' => 'nullable|integer',
             'coupon_code' => 'nullable|string',
+            'livraison_id' => 'nullable|integer|exists:livraisons,id',
             'notes' => 'nullable|string',
         ]);
 
@@ -76,7 +77,15 @@ class OrderController extends Controller
         }
 
         $fraisLivraison = 0;
-        $livraison = \App\Models\Livraison::where('is_active', true)->first();
+        // Méthode de livraison choisie, sinon la première active
+        $livraison = null;
+        if (!empty($data['livraison_id'])) {
+            $livraison = \App\Models\Livraison::where('is_active', true)
+                ->find($data['livraison_id']);
+        }
+        if (!$livraison) {
+            $livraison = \App\Models\Livraison::where('is_active', true)->first();
+        }
         if ($livraison) {
             $fraisLivraison = (float) ($livraison->price ?? 0);
         }

@@ -106,6 +106,8 @@ export default function CartScreen({ navigation }) {
     const [recoFilter, setRecoFilter] = useState("all");
     const [recoLoading, setRecoLoading] = useState(false);
     const [defaultAddress, setDefaultAddress] = useState(null);
+    const [shippingMethods, setShippingMethods] = useState([]);
+    const [shipping, setShipping] = useState(null);
     const [coupon, setCoupon] = useState(null);
     const [couponInput, setCouponInput] = useState("");
     const [placing, setPlacing] = useState(false);
@@ -157,12 +159,24 @@ export default function CartScreen({ navigation }) {
         }
     }, []);
 
+    const loadShipping = useCallback(async () => {
+        try {
+            const { data } = await api.get("/shipping-methods");
+            const list = data.data ?? [];
+            setShippingMethods(list);
+            setShipping((prev) => prev || list[0] || null);
+        } catch (e) {
+            /* ignore */
+        }
+    }, []);
+
     useFocusEffect(
         useCallback(() => {
             refresh();
             loadRecos(recoFilter);
             loadAddress();
-        }, [refresh, loadRecos, recoFilter, loadAddress]),
+            loadShipping();
+        }, [refresh, loadRecos, recoFilter, loadAddress, loadShipping]),
     );
 
     const selectReco = (key) => {
@@ -232,6 +246,7 @@ export default function CartScreen({ navigation }) {
             const { data } = await api.post("/orders", {
                 address_id: defaultAddress?.id,
                 coupon_code: coupon?.code,
+                livraison_id: shipping?.id,
             });
             const order = data.data ?? data;
             setCoupon(null);
@@ -548,6 +563,39 @@ export default function CartScreen({ navigation }) {
                             />
                         </TouchableOpacity>
 
+                        {/* Mode de livraison */}
+                        {shippingMethods.length > 0 && (
+                            <View style={styles.shipCard}>
+                                <Text style={styles.shipTitle}>Mode de livraison</Text>
+                                {shippingMethods.map((m) => {
+                                    const on = shipping?.id === m.id;
+                                    return (
+                                        <TouchableOpacity
+                                            key={m.id}
+                                            style={[styles.shipRow, on && styles.shipRowOn]}
+                                            activeOpacity={0.8}
+                                            onPress={() => setShipping(m)}
+                                        >
+                                            <Ionicons
+                                                name={on ? "radio-button-on" : "radio-button-off"}
+                                                size={20}
+                                                color={on ? COLORS.primaryDark : "#cbd5e1"}
+                                            />
+                                            <View style={{ flex: 1 }}>
+                                                <Text style={styles.shipName}>{m.name}</Text>
+                                                {m.delay ? (
+                                                    <Text style={styles.shipDelay}>Délai : {m.delay}</Text>
+                                                ) : null}
+                                            </View>
+                                            <Text style={styles.shipPrice}>
+                                                {m.price > 0 ? formatPrice(m.price) : "Gratuit"}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </View>
+                        )}
+
                         {/* Code promo */}
                         <View style={styles.couponCard}>
                             <Ionicons
@@ -613,13 +661,24 @@ export default function CartScreen({ navigation }) {
                             </Text>
                         </View>
                     ) : null}
+                    <View style={styles.sumLine}>
+                        <Text style={styles.sumLabel}>Livraison</Text>
+                        <Text style={styles.sumVal}>
+                            {shipping && shipping.price > 0
+                                ? formatPrice(shipping.price)
+                                : "Gratuite"}
+                        </Text>
+                    </View>
                     <View style={styles.totalRow}>
                         <Text style={styles.totalLabel}>
                             Total ({cart.count})
                         </Text>
                         <Text style={styles.totalValue}>
                             {formatPrice(
-                                Math.max(0, cart.total - (coupon?.discount || 0)),
+                                Math.max(
+                                    0,
+                                    cart.total - (coupon?.discount || 0) + (shipping?.price || 0),
+                                ),
                             )}
                         </Text>
                     </View>
@@ -839,8 +898,7 @@ const styles = StyleSheet.create({
     lineTotal: { fontWeight: "800", color: "#111827", alignSelf: "center" },
     addrCard: {
         flexDirection: "row",
-        alignItems: "center",
-        gap: 10,
+        alignItems: "center",        gap: 10,
         backgroundColor: "#fff",
         borderRadius: 14,
         padding: 14,
@@ -848,6 +906,25 @@ const styles = StyleSheet.create({
     },
     addrName: { fontWeight: "700", color: COLORS.text, fontSize: 13.5 },
     addrLine: { color: COLORS.textLight, fontSize: 12.5, marginTop: 3 },
+    shipCard: {
+        backgroundColor: "#fff",
+        borderRadius: 14,
+        padding: 14,
+        elevation: 1,
+    },
+    shipTitle: { fontWeight: "800", color: COLORS.text, fontSize: 14, marginBottom: 8 },
+    shipRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 10,
+        paddingVertical: 10,
+        borderTopWidth: 1,
+        borderTopColor: "#f3f4f6",
+    },
+    shipRowOn: {},
+    shipName: { fontSize: 14, fontWeight: "600", color: COLORS.text },
+    shipDelay: { fontSize: 12, color: COLORS.textLight, marginTop: 2 },
+    shipPrice: { fontSize: 14, fontWeight: "800", color: COLORS.primaryDark },
     couponCard: {
         flexDirection: "row",
         alignItems: "center",

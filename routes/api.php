@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\SearchController;
+use App\Http\Controllers\Api\ShippingMethodController;
 use App\Http\Controllers\Api\SocialAuthController;
 use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\WishlistController;
@@ -39,6 +40,7 @@ Route::middleware('throttle:60,1')->group(function () {
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::get('/search/suggestions', [SearchController::class, 'suggestions']);
     Route::get('/payment-methods', [PaymentMethodController::class, 'index']);
+    Route::get('/shipping-methods', [ShippingMethodController::class, 'index']);
 });
 
 // Protégé (Bearer token)
