@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Paniers;
 use App\Models\Produits;
+use App\Notifications\CartItemAddedNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class CartController extends Controller
 {
@@ -63,6 +65,13 @@ class CartController extends Controller
                 'prix_unitaire' => $prix,
                 'total_ligne' => $newQty * $prix,
             ]);
+        }
+
+        // Notification (base + email) — sans bloquer l'ajout si l'envoi échoue
+        try {
+            $request->user()->notify(new CartItemAddedNotification($product, $qty));
+        } catch (\Throwable $e) {
+            Log::warning('Notification panier échouée : ' . $e->getMessage());
         }
 
         return response()->json($this->payload($panier->fresh()));

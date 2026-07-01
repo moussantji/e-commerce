@@ -52,6 +52,8 @@ export default function ProductDetailScreen({ route, navigation }) {
     const [qty, setQty] = useState(1);
     const [tab, setTab] = useState("description");
     const [activeImg, setActiveImg] = useState(0);
+    const [isFav, setIsFav] = useState(false);
+    const [favLoading, setFavLoading] = useState(false);
     const galleryRef = useRef(null);
 
     useEffect(() => {
@@ -69,6 +71,39 @@ export default function ProductDetailScreen({ route, navigation }) {
         })();
     }, [id]);
 
+    // État favori (si connecté)
+    useEffect(() => {
+        if (!token) return;
+        (async () => {
+            try {
+                const { data } = await api.get(`/wishlist/${id}`);
+                setIsFav(!!data.favorited);
+            } catch (e) {
+                /* ignore */
+            }
+        })();
+    }, [id, token]);
+
+    const toggleFav = async () => {
+        if (!token) {
+            Alert.alert("Connexion requise", "Connectez-vous pour gérer vos favoris.");
+            return;
+        }
+        if (favLoading) return;
+        setFavLoading(true);
+        // Optimiste
+        setIsFav((v) => !v);
+        try {
+            const { data } = await api.post(`/wishlist/${id}`);
+            setIsFav(!!data.favorited);
+        } catch (e) {
+            setIsFav((v) => !v); // rollback
+            Alert.alert("Impossible", apiError(e));
+        } finally {
+            setFavLoading(false);
+        }
+    };
+
     const addToCart = async () => {
         if (!token) {
             Alert.alert("Connexion requise", "Connectez-vous pour ajouter au panier.");
@@ -77,10 +112,8 @@ export default function ProductDetailScreen({ route, navigation }) {
         setAdding(true);
         try {
             await add(product.id, qty);
-            Alert.alert("✅ Ajouté", `${qty}x ${product.name} ajouté au panier.`, [
-                { text: "Voir le panier", onPress: () => navigation.navigate("Panier") },
-                { text: "OK" },
-            ]);
+            // Redirige directement vers le panier
+            navigation.navigate("Panier");
         } catch (e) {
             Alert.alert("Impossible", apiError(e));
         } finally {
@@ -160,8 +193,12 @@ export default function ProductDetailScreen({ route, navigation }) {
                     <TouchableOpacity style={styles.circleBtn} onPress={() => navigation.navigate("Panier")}>
                         <Ionicons name="bag-outline" size={20} color="#111" />
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.circleBtn}>
-                        <Ionicons name="heart-outline" size={20} color="#111" />
+                    <TouchableOpacity style={styles.circleBtn} onPress={toggleFav}>
+                        <Ionicons
+                            name={isFav ? "heart" : "heart-outline"}
+                            size={20}
+                            color={isFav ? COLORS.badge : "#111"}
+                        />
                     </TouchableOpacity>
                 </View>
             </View>
@@ -418,8 +455,12 @@ export default function ProductDetailScreen({ route, navigation }) {
 
             {/* Barre d'action fixe */}
             <View style={[styles.footer, { paddingBottom: insets.bottom + 10 }]}>
-                <TouchableOpacity style={styles.wishBtn}>
-                    <Ionicons name="heart-outline" size={22} color={COLORS.primaryDark} />
+                <TouchableOpacity style={styles.wishBtn} onPress={toggleFav}>
+                    <Ionicons
+                        name={isFav ? "heart" : "heart-outline"}
+                        size={22}
+                        color={isFav ? COLORS.badge : COLORS.primaryDark}
+                    />
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={styles.buttonWrap}
