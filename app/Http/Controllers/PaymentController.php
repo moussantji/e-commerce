@@ -83,7 +83,7 @@ class PaymentController extends Controller
             return back()->with('error', 'Aucun paiement associé à cette commande.');
         }
 
-        $paiement->status = 'confirme';
+        $paiement->status = \App\Support\PaymentStatus::CONFIRMED;
         $paiement->payment_date = now();
         $paiement->save();
 

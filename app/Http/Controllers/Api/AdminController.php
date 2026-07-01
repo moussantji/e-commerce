@@ -55,6 +55,8 @@ class AdminController extends Controller
                 'amount' => (float) $p->amount,
                 'reference' => $p->notes,
                 'status' => $p->status,
+                'status_label' => $p->status_label,
+                'status_color' => \App\Support\PaymentStatus::color($p->status),
                 'date' => optional($p->created_at)->diffForHumans(),
             ]),
             'meta' => ['current_page' => $proofs->currentPage(), 'last_page' => $proofs->lastPage(), 'total' => $proofs->total()],
@@ -69,7 +71,7 @@ class AdminController extends Controller
         $proof = PaymentProof::with(['order', 'user'])->findOrFail($id);
 
         DB::transaction(function () use ($proof) {
-            $proof->update(['status' => 'confirme']);
+            $proof->update(['status' => \App\Support\PaymentStatus::CONFIRMED]);
             if ($proof->order) {
                 // Le changement de statut déclenche la notification (hook modèle Commandes)
                 $proof->order->update(['statut' => 'payee', 'date_traitement' => now()]);
@@ -86,7 +88,7 @@ class AdminController extends Controller
         $reason = $request->input('reason');
 
         $proof = PaymentProof::with(['order', 'user'])->findOrFail($id);
-        $proof->update(['status' => 'rejete']);
+        $proof->update(['status' => \App\Support\PaymentStatus::REJECTED]);
 
         // La commande repasse en attente de paiement (le client peut re-payer)
         if ($proof->order) {
@@ -127,6 +129,8 @@ class AdminController extends Controller
                 'phone' => $t->phone,
                 'reference' => $t->reference,
                 'status' => $t->status,
+                'status_label' => $t->status_label,
+                'status_color' => \App\Support\PaymentStatus::color($t->status),
                 'date' => optional($t->created_at)->diffForHumans(),
             ]),
             'meta' => ['current_page' => $topups->currentPage(), 'last_page' => $topups->lastPage(), 'total' => $topups->total()],

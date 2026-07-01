@@ -299,7 +299,10 @@
             @if ($proof)
                 <div class="card mb-3">
                     <div class="card-body">
-                        <h5>Preuve envoyée ({{ $proof->status }})</h5>
+                        <h5 class="d-flex align-items-center gap-2">
+                            Preuve envoyée
+                            <span class="badge bg-{{ $proof->status_badge_class }}">{{ $proof->status_label }}</span>
+                        </h5>
                         @if (is_array($proof->photos))
                             @foreach ($proof->photos as $p)
                                 <img src="{{ asset('storage/' . $p) }}" alt="preuve" class="img-thumbnail me-2"
