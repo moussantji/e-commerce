@@ -11,14 +11,36 @@ class Paniers extends Model
     protected $fillable = [
         'user_id',
         'session_id',
+        'status',
+        'date_maj',
         'created_at',
         'updated_at'
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
-        'updated_at' => 'datetime'
+        'updated_at' => 'datetime',
+        'date_maj' => 'datetime',
     ];
+
+    /**
+     * Garantit que date_maj (NOT NULL) est toujours renseigné, quel que soit
+     * le chemin de création (web, API, firstOrCreate...).
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (Paniers $panier) {
+            if (empty($panier->date_maj)) {
+                $panier->date_maj = now();
+            }
+        });
+
+        static::saving(function (Paniers $panier) {
+            if (empty($panier->date_maj)) {
+                $panier->date_maj = now();
+            }
+        });
+    }
 
     public function user(): BelongsTo
     {
