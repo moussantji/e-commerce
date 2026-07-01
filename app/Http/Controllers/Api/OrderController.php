@@ -235,9 +235,9 @@ class OrderController extends Controller
         }
         $providerLabel = $data['provider'] ?? ($method->method_name ?? 'Mobile Money');
 
-        // Enregistre la méthode choisie sur la commande + statut en attente de vérification
+        // Enregistre la méthode choisie sur la commande + statut : paiement déclaré
         $order->paiement_id = $method->id ?? $order->paiement_id;
-        $order->statut = 'en_attente';
+        $order->statut = 'paiement_declare';
         $order->date_en_attente = now();
         $notePaiement = "Paiement déclaré via {$providerLabel}"
             . (!empty($data['phone']) ? " — {$data['phone']}" : '')

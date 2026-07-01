@@ -97,6 +97,11 @@ class AdminController extends Controller
         $proof = PaymentProof::with(['order', 'user'])->findOrFail($id);
         $proof->update(['status' => 'rejete']);
 
+        // La commande repasse en attente de paiement (le client peut re-payer)
+        if ($proof->order) {
+            $proof->order->update(['statut' => 'en_attente']);
+        }
+
         if ($proof->user) {
             $numero = optional($proof->order)->numero_commande ?? ('#' . $proof->order_id);
             $proof->user->notify(new PaymentStatusNotification(
