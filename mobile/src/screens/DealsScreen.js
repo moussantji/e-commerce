@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
     View,
     Text,
@@ -8,16 +8,22 @@ import {
     FlatList,
     ActivityIndicator,
     RefreshControl,
+    Animated,
+    ImageBackground,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api from "../api/client";
 import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
-import ScreenHeroHeader from "../components/ScreenHeroHeader";
 
 const HERO_IMAGE =
     "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1080&q=80";
+
+// Header heights
+const HEADER_MAX_EXTRA = 90; // extra height beyond the collapsed state
+const HEADER_COLLAPSED = 52; // collapsed header height (title only, compact)
 
 const TABS = [
     { key: "on_sale", label: "Promos", icon: "pricetag" },
@@ -39,6 +45,31 @@ export default function DealsScreen({ navigation }) {
     const [refreshing, setRefreshing] = useState(false);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
+
+    const scrollY = useRef(new Animated.Value(0)).current;
+
+    const HEADER_MAX = HEADER_COLLAPSED + HEADER_MAX_EXTRA + insets.top;
+    const HEADER_MIN = HEADER_COLLAPSED + insets.top;
+    const SCROLL_RANGE = HEADER_MAX - HEADER_MIN;
+
+    // Animated interpolations
+    const headerHeight = scrollY.interpolate({
+        inputRange: [0, SCROLL_RANGE],
+        outputRange: [HEADER_MAX, HEADER_MIN],
+        extrapolate: "clamp",
+    });
+
+    const subtitleOpacity = scrollY.interpolate({
+        inputRange: [0, SCROLL_RANGE * 0.5],
+        outputRange: [1, 0],
+        extrapolate: "clamp",
+    });
+
+    const titleScale = scrollY.interpolate({
+        inputRange: [0, SCROLL_RANGE],
+        outputRange: [1, 0.85],
+        extrapolate: "clamp",
+    });
 
     const fetchProducts = useCallback(
         async (pageNum = 1, refresh = false) => {
@@ -140,30 +171,42 @@ export default function DealsScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
-            {/* Header hero avec photo + voile violet */}
-            <ScreenHeroHeader
-                image={HERO_IMAGE}
-                height={140 + insets.top}
-                overlayOpacity="medium"
-                style={{ paddingTop: insets.top }}
-            >
-                <View style={styles.header}>
-                    <View>
-                        <Text style={styles.headerTitle}>Bons Plans</Text>
-                        <Text style={styles.headerSub}>
-                            Les meilleures offres du moment
-                        </Text>
-                    </View>
-                    <TouchableOpacity
-                        onPress={() => navigation.navigate("Notifications")}
-                        style={styles.notifBtn}
-                    >
-                        <Ionicons name="notifications-outline" size={22} color="#fff" />
-                    </TouchableOpacity>
-                </View>
-            </ScreenHeroHeader>
+            {/* Collapsing header with photo + purple overlay */}
+            <Animated.View style={[styles.headerWrapper, { height: headerHeight }]}>
+                <ImageBackground
+                    source={{ uri: HERO_IMAGE }}
+                    style={StyleSheet.absoluteFill}
+                    resizeMode="cover"
+                >
+                    <LinearGradient
+                        colors={["rgba(102,126,234,0.55)", "rgba(118,75,162,0.85)"]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={StyleSheet.absoluteFill}
+                    />
+                </ImageBackground>
 
-            {/* Tabs */}
+                <View style={[styles.headerContent, { paddingTop: insets.top + 8 }]}>
+                    <View style={styles.headerRow}>
+                        <Animated.View style={{ transform: [{ scale: titleScale }] }}>
+                            <Text style={styles.headerTitle}>Bons Plans</Text>
+                        </Animated.View>
+                        <TouchableOpacity
+                            onPress={() => navigation.navigate("Notifications")}
+                            style={styles.notifBtn}
+                        >
+                            <Ionicons name="notifications-outline" size={20} color="#fff" />
+                        </TouchableOpacity>
+                    </View>
+                    <Animated.Text
+                        style={[styles.headerSub, { opacity: subtitleOpacity }]}
+                    >
+                        Les meilleures offres du moment
+                    </Animated.Text>
+                </View>
+            </Animated.View>
+
+            {/* Sticky Tabs */}
             <View style={styles.tabBar}>
                 {TABS.map((tab) => {
                     const isActive = activeTab === tab.key;
@@ -197,7 +240,7 @@ export default function DealsScreen({ navigation }) {
                     <ActivityIndicator size="large" color={COLORS.primary} />
                 </View>
             ) : (
-                <FlatList
+                <Animated.FlatList
                     data={products}
                     keyExtractor={(item) => `deal-${item.id}`}
                     renderItem={renderProduct}
@@ -213,6 +256,11 @@ export default function DealsScreen({ navigation }) {
                     }
                     onEndReached={onEndReached}
                     onEndReachedThreshold={0.3}
+                    onScroll={Animated.event(
+                        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                        { useNativeDriver: false }
+                    )}
+                    scrollEventThrottle={16}
                     ListEmptyComponent={
                         <View style={styles.emptyContainer}>
                             <Ionicons
@@ -244,9 +292,19 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: "#f9fafb",
     },
-    header: {
+    headerWrapper: {
+        width: "100%",
+        overflow: "hidden",
+    },
+    headerContent: {
+        flex: 1,
+        justifyContent: "flex-end",
+        paddingHorizontal: 16,
+        paddingBottom: 12,
+    },
+    headerRow: {
         flexDirection: "row",
-        alignItems: "flex-end",
+        alignItems: "center",
         justifyContent: "space-between",
     },
     headerTitle: {
@@ -260,9 +318,9 @@ const styles = StyleSheet.create({
         marginTop: 2,
     },
     notifBtn: {
-        width: 38,
-        height: 38,
-        borderRadius: 19,
+        width: 36,
+        height: 36,
+        borderRadius: 18,
         backgroundColor: "rgba(255,255,255,0.2)",
         alignItems: "center",
         justifyContent: "center",
