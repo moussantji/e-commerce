@@ -10,6 +10,8 @@ import {
     RefreshControl,
     Animated,
     ImageBackground,
+    Platform,
+    Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -21,9 +23,7 @@ import { COLORS, RADIUS } from "../theme";
 const HERO_IMAGE =
     "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1080&q=80";
 
-// Header heights
-const HEADER_MAX_EXTRA = 90; // extra height beyond the collapsed state
-const HEADER_COLLAPSED = 52; // collapsed header height (title only, compact)
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const TABS = [
     { key: "on_sale", label: "Promos", icon: "pricetag" },
@@ -48,26 +48,31 @@ export default function DealsScreen({ navigation }) {
 
     const scrollY = useRef(new Animated.Value(0)).current;
 
-    const HEADER_MAX = HEADER_COLLAPSED + HEADER_MAX_EXTRA + insets.top;
-    const HEADER_MIN = HEADER_COLLAPSED + insets.top;
-    const SCROLL_RANGE = HEADER_MAX - HEADER_MIN;
+    // Responsive: extra padding above the bell icon to avoid system status bar icons
+    const STATUS_BAR_PADDING = Platform.OS === "ios" ? insets.top + 12 : insets.top + 16;
 
-    // Animated interpolations
+    // Header shrinks only a little (not folding completely)
+    const HEADER_EXPANDED = 160;
+    const HEADER_COLLAPSED = 110;
+    const SCROLL_DISTANCE = HEADER_EXPANDED - HEADER_COLLAPSED;
+
     const headerHeight = scrollY.interpolate({
-        inputRange: [0, SCROLL_RANGE],
-        outputRange: [HEADER_MAX, HEADER_MIN],
+        inputRange: [0, SCROLL_DISTANCE],
+        outputRange: [HEADER_EXPANDED + STATUS_BAR_PADDING, HEADER_COLLAPSED + STATUS_BAR_PADDING],
         extrapolate: "clamp",
     });
 
+    // Subtitle fades out slightly
     const subtitleOpacity = scrollY.interpolate({
-        inputRange: [0, SCROLL_RANGE * 0.5],
+        inputRange: [0, SCROLL_DISTANCE * 0.7],
         outputRange: [1, 0],
         extrapolate: "clamp",
     });
 
-    const titleScale = scrollY.interpolate({
-        inputRange: [0, SCROLL_RANGE],
-        outputRange: [1, 0.85],
+    // Title font shrinks just a tiny bit
+    const titleFontSize = scrollY.interpolate({
+        inputRange: [0, SCROLL_DISTANCE],
+        outputRange: [22, 18],
         extrapolate: "clamp",
     });
 
@@ -118,7 +123,7 @@ export default function DealsScreen({ navigation }) {
 
         return (
             <TouchableOpacity
-                style={styles.card}
+                style={[styles.card, { width: (SCREEN_WIDTH - 32) / 2 }]}
                 activeOpacity={0.9}
                 onPress={() =>
                     navigation.navigate("ProductDetail", {
@@ -171,7 +176,7 @@ export default function DealsScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
-            {/* Collapsing header with photo + purple overlay */}
+            {/* Header with photo + purple overlay — shrinks slightly on scroll */}
             <Animated.View style={[styles.headerWrapper, { height: headerHeight }]}>
                 <ImageBackground
                     source={{ uri: HERO_IMAGE }}
@@ -179,34 +184,36 @@ export default function DealsScreen({ navigation }) {
                     resizeMode="cover"
                 >
                     <LinearGradient
-                        colors={["rgba(102,126,234,0.55)", "rgba(118,75,162,0.85)"]}
+                        colors={["rgba(102,126,234,0.6)", "rgba(118,75,162,0.88)"]}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                         style={StyleSheet.absoluteFill}
                     />
                 </ImageBackground>
 
-                <View style={[styles.headerContent, { paddingTop: insets.top + 8 }]}>
-                    <View style={styles.headerRow}>
-                        <Animated.View style={{ transform: [{ scale: titleScale }] }}>
-                            <Text style={styles.headerTitle}>Bons Plans</Text>
-                        </Animated.View>
+                <View style={[styles.headerContent, { paddingTop: STATUS_BAR_PADDING }]}>
+                    {/* Top row: title + notification bell (well below status bar) */}
+                    <View style={styles.headerTopRow}>
+                        <Animated.Text style={[styles.headerTitle, { fontSize: titleFontSize }]}>
+                            Bons Plans
+                        </Animated.Text>
                         <TouchableOpacity
                             onPress={() => navigation.navigate("Notifications")}
                             style={styles.notifBtn}
+                            activeOpacity={0.7}
                         >
                             <Ionicons name="notifications-outline" size={20} color="#fff" />
                         </TouchableOpacity>
                     </View>
-                    <Animated.Text
-                        style={[styles.headerSub, { opacity: subtitleOpacity }]}
-                    >
+
+                    {/* Subtitle — fades out on scroll */}
+                    <Animated.Text style={[styles.headerSub, { opacity: subtitleOpacity }]}>
                         Les meilleures offres du moment
                     </Animated.Text>
                 </View>
             </Animated.View>
 
-            {/* Sticky Tabs */}
+            {/* Sticky tabs */}
             <View style={styles.tabBar}>
                 {TABS.map((tab) => {
                     const isActive = activeTab === tab.key;
@@ -300,30 +307,32 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: "flex-end",
         paddingHorizontal: 16,
-        paddingBottom: 12,
+        paddingBottom: 14,
     },
-    headerRow: {
+    headerTopRow: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
+        marginBottom: 4,
     },
     headerTitle: {
-        fontSize: 22,
         fontWeight: "900",
         color: "#fff",
     },
     headerSub: {
         fontSize: 13,
-        color: "rgba(255,255,255,0.85)",
+        color: "rgba(255,255,255,0.9)",
         marginTop: 2,
     },
     notifBtn: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        backgroundColor: "rgba(255,255,255,0.2)",
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: "rgba(255,255,255,0.18)",
         alignItems: "center",
         justifyContent: "center",
+        // Extra margin to stay well below system status bar icons
+        marginTop: 0,
     },
     tabBar: {
         flexDirection: "row",
@@ -332,6 +341,11 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         borderBottomWidth: 1,
         borderBottomColor: "#f3f4f6",
+        elevation: 2,
+        shadowColor: "#000",
+        shadowOpacity: 0.04,
+        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 2 },
     },
     tab: {
         flex: 1,
@@ -368,7 +382,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 4,
     },
     card: {
-        width: "48%",
         backgroundColor: "#fff",
         borderRadius: RADIUS.md,
         marginBottom: 10,
