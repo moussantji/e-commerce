@@ -43,6 +43,28 @@
                     @enderror
                 </div>
 
+                <div class="mb-3">
+                    <label for="account_number" class="form-label">Numéro / compte à créditer</label>
+                    <input type="text" class="form-control @error('account_number') is-invalid @enderror"
+                           id="account_number" name="account_number"
+                           placeholder="Ex : 07 00 00 00 00"
+                           value="{{ old('account_number', $paymentMethod->account_number ?? '') }}">
+                    @error('account_number')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="mb-3">
+                    <label for="instructions" class="form-label">Instructions à suivre par le client</label>
+                    <textarea class="form-control @error('instructions') is-invalid @enderror"
+                              id="instructions" name="instructions" rows="5"
+                              placeholder="Ex :&#10;1. Composez #144# ...&#10;2. Envoyez le montant au numéro ci-dessus&#10;3. Notez la référence de transaction&#10;4. Cliquez sur 'J'ai payé'">{{ old('instructions', $paymentMethod->instructions ?? '') }}</textarea>
+                    <small class="text-muted">Ces instructions s'affichent au client dans l'application mobile.</small>
+                    @error('instructions')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
                 <div class="row mb-3">
                     <div class="col-md-4">
                         <label for="fee" class="form-label">Frais fixes (€)</label>

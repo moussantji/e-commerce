@@ -20,6 +20,7 @@
 
             <th class="sort align-middle text-end" scope="col" data-sort="total" style="width:6%;">TOTAL</th>
             <th class="sort align-middle text-end pe-0" scope="col" data-sort="date">DATE</th>
+            <th class="align-middle text-end pe-0" scope="col" style="width:1%;">ACTIONS</th>
         </tr>
     </thead>
     <tbody class="list" id="order-table-body">
@@ -51,13 +52,13 @@
                     </div>
                 </td>
                 <td class="order align-middle white-space-nowrap py-0"><a class="fw-semibold"
-                        href="#!">#{{ $commande->id }}</a>
+                        href="{{ route('admin.orders.show', $commande) }}">#{{ $commande->id }}</a>
                 </td>
                 <td class="customer align-middle white-space-nowrap ps-8"><a class="d-flex align-items-center text-body"
-                        href="../landing/profile.html">
+                        href="{{ route('admin.orders.show', $commande) }}">
                         <div class="avatar avatar-m"><img class="rounded-circle" src="../../../assets/img/team/32.webp"
                                 alt="" /></div>
-                        <h6 class="mb-0 ms-3 text-body">{{ $commande->user->name }}</h6>
+                        <h6 class="mb-0 ms-3 text-body">{{ $commande->user->name ?? 'Client inconnu' }}</h6>
                     </a></td>
                 <td class="delivery_type align-middle white-space-nowrap text-body fs-9 text-start">
                     @if($commande->paiement)
@@ -109,6 +110,27 @@
 
                 <td class="total align-middle text-end fw-semibold text-body-highlight">{{ number_format($commande->total, 0, ',', ' ') }} FCFA</td>
                 <td class="date align-middle white-space-nowrap text-body-tertiary fs-9 ps-4 text-end">{{ $commande->created_at->format('d/m/Y H:i') }}</td>
+                <td class="align-middle text-end pe-0 white-space-nowrap">
+                    @php
+                        $terminal = in_array($commande->statut, ['livre', 'livree', 'annule', 'annulee']);
+                    @endphp
+                    <div class="btn-group">
+                        <a href="{{ route('admin.orders.show', $commande) }}"
+                            class="btn btn-sm btn-phoenix-secondary" title="Voir / Éditer">
+                            <span class="fas fa-eye"></span>
+                        </a>
+                        @unless($terminal)
+                            <form action="{{ route('admin.orders.update-status', $commande) }}" method="POST"
+                                onsubmit="return confirm('Annuler cette commande ?');">
+                                @csrf @method('PATCH')
+                                <input type="hidden" name="status" value="annule">
+                                <button type="submit" class="btn btn-sm btn-phoenix-danger" title="Annuler la commande">
+                                    <span class="fas fa-times"></span>
+                                </button>
+                            </form>
+                        @endunless
+                    </div>
+                </td>
             </tr>
         @endforeach
     </tbody>

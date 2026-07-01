@@ -45,16 +45,28 @@
 
                                     </button>
                                 @endif
-                                <a class="btn btn-lg btn-warning rounded-pill w-100 fs-9 fs-sm-8"
-                                    onclick="addToCartWithQty({{ $product->id }})"><span
-                                        class="fas fa-shopping-cart me-2"></span>Add to cart</a>
+                                @if ($inStock)
+                                    <a class="btn btn-lg btn-warning rounded-pill w-100 fs-9 fs-sm-8"
+                                        onclick="addToCartWithQty({{ $product->id }})"><span
+                                            class="fas fa-shopping-cart me-2"></span>Add to cart</a>
+                                @else
+                                    <button type="button"
+                                        class="btn btn-lg btn-secondary rounded-pill w-100 fs-9 fs-sm-8" disabled><span
+                                            class="fas fa-ban me-2"></span>Rupture de stock</button>
+                                @endif
                             @else
                                 <a href="{{ route('login') }}"
                                     class="btn btn-lg btn-outline-warning rounded-pill w-100 me-3 px-2 px-sm-4 fs-9 fs-sm-8"><span
                                         class="me-2 far fa-heart"></span>Add to wishlist</a>
-                                <a class="btn btn-lg btn-warning rounded-pill w-100 fs-9 fs-sm-8"
-                                    href="{{ route('login') }}"><span class="fas fa-shopping-cart me-2"></span>Add to
-                                    cart</a>
+                                @if ($inStock)
+                                    <a class="btn btn-lg btn-warning rounded-pill w-100 fs-9 fs-sm-8"
+                                        href="{{ route('login') }}"><span class="fas fa-shopping-cart me-2"></span>Add to
+                                        cart</a>
+                                @else
+                                    <button type="button"
+                                        class="btn btn-lg btn-secondary rounded-pill w-100 fs-9 fs-sm-8" disabled><span
+                                            class="fas fa-ban me-2"></span>Rupture de stock</button>
+                                @endif
                             @endif
                         </div>
                     </div>
@@ -284,7 +296,8 @@
                                                 Write a review
                                             </button>
 
-                                            <!-- Modale principale -->
+                                            <!-- Modale principale (téléportée dans <body> pour un affichage correct) -->
+                                            @teleport('body')
                                             <div class="modal fade" id="reviewModal" tabindex="-1"
                                                 aria-labelledby="reviewModalLabel" aria-hidden="true"
                                                 wire:ignore.self>
@@ -344,6 +357,7 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            @endteleport
 
 
                                         </div>
@@ -585,7 +599,8 @@
     <!-- ============================================-->
 
     <script>
-        document.getElementById('shareBtn').addEventListener('click', async () => {
+        const shareBtn = document.getElementById('shareBtn');
+        if (shareBtn) shareBtn.addEventListener('click', async () => {
             const productData = {
                 title: '{{ $product->name }}',
                 url: '{{ route('produits.show', ['slug' => $product->getSlug(), 'id' => $product->id]) }}',
@@ -638,6 +653,8 @@
             const starsContainer = document.getElementById('stars');
             const ratingSpan = document.getElementById('rating-value');
             const ratingInput = document.getElementById('rating-input');
+
+            if (!starsContainer || !ratingSpan || !ratingInput) return;
 
             // Transforme le texte en spans
             function initStars() {

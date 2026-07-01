@@ -5,9 +5,26 @@
 @section('content')
     <div class="content">
         <div class="mb-9">
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+            @if (session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
             <div class="row g-3 mb-4">
                 <div class="col-auto">
                     <h2 class="mb-0">Orders</h2>
+                </div>
+                <div class="col-auto ms-auto">
+                    <a href="{{ route('admin.payments.moderation') }}" class="btn btn-primary">
+                        <span class="fas fa-money-check-alt me-2"></span>Paiements à vérifier
+                    </a>
                 </div>
             </div>
             <div id="orderTable"

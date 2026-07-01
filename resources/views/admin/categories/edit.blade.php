@@ -20,9 +20,9 @@
             @endif
         </div>
         <div class="card-body">
-            @if($category->image)
+            @if($category->getPhoto())
                 <div class="mb-4 text-center">
-                    <img src="{{ asset('storage/' . $category->image) }}"
+                    <img src="{{ $category->getPhoto()->getImageUrl(200, 200) }}"
                          alt="{{ $category->name }}" class="img-thumbnail rounded" style="max-width: 200px; max-height: 200px;">
                     <div class="mt-2">
                         <small class="text-muted">Image actuelle</small>
@@ -46,20 +46,29 @@
 
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Catégorie parente</label>
-                        <select name="parent_id" class="form-select @error('parent_id') is-invalid @enderror">
-                            <option value="">-- Catégorie racine --</option>
-                            @foreach($categories as $parentCategory)
-                                @if($parentCategory->id != $category->id)
+                        @if($category->children()->exists())
+                            <select class="form-select" disabled>
+                                <option>-- Catégorie principale (racine) --</option>
+                            </select>
+                            <input type="hidden" name="parent_id" value="">
+                            <div class="form-text text-warning">
+                                Cette catégorie possède des sous-catégories : elle reste une catégorie principale.
+                            </div>
+                        @else
+                            <select name="parent_id" class="form-select @error('parent_id') is-invalid @enderror">
+                                <option value="">-- Catégorie principale (racine) --</option>
+                                @foreach($categories as $parentCategory)
                                     <option value="{{ $parentCategory->id }}"
                                             {{ old('parent_id', $category->parent_id) == $parentCategory->id ? 'selected' : '' }}>
                                         {{ $parentCategory->name }}
                                     </option>
-                                @endif
-                            @endforeach
-                        </select>
-                        @error('parent_id')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                                @endforeach
+                            </select>
+                            @error('parent_id')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <div class="form-text">Laissez vide pour une catégorie principale (2 niveaux maximum).</div>
+                        @endif
                     </div>
                 </div>
 
@@ -87,9 +96,7 @@
                 <div class="row">
                     <div class="col-md-8 mb-3">
                         <label class="form-label">Description</label>
-                        <textarea name="description" rows="4" class="form-control @error('description') is-invalid @enderror">
-                            {{ old('description', $category->description) }}
-                        </textarea>
+                        <textarea name="description" rows="4" class="form-control @error('description') is-invalid @enderror">{{ old('description', $category->description) }}</textarea>
                         @error('description')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -102,6 +109,35 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                         <div class="form-text">Laisser vide = garder l'image actuelle</div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Bannière 1 (accueil mobile)</label>
+                        <input type="file" name="banner_image_1" accept="image/*"
+                               class="form-control @error('banner_image_1') is-invalid @enderror">
+                        @error('banner_image_1')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <div class="form-text">Laisser vide = garder la bannière actuelle</div>
+                        @if($category->bannerImageUrl(1))
+                            <img src="{{ $category->bannerImageUrl(1) }}"
+                                 alt="Bannière 1" class="img-thumbnail mt-2" style="max-height: 90px;">
+                        @endif
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Bannière 2 (accueil mobile)</label>
+                        <input type="file" name="banner_image_2" accept="image/*"
+                               class="form-control @error('banner_image_2') is-invalid @enderror">
+                        @error('banner_image_2')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <div class="form-text">Laisser vide = garder la bannière actuelle</div>
+                        @if($category->bannerImageUrl(2))
+                            <img src="{{ $category->bannerImageUrl(2) }}"
+                                 alt="Bannière 2" class="img-thumbnail mt-2" style="max-height: 90px;">
+                        @endif
                     </div>
                 </div>
 

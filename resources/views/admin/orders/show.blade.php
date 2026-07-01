@@ -1,8 +1,9 @@
-@extends('admin.layouts.app')
+@extends('admin.base')
 
 @section('title', 'Détails de la commande #' . $order->id)
 
 @section('content')
+<div class="content">
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
@@ -11,6 +12,18 @@
                     <h5 class="mb-0">Détails de la commande #{{ $order->id }}</h5>
                 </div>
                 <div class="card-body">
+                    @if (session('success'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            {{ session('success') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
+                    @if (session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            {{ session('error') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
                     <div class="row">
                         <div class="col-md-6">
                             <h6>Informations client</h6>
@@ -25,19 +38,31 @@
                             @php
                                 $statusClass = [
                                     'en_attente' => 'warning',
+                                    'paiement_declare' => 'warning',
+                                    'payee' => 'primary',
+                                    'traitement' => 'info',
                                     'en_cours' => 'info',
                                     'expediee' => 'primary',
+                                    'expedie' => 'primary',
                                     'livree' => 'success',
-                                    'annulee' => 'danger'
-                                ][$order->status] ?? 'secondary';
+                                    'livre' => 'success',
+                                    'annulee' => 'danger',
+                                    'annule' => 'danger'
+                                ][$order->statut] ?? 'secondary';
 
                                 $statusText = [
-                                    'en_attente' => 'En attente',
-                                    'en_cours' => 'En cours de traitement',
+                                    'en_attente' => 'En attente de paiement',
+                                    'paiement_declare' => 'Paiement en vérification',
+                                    'payee' => 'Payée',
+                                    'traitement' => 'En préparation',
+                                    'en_cours' => 'En préparation',
                                     'expediee' => 'Expédiée',
+                                    'expedie' => 'Expédiée',
                                     'livree' => 'Livrée',
-                                    'annulee' => 'Annulée'
-                                ][$order->status] ?? $order->status;
+                                    'livre' => 'Livrée',
+                                    'annulee' => 'Annulée',
+                                    'annule' => 'Annulée'
+                                ][$order->statut] ?? $order->statut;
                             @endphp
                             <span class="badge bg-{{ $statusClass }} fs-6">{{ $statusText }}</span>
 
@@ -82,13 +107,13 @@
                                             </div>
                                         </td>
                                         <td class="text-end">
-                                            {{ number_format($produit->pivot->prix_unitaire, 2, ',', ' ') }} €
+                                            {{ number_format($produit->pivot->prix_unitaire, 0, ',', ' ') }} FCFA
                                         </td>
                                         <td class="text-center">
-                                            {{ $produit->pivot->quantity }}
+                                            {{ $produit->pivot->quantite }}
                                         </td>
                                         <td class="text-end">
-                                            {{ number_format($produit->pivot->total_ligne, 2, ',', ' ') }} €
+                                            {{ number_format($produit->pivot->total, 0, ',', ' ') }} FCFA
                                         </td>
                                     </tr>
                                 @endforeach
@@ -96,21 +121,21 @@
                                 <tr>
                                     <td colspan="3" class="text-end fw-bold">Sous-total</td>
                                     <td class="text-end">
-                                        {{ number_format($order->produits->sum('pivot.total_ligne'), 2, ',', ' ') }} €
+                                        {{ number_format($order->produits->sum('pivot.total'), 0, ',', ' ') }} FCFA
                                     </td>
                                 </tr>
                                 @if($order->frais_livraison > 0)
                                     <tr>
                                         <td colspan="3" class="text-end fw-bold">Frais de livraison</td>
                                         <td class="text-end">
-                                            {{ number_format($order->frais_livraison, 2, ',', ' ') }} €
+                                            {{ number_format($order->frais_livraison, 0, ',', ' ') }} FCFA
                                         </td>
                                     </tr>
                                 @endif
                                 <tr>
                                     <td colspan="3" class="text-end fw-bold">Total TTC</td>
                                     <td class="text-end fw-bold">
-                                        {{ number_format($order->total, 2, ',', ' ') }} €
+                                        {{ number_format($order->total, 0, ',', ' ') }} FCFA
                                     </td>
                                 </tr>
                             </tbody>
@@ -120,76 +145,129 @@
                     <div class="row mt-4">
                         <div class="col-md-6">
                             <h6>Adresse de livraison</h6>
-                            <address>
-                                {{ $order->adresse_livraison ?? 'Non spécifiée' }}
-                            </address>
+                            @php $liv = $order->adresse_livraison; @endphp
+                            @if (is_array($liv) && !empty($liv))
+                                <address class="mb-0">
+                                    <strong>{{ data_get($liv, 'nom', $order->user->name ?? '') }}</strong><br>
+                                    {{ data_get($liv, 'adresse') }}<br>
+                                    {{ data_get($liv, 'ville') }}@if(data_get($liv, 'pays')), {{ data_get($liv, 'pays') }}@endif<br>
+                                    @if(data_get($liv, 'telephone'))Tél. : {{ data_get($liv, 'telephone') }}@endif
+                                </address>
+                            @else
+                                <address class="mb-0">{{ is_string($liv) ? $liv : 'Non spécifiée' }}</address>
+                            @endif
                         </div>
                         <div class="col-md-6">
                             <h6>Informations de facturation</h6>
-                            <address>
-                                {{ $order->adresse_facturation ?? 'Identique à l\'adresse de livraison' }}
-                            </address>
+                            @php $fac = $order->adresse_facturation; @endphp
+                            @if (is_array($fac) && !empty($fac))
+                                <address class="mb-0">
+                                    <strong>{{ data_get($fac, 'nom', $order->user->name ?? '') }}</strong><br>
+                                    {{ data_get($fac, 'adresse') }}<br>
+                                    {{ data_get($fac, 'ville') }}@if(data_get($fac, 'pays')), {{ data_get($fac, 'pays') }}@endif<br>
+                                    @if(data_get($fac, 'telephone'))Tél. : {{ data_get($fac, 'telephone') }}@endif
+                                </address>
+                            @else
+                                <address class="mb-0">{{ is_string($fac) ? $fac : 'Identique à l\'adresse de livraison' }}</address>
+                            @endif
                         </div>
                     </div>
 
-                    <div class="mt-4">
+                    <div class="mt-4 d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
                         <a href="{{ route('admin.orders.index') }}" class="btn btn-light">
                             <i class="fas fa-arrow-left me-2"></i> Retour à la liste
                         </a>
-                        @if($order->paiement)
-                            <div class="float-start ms-3">
-                                <strong>Preuve de paiement:</strong>
-                                <div class="mt-2">
+                        @if($order->paiement && $order->paiement->photos->count())
+                            <div class="w-100 w-md-auto">
+                                <strong class="d-block mb-2">Preuve de paiement :</strong>
+                                <div class="d-flex flex-wrap gap-2">
                                     @foreach($order->paiement->photos as $photo)
-                                        <img src="{{ asset('storage/' . $photo->filename) }}" alt="preuve" class="img-thumbnail me-2" style="max-width:120px" />
+                                        <a href="{{ asset('storage/' . $photo->filename) }}" target="_blank">
+                                            <img src="{{ asset('storage/' . $photo->filename) }}" alt="preuve"
+                                                class="img-thumbnail"
+                                                style="width:96px;height:96px;object-fit:cover;" />
+                                        </a>
                                     @endforeach
                                 </div>
                             </div>
                         @endif
-
-                        @if($order->status !== 'annulee' && $order->status !== 'livree')
-                            <div class="btn-group float-end">
-                                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Changer le statut
-                                </button>
-                                <ul class="dropdown-menu">
-                                    @foreach([
-                                        'en_attente' => 'En attente',
-                                        'en_cours' => 'En cours de traitement',
-                                        'expediee' => 'Marquer comme expédiée',
-                                        'livree' => 'Marquer comme livrée',
-                                        'annulee' => 'Annuler la commande'
-                                    ] as $status => $label)
-                                        @if($order->status !== $status)
-                                            <li>
-                                                <form action="{{ route('admin.orders.update-status', $order) }}" method="POST" class="d-inline">
-                                                    @csrf
-                                                    @method('PATCH')
-                                                    <input type="hidden" name="status" value="{{ $status }}">
-                                                    <button type="submit" class="dropdown-item"
-                                                            onclick="return confirm('Êtes-vous sûr de vouloir passer cette commande en statut {{ strtolower($label) }} ?')">
-                                                        {{ $label }}
-                                                    </button>
-                                                </form>
-                                            </li>
-                                        @endif
-                                    @endforeach
-                                </ul>
-                            </div>
-                            @if($order->paiement && ($order->paiement->status === 'en_attente' || $order->paiement->status === 'pending'))
-                                <form action="{{ route('admin.orders.confirm-payment', $order) }}" method="POST" class="d-inline ms-2">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit" class="btn btn-success" onclick="return confirm('Confirmer le paiement et marquer la commande comme payée ?')">
-                                        <i class="fas fa-check me-1"></i> Confirmer paiement
-                                    </button>
-                                </form>
-                            @endif
-                        @endif
                     </div>
+
+                    {{-- Workflow de traitement de la commande --}}
+                    @php
+                        $st = $order->statut;
+                        $terminal = in_array($st, ['livre', 'livree', 'annule', 'annulee']);
+                    @endphp
+                    @unless($terminal)
+                        <div class="card mt-4 border">
+                            <div class="card-body">
+                                <h6 class="mb-3">Traitement de la commande</h6>
+                                <div class="d-flex flex-wrap gap-2">
+                                    {{-- Étape paiement : confirmer si pas encore payée --}}
+                                    @if(in_array($st, ['en_attente', 'paiement_declare']))
+                                        <form action="{{ route('admin.orders.update-status', $order) }}" method="POST">
+                                            @csrf @method('PATCH')
+                                            <input type="hidden" name="status" value="payee">
+                                            <button class="btn btn-success"
+                                                onclick="return confirm('Confirmer le paiement et marquer la commande comme payée ?')">
+                                                <i class="fas fa-check me-1"></i> Confirmer le paiement (Payée)
+                                            </button>
+                                        </form>
+                                    @endif
+
+                                    {{-- Étape préparation --}}
+                                    @if(in_array($st, ['payee']))
+                                        <form action="{{ route('admin.orders.update-status', $order) }}" method="POST">
+                                            @csrf @method('PATCH')
+                                            <input type="hidden" name="status" value="traitement">
+                                            <button class="btn btn-info text-white">
+                                                <i class="fas fa-box me-1"></i> Marquer « En préparation »
+                                            </button>
+                                        </form>
+                                    @endif
+
+                                    {{-- Étape expédition --}}
+                                    @if(in_array($st, ['payee', 'traitement']))
+                                        <form action="{{ route('admin.orders.update-status', $order) }}" method="POST">
+                                            @csrf @method('PATCH')
+                                            <input type="hidden" name="status" value="expedie">
+                                            <button class="btn btn-primary">
+                                                <i class="fas fa-truck me-1"></i> Marquer « Expédiée »
+                                            </button>
+                                        </form>
+                                    @endif
+
+                                    {{-- Étape livraison --}}
+                                    @if(in_array($st, ['traitement', 'expedie', 'expedition']))
+                                        <form action="{{ route('admin.orders.update-status', $order) }}" method="POST">
+                                            @csrf @method('PATCH')
+                                            <input type="hidden" name="status" value="livre">
+                                            <button class="btn btn-success">
+                                                <i class="fas fa-check-double me-1"></i> Marquer « Livrée »
+                                            </button>
+                                        </form>
+                                    @endif
+
+                                    {{-- Annulation (toujours possible tant que non terminal) --}}
+                                    <form action="{{ route('admin.orders.update-status', $order) }}" method="POST">
+                                        @csrf @method('PATCH')
+                                        <input type="hidden" name="status" value="annule">
+                                        <button class="btn btn-outline-danger"
+                                            onclick="return confirm('Annuler cette commande ?')">
+                                            <i class="fas fa-times me-1"></i> Annuler
+                                        </button>
+                                    </form>
+                                </div>
+                                <small class="text-muted d-block mt-3">
+                                    Le client est notifié (email + push) à chaque changement de statut.
+                                </small>
+                            </div>
+                        </div>
+                    @endunless
                 </div>
             </div>
         </div>
     </div>
+</div>
 </div>
 @endsection

@@ -14,6 +14,8 @@ class Categories extends Model
         'description',
         'slug',
         'image',
+        'banner_image_1',
+        'banner_image_2',
         'is_active',
         'parent_id'
     ];
@@ -41,6 +43,17 @@ class Categories extends Model
     public function getPhoto(): ?Photos
     {
         return $this->photos()->where('categories_id', $this->id)->first();
+    }
+
+    /**
+     * URL relative (/storage/...) d'une image de bannière (1 ou 2), ou null.
+     * Relative pour s'afficher correctement quel que soit l'hôte de l'admin.
+     */
+    public function bannerImageUrl(int $n): ?string
+    {
+        $filename = $n === 2 ? $this->banner_image_2 : $this->banner_image_1;
+
+        return $filename ? '/storage/' . ltrim($filename, '/') : null;
     }
     
     public function attachfiles(?array $files)

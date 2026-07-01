@@ -104,6 +104,16 @@ class AddProduct extends Component
         $this->last_restock = now();
     }
 
+    /**
+     * Garde l'affichage du "stock actuel/total" cohérent avec la quantité saisie
+     * (le stock initial enregistré = stock_quantity).
+     */
+    public function updatedStockQuantity($value)
+    {
+        $this->stock_actuel = (int) $value;
+        $this->stock_total = (int) $value + (int) $this->stock_transit;
+    }
+
     public function submit()
     {
         $this->validate();

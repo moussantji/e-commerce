@@ -20,12 +20,15 @@ class DashboardController extends Controller
         $endDate = now()->subMonths($monthsBack)->endOfMonth();
         
         // Récupérer les ventes du mois
+        // ⚠️ On alias la somme en "ventes" (et NON "total") car le modèle Commandes
+        // possède un accesseur getTotalAttribute() qui recalcule total à partir de
+        // sous_total/frais/remise — absents ici — et renverrait 0.
         $sales = Commandes::whereIn('statut', ['livre', 'expedie'])
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->selectRaw('DATE(created_at) as date, COALESCE(SUM(total), 0) as total')
+            ->selectRaw('DATE(created_at) as date, COALESCE(SUM(total), 0) as ventes')
             ->groupBy('date')
             ->orderBy('date')
-            ->pluck('total', 'date')
+            ->pluck('ventes', 'date')
             ->toArray();
             
         // Créer un tableau pour tous les jours du mois
@@ -109,7 +112,33 @@ class DashboardController extends Controller
         // Récupérer les données de vente pour le graphique
         $currentMonthSales = $this->getMonthlySalesData(0); // Mois en cours
         $previousMonthSales = $this->getMonthlySalesData(1); // Mois précédent
-        
+
+        // ----- Carte des utilisateurs (position + statut en ligne) -----
+        $onlineThreshold = now()->subMinutes(5)->timestamp;
+        $onlineIds = \Illuminate\Support\Facades\DB::table('sessions')
+            ->whereNotNull('user_id')
+            ->where('last_activity', '>=', $onlineThreshold)
+            ->pluck('user_id')
+            ->unique();
+
+        $mapUsers = \App\Models\User::whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->get(['id', 'name', 'email', 'ville', 'pays', 'latitude', 'longitude', 'last_login', 'role'])
+            ->map(function ($u) use ($onlineIds) {
+                return [
+                    'name' => $u->name,
+                    'email' => $u->email,
+                    'ville' => $u->ville,
+                    'pays' => $u->pays,
+                    'role' => $u->role,
+                    'lat' => (float) $u->latitude,
+                    'lng' => (float) $u->longitude,
+                    'online' => $onlineIds->contains($u->id),
+                    'last_login' => optional($u->last_login)->format('d/m/Y H:i'),
+                ];
+            })
+            ->values();
+
         // Journal de débogage
         \Log::info('Données de vente du mois en cours:', $currentMonthSales);
         \Log::info('Données de vente du mois précédent:', $previousMonthSales);
@@ -125,6 +154,7 @@ class DashboardController extends Controller
             'commandes' => $pendingOrders,
             'currentMonthSales' => $currentMonthSales,
             'previousMonthSales' => $previousMonthSales,
+            'mapUsers' => $mapUsers,
             'pendingOrders' => $pendingOrdersCount,
             'processingOrders' => $processingOrdersCount,
             'shippedOrders' => $shippedOrdersCount,
@@ -217,23 +247,25 @@ class DashboardController extends Controller
         $startDate = $date->copy()->startOfMonth();
         $endDate = $date->copy()->endOfMonth();
         
-        // Récupérer les ventes du mois
+        // Récupérer les ventes du mois (alias "ventes" pour éviter l'accesseur
+        // getTotalAttribute(), et DATE() qui est portable MySQL/SQLite)
         $sales = Commandes::whereIn('statut', ['livre', 'expedie'])
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->selectRaw('DAY(created_at) as day, SUM(total) as total')
-            ->groupBy('day')
-            ->orderBy('day')
-            ->pluck('total', 'day')
+            ->selectRaw('DATE(created_at) as date, COALESCE(SUM(total), 0) as ventes')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->pluck('ventes', 'date')
             ->toArray();
-            
+
         // Créer un tableau pour tous les jours du mois
         $daysInMonth = $startDate->daysInMonth;
         $result = [];
-        
+
         for ($day = 1; $day <= $daysInMonth; $day++) {
-            $result[] = (float) ($sales[$day] ?? 0);
+            $key = $startDate->copy()->day($day)->format('Y-m-d');
+            $result[] = (float) ($sales[$key] ?? 0);
         }
-        
+
         return $result;
     }
 }

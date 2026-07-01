@@ -120,6 +120,7 @@
                                         style="width:12%;">DERNIÈRE CONNEXION</th>
                                     <th class="sort align-middle pe-2" scope="col" data-sort="status" style="width:8%;">
                                         STATUT</th>
+                                    <th class="align-middle pe-2" scope="col" style="width:10%;">RÔLE</th>
                                 </tr>
                             </thead>
                             <tbody class="list" id="users-table-body">
@@ -131,7 +132,7 @@
                                             </div>
                                         </td>
                                         <td class="name align-middle white-space-nowrap pe-3">
-                                            <a href="{{ route('admin.users.edit', $user) }}"
+                                            <a href="{{ route('admin.users.show', $user) }}"
                                                 class="d-flex align-items-center text-body-emphasis">
                                                 <div class="avatar avatar-m">
                                                     @if ($user->avatar)
@@ -170,11 +171,22 @@
                                                 {{ $user->is_active ? 'Actif' : 'Inactif' }}
                                             </span>
                                         </td>
+                                        <td class="role align-middle pe-3">
+                                            <form action="{{ route('admin.users.role', $user) }}" method="POST"
+                                                class="d-flex align-items-center gap-2">
+                                                @csrf @method('PATCH')
+                                                <select name="role" class="form-select form-select-sm" style="width:auto;"
+                                                    onchange="this.form.submit()">
+                                                    <option value="customer" {{ $user->role === 'customer' ? 'selected' : '' }}>Client</option>
+                                                    <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>Admin</option>
+                                                </select>
+                                            </form>
+                                        </td>
 
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="9" class="text-center py-5">
+                                        <td colspan="10" class="text-center py-5">
                                             <div class="text-muted">
                                                 <i class="fas fa-users fa-3x mb-3 opacity-75"></i>
                                                 <p>Aucun utilisateur trouvé</p>
