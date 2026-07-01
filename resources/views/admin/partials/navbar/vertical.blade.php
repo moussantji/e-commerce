@@ -266,18 +266,18 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link {{ request()->get('status') === 'en_cours' ? 'active' : '' }}"
-                                        href="{{ route('admin.orders.index') }}?status=en_cours">
+                                    <a class="nav-link {{ request()->get('status') === 'traitement' ? 'active' : '' }}"
+                                        href="{{ route('admin.orders.index') }}?status=traitement">
                                         <div class="d-flex align-items-center">
-                                            <span class="nav-link-text">Commandes en cours</span>
+                                            <span class="nav-link-text">Commandes en préparation</span>
                                         </div>
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link {{ request()->get('status') === 'expediee' ? 'active' : '' }}"
-                                        href="{{ route('admin.orders.index') }}?status=expediee">
+                                    <a class="nav-link {{ request()->get('status') === 'livre' ? 'active' : '' }}"
+                                        href="{{ route('admin.orders.index') }}?status=livre">
                                         <div class="d-flex align-items-center">
-                                            <span class="nav-link-text">Commandes terminées</span>
+                                            <span class="nav-link-text">Commandes livrées</span>
                                         </div>
                                     </a>
                                 </li>
