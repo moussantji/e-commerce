@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
     View,
     Text,
@@ -94,34 +94,26 @@ export default function CartScreen({ navigation }) {
     const [coupon, setCoupon] = useState(null);
     const [couponInput, setCouponInput] = useState("");
     const [placing, setPlacing] = useState(false);
+    const [sticky, setSticky] = useState(false);
 
-    const scrollY = useRef(new Animated.Value(0)).current;
-
-    // Responsive: extra padding above the header content to avoid system status bar
+    // Responsive: extra padding to keep content below the system status bar
     const STATUS_BAR_PADDING = Platform.OS === "ios" ? insets.top + 12 : insets.top + 16;
 
-    // Header shrinks slightly on scroll (no aggressive folding)
-    const HEADER_EXPANDED = 120;
-    const HEADER_COLLAPSED = 76;
-    const SCROLL_DISTANCE = HEADER_EXPANDED - HEADER_COLLAPSED;
+    // Barre collante animée qui apparaît en descendant (comme l'accueil)
+    const stickyAnim = useRef(new Animated.Value(0)).current;
+    useEffect(() => {
+        Animated.timing(stickyAnim, {
+            toValue: sticky ? 1 : 0,
+            duration: 220,
+            useNativeDriver: true,
+        }).start();
+    }, [sticky, stickyAnim]);
 
-    const headerHeight = scrollY.interpolate({
-        inputRange: [0, SCROLL_DISTANCE],
-        outputRange: [HEADER_EXPANDED + STATUS_BAR_PADDING, HEADER_COLLAPSED + STATUS_BAR_PADDING],
-        extrapolate: "clamp",
-    });
-
-    const locationOpacity = scrollY.interpolate({
-        inputRange: [0, SCROLL_DISTANCE * 0.7],
-        outputRange: [1, 0],
-        extrapolate: "clamp",
-    });
-
-    const titleFontSize = scrollY.interpolate({
-        inputRange: [0, SCROLL_DISTANCE],
-        outputRange: [22, 18],
-        extrapolate: "clamp",
-    });
+    const onScroll = (e) => {
+        const y = e.nativeEvent.contentOffset.y;
+        const should = y > 120;
+        setSticky((prev) => (prev === should ? prev : should));
+    };
 
     const city =
         user?.ville || user?.city || user?.region || user?.pays || null;
@@ -238,7 +230,7 @@ export default function CartScreen({ navigation }) {
     const rightCol = recos.filter((_, i) => i % 2 === 1);
 
     const Header = (
-        <Animated.View style={[styles.headerWrapper, { height: headerHeight }]}>
+        <View style={[styles.headerWrapper, { paddingTop: STATUS_BAR_PADDING }]}>
             <ImageBackground
                 source={{ uri: CART_HERO_IMAGE }}
                 style={StyleSheet.absoluteFill}
@@ -252,30 +244,64 @@ export default function CartScreen({ navigation }) {
                 />
             </ImageBackground>
 
-            <View style={[styles.headerContent, { paddingTop: STATUS_BAR_PADDING }]}>
-                <View style={styles.headerInner}>
-                    <View style={{ flex: 1 }}>
-                        <Animated.Text style={[styles.headerTitle, { fontSize: titleFontSize }]}>
-                            Panier
-                        </Animated.Text>
-                        <Animated.View style={{ opacity: locationOpacity }}>
-                            <TouchableOpacity style={styles.location} activeOpacity={0.7}>
-                                <Ionicons name="location-outline" size={15} color="rgba(255,255,255,0.85)" />
-                                <Text style={styles.locationText} numberOfLines={1}>
-                                    {city ? `Livrer à ${city}` : "Adresse de livraison"}
-                                </Text>
-                                <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.85)" />
-                            </TouchableOpacity>
-                        </Animated.View>
-                    </View>
-                    <View style={styles.cartBadgeCircle}>
-                        <Ionicons name="bag" size={22} color="#fff" />
-                        {cart.count > 0 && (
-                            <View style={styles.cartBadgeDot}>
-                                <Text style={styles.cartBadgeNum}>{cart.count}</Text>
-                            </View>
-                        )}
-                    </View>
+            <View style={styles.headerInner}>
+                <View style={{ flex: 1 }}>
+                    <Text style={styles.headerTitle}>Panier</Text>
+                    <TouchableOpacity style={styles.location} activeOpacity={0.7}>
+                        <Ionicons name="location-outline" size={15} color="rgba(255,255,255,0.85)" />
+                        <Text style={styles.locationText} numberOfLines={1}>
+                            {city ? `Livrer à ${city}` : "Adresse de livraison"}
+                        </Text>
+                        <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.85)" />
+                    </TouchableOpacity>
+                </View>
+                <View style={styles.cartBadgeCircle}>
+                    <Ionicons name="bag" size={22} color="#fff" />
+                    {cart.count > 0 && (
+                        <View style={styles.cartBadgeDot}>
+                            <Text style={styles.cartBadgeNum}>{cart.count}</Text>
+                        </View>
+                    )}
+                </View>
+            </View>
+        </View>
+    );
+
+    // Barre compacte qui apparaît en descendant (violet uni)
+    const StickyBar = (
+        <Animated.View
+            pointerEvents={sticky ? "auto" : "none"}
+            style={[
+                styles.stickyBar,
+                {
+                    paddingTop: STATUS_BAR_PADDING,
+                    opacity: stickyAnim,
+                    transform: [
+                        {
+                            translateY: stickyAnim.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: [-20, 0],
+                            }),
+                        },
+                    ],
+                },
+            ]}
+        >
+            <LinearGradient
+                colors={COLORS.gradient}
+                start={COLORS.gradientStart}
+                end={COLORS.gradientEnd}
+                style={StyleSheet.absoluteFill}
+            />
+            <View style={styles.stickyInner}>
+                <Text style={styles.stickyTitle}>Panier</Text>
+                <View style={styles.stickyBadgeCircle}>
+                    <Ionicons name="bag" size={20} color="#fff" />
+                    {cart.count > 0 && (
+                        <View style={styles.cartBadgeDot}>
+                            <Text style={styles.cartBadgeNum}>{cart.count}</Text>
+                        </View>
+                    )}
                 </View>
             </View>
         </Animated.View>
@@ -346,18 +372,15 @@ export default function CartScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
-            {/* Collapsing sticky header (photo + purple overlay) */}
-            {Header}
-
             <Animated.ScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingBottom: isEmpty ? 24 : 160 }}
-                onScroll={Animated.event(
-                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                    { useNativeDriver: false }
-                )}
+                onScroll={onScroll}
                 scrollEventThrottle={16}
             >
+                {/* Header hero — défile naturellement avec le contenu */}
+                {Header}
+
                 {isEmpty ? (
                     <>
                         <View style={styles.emptyCard}>
@@ -589,6 +612,9 @@ export default function CartScreen({ navigation }) {
                     <ActivityIndicator color={COLORS.primary} />
                 </View>
             )}
+
+            {/* Barre collante violette : apparaît en descendant */}
+            {StickyBar}
         </View>
     );
 }
@@ -597,26 +623,46 @@ const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: COLORS.bg },
     headerWrapper: {
         width: "100%",
-        overflow: "hidden",
-    },
-    headerContent: {
-        flex: 1,
-        justifyContent: "flex-end",
         paddingHorizontal: 16,
-        paddingBottom: 14,
+        paddingBottom: 16,
+        overflow: "hidden",
     },
     headerInner: {
         flexDirection: "row",
         alignItems: "flex-end",
         justifyContent: "space-between",
     },
-    headerTitle: { fontWeight: "900", color: "#fff" },
+    headerTitle: { fontSize: 22, fontWeight: "900", color: "#fff" },
     location: { flexDirection: "row", alignItems: "center", gap: 3, marginTop: 4 },
     locationText: { color: "rgba(255,255,255,0.85)", fontSize: 13, flexShrink: 1 },
     cartBadgeCircle: {
         width: 44,
         height: 44,
         borderRadius: 22,
+        backgroundColor: "rgba(255,255,255,0.2)",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    // Sticky bar (apparaît au scroll)
+    stickyBar: {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 30,
+        paddingHorizontal: 16,
+        paddingBottom: 12,
+    },
+    stickyInner: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+    },
+    stickyTitle: { fontSize: 18, fontWeight: "900", color: "#fff" },
+    stickyBadgeCircle: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
         backgroundColor: "rgba(255,255,255,0.2)",
         alignItems: "center",
         justifyContent: "center",

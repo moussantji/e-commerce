@@ -45,36 +45,26 @@ export default function DealsScreen({ navigation }) {
     const [refreshing, setRefreshing] = useState(false);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
+    const [sticky, setSticky] = useState(false);
 
-    const scrollY = useRef(new Animated.Value(0)).current;
-
-    // Responsive: extra padding above the bell icon to avoid system status bar icons
+    // Responsive: extra padding to keep content below the system status bar
     const STATUS_BAR_PADDING = Platform.OS === "ios" ? insets.top + 12 : insets.top + 16;
 
-    // Header shrinks only a little (not folding completely)
-    const HEADER_EXPANDED = 160;
-    const HEADER_COLLAPSED = 110;
-    const SCROLL_DISTANCE = HEADER_EXPANDED - HEADER_COLLAPSED;
+    // Barre collante animée qui apparaît en descendant (comme l'accueil)
+    const stickyAnim = useRef(new Animated.Value(0)).current;
+    useEffect(() => {
+        Animated.timing(stickyAnim, {
+            toValue: sticky ? 1 : 0,
+            duration: 220,
+            useNativeDriver: true,
+        }).start();
+    }, [sticky, stickyAnim]);
 
-    const headerHeight = scrollY.interpolate({
-        inputRange: [0, SCROLL_DISTANCE],
-        outputRange: [HEADER_EXPANDED + STATUS_BAR_PADDING, HEADER_COLLAPSED + STATUS_BAR_PADDING],
-        extrapolate: "clamp",
-    });
-
-    // Subtitle fades out slightly
-    const subtitleOpacity = scrollY.interpolate({
-        inputRange: [0, SCROLL_DISTANCE * 0.7],
-        outputRange: [1, 0],
-        extrapolate: "clamp",
-    });
-
-    // Title font shrinks just a tiny bit
-    const titleFontSize = scrollY.interpolate({
-        inputRange: [0, SCROLL_DISTANCE],
-        outputRange: [22, 18],
-        extrapolate: "clamp",
-    });
+    const onScroll = (e) => {
+        const y = e.nativeEvent.contentOffset.y;
+        const should = y > 140;
+        setSticky((prev) => (prev === should ? prev : should));
+    };
 
     const fetchProducts = useCallback(
         async (pageNum = 1, refresh = false) => {
@@ -114,6 +104,46 @@ export default function DealsScreen({ navigation }) {
             fetchProducts(page + 1);
         }
     };
+
+    // Rangée d'onglets de filtre (réutilisée dans le header et la barre collante)
+    const renderTabs = (compact = false) => (
+        <View style={[styles.tabBar, compact && styles.tabBarCompact]}>
+            {TABS.map((tab) => {
+                const isActive = activeTab === tab.key;
+                return (
+                    <TouchableOpacity
+                        key={tab.key}
+                        style={[
+                            styles.tab,
+                            isActive && (compact ? styles.tabActiveCompact : styles.tabActive),
+                        ]}
+                        onPress={() => setActiveTab(tab.key)}
+                    >
+                        <Ionicons
+                            name={isActive ? tab.icon : `${tab.icon}-outline`}
+                            size={16}
+                            color={
+                                compact
+                                    ? "#fff"
+                                    : isActive
+                                    ? COLORS.primaryDark
+                                    : "#6b7280"
+                            }
+                        />
+                        <Text
+                            style={[
+                                styles.tabLabel,
+                                compact && styles.tabLabelCompact,
+                                !compact && isActive && styles.tabLabelActive,
+                            ]}
+                        >
+                            {tab.label}
+                        </Text>
+                    </TouchableOpacity>
+                );
+            })}
+        </View>
+    );
 
     const renderProduct = ({ item }) => {
         const hasDiscount = item.sale_price && item.sale_price < item.price;
@@ -174,10 +204,10 @@ export default function DealsScreen({ navigation }) {
         );
     };
 
-    return (
-        <View style={styles.container}>
-            {/* Header with photo + purple overlay — shrinks slightly on scroll */}
-            <Animated.View style={[styles.headerWrapper, { height: headerHeight }]}>
+    // En-tête défilant : hero photo + voile violet, puis onglets de filtre
+    const ListHeader = (
+        <View>
+            <View style={[styles.headerWrapper, { paddingTop: STATUS_BAR_PADDING }]}>
                 <ImageBackground
                     source={{ uri: HERO_IMAGE }}
                     style={StyleSheet.absoluteFill}
@@ -191,69 +221,43 @@ export default function DealsScreen({ navigation }) {
                     />
                 </ImageBackground>
 
-                <View style={[styles.headerContent, { paddingTop: STATUS_BAR_PADDING }]}>
-                    {/* Top row: title + notification bell (well below status bar) */}
-                    <View style={styles.headerTopRow}>
-                        <Animated.Text style={[styles.headerTitle, { fontSize: titleFontSize }]}>
-                            Bons Plans
-                        </Animated.Text>
-                        <TouchableOpacity
-                            onPress={() => navigation.navigate("Notifications")}
-                            style={styles.notifBtn}
-                            activeOpacity={0.7}
-                        >
-                            <Ionicons name="notifications-outline" size={20} color="#fff" />
-                        </TouchableOpacity>
+                <View style={styles.headerRow}>
+                    <View>
+                        <Text style={styles.headerTitle}>Bons Plans</Text>
+                        <Text style={styles.headerSub}>
+                            Les meilleures offres du moment
+                        </Text>
                     </View>
-
-                    {/* Subtitle — fades out on scroll */}
-                    <Animated.Text style={[styles.headerSub, { opacity: subtitleOpacity }]}>
-                        Les meilleures offres du moment
-                    </Animated.Text>
+                    <TouchableOpacity
+                        onPress={() => navigation.navigate("Notifications")}
+                        style={styles.notifBtn}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="notifications-outline" size={20} color="#fff" />
+                    </TouchableOpacity>
                 </View>
-            </Animated.View>
-
-            {/* Sticky tabs */}
-            <View style={styles.tabBar}>
-                {TABS.map((tab) => {
-                    const isActive = activeTab === tab.key;
-                    return (
-                        <TouchableOpacity
-                            key={tab.key}
-                            style={[styles.tab, isActive && styles.tabActive]}
-                            onPress={() => setActiveTab(tab.key)}
-                        >
-                            <Ionicons
-                                name={isActive ? tab.icon : `${tab.icon}-outline`}
-                                size={16}
-                                color={isActive ? COLORS.primaryDark : "#6b7280"}
-                            />
-                            <Text
-                                style={[
-                                    styles.tabLabel,
-                                    isActive && styles.tabLabelActive,
-                                ]}
-                            >
-                                {tab.label}
-                            </Text>
-                        </TouchableOpacity>
-                    );
-                })}
             </View>
 
-            {/* Product grid */}
+            {/* Onglets de filtre (fond blanc) */}
+            {renderTabs(false)}
+        </View>
+    );
+
+    return (
+        <View style={styles.container}>
             {loading && products.length === 0 ? (
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color={COLORS.primary} />
                 </View>
             ) : (
-                <Animated.FlatList
+                <FlatList
                     data={products}
                     keyExtractor={(item) => `deal-${item.id}`}
                     renderItem={renderProduct}
                     numColumns={2}
                     columnWrapperStyle={styles.row}
                     contentContainerStyle={styles.listContent}
+                    ListHeaderComponent={ListHeader}
                     refreshControl={
                         <RefreshControl
                             refreshing={refreshing}
@@ -263,10 +267,7 @@ export default function DealsScreen({ navigation }) {
                     }
                     onEndReached={onEndReached}
                     onEndReachedThreshold={0.3}
-                    onScroll={Animated.event(
-                        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                        { useNativeDriver: false }
-                    )}
+                    onScroll={onScroll}
                     scrollEventThrottle={16}
                     ListEmptyComponent={
                         <View style={styles.emptyContainer}>
@@ -290,6 +291,44 @@ export default function DealsScreen({ navigation }) {
                     }
                 />
             )}
+
+            {/* Barre collante violette : apparaît en descendant (titre + onglets) */}
+            <Animated.View
+                pointerEvents={sticky ? "auto" : "none"}
+                style={[
+                    styles.stickyBar,
+                    {
+                        paddingTop: STATUS_BAR_PADDING,
+                        opacity: stickyAnim,
+                        transform: [
+                            {
+                                translateY: stickyAnim.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: [-20, 0],
+                                }),
+                            },
+                        ],
+                    },
+                ]}
+            >
+                <LinearGradient
+                    colors={COLORS.gradient}
+                    start={COLORS.gradientStart}
+                    end={COLORS.gradientEnd}
+                    style={StyleSheet.absoluteFill}
+                />
+                <View style={styles.stickyTitleRow}>
+                    <Text style={styles.stickyTitle}>Bons Plans</Text>
+                    <TouchableOpacity
+                        onPress={() => navigation.navigate("Notifications")}
+                        style={styles.stickyNotifBtn}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="notifications-outline" size={20} color="#fff" />
+                    </TouchableOpacity>
+                </View>
+                {renderTabs(true)}
+            </Animated.View>
         </View>
     );
 }
@@ -301,21 +340,17 @@ const styles = StyleSheet.create({
     },
     headerWrapper: {
         width: "100%",
+        paddingHorizontal: 16,
+        paddingBottom: 16,
         overflow: "hidden",
     },
-    headerContent: {
-        flex: 1,
-        justifyContent: "flex-end",
-        paddingHorizontal: 16,
-        paddingBottom: 14,
-    },
-    headerTopRow: {
+    headerRow: {
         flexDirection: "row",
-        alignItems: "center",
+        alignItems: "flex-end",
         justifyContent: "space-between",
-        marginBottom: 4,
     },
     headerTitle: {
+        fontSize: 22,
         fontWeight: "900",
         color: "#fff",
     },
@@ -331,9 +366,34 @@ const styles = StyleSheet.create({
         backgroundColor: "rgba(255,255,255,0.18)",
         alignItems: "center",
         justifyContent: "center",
-        // Extra margin to stay well below system status bar icons
-        marginTop: 0,
     },
+    // Sticky bar
+    stickyBar: {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 30,
+        paddingHorizontal: 12,
+        paddingBottom: 6,
+    },
+    stickyTitleRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        paddingHorizontal: 4,
+        marginBottom: 4,
+    },
+    stickyTitle: { fontSize: 18, fontWeight: "900", color: "#fff" },
+    stickyNotifBtn: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: "rgba(255,255,255,0.18)",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    // Tab bar
     tabBar: {
         flexDirection: "row",
         backgroundColor: "#fff",
@@ -347,6 +407,13 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         shadowOffset: { width: 0, height: 2 },
     },
+    tabBarCompact: {
+        backgroundColor: "transparent",
+        borderBottomWidth: 0,
+        elevation: 0,
+        shadowOpacity: 0,
+        paddingVertical: 4,
+    },
     tab: {
         flex: 1,
         flexDirection: "row",
@@ -359,6 +426,9 @@ const styles = StyleSheet.create({
     tabActive: {
         backgroundColor: COLORS.soft,
     },
+    tabActiveCompact: {
+        backgroundColor: "rgba(255,255,255,0.22)",
+    },
     tabLabel: {
         fontSize: 12,
         fontWeight: "600",
@@ -367,6 +437,9 @@ const styles = StyleSheet.create({
     tabLabelActive: {
         color: COLORS.primaryDark,
     },
+    tabLabelCompact: {
+        color: "#fff",
+    },
     loadingContainer: {
         flex: 1,
         justifyContent: "center",
@@ -374,12 +447,12 @@ const styles = StyleSheet.create({
     },
     listContent: {
         paddingHorizontal: 8,
-        paddingTop: 8,
         paddingBottom: 20,
     },
     row: {
         justifyContent: "space-between",
         paddingHorizontal: 4,
+        marginTop: 8,
     },
     card: {
         backgroundColor: "#fff",
