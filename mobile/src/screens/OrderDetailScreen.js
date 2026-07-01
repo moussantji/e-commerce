@@ -22,6 +22,7 @@ import { COLORS, RADIUS } from "../theme";
 
 const STATUS_LABELS = {
     en_attente: "En attente de paiement",
+    payee: "Payée — en préparation",
     traitement: "En traitement",
     expedie: "Expédiée",
     livre: "Livrée",
@@ -282,10 +283,11 @@ export default function OrderDetailScreen({ route, navigation }) {
                         activeOpacity={0.85}
                         style={{ flex: 1 }}
                         onPress={() =>
-                            Alert.alert(
-                                "Paiement",
-                                "Le paiement en ligne sera bientôt disponible.",
-                            )
+                            navigation.navigate("Payment", {
+                                orderId: order.id ?? id,
+                                numero: order.numero,
+                                total: order.total,
+                            })
                         }
                     >
                         <LinearGradient

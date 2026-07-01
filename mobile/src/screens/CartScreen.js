@@ -237,14 +237,12 @@ export default function CartScreen({ navigation }) {
             setCoupon(null);
             setCouponInput("");
             await refresh();
-            Alert.alert("Commande passée", "Votre commande a bien été créée.", [
-                {
-                    text: "Voir la commande",
-                    onPress: () =>
-                        navigation.navigate("OrderDetail", { id: order.id }),
-                },
-                { text: "OK" },
-            ]);
+            // Redirige vers le paiement (choix méthode + instructions)
+            navigation.navigate("Payment", {
+                orderId: order.id,
+                numero: order.numero_commande,
+                total: order.total,
+            });
         } catch (e) {
             Alert.alert("Impossible", apiError(e));
         } finally {
