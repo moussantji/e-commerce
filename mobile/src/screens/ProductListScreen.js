@@ -152,7 +152,7 @@ export default function ProductListScreen({ route, navigation }) {
     const activeFilterCount =
         selBrands.length + Object.values(selCarac).reduce((n, v) => n + v.length, 0);
 
-    const renderItem = ({ item }) => {
+    const renderItem = ({ item, index }) => {
         const hasDiscount = item.sale_price && item.sale_price < item.price;
         const discount = hasDiscount
             ? Math.round(((item.price - item.sale_price) / item.price) * 100)
@@ -163,6 +163,7 @@ export default function ProductListScreen({ route, navigation }) {
             <AnimatedPressable
                 style={styles.card}
                 scaleTo={0.97}
+                index={index}
                 onPress={() =>
                     navigation.navigate("ProductDetail", { id: item.id, name: item.name })
                 }
