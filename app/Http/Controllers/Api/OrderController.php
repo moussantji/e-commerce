@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\OrderResource;
 use App\Models\Commandes;
 use App\Models\Paniers;
+use App\Models\Produits;
 use App\Models\PromoCode;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class OrderController extends Controller
@@ -49,21 +51,8 @@ class OrderController extends Controller
         }
 
         $panier->load('products');
-        $sousTotal = 0;
-        $lines = [];
-        foreach ($panier->products as $p) {
-            $qty = (int) $p->pivot->quantite;
-            $pu = (float) $p->pivot->prix_unitaire;
-            $lt = (float) ($p->pivot->total_ligne ?? $qty * $pu);
-            $sousTotal += $lt;
-            $lines[$p->id] = [
-                'quantite' => $qty,
-                'prix_unitaire' => $pu,
-                'total' => $lt,
-            ];
-        }
 
-        // Coupon
+        // Coupon validation (before transaction to avoid holding locks during external checks)
         $promo = null;
         $discount = 0;
         if (!empty($data['coupon_code'])) {
@@ -71,7 +60,6 @@ class OrderController extends Controller
             if (!$promo || !$promo->isValid()) {
                 return response()->json(['message' => 'Code promo invalide ou expiré.'], 422);
             }
-            $discount = $promo->calculateDiscount($sousTotal);
         }
 
         // Adresse : choisie, sinon par défaut, sinon la plus récente
@@ -91,8 +79,6 @@ class OrderController extends Controller
         }
         $paiementId = \App\Models\Paiements::where('is_active', true)->value('id');
 
-        $total = max(0, $sousTotal + $fraisLivraison - $discount);
-
         $adr = $address ? [
             'nom' => $address->nom,
             'telephone' => $address->telephone,
@@ -103,34 +89,85 @@ class OrderController extends Controller
             'code_postal' => $address->code_postal,
         ] : [];
 
-        $order = Commandes::create([
-            'user_id' => $user->id,
-            'paiement_id' => $paiementId,
-            'livraison_id' => $livraison?->id,
-            'numero_commande' => 'CMD-' . strtoupper(Str::random(8)),
-            'statut' => 'en_attente',
-            'sous_total' => $sousTotal,
-            'frais_livraison' => $fraisLivraison,
-            'promo_code_id' => $promo?->id,
-            'promo_discount' => $discount,
-            'remise' => 0,
-            'total' => $total,
-            'adresse_livraison' => $adr,
-            'adresse_facturation' => $adr,
-            'notes' => $data['notes'] ?? null,
-            'date_en_attente' => now(),
-        ]);
+        // Wrap the entire order creation in a database transaction with pessimistic locking
+        $order = DB::transaction(function () use ($panier, $user, $promo, $fraisLivraison, $livraison, $paiementId, $adr, $data) {
+            $sousTotal = 0;
+            $lines = [];
 
-        foreach ($lines as $produitId => $pivot) {
-            $order->produits()->attach($produitId, $pivot);
-        }
+            // Lock products for update to prevent race conditions
+            $productIds = $panier->products->pluck('id')->toArray();
+            $lockedProducts = Produits::whereIn('id', $productIds)->lockForUpdate()->get()->keyBy('id');
 
-        if ($promo) {
-            $promo->increment('usage_count');
-        }
+            foreach ($panier->products as $p) {
+                $qty = (int) $p->pivot->quantite;
+                $pu = (float) $p->pivot->prix_unitaire;
+                $lt = (float) ($p->pivot->total_ligne ?? $qty * $pu);
 
-        // Vider le panier
-        $panier->products()->detach();
+                // Validate stock availability with the locked row
+                $lockedProduct = $lockedProducts->get($p->id);
+                if (!$lockedProduct || $lockedProduct->stock < $qty) {
+                    throw new \App\Exceptions\InsufficientStockException(
+                        "Stock insuffisant pour « {$p->name} ». Disponible : " . ($lockedProduct->stock ?? 0) . ", demandé : {$qty}."
+                    );
+                }
+
+                $sousTotal += $lt;
+                $lines[$p->id] = [
+                    'quantite' => $qty,
+                    'prix_unitaire' => $pu,
+                    'total' => $lt,
+                ];
+            }
+
+            // Calculate coupon discount with the validated sub-total
+            $discount = 0;
+            if ($promo) {
+                // Re-check coupon validity with lock to prevent over-redemption
+                $promo = PromoCode::where('id', $promo->id)->lockForUpdate()->first();
+                if (!$promo || !$promo->isValid()) {
+                    throw new \App\Exceptions\InvalidCouponException('Code promo invalide ou expiré.');
+                }
+                $discount = $promo->calculateDiscount($sousTotal);
+            }
+
+            $total = max(0, $sousTotal + $fraisLivraison - $discount);
+
+            $order = Commandes::create([
+                'user_id' => $user->id,
+                'paiement_id' => $paiementId,
+                'livraison_id' => $livraison?->id,
+                'numero_commande' => 'CMD-' . strtoupper(Str::random(8)),
+                'statut' => 'en_attente',
+                'sous_total' => $sousTotal,
+                'frais_livraison' => $fraisLivraison,
+                'promo_code_id' => $promo?->id,
+                'promo_discount' => $discount,
+                'remise' => 0,
+                'total' => $total,
+                'adresse_livraison' => $adr,
+                'adresse_facturation' => $adr,
+                'notes' => $data['notes'] ?? null,
+                'date_en_attente' => now(),
+            ]);
+
+            // Attach products to order and decrement stock atomically
+            foreach ($lines as $produitId => $pivot) {
+                $order->produits()->attach($produitId, $pivot);
+
+                // Decrement stock for each product
+                Produits::where('id', $produitId)->decrement('stock', $pivot['quantite']);
+            }
+
+            // Atomically increment coupon usage count
+            if ($promo) {
+                $promo->increment('usage_count');
+            }
+
+            // Clear the cart
+            $panier->products()->detach();
+
+            return $order;
+        });
 
         $order->loadCount('produits')->load('produits.photos');
 
@@ -150,14 +187,23 @@ class OrderController extends Controller
             );
         }
 
-        $reason = $request->input('reason');
-        $order->statut = 'annule';
-        if ($reason) {
-            $order->notes = trim(
-                ($order->notes ? $order->notes . "\n" : '') . 'Annulation : ' . $reason,
-            );
-        }
-        $order->save();
+        // Restore stock when cancelling an order
+        DB::transaction(function () use ($order, $request) {
+            $reason = $request->input('reason');
+            $order->statut = 'annule';
+            if ($reason) {
+                $order->notes = trim(
+                    ($order->notes ? $order->notes . "\n" : '') . 'Annulation : ' . $reason,
+                );
+            }
+            $order->save();
+
+            // Restore stock for each product in the cancelled order
+            foreach ($order->produits as $produit) {
+                $qty = (int) $produit->pivot->quantite;
+                Produits::where('id', $produit->id)->increment('stock', $qty);
+            }
+        });
 
         $order->loadCount('produits')->load('produits.photos');
 
