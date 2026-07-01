@@ -46,6 +46,12 @@ class SocialAuthController extends Controller
                 'provider' => $data['provider'],
                 'provider_id' => $socialUser->getId(),
             ]);
+
+            try {
+                $user->notify(new \App\Notifications\WelcomeNotification());
+            } catch (\Throwable $e) {
+                // ignore
+            }
         } else {
             $user->forceFill([
                 'provider' => $data['provider'],

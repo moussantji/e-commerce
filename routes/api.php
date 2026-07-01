@@ -49,6 +49,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/me', [AuthController::class, 'updateProfile']);
     Route::put('/me/password', [AuthController::class, 'changePassword']);
     Route::post('/me/avatar', [AuthController::class, 'updateAvatar']);
+    Route::post('/me/push-token', [AuthController::class, 'savePushToken']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
     // Avis clients

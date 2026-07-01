@@ -150,6 +150,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
 
     // Gestion des utilisateurs
     Route::resource('users', UserController::class);
+    Route::patch('users/{user}/role', [UserController::class, 'updateRole'])->name('users.role');
 
     // Gestion des tags
     Route::resource('tags', \App\Http\Controllers\AdminPanel\TagController::class);
@@ -190,6 +191,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
 
     // Confirmation manuelle du paiement par l'admin (preuve mobile money)
     Route::patch('orders/{order}/confirm-payment', [\App\Http\Controllers\PaymentController::class, 'confirmPayment'])->name('orders.confirm-payment');
+
+    // Modération des paiements (commandes + rechargements portefeuille)
+    Route::get('paiements', [\App\Http\Controllers\Admin\PaymentModerationController::class, 'index'])->name('payments.moderation');
+    Route::patch('paiements/{proof}/confirm', [\App\Http\Controllers\Admin\PaymentModerationController::class, 'confirmPayment'])->name('payments.confirm');
+    Route::patch('paiements/{proof}/reject', [\App\Http\Controllers\Admin\PaymentModerationController::class, 'rejectPayment'])->name('payments.reject');
+    Route::patch('rechargements/{transaction}/confirm', [\App\Http\Controllers\Admin\PaymentModerationController::class, 'confirmTopup'])->name('topups.confirm');
+    Route::patch('rechargements/{transaction}/reject', [\App\Http\Controllers\Admin\PaymentModerationController::class, 'rejectTopup'])->name('topups.reject');
 
     Route::delete('photo/{photo}', [PhotoControler::class, 'destroyPhoto'])->name('photo.destroy');
 

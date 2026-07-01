@@ -32,7 +32,7 @@ class AdminPaymentNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['database', 'mail'];
+        return [\App\Notifications\Channels\ExpoChannel::class, 'database', 'mail'];
     }
 
     public function toMail(object $notifiable): MailMessage

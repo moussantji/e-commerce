@@ -37,7 +37,13 @@
     },
     "plugins": [
       "expo-asset",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "color": "#764ba2"
+        }
+      ]
     ]
   }
 }

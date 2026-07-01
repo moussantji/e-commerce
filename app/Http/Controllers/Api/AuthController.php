@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Notifications\WelcomeNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -27,6 +28,12 @@ class AuthController extends Controller
         ]);
 
         $token = $user->createToken('mobile')->plainTextToken;
+
+        try {
+            $user->notify(new WelcomeNotification());
+        } catch (\Throwable $e) {
+            // ne bloque pas l'inscription si l'email échoue
+        }
 
         return response()->json([
             'user' => $this->userPayload($user),
@@ -129,6 +136,18 @@ class AuthController extends Controller
             'message' => 'Photo de profil mise à jour.',
             'user' => $this->userPayload($user->fresh()),
         ]);
+    }
+
+    /** Enregistre le token de notification push Expo du téléphone. */
+    public function savePushToken(Request $request)
+    {
+        $data = $request->validate([
+            'token' => 'required|string|max:255',
+        ]);
+
+        $request->user()->forceFill(['expo_push_token' => $data['token']])->save();
+
+        return response()->json(['message' => 'Token enregistré.']);
     }
 
     public function logout(Request $request)
