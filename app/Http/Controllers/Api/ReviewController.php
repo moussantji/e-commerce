@@ -39,6 +39,8 @@ class ReviewController extends Controller
         $data = $request->validate([
             'rating' => 'required|numeric|min:0.5|max:5',
             'comment' => 'nullable|string|max:1000',
+            'photos' => 'nullable|array|max:5',
+            'photos.*' => 'image|max:20480',
         ]);
 
         $user = $request->user();
@@ -61,6 +63,11 @@ class ReviewController extends Controller
             'note' => $data['rating'],
             'commentaire' => $data['comment'] ?? null,
         ]);
+
+        // Photos jointes (optionnel) — même mécanisme que le web
+        if ($request->hasFile('photos')) {
+            $review->attachfiles($request->file('photos'));
+        }
 
         // Invalide le cache des notes (même clé que le web)
         Cache::forget("product_{$product->id}_ratings");
