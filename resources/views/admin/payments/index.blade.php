@@ -3,6 +3,7 @@
 @section('title', 'Modération des paiements')
 
 @section('content')
+<div class="content">
 <div class="container-fluid py-4">
 
     {{-- En-tête --}}
@@ -171,5 +172,6 @@
             </div>
         @endforelse
     </div>
+</div>
 </div>
 @endsection
