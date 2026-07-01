@@ -181,7 +181,7 @@ export default function AccountScreen({ navigation }) {
                 <View style={styles.block}>
                     <View style={styles.blockHead}>
                         <Text style={styles.blockTitle}>Ma Commande</Text>
-                        <TouchableOpacity onPress={() => navigation.navigate("Commande")}>
+                        <TouchableOpacity onPress={() => navigation.navigate("Orders")}>
                             <Text style={styles.seeAll}>Voir tout</Text>
                         </TouchableOpacity>
                     </View>
@@ -193,7 +193,7 @@ export default function AccountScreen({ navigation }) {
                                 <TouchableOpacity
                                     key={s.key}
                                     style={styles.step}
-                                    onPress={() => navigation.navigate("Commande")}
+                                    onPress={() => navigation.navigate("Orders")}
                                 >
                                     <View style={styles.stepIcon}>
                                         <Ionicons
