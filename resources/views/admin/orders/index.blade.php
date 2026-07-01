@@ -56,9 +56,12 @@
                 </div>
                 <div
                     class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis border-top border-bottom border-translucent position-relative top-1">
-                    <div class="table-responsive scrollbar mx-n1 px-1">
+                    <div class="table-responsive scrollbar mx-n1 px-1 d-none d-lg-block">
                         @include('admin.partials.dashboard.table_commande')
                     </div>
+
+                    @include('admin.partials.dashboard.cards_commande_mobile')
+
                     <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
                         <div class="col-auto d-flex">
                             <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info">

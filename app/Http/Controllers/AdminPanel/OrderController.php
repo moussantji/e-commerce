@@ -79,8 +79,8 @@ class OrderController extends Controller
         }
 
         $allowed = [
-            'en_attente', 'en_traitement', 'expediee', 'expédition', 'expédition',
-            'expedie', 'en_cours', 'expediee', 'livree', 'livree', 'annulee', 'annule', 'payee'
+            'en_attente', 'en_traitement', 'traitement', 'expediee', 'expédition',
+            'expedie', 'en_cours', 'livree', 'livre', 'annulee', 'annule', 'payee'
         ];
         if (! in_array($status, $allowed, true)) {
             return back()->with('error', 'Statut invalide.');
@@ -96,6 +96,7 @@ class OrderController extends Controller
                 $updates['date_en_attente'] = $now;
                 break;
             case 'en_traitement':
+            case 'traitement':
             case 'en_cours':
                 $updates['date_traitement'] = $now;
                 break;
@@ -104,6 +105,7 @@ class OrderController extends Controller
                 $updates['date_expedition'] = $now;
                 break;
             case 'livree':
+            case 'livre':
                 $updates['date_livraison'] = $now;
                 break;
             case 'annulee':
