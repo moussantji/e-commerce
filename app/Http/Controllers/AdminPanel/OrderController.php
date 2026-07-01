@@ -131,12 +131,13 @@ class OrderController extends Controller
     }
 
     /**
-     * Affiche le formulaire d'édition d'une commande
+     * L'édition d'une commande se fait via la page de détail (show) qui
+     * contient le workflow de statut (confirmer paiement, préparer, expédier,
+     * livrer, annuler). On y redirige pour éviter une vue d'édition dupliquée.
      */
     public function edit(Order $order)
     {
-        $order->load(['user', 'produits', 'paiement', 'livraison', 'promoCode']);
-        return view('admin.orders.edit', compact('order'));
+        return redirect()->route('admin.orders.show', $order);
     }
 
     /**
