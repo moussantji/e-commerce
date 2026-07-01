@@ -112,8 +112,8 @@ export default function ProductDetailScreen({ route, navigation }) {
         setAdding(true);
         try {
             await add(product.id, qty);
-            // Redirige directement vers le panier
-            navigation.navigate("Panier");
+            // Redirige directement vers le panier (onglet dans Tabs)
+            navigation.navigate("Tabs", { screen: "Panier" });
         } catch (e) {
             Alert.alert("Impossible", apiError(e));
         } finally {
@@ -190,7 +190,7 @@ export default function ProductDetailScreen({ route, navigation }) {
                     <Ionicons name="chevron-back" size={22} color="#111" />
                 </TouchableOpacity>
                 <View style={{ flexDirection: "row", gap: 10 }}>
-                    <TouchableOpacity style={styles.circleBtn} onPress={() => navigation.navigate("Panier")}>
+                    <TouchableOpacity style={styles.circleBtn} onPress={() => navigation.navigate("Tabs", { screen: "Panier" })}>
                         <Ionicons name="bag-outline" size={20} color="#111" />
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.circleBtn} onPress={toggleFav}>
