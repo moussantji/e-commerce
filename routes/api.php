@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\SocialAuthController;
 use App\Http\Controllers\Api\WalletController;
+use App\Http\Controllers\Api\WishlistController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -44,6 +45,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Avis clients
     Route::post('/products/{id}/reviews', [ReviewController::class, 'store']);
+
+    // Favoris (wishlist)
+    Route::get('/wishlist', [WishlistController::class, 'index']);
+    Route::get('/wishlist/{productId}', [WishlistController::class, 'check']);
+    Route::post('/wishlist/{productId}', [WishlistController::class, 'toggle']);
+    Route::delete('/wishlist/{productId}', [WishlistController::class, 'destroy']);
 
     Route::get('/cart', [CartController::class, 'index']);
     Route::post('/cart', [CartController::class, 'store']);

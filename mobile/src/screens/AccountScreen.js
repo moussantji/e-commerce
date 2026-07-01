@@ -80,11 +80,7 @@ export default function AccountScreen({ navigation }) {
             icon: "heart",
             label: "Liste de souhait",
             right: <ThumbRow from={0} />,
-            onPress: () =>
-                navigation.navigate("ProductList", {
-                    title: "Liste de souhait",
-                    featured: 1,
-                }),
+            onPress: () => navigation.navigate("Wishlist"),
         },
         {
             icon: "storefront-outline",
