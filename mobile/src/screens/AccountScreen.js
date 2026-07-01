@@ -22,10 +22,11 @@ const ACCOUNT_BG_IMAGE =
     "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1080&q=80";
 
 const ORDER_STEPS = [
-    { key: "en_attente", icon: "hourglass-outline", label: "En attente de paiement" },
-    { key: "expedie", icon: "car-outline", label: "Expédition" },
-    { key: "livre", icon: "chatbox-ellipses-outline", label: "En attente de commentaires" },
-    { key: "retour", icon: "refresh-outline", label: "Retour & Remboursement" },
+    { key: "en_attente", statuses: ["en_attente"], icon: "wallet-outline", label: "À payer" },
+    { key: "verif", statuses: ["paiement_declare"], icon: "hourglass-outline", label: "En vérification" },
+    { key: "prep", statuses: ["payee", "traitement"], icon: "cube-outline", label: "En préparation" },
+    { key: "expedie", statuses: ["expedie"], icon: "car-outline", label: "Expédiée" },
+    { key: "livre", statuses: ["livre"], icon: "chatbox-ellipses-outline", label: "À évaluer" },
 ];
 
 export default function AccountScreen({ navigation }) {
@@ -71,8 +72,8 @@ export default function AccountScreen({ navigation }) {
         }, [load]),
     );
 
-    const countByStatus = (key) =>
-        orders.filter((o) => o.statut === key).length;
+    const countByStatus = (statuses) =>
+        orders.filter((o) => statuses.includes(o.statut)).length;
 
     const ThumbRow = ({ from }) => (
         <View style={styles.thumbRow}>
@@ -207,8 +208,7 @@ export default function AccountScreen({ navigation }) {
                     </View>
                     <View style={styles.stepsRow}>
                         {ORDER_STEPS.map((s) => {
-                            const count =
-                                s.key === "retour" ? 0 : countByStatus(s.key);
+                            const count = countByStatus(s.statuses);
                             return (
                                 <TouchableOpacity
                                     key={s.key}
