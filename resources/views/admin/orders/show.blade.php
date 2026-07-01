@@ -158,47 +158,79 @@
                                 </div>
                             </div>
                         @endif
-
-                        @if($order->status !== 'annulee' && $order->status !== 'livree')
-                            <div class="btn-group float-end">
-                                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Changer le statut
-                                </button>
-                                <ul class="dropdown-menu">
-                                    @foreach([
-                                        'payee' => 'Marquer comme payée',
-                                        'traitement' => 'En préparation',
-                                        'expedie' => 'Marquer comme expédiée',
-                                        'livre' => 'Marquer comme livrée',
-                                        'annule' => 'Annuler la commande'
-                                    ] as $status => $label)
-                                        @if($order->statut !== $status)
-                                            <li>
-                                                <form action="{{ route('admin.orders.update-status', $order) }}" method="POST" class="d-inline">
-                                                    @csrf
-                                                    @method('PATCH')
-                                                    <input type="hidden" name="status" value="{{ $status }}">
-                                                    <button type="submit" class="dropdown-item"
-                                                            onclick="return confirm('Êtes-vous sûr de vouloir passer cette commande en statut {{ strtolower($label) }} ?')">
-                                                        {{ $label }}
-                                                    </button>
-                                                </form>
-                                            </li>
-                                        @endif
-                                    @endforeach
-                                </ul>
-                            </div>
-                            @if($order->paiement && ($order->paiement->status === 'en_attente' || $order->paiement->status === 'pending'))
-                                <form action="{{ route('admin.orders.confirm-payment', $order) }}" method="POST" class="d-inline ms-2">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit" class="btn btn-success" onclick="return confirm('Confirmer le paiement et marquer la commande comme payée ?')">
-                                        <i class="fas fa-check me-1"></i> Confirmer paiement
-                                    </button>
-                                </form>
-                            @endif
-                        @endif
                     </div>
+
+                    {{-- Workflow de traitement de la commande --}}
+                    @php
+                        $st = $order->statut;
+                        $terminal = in_array($st, ['livre', 'livree', 'annule', 'annulee']);
+                    @endphp
+                    @unless($terminal)
+                        <div class="card mt-4 border">
+                            <div class="card-body">
+                                <h6 class="mb-3">Traitement de la commande</h6>
+                                <div class="d-flex flex-wrap gap-2">
+                                    {{-- Étape paiement : confirmer si pas encore payée --}}
+                                    @if(in_array($st, ['en_attente', 'paiement_declare']))
+                                        <form action="{{ route('admin.orders.update-status', $order) }}" method="POST">
+                                            @csrf @method('PATCH')
+                                            <input type="hidden" name="status" value="payee">
+                                            <button class="btn btn-success"
+                                                onclick="return confirm('Confirmer le paiement et marquer la commande comme payée ?')">
+                                                <i class="fas fa-check me-1"></i> Confirmer le paiement (Payée)
+                                            </button>
+                                        </form>
+                                    @endif
+
+                                    {{-- Étape préparation --}}
+                                    @if(in_array($st, ['payee']))
+                                        <form action="{{ route('admin.orders.update-status', $order) }}" method="POST">
+                                            @csrf @method('PATCH')
+                                            <input type="hidden" name="status" value="traitement">
+                                            <button class="btn btn-info text-white">
+                                                <i class="fas fa-box me-1"></i> Marquer « En préparation »
+                                            </button>
+                                        </form>
+                                    @endif
+
+                                    {{-- Étape expédition --}}
+                                    @if(in_array($st, ['payee', 'traitement']))
+                                        <form action="{{ route('admin.orders.update-status', $order) }}" method="POST">
+                                            @csrf @method('PATCH')
+                                            <input type="hidden" name="status" value="expedie">
+                                            <button class="btn btn-primary">
+                                                <i class="fas fa-truck me-1"></i> Marquer « Expédiée »
+                                            </button>
+                                        </form>
+                                    @endif
+
+                                    {{-- Étape livraison --}}
+                                    @if(in_array($st, ['traitement', 'expedie', 'expedition']))
+                                        <form action="{{ route('admin.orders.update-status', $order) }}" method="POST">
+                                            @csrf @method('PATCH')
+                                            <input type="hidden" name="status" value="livre">
+                                            <button class="btn btn-success">
+                                                <i class="fas fa-check-double me-1"></i> Marquer « Livrée »
+                                            </button>
+                                        </form>
+                                    @endif
+
+                                    {{-- Annulation (toujours possible tant que non terminal) --}}
+                                    <form action="{{ route('admin.orders.update-status', $order) }}" method="POST">
+                                        @csrf @method('PATCH')
+                                        <input type="hidden" name="status" value="annule">
+                                        <button class="btn btn-outline-danger"
+                                            onclick="return confirm('Annuler cette commande ?')">
+                                            <i class="fas fa-times me-1"></i> Annuler
+                                        </button>
+                                    </form>
+                                </div>
+                                <small class="text-muted d-block mt-3">
+                                    Le client est notifié (email + push) à chaque changement de statut.
+                                </small>
+                            </div>
+                        </div>
+                    @endunless
                 </div>
             </div>
         </div>
