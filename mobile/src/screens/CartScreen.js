@@ -18,6 +18,10 @@ import { useAuth } from "../context/AuthContext";
 import api, { apiError } from "../api/client";
 import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
+import ScreenHeroHeader from "../components/ScreenHeroHeader";
+
+const CART_HERO_IMAGE =
+    "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1080&q=80";
 
 const RECO_FILTERS = [
     { key: "all", label: "Tout", icon: null },
@@ -204,16 +208,33 @@ export default function CartScreen({ navigation }) {
     const rightCol = recos.filter((_, i) => i % 2 === 1);
 
     const Header = (
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-            <Text style={styles.headerTitle}>Panier</Text>
-            <TouchableOpacity style={styles.location} activeOpacity={0.7}>
-                <Ionicons name="location-outline" size={15} color={COLORS.textLight} />
-                <Text style={styles.locationText}>
-                    {city ? `Livrer à ${city}` : "Adresse de livraison"}
-                </Text>
-                <Ionicons name="chevron-forward" size={14} color={COLORS.textLight} />
-            </TouchableOpacity>
-        </View>
+        <ScreenHeroHeader
+            image={CART_HERO_IMAGE}
+            height={130 + insets.top}
+            overlayOpacity="medium"
+            style={{ paddingTop: insets.top }}
+        >
+            <View style={styles.headerInner}>
+                <View>
+                    <Text style={styles.headerTitle}>Panier</Text>
+                    <TouchableOpacity style={styles.location} activeOpacity={0.7}>
+                        <Ionicons name="location-outline" size={15} color="rgba(255,255,255,0.85)" />
+                        <Text style={styles.locationText}>
+                            {city ? `Livrer à ${city}` : "Adresse de livraison"}
+                        </Text>
+                        <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.85)" />
+                    </TouchableOpacity>
+                </View>
+                <View style={styles.cartBadgeCircle}>
+                    <Ionicons name="bag" size={22} color="#fff" />
+                    {cart.count > 0 && (
+                        <View style={styles.cartBadgeDot}>
+                            <Text style={styles.cartBadgeNum}>{cart.count}</Text>
+                        </View>
+                    )}
+                </View>
+            </View>
+        </ScreenHeroHeader>
     );
 
     const Recommendations = (
@@ -524,10 +545,35 @@ export default function CartScreen({ navigation }) {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: COLORS.bg },
-    header: { backgroundColor: "#fff", paddingHorizontal: 16, paddingBottom: 12 },
-    headerTitle: { fontSize: 22, fontWeight: "900", color: COLORS.text },
+    headerInner: {
+        flexDirection: "row",
+        alignItems: "flex-end",
+        justifyContent: "space-between",
+    },
+    headerTitle: { fontSize: 22, fontWeight: "900", color: "#fff" },
     location: { flexDirection: "row", alignItems: "center", gap: 3, marginTop: 4 },
-    locationText: { color: COLORS.textLight, fontSize: 13 },
+    locationText: { color: "rgba(255,255,255,0.85)", fontSize: 13 },
+    cartBadgeCircle: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: "rgba(255,255,255,0.2)",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    cartBadgeDot: {
+        position: "absolute",
+        top: -2,
+        right: -2,
+        minWidth: 18,
+        height: 18,
+        borderRadius: 9,
+        backgroundColor: COLORS.badge,
+        alignItems: "center",
+        justifyContent: "center",
+        paddingHorizontal: 4,
+    },
+    cartBadgeNum: { color: "#fff", fontSize: 10, fontWeight: "800" },
 
     emptyCard: {
         flexDirection: "row",
