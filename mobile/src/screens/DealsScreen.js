@@ -10,11 +10,14 @@ import {
     RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api from "../api/client";
 import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
+import ScreenHeroHeader from "../components/ScreenHeroHeader";
+
+const HERO_IMAGE =
+    "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1080&q=80";
 
 const TABS = [
     { key: "on_sale", label: "Promos", icon: "pricetag" },
@@ -136,21 +139,29 @@ export default function DealsScreen({ navigation }) {
     };
 
     return (
-        <View style={[styles.container, { paddingTop: insets.top }]}>
-            {/* Header gradient */}
-            <LinearGradient
-                colors={COLORS.gradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.header}
+        <View style={styles.container}>
+            {/* Header hero avec photo + voile violet */}
+            <ScreenHeroHeader
+                image={HERO_IMAGE}
+                height={140 + insets.top}
+                overlayOpacity="medium"
+                style={{ paddingTop: insets.top }}
             >
-                <Text style={styles.headerTitle}>Bons Plans</Text>
-                <TouchableOpacity
-                    onPress={() => navigation.navigate("Notifications")}
-                >
-                    <Ionicons name="notifications-outline" size={22} color="#fff" />
-                </TouchableOpacity>
-            </LinearGradient>
+                <View style={styles.header}>
+                    <View>
+                        <Text style={styles.headerTitle}>Bons Plans</Text>
+                        <Text style={styles.headerSub}>
+                            Les meilleures offres du moment
+                        </Text>
+                    </View>
+                    <TouchableOpacity
+                        onPress={() => navigation.navigate("Notifications")}
+                        style={styles.notifBtn}
+                    >
+                        <Ionicons name="notifications-outline" size={22} color="#fff" />
+                    </TouchableOpacity>
+                </View>
+            </ScreenHeroHeader>
 
             {/* Tabs */}
             <View style={styles.tabBar}>
@@ -235,15 +246,26 @@ const styles = StyleSheet.create({
     },
     header: {
         flexDirection: "row",
-        alignItems: "center",
+        alignItems: "flex-end",
         justifyContent: "space-between",
-        paddingHorizontal: 16,
-        paddingVertical: 14,
     },
     headerTitle: {
-        fontSize: 20,
-        fontWeight: "800",
+        fontSize: 22,
+        fontWeight: "900",
         color: "#fff",
+    },
+    headerSub: {
+        fontSize: 13,
+        color: "rgba(255,255,255,0.85)",
+        marginTop: 2,
+    },
+    notifBtn: {
+        width: 38,
+        height: 38,
+        borderRadius: 19,
+        backgroundColor: "rgba(255,255,255,0.2)",
+        alignItems: "center",
+        justifyContent: "center",
     },
     tabBar: {
         flexDirection: "row",
