@@ -132,7 +132,7 @@
                                             </div>
                                         </td>
                                         <td class="name align-middle white-space-nowrap pe-3">
-                                            <a href="{{ route('admin.users.edit', $user) }}"
+                                            <a href="{{ route('admin.users.show', $user) }}"
                                                 class="d-flex align-items-center text-body-emphasis">
                                                 <div class="avatar avatar-m">
                                                     @if ($user->avatar)
