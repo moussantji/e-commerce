@@ -39,6 +39,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'provider',
         'provider_id',
         'wallet_balance',
+        'expo_push_token',
     ];
 
     /**

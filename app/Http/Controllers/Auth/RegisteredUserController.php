@@ -43,6 +43,12 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
+        try {
+            $user->notify(new \App\Notifications\WelcomeNotification());
+        } catch (\Throwable $e) {
+            // ne bloque pas l'inscription si l'email échoue
+        }
+
         Auth::login($user);
 
         return redirect(route('dashboard', absolute: false));

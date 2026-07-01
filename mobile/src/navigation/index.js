@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -30,6 +30,8 @@ import AdminPaymentsScreen from "../screens/AdminPaymentsScreen";
 import OrderDetailScreen from "../screens/OrderDetailScreen";
 import NotificationsScreen from "../screens/NotificationsScreen";
 import AddressesScreen from "../screens/AddressesScreen";
+import * as Notifications from "expo-notifications";
+import { registerForPushNotifications } from "../push";
 import CouponsScreen from "../screens/CouponsScreen";
 import WalletScreen from "../screens/WalletScreen";
 
@@ -214,8 +216,51 @@ function AuthStack() {
     );
 }
 
+// Redirige selon le lien d'une notification push
+function routeFromLink(nav, link) {
+    if (!nav || !link) return;
+    switch (link.type) {
+        case "order":
+            nav.navigate("OrderDetail", { id: link.id });
+            break;
+        case "product":
+            nav.navigate("ProductDetail", { id: link.id });
+            break;
+        case "cart":
+            nav.navigate("Tabs", { screen: "Panier" });
+            break;
+        case "wallet":
+            nav.navigate("Wallet");
+            break;
+        case "admin_payment":
+        case "admin_wallet":
+            nav.navigate("AdminPayments");
+            break;
+        default:
+            nav.navigate("Notifications");
+            break;
+    }
+}
+
 export default function RootNavigator() {
     const { token, loading } = useAuth();
+    const navRef = useRef(null);
+
+    // Enregistre le token push dès qu'on est connecté
+    useEffect(() => {
+        if (token) {
+            registerForPushNotifications();
+        }
+    }, [token]);
+
+    // Ouvre l'écran concerné quand on tape une notification push
+    useEffect(() => {
+        const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+            const link = response?.notification?.request?.content?.data?.link;
+            routeFromLink(navRef.current, link);
+        });
+        return () => sub.remove();
+    }, []);
 
     if (loading) {
         return (
@@ -232,7 +277,7 @@ export default function RootNavigator() {
     }
 
     return (
-        <NavigationContainer>
+        <NavigationContainer ref={navRef}>
             {token ? <AppStack /> : <AuthStack />}
         </NavigationContainer>
     );

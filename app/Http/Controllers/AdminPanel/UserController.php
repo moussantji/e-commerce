@@ -134,6 +134,7 @@ class UserController extends Controller
         $updateData = [
             'name' => $validated['name'],
             'email' => $validated['email'],
+            'role' => $validated['role'],
         ];
 
         // Mise à jour du mot de passe si fourni
@@ -143,11 +144,35 @@ class UserController extends Controller
 
         $user->update($updateData);
 
-        // Mise à jour du rôle
-        $user->syncRoles([$validated['role']]);
+        // Compatibilité Spatie si présent
+        if (method_exists($user, 'syncRoles')) {
+            try {
+                $user->syncRoles([$validated['role']]);
+            } catch (\Throwable $e) {
+                // rôle géré via la colonne 'role'
+            }
+        }
 
         return redirect()->route('admin.users.show', $user)
             ->with('success', 'Utilisateur mis à jour avec succès');
+    }
+
+    /**
+     * Change rapidement le rôle d'un utilisateur (admin <-> customer).
+     */
+    public function updateRole(Request $request, User $user)
+    {
+        $data = $request->validate([
+            'role' => ['required', 'in:admin,customer'],
+        ]);
+
+        if (auth()->id() === $user->id && $data['role'] !== 'admin') {
+            return back()->with('error', 'Vous ne pouvez pas retirer votre propre rôle administrateur.');
+        }
+
+        $user->update(['role' => $data['role']]);
+
+        return back()->with('success', "Rôle de {$user->name} mis à jour : {$data['role']}.");
     }
 
     /**

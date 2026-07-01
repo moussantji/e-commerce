@@ -605,6 +605,15 @@
                     </ul>
                 </li>
 
+                <!-- Paiements à vérifier -->
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('admin.payments.moderation') ? 'active' : '' }}"
+                        href="{{ route('admin.payments.moderation') }}">
+                        <span class="uil fs-8 me-2" data-feather="dollar-sign"></span>
+                        Paiements à vérifier
+                    </a>
+                </li>
+
                 <!-- Utilisateurs -->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"
