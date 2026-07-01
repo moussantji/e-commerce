@@ -32,6 +32,9 @@ $slugRegex = '[0-9a-z\-]+';
 
 // Page d'accueil
 Route::get('/', [HomeController::class, 'index'])->name('home');
+// Pages légales
+Route::view('/conditions', 'legal.conditions')->name('conditions');
+Route::view('/confidentialite', 'legal.confidentialite')->name('confidentialite');
 Route::get('/panier', [CartController::class, 'index'])->name('panier');
 Route::get('/produits', [HomeController::class, 'allProduits'])->name('products');
 Route::get('/favoris', [HomeController::class, 'favoris'])->name('favoris');
