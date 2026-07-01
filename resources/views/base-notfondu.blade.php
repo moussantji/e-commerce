@@ -145,6 +145,8 @@
 
     @yield('content')
 
+    @includeIf('partials.bottom-nav')
+
     @if (session('success') || session('error'))
         <div id="toastNotification" class="toast {{ session('error') ? 'toast-error' : 'toast-success' }}">
             <div class="toast-icon">

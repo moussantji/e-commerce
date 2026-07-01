@@ -294,6 +294,20 @@ class Cart extends Component
         // ✅ VALIDATION VOS SELECTS
         $this->validate();
 
+        // ✅ VÉRIFIE LA DISPONIBILITÉ DU STOCK AVANT DE CRÉER LA COMMANDE
+        $rupture = [];
+        $items = DB::table('panier_produit')->where('paniers_id', $this->panier->id)->get();
+        foreach ($items as $it) {
+            $produit = DB::table('produits')->where('id', $it->produits_id)->first(['name', 'stock']);
+            if (!$produit || $it->quantite > (int) $produit->stock) {
+                $rupture[] = ($produit->name ?? 'Produit') . ' (dispo : ' . (int) ($produit->stock ?? 0) . ')';
+            }
+        }
+        if (!empty($rupture)) {
+            $this->dispatch('error', ['message' => 'Stock insuffisant pour : ' . implode(', ', $rupture)]);
+            return;
+        }
+
         // ✅ CRÉER COMMANDE AVANT redirection
         $this->commandeId = $this->createOrder();
 
@@ -343,6 +357,12 @@ class Cart extends Component
                     'created_at' => now(),
                     'updated_at' => now()
                 ]);
+
+                // ✅ DÉCRÉMENTE LE STOCK DU PRODUIT (jamais sous 0)
+                DB::table('produits')
+                    ->where('id', $item->produits_id)
+                    ->where('stock', '>=', $item->quantite)
+                    ->decrement('stock', $item->quantite);
             }
 
             // 3. Vider panier

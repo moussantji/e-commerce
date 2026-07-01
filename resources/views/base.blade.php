@@ -475,8 +475,9 @@
     </style>
 
     <style>
-        /* TOUTES les pages : fade in après loader */
-        body.fade-ready,
+        /* TOUTES les pages : fade in après loader.
+           ⚠️ On N'inclut PAS body ici : un transform sur body casserait
+           le position:fixed de la barre de navigation mobile. */
         main,
         .container,
         .produit-main,
@@ -580,6 +581,8 @@
 
     @yield('content')
 
+    @includeIf('partials.bottom-nav')
+
     @if (session('success') || session('error'))
         <div id="toastNotification" class="toast {{ session('error') ? 'toast-error' : 'toast-success' }}">
             <div class="toast-icon">
@@ -667,78 +670,76 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Clone + loader (inchangé)
+            // --- 1. Carrousel de catégories : clone le contenu pour un défilement infini ---
             const original = document.getElementById('scrollContent');
             const clone = document.getElementById('scrollContentClone');
-            clone.innerHTML = original.innerHTML;
+            const scrollTrack = document.querySelector('.scroll-track');
+            if (original && clone) {
+                clone.innerHTML = original.innerHTML;
+            }
 
-            setTimeout(() => {
-                const loader = document.getElementById('pageLoader');
-                if (loader) {
-                    loader.classList.add('fade-out');
+            // --- 2. Observer de révélation au scroll (réutilisable, robuste) ---
+            const revealSelector = '[data-hidden], .top-deals-card, .d-flex.flex-between-center.mb-3, .swiper-theme-container.products-slider, .col-lg-3 .h-100, .col-12.d-lg-none img';
 
-                    setTimeout(() => {
-                        // ✅ FADE IN TOUTES LES PAGES
-                        document.body.classList.add('fade-ready');
-
-                        // Scrollbar seulement si existe
-                        const scrollTrack = document.querySelector('.scroll-track');
-                        if (scrollTrack) {
-                            scrollTrack.style.animationPlayState = 'running';
-                        }
-                    }, 850);
-                }
-            }, 2500);
-            // Observer spécifique pour Top Deals
-            // Observer Top Deals cards (APRES Livewire)
-            setTimeout(() => {
-                const observer = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            const cards = document.querySelectorAll('.top-deals-card');
-                            cards.forEach((card, index) => {
-                                setTimeout(() => card.classList.add('animate'),
-                                    index * 100);
-                            });
-                        }
-                    });
-                }, {
-                    threshold: 0.1
-                });
-
-                observer.observe(document.querySelector('.swiper-theme-container'));
-            }, 1500); // Attend Livewire
-            document.querySelector('.scroll-track').style.animationPlayState = 'paused';
-
-            setTimeout(() => {
-                document.getElementById('pageLoader').classList.add('fade-out');
-                setTimeout(() => {
-                    document.querySelector('.scroll-track').style.animationPlayState = 'running';
-                }, 850);
-            }, 2000);
-            // APRÈS la ligne loader.classList.add('fade-out');
-            setTimeout(() => {
-                document.querySelector('.whooping-banner').classList.add('fade-ready');
-                document.querySelector('.gift-items-banner').classList.add('fade-ready');
-                document.querySelector('.best-in-market-banner').classList.add('fade-ready');
-            }, 2000); // Pile après fin du fadeout loader
-
-            // Observer SIMPLifié
-            const observer = new IntersectionObserver((entries) => {
+            const revealObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
                         entry.target.classList.add('animate');
+                        revealObserver.unobserve(entry.target);
                     }
                 });
             }, {
-                threshold: 0.2,
-                rootMargin: '0px 0px -100px 0px'
+                threshold: 0.15,
+                rootMargin: '0px 0px -80px 0px'
             });
 
-            // Observe TOUS les data-hidden
-            document.querySelectorAll('[data-hidden]').forEach(el => {
-                observer.observe(el);
-            });
+            const revealAll = () => {
+                document.querySelectorAll(revealSelector).forEach(el => revealObserver.observe(el));
+            };
+            revealAll();
+
+            // Filet de sécurité : si quelque chose empêche l'observer de se déclencher,
+            // on force l'affichage pour que le contenu ne reste jamais invisible.
+            const forceVisible = () => {
+                document.querySelectorAll(revealSelector).forEach(el => el.classList.add('animate'));
+                document.querySelectorAll('.whooping-banner, .gift-items-banner, .best-in-market-banner')
+                    .forEach(el => el.classList.add('fade-ready'));
+            };
+
+            // --- 3. Loader + démarrage des animations ---
+            const startPage = () => {
+                document.body.classList.add('fade-ready');
+                if (scrollTrack) {
+                    scrollTrack.style.animationPlayState = 'running';
+                }
+                document.querySelectorAll('.whooping-banner, .gift-items-banner, .best-in-market-banner')
+                    .forEach(el => el.classList.add('fade-ready'));
+                // Re-scanne le DOM (utile après le rendu des composants Livewire)
+                revealAll();
+            };
+
+            const loader = document.getElementById('pageLoader');
+            if (loader) {
+                // Met le carrousel en pause tant que le loader est visible
+                if (scrollTrack) scrollTrack.style.animationPlayState = 'paused';
+                const hideLoader = () => {
+                    loader.classList.add('fade-out');
+                    setTimeout(startPage, 600);
+                };
+                if (document.readyState === 'complete') {
+                    setTimeout(hideLoader, 800);
+                } else {
+                    let done = false;
+                    const run = () => { if (!done) { done = true; hideLoader(); } };
+                    window.addEventListener('load', () => setTimeout(run, 400));
+                    setTimeout(run, 2500); // garde-fou si l'évènement load tarde
+                }
+            } else {
+                startPage();
+            }
+
+            // Filet de sécurité global : tout est visible au plus tard après 4s
+            setTimeout(forceVisible, 4000);
         });
     </script>
 
@@ -769,33 +770,6 @@
 
 
     @stack('scripts')
-
-    <script>
-        const loader = document.querySelector(".page-loader");
-        if (!loader) {
-            document.body.classList.add("fade-ready");
-        }
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add("animate");
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, {
-            threshold: 0.1
-        });
-
-        const header = document.querySelector(".d-flex.flex-between-center.mb-3");
-        if (header) observer.observe(header);
-
-        const slider = document.querySelector(".swiper-theme-container.products-slider");
-        if (slider) observer.observe(slider);
-
-        document.querySelectorAll("[data-hidden]").forEach(el => observer.observe(el));
-        document.querySelectorAll(".top-deals-card").forEach(el => observer.observe(el));
-    </script>
 
 
 </body>

@@ -30,7 +30,7 @@
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Catégorie parente</label>
                         <select name="parent_id" class="form-select @error('parent_id') is-invalid @enderror">
-                            <option value="">-- Catégorie racine --</option>
+                            <option value="">-- Catégorie principale (racine) --</option>
                             @foreach($categories as $parentCategory)
                                 <option value="{{ $parentCategory->id }}" {{ old('parent_id') == $parentCategory->id ? 'selected' : '' }}>
                                     {{ $parentCategory->name }}
@@ -40,6 +40,7 @@
                         @error('parent_id')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
+                        <div class="form-text">Laissez vide pour créer une catégorie principale. Sinon, choisissez son rayon parent (2 niveaux maximum).</div>
                     </div>
                 </div>
 
@@ -83,6 +84,27 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                         <div class="form-text">Recommandé: 300x300px, JPG/PNG</div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Bannière 1 (accueil mobile)</label>
+                        <input type="file" name="banner_image_1" accept="image/*"
+                               class="form-control @error('banner_image_1') is-invalid @enderror">
+                        @error('banner_image_1')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <div class="form-text">Image de fond cliquable affichée dans l'app mobile</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Bannière 2 (accueil mobile)</label>
+                        <input type="file" name="banner_image_2" accept="image/*"
+                               class="form-control @error('banner_image_2') is-invalid @enderror">
+                        @error('banner_image_2')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <div class="form-text">Deuxième image de fond cliquable</div>
                     </div>
                 </div>
 

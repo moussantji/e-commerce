@@ -4,139 +4,73 @@ namespace Database\Seeders;
 
 use App\Models\Paiements;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
+/**
+ * Méthodes de paiement : Orange Money, Moov Money, Wave (les seules actives),
+ * chacune avec ses instructions à suivre par le client.
+ */
 class PaymentMethodSeeder extends Seeder
 {
-    /**
-     * Exécute le seeder.
-     */
     public function run(): void
     {
-        // Dossier de stockage des logos
-        $logoPath = 'public/payment-methods';
-        if (!Storage::exists($logoPath)) {
-            Storage::makeDirectory($logoPath);
-        }
-        
-        // Copier les logos de démonstration
-        $logos = [
-            'visa-mastercard.png' => 'https://raw.githubusercontent.com/fawazahmed0/payment-logos/ec37dacd0c4a1d0a2a1f7b8b8b8b8b8b8b8b8b8b8/src/logos/visa.svg',
-            'paypal.png' => 'https://raw.githubusercontent.com/fawazahmed0/payment-logos/ec37dacd0c4a1d0a2a1f7b8b8b8b8b8b8b8b8b8b8/src/logos/paypal.svg',
-            'bank-transfer.png' => 'https://raw.githubusercontent.com/fawazahmed0/payment-logos/ec37dacd0c4a1d0a2a1f7b8b8b8b8b8b8b8b8b8b8/src/logos/bank.svg',
-            'cash-on-delivery.png' => 'https://raw.githubusercontent.com/fawazahmed0/payment-logos/ec37dacd0c4a1d0a2a1f7b8b8b8b8b8b8b8b8b8b8/src/logos/cash.svg',
-        ];
-        
-        foreach ($logos as $filename => $url) {
-            $destination = $logoPath . '/' . $filename;
-            if (!Storage::exists($destination)) {
-                try {
-                    $contents = @file_get_contents($url);
-                    if ($contents === false) {
-                        $this->command->warn("Impossible de télécharger l'image: $url");
-                        continue;
-                    }
-                    Storage::put($destination, $contents);
-                    $this->command->info("Image téléchargée: $filename");
-                } catch (\Exception $e) {
-                    $this->command->error("Erreur lors du téléchargement de $url: " . $e->getMessage());
-                }
-            }
-        }
-        
-        // Méthodes de paiement par défaut en FCFA
         $methods = [
             [
-                'method_name' => 'Carte de crédit',
-                'provider_name' => 'Stripe',
-                'description' => 'Paiement sécurisé par carte bancaire (Visa, Mastercard, etc.)',
-                'fee' => 150, // ~0.23€
-                'fee_percentage' => 2.9,
-                'logo' => 'payment-methods/visa-mastercard.png',
-                'is_active' => true,
-                'sort_order' => 1,
-                'config' => json_encode([
-                    'public_key' => 'pk_test_'.Str::random(48),
-                    'secret_key' => 'sk_test_'.Str::random(48),
-                    'webhook_secret' => 'whsec_'.Str::random(32),
-                    'test_mode' => true,
-                ]),
-            ],
-            [
                 'method_name' => 'Orange Money',
-                'provider_name' => 'Orange Money',
-                'description' => 'Paiement mobile avec Orange Money',
-                'fee' => 50, // ~0.08€
-                'fee_percentage' => 1.5,
-                'logo' => 'payment-methods/orange-money.png',
-                'is_active' => true,
+                'provider_name' => 'Orange',
+                'account_number' => '07 00 00 00 00',
+                'description' => 'Paiement via Orange Money.',
+                'instructions' => "1. Composez #144# sur votre téléphone Orange.\n"
+                    . "2. Choisissez « Transfert d'argent ».\n"
+                    . "3. Envoyez le montant exact au numéro indiqué ci-dessus.\n"
+                    . "4. Conservez la référence de transaction reçue par SMS.\n"
+                    . "5. Saisissez cette référence puis cliquez sur « J'ai payé ».",
+                'sort_order' => 1,
+            ],
+            [
+                'method_name' => 'Moov Money',
+                'provider_name' => 'Moov',
+                'account_number' => '01 00 00 00 00',
+                'description' => 'Paiement via Moov Money.',
+                'instructions' => "1. Composez *155# sur votre téléphone Moov.\n"
+                    . "2. Choisissez « Transfert d'argent ».\n"
+                    . "3. Envoyez le montant exact au numéro indiqué ci-dessus.\n"
+                    . "4. Conservez la référence de transaction reçue par SMS.\n"
+                    . "5. Saisissez cette référence puis cliquez sur « J'ai payé ».",
                 'sort_order' => 2,
-                'config' => json_encode([
-                    'merchant_code' => 'CI'.rand(100000, 999999),
-                    'test_mode' => true,
-                ]),
             ],
             [
-                'method_name' => 'MTN Mobile Money',
-                'provider_name' => 'MTN Mobile Money',
-                'description' => 'Paiement mobile avec MTN Mobile Money',
-                'fee' => 50, // ~0.08€
-                'fee_percentage' => 1.5,
-                'logo' => 'payment-methods/mtn-money.png',
-                'is_active' => true,
+                'method_name' => 'Wave',
+                'provider_name' => 'Wave',
+                'account_number' => '05 00 00 00 00',
+                'description' => 'Paiement via Wave.',
+                'instructions' => "1. Ouvrez l'application Wave.\n"
+                    . "2. Sélectionnez « Envoyer de l'argent ».\n"
+                    . "3. Envoyez le montant exact au numéro indiqué ci-dessus.\n"
+                    . "4. Conservez la référence de la transaction.\n"
+                    . "5. Saisissez cette référence puis cliquez sur « J'ai payé ».",
                 'sort_order' => 3,
-                'config' => json_encode([
-                    'merchant_code' => 'CI'.rand(100000, 999999),
-                    'test_mode' => true,
-                ]),
-            ],
-            [
-                'method_name' => 'Virement bancaire',
-                'provider_name' => 'Banque',
-                'description' => 'Paiement par virement bancaire',
-                'fee' => 0,
-                'fee_percentage' => 1.0,
-                'logo' => 'payment-methods/bank-transfer.png',
-                'is_active' => true,
-                'sort_order' => 4,
-                'config' => json_encode([
-                    'bank_name' => 'Banque Internationale',
-                    'account_name' => 'VOTRE ENTREPRISE',
-                    'account_number' => 'CI05999999999999999999999',
-                    'iban' => 'CI05999999999999999999999',
-                    'bic' => 'ABCDCIAXXXX',
-                ]),
             ],
             [
                 'method_name' => 'Paiement à la livraison',
-                'provider_name' => 'LIVRAISON',
-                'description' => 'Paiement en espèces à la livraison',
-                'fee' => 0,
-                'fee_percentage' => 0,
-                'logo' => 'payment-methods/cash-on-delivery.png',
-                'is_active' => true,
-                'sort_order' => 5,
-                'config' => json_encode([
-                    'instructions' => 'Paiement en espèces à la livraison uniquement',
-                    'min_amount' => 0,
-                    'max_amount' => 500000, // ~762€
-                ]),
+                'provider_name' => 'cash',
+                'account_number' => null,
+                'description' => 'Payez en espèces à la réception de votre commande.',
+                'instructions' => "Vous réglez votre commande en espèces au moment de la livraison.\n"
+                    . "Préparez le montant exact ; le livreur vous remettra un reçu.",
+                'sort_order' => 4,
             ],
         ];
-        
-        foreach ($methods as $method) {
-            // Vérifier si la méthode existe déjà
-            $exists = Paiements::where('method_name', $method['method_name'])->exists();
-            
-            if (!$exists) {
-                // La configuration est déjà encodée en JSON
-                
-                Paiements::create($method);
-            }
+
+        $keep = [];
+        foreach ($methods as $data) {
+            $m = Paiements::updateOrCreate(
+                ['method_name' => $data['method_name']],
+                array_merge($data, ['is_active' => true, 'fee' => 0, 'fee_percentage' => 0]),
+            );
+            $keep[] = $m->id;
         }
-        
-        $this->command->info('Méthodes de paiement créées avec succès !');
+
+        // Toute autre méthode existante est désactivée (Orange/Moov/Wave seules actives)
+        Paiements::whereNotIn('id', $keep)->update(['is_active' => false]);
     }
 }

@@ -28,12 +28,51 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        $this->recordLogin($request);
+
         if($request->user()->role === 'admin')
         {
             return redirect()->route('admin.dashboard');
         }
 
         return redirect()->intended(route('dashboard', absolute: false));
+    }
+
+    /**
+     * Enregistre la connexion : date + position géographique (par IP).
+     * N'empêche jamais la connexion en cas d'échec.
+     */
+    protected function recordLogin(Request $request): void
+    {
+        try {
+            $user = $request->user();
+            $data = ['last_login' => now(), 'last_activity' => now()];
+
+            $geo = \App\Support\IpGeolocator::locate($request->ip());
+            if ($geo && $geo['lat'] !== null && $geo['lon'] !== null) {
+                $data['latitude'] = $geo['lat'];
+                $data['longitude'] = $geo['lon'];
+                $data['ville'] = $geo['city'] ?? $user->ville;
+                $data['region'] = $geo['region'] ?? $user->region;
+                $data['pays'] = $geo['country'] ?? $user->pays;
+            }
+
+            $user->forceFill($data)->save();
+
+            // Notification de connexion (base + push, sans email)
+            try {
+                $user->notify(new \App\Notifications\SecurityNotification(
+                    'Nouvelle connexion',
+                    'Une connexion à votre compte vient d\'avoir lieu (' . now()->format('d/m/Y H:i') . ').',
+                    'log-in-outline',
+                    false,
+                ));
+            } catch (\Throwable $e) {
+                // silencieux
+            }
+        } catch (\Throwable $e) {
+            // silencieux : la connexion ne doit jamais échouer à cause du géocodage
+        }
     }
 
     /**

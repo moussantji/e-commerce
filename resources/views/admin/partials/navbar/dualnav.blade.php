@@ -585,24 +585,33 @@
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item {{ request()->get('status') === 'pending' ? 'active' : '' }}"
-                                href="{{ route('admin.orders.index') }}?status=pending">
+                            <a class="dropdown-item {{ request()->get('status') === 'en_attente' ? 'active' : '' }}"
+                                href="{{ route('admin.orders.index') }}?status=en_attente">
                                 En attente
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item {{ request()->get('status') === 'processing' ? 'active' : '' }}"
-                                href="{{ route('admin.orders.index') }}?status=processing">
-                                En cours
+                            <a class="dropdown-item {{ request()->get('status') === 'traitement' ? 'active' : '' }}"
+                                href="{{ route('admin.orders.index') }}?status=traitement">
+                                En préparation
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item {{ request()->get('status') === 'completed' ? 'active' : '' }}"
-                                href="{{ route('admin.orders.index') }}?status=completed">
-                                Terminées
+                            <a class="dropdown-item {{ request()->get('status') === 'livre' ? 'active' : '' }}"
+                                href="{{ route('admin.orders.index') }}?status=livre">
+                                Livrées
                             </a>
                         </li>
                     </ul>
+                </li>
+
+                <!-- Paiements à vérifier -->
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('admin.payments.moderation') ? 'active' : '' }}"
+                        href="{{ route('admin.payments.moderation') }}">
+                        <span class="uil fs-8 me-2" data-feather="dollar-sign"></span>
+                        Paiements à vérifier
+                    </a>
                 </li>
 
                 <!-- Utilisateurs -->

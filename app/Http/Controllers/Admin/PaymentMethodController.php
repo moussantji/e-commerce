@@ -134,6 +134,8 @@ class PaymentMethodController extends Controller
             'method_name' => ['required', 'string', 'max:255'],
             'provider_name' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'instructions' => ['nullable', 'string'],
+            'account_number' => ['nullable', 'string', 'max:255'],
             'fee' => ['nullable', 'numeric', 'min:0'],
             'fee_percentage' => ['nullable', 'numeric', 'between:0,100'],
             'logo' => ['nullable', 'image', 'max:2048'],

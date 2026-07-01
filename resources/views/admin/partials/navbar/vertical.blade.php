@@ -266,18 +266,18 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link {{ request()->get('status') === 'en_cours' ? 'active' : '' }}"
-                                        href="{{ route('admin.orders.index') }}?status=en_cours">
+                                    <a class="nav-link {{ request()->get('status') === 'traitement' ? 'active' : '' }}"
+                                        href="{{ route('admin.orders.index') }}?status=traitement">
                                         <div class="d-flex align-items-center">
-                                            <span class="nav-link-text">Commandes en cours</span>
+                                            <span class="nav-link-text">Commandes en préparation</span>
                                         </div>
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link {{ request()->get('status') === 'expediee' ? 'active' : '' }}"
-                                        href="{{ route('admin.orders.index') }}?status=expediee">
+                                    <a class="nav-link {{ request()->get('status') === 'livre' ? 'active' : '' }}"
+                                        href="{{ route('admin.orders.index') }}?status=livre">
                                         <div class="d-flex align-items-center">
-                                            <span class="nav-link-text">Commandes terminées</span>
+                                            <span class="nav-link-text">Commandes livrées</span>
                                         </div>
                                     </a>
                                 </li>
@@ -370,6 +370,23 @@
                                 </li>
                             </ul>
                         </div>
+                    </div>
+                </li>
+
+                <!-- Paiements à vérifier -->
+                <li class="nav-item">
+                    <div class="nav-item-wrapper">
+                        <a class="nav-link label-1 {{ request()->routeIs('admin.payments.moderation') ? 'active' : '' }}"
+                            href="{{ route('admin.payments.moderation') }}" role="button">
+                            <div class="d-flex align-items-center">
+                                <span class="nav-link-icon">
+                                    <span data-feather="dollar-sign"></span>
+                                </span>
+                                <span class="nav-link-text-wrapper">
+                                    <span class="nav-link-text">Paiements à vérifier</span>
+                                </span>
+                            </div>
+                        </a>
                     </div>
                 </li>
 
