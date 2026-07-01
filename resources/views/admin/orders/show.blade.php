@@ -106,13 +106,13 @@
                                             </div>
                                         </td>
                                         <td class="text-end">
-                                            {{ number_format($produit->pivot->prix_unitaire, 2, ',', ' ') }} €
+                                            {{ number_format($produit->pivot->prix_unitaire, 0, ',', ' ') }} FCFA
                                         </td>
                                         <td class="text-center">
-                                            {{ $produit->pivot->quantity }}
+                                            {{ $produit->pivot->quantite }}
                                         </td>
                                         <td class="text-end">
-                                            {{ number_format($produit->pivot->total_ligne, 2, ',', ' ') }} €
+                                            {{ number_format($produit->pivot->total, 0, ',', ' ') }} FCFA
                                         </td>
                                     </tr>
                                 @endforeach
@@ -120,21 +120,21 @@
                                 <tr>
                                     <td colspan="3" class="text-end fw-bold">Sous-total</td>
                                     <td class="text-end">
-                                        {{ number_format($order->produits->sum('pivot.total_ligne'), 2, ',', ' ') }} €
+                                        {{ number_format($order->produits->sum('pivot.total'), 0, ',', ' ') }} FCFA
                                     </td>
                                 </tr>
                                 @if($order->frais_livraison > 0)
                                     <tr>
                                         <td colspan="3" class="text-end fw-bold">Frais de livraison</td>
                                         <td class="text-end">
-                                            {{ number_format($order->frais_livraison, 2, ',', ' ') }} €
+                                            {{ number_format($order->frais_livraison, 0, ',', ' ') }} FCFA
                                         </td>
                                     </tr>
                                 @endif
                                 <tr>
                                     <td colspan="3" class="text-end fw-bold">Total TTC</td>
                                     <td class="text-end fw-bold">
-                                        {{ number_format($order->total, 2, ',', ' ') }} €
+                                        {{ number_format($order->total, 0, ',', ' ') }} FCFA
                                     </td>
                                 </tr>
                             </tbody>
@@ -144,15 +144,31 @@
                     <div class="row mt-4">
                         <div class="col-md-6">
                             <h6>Adresse de livraison</h6>
-                            <address>
-                                {{ $order->adresse_livraison ?? 'Non spécifiée' }}
-                            </address>
+                            @php $liv = $order->adresse_livraison; @endphp
+                            @if (is_array($liv) && !empty($liv))
+                                <address class="mb-0">
+                                    <strong>{{ data_get($liv, 'nom', $order->user->name ?? '') }}</strong><br>
+                                    {{ data_get($liv, 'adresse') }}<br>
+                                    {{ data_get($liv, 'ville') }}@if(data_get($liv, 'pays')), {{ data_get($liv, 'pays') }}@endif<br>
+                                    @if(data_get($liv, 'telephone'))Tél. : {{ data_get($liv, 'telephone') }}@endif
+                                </address>
+                            @else
+                                <address class="mb-0">{{ is_string($liv) ? $liv : 'Non spécifiée' }}</address>
+                            @endif
                         </div>
                         <div class="col-md-6">
                             <h6>Informations de facturation</h6>
-                            <address>
-                                {{ $order->adresse_facturation ?? 'Identique à l\'adresse de livraison' }}
-                            </address>
+                            @php $fac = $order->adresse_facturation; @endphp
+                            @if (is_array($fac) && !empty($fac))
+                                <address class="mb-0">
+                                    <strong>{{ data_get($fac, 'nom', $order->user->name ?? '') }}</strong><br>
+                                    {{ data_get($fac, 'adresse') }}<br>
+                                    {{ data_get($fac, 'ville') }}@if(data_get($fac, 'pays')), {{ data_get($fac, 'pays') }}@endif<br>
+                                    @if(data_get($fac, 'telephone'))Tél. : {{ data_get($fac, 'telephone') }}@endif
+                                </address>
+                            @else
+                                <address class="mb-0">{{ is_string($fac) ? $fac : 'Identique à l\'adresse de livraison' }}</address>
+                            @endif
                         </div>
                     </div>
 
