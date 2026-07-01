@@ -65,14 +65,14 @@
                                             <div class="d-flex align-items-center">
                                                 @if($produit->image)
                                                     <img src="{{ asset('storage/' . $produit->image) }}"
-                                                         alt="{{ $produit->nom }}"
+                                                         alt="{{ $produit->name }}"
                                                          class="img-thumbnail me-3"
                                                          style="width: 60px; height: 60px; object-fit: cover;">
                                                 @endif
                                                 <div>
-                                                    <h6 class="mb-0">{{ $produit->nom }}</h6>
+                                                    <h6 class="mb-0">{{ $produit->name }}</h6>
                                                     <small class="text-muted">
-                                                        Réf: {{ $produit->reference ?? 'N/A' }}
+                                                        Réf: {{ $produit->sku ?? 'N/A' }}
                                                     </small>
                                                 </div>
                                             </div>
