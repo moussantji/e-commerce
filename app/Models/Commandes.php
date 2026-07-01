@@ -2,12 +2,31 @@
 
 namespace App\Models;
 
+use App\Notifications\OrderStatusNotification;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\Log;
 
 class Commandes extends Model
 {
+    /**
+     * Notifie le client (base + email) à chaque changement de statut.
+     */
+    protected static function booted(): void
+    {
+        static::updated(function (Commandes $order) {
+            if ($order->wasChanged('statut') && $order->user) {
+                try {
+                    $order->user->notify(
+                        new OrderStatusNotification($order, $order->status_label),
+                    );
+                } catch (\Throwable $e) {
+                    Log::warning('Notification changement de statut échouée : ' . $e->getMessage());
+                }
+            }
+        });
+    }
     protected $fillable = [
         'user_id',
         'paiement_id',
