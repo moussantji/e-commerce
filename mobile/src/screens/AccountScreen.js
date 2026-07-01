@@ -3,6 +3,7 @@ import {
     View,
     Text,
     Image,
+    ImageBackground,
     TouchableOpacity,
     StyleSheet,
     ScrollView,
@@ -15,6 +16,10 @@ import { useAuth } from "../context/AuthContext";
 import api from "../api/client";
 import { COLORS, RADIUS } from "../theme";
 import { getRecentlyViewed } from "../recentlyViewed";
+
+// Image de fond de l'en-tête du profil (comme l'accueil)
+const ACCOUNT_BG_IMAGE =
+    "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1080&q=80";
 
 const ORDER_STEPS = [
     { key: "en_attente", icon: "hourglass-outline", label: "En attente de paiement" },
@@ -126,13 +131,18 @@ export default function AccountScreen({ navigation }) {
     return (
         <View style={{ flex: 1, backgroundColor: COLORS.bg }}>
             <ScrollView showsVerticalScrollIndicator={false}>
-                {/* En-tête dégradé */}
-                <LinearGradient
-                    colors={COLORS.gradient}
-                    start={COLORS.gradientStart}
-                    end={COLORS.gradientEnd}
+                {/* En-tête : image de fond + voile violet (comme l'accueil) */}
+                <ImageBackground
+                    source={{ uri: ACCOUNT_BG_IMAGE }}
                     style={[styles.header, { paddingTop: insets.top + 8 }]}
+                    resizeMode="cover"
                 >
+                    <LinearGradient
+                        colors={["rgba(102,126,234,0.82)", "rgba(118,75,162,0.92)"]}
+                        start={COLORS.gradientStart}
+                        end={COLORS.gradientEnd}
+                        style={StyleSheet.absoluteFill}
+                    />
                     <View style={styles.topRow}>
                         <View style={styles.langBtn}>
                             <Text style={styles.langText}>Français</Text>
@@ -175,7 +185,7 @@ export default function AccountScreen({ navigation }) {
                             </View>
                         </View>
                     </View>
-                </LinearGradient>
+                </ImageBackground>
 
                 {/* Ma Commande */}
                 <View style={styles.block}>

@@ -18,6 +18,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
+import { useWishlist } from "../context/WishlistContext";
 import api, { apiError } from "../api/client";
 import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
@@ -37,22 +38,35 @@ const RECO_PARAMS = {
 };
 
 /** Carte de recommandation (hauteur variable + bouton ajout panier). */
-function RecoCard({ item, onPress, onAdd }) {
+function RecoCard({ item, onPress, onAdd, favorited, onToggleFav }) {
     const [ar, setAr] = useState(0.85);
     const discount = item.sale_price
         ? Math.round((1 - item.sale_price / item.price) * 100)
         : 0;
     return (
         <TouchableOpacity style={styles.recoCard} activeOpacity={0.9} onPress={onPress}>
-            <Image
-                source={{ uri: item.image }}
-                style={[styles.recoImg, { aspectRatio: ar }]}
-                resizeMode="cover"
-                onLoad={(e) => {
-                    const s = e?.nativeEvent?.source;
-                    if (s?.width && s?.height) setAr(s.width / s.height);
-                }}
-            />
+            <View>
+                <Image
+                    source={{ uri: item.image }}
+                    style={[styles.recoImg, { aspectRatio: ar }]}
+                    resizeMode="cover"
+                    onLoad={(e) => {
+                        const s = e?.nativeEvent?.source;
+                        if (s?.width && s?.height) setAr(s.width / s.height);
+                    }}
+                />
+                <TouchableOpacity
+                    style={styles.recoHeart}
+                    onPress={onToggleFav}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                    <Ionicons
+                        name={favorited ? "heart" : "heart-outline"}
+                        size={16}
+                        color={favorited ? COLORS.badge : COLORS.primaryDark}
+                    />
+                </TouchableOpacity>
+            </View>
             <View style={styles.recoBody}>
                 <Text style={styles.recoName} numberOfLines={2}>
                     {item.name}
@@ -85,6 +99,7 @@ function RecoCard({ item, onPress, onAdd }) {
 export default function CartScreen({ navigation }) {
     const { cart, loading, refresh, update, remove, add } = useCart();
     const { user, token } = useAuth();
+    const { isFav, toggle: toggleFav } = useWishlist();
     const insets = useSafeAreaInsets();
 
     const [recos, setRecos] = useState([]);
@@ -171,6 +186,18 @@ export default function CartScreen({ navigation }) {
             await add(p.id, 1);
         } catch (e) {
             Alert.alert("Erreur", apiError(e));
+        }
+    };
+
+    const onToggleFav = async (productId) => {
+        if (!token) {
+            Alert.alert("Connexion requise", "Connectez-vous pour gérer vos favoris.");
+            return;
+        }
+        try {
+            await toggleFav(productId);
+        } catch (e) {
+            /* ignore */
         }
     };
 
@@ -352,6 +379,8 @@ export default function CartScreen({ navigation }) {
                                 item={p}
                                 onPress={() => goDetail(p)}
                                 onAdd={() => addReco(p)}
+                                favorited={isFav(p.id)}
+                                onToggleFav={() => onToggleFav(p.id)}
                             />
                         ))}
                     </View>
@@ -362,6 +391,8 @@ export default function CartScreen({ navigation }) {
                                 item={p}
                                 onPress={() => goDetail(p)}
                                 onAdd={() => addReco(p)}
+                                favorited={isFav(p.id)}
+                                onToggleFav={() => onToggleFav(p.id)}
                             />
                         ))}
                     </View>
@@ -750,6 +781,17 @@ const styles = StyleSheet.create({
         elevation: 1,
     },
     recoImg: { width: "100%", backgroundColor: "#e5e7eb" },
+    recoHeart: {
+        position: "absolute",
+        top: 6,
+        right: 6,
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: "rgba(255,255,255,0.92)",
+        alignItems: "center",
+        justifyContent: "center",
+    },
     recoBody: { padding: 8 },
     recoName: { fontSize: 12.5, color: COLORS.text, lineHeight: 17 },
     bestseller: { fontSize: 11, color: COLORS.accent, fontWeight: "700", marginTop: 4 },
