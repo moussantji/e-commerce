@@ -41,6 +41,7 @@ Route::middleware('throttle:60,1')->group(function () {
 // Protégé (Bearer token)
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
+    Route::put('/me', [AuthController::class, 'updateProfile']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
     // Avis clients

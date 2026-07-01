@@ -236,6 +236,17 @@ export default function DealsScreen({ navigation }) {
                         <Ionicons name="notifications-outline" size={20} color="#fff" />
                     </TouchableOpacity>
                 </View>
+
+                {/* Barre de recherche */}
+                <TouchableOpacity
+                    style={styles.searchBar}
+                    activeOpacity={0.85}
+                    onPress={() => navigation.navigate("Search", { focusSearch: true })}
+                >
+                    <Ionicons name="search" size={18} color="#9ca3af" />
+                    <Text style={styles.searchPlaceholder}>Rechercher une offre...</Text>
+                    <Ionicons name="camera-outline" size={19} color="#9ca3af" />
+                </TouchableOpacity>
             </View>
 
             {/* Onglets de filtre (fond blanc) */}
@@ -319,13 +330,22 @@ export default function DealsScreen({ navigation }) {
                 />
                 <View style={styles.stickyTitleRow}>
                     <Text style={styles.stickyTitle}>Bons Plans</Text>
-                    <TouchableOpacity
-                        onPress={() => navigation.navigate("Notifications")}
-                        style={styles.stickyNotifBtn}
-                        activeOpacity={0.7}
-                    >
-                        <Ionicons name="notifications-outline" size={20} color="#fff" />
-                    </TouchableOpacity>
+                    <View style={{ flexDirection: "row", gap: 8 }}>
+                        <TouchableOpacity
+                            onPress={() => navigation.navigate("Search", { focusSearch: true })}
+                            style={styles.stickyNotifBtn}
+                            activeOpacity={0.7}
+                        >
+                            <Ionicons name="search" size={19} color="#fff" />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => navigation.navigate("Notifications")}
+                            style={styles.stickyNotifBtn}
+                            activeOpacity={0.7}
+                        >
+                            <Ionicons name="notifications-outline" size={20} color="#fff" />
+                        </TouchableOpacity>
+                    </View>
                 </View>
                 {renderTabs(true)}
             </Animated.View>
@@ -359,6 +379,17 @@ const styles = StyleSheet.create({
         color: "rgba(255,255,255,0.9)",
         marginTop: 2,
     },
+    searchBar: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+        backgroundColor: "#fff",
+        borderRadius: RADIUS.pill,
+        paddingHorizontal: 14,
+        height: 40,
+        marginTop: 14,
+    },
+    searchPlaceholder: { flex: 1, color: "#9ca3af", fontSize: 14 },
     notifBtn: {
         width: 40,
         height: 40,

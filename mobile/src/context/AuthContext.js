@@ -74,6 +74,13 @@ export function AuthProvider({ children }) {
         setUser(null);
     };
 
+    // Met à jour le profil et le state utilisateur
+    const updateProfile = async (payload) => {
+        const { data } = await api.put("/me", payload);
+        setUser(data.user);
+        return data.user;
+    };
+
     return (
         <AuthContext.Provider
             value={{
@@ -84,6 +91,7 @@ export function AuthProvider({ children }) {
                 register,
                 socialLogin,
                 logout,
+                updateProfile,
             }}
         >
             {children}
