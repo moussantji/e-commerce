@@ -58,6 +58,18 @@ class AuthenticatedSessionController extends Controller
             }
 
             $user->forceFill($data)->save();
+
+            // Notification de connexion (base + push, sans email)
+            try {
+                $user->notify(new \App\Notifications\SecurityNotification(
+                    'Nouvelle connexion',
+                    'Une connexion à votre compte vient d\'avoir lieu (' . now()->format('d/m/Y H:i') . ').',
+                    'log-in-outline',
+                    false,
+                ));
+            } catch (\Throwable $e) {
+                // silencieux
+            }
         } catch (\Throwable $e) {
             // silencieux : la connexion ne doit jamais échouer à cause du géocodage
         }

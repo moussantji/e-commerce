@@ -60,6 +60,18 @@ class AuthController extends Controller
 
         $token = $user->createToken('mobile')->plainTextToken;
 
+        // Notification de connexion (base + push, sans email pour éviter le spam)
+        try {
+            $user->notify(new \App\Notifications\SecurityNotification(
+                'Nouvelle connexion',
+                'Une connexion à votre compte vient d\'avoir lieu (' . now()->format('d/m/Y H:i') . ').',
+                'log-in-outline',
+                false,
+            ));
+        } catch (\Throwable $e) {
+            /* ignore */
+        }
+
         return response()->json([
             'user' => $this->userPayload($user),
             'token' => $token,
@@ -115,6 +127,18 @@ class AuthController extends Controller
         // Révoque les autres tokens, garde la session courante
         $currentId = $request->user()->currentAccessToken()->id;
         $user->tokens()->where('id', '!=', $currentId)->delete();
+
+        // Notification de sécurité (base + email + push)
+        try {
+            $user->notify(new \App\Notifications\SecurityNotification(
+                'Mot de passe modifié',
+                'Le mot de passe de votre compte vient d\'être changé.',
+                'lock-closed-outline',
+                true,
+            ));
+        } catch (\Throwable $e) {
+            /* ignore */
+        }
 
         return response()->json(['message' => 'Mot de passe mis à jour.']);
     }
