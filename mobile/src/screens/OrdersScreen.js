@@ -20,15 +20,18 @@ import { COLORS, RADIUS } from "../theme";
 
 const TABS = [
     { key: "all", label: "Tout" },
-    { key: "en_attente", label: "En attente de paiement", match: ["en_attente"] },
-    { key: "route", label: "En route", match: ["traitement", "expedie"] },
+    { key: "en_attente", label: "À payer", match: ["en_attente"] },
+    { key: "verif", label: "En vérification", match: ["paiement_declare"] },
+    { key: "route", label: "En cours", match: ["payee", "traitement", "expedie"] },
     { key: "livre", label: "Livré", match: ["livre"] },
     { key: "annule", label: "Annulé", match: ["annule"] },
 ];
 
 const STATUS_LABELS = {
     en_attente: "En attente de paiement",
-    traitement: "En traitement",
+    paiement_declare: "Paiement en vérification",
+    payee: "Payée — en préparation",
+    traitement: "En préparation",
     expedie: "Expédiée",
     livre: "Livrée",
     annule: "Commande annulée",

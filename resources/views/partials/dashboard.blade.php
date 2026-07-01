@@ -48,15 +48,20 @@
                                 @php
                                     // Status configuration mapping
                                     $statusConfig = [
-                                        'en_attente' => ['badge-phoenix-secondary', 'clock', 'Pending'],
-                                        'traitement' => ['badge-phoenix-info', 'clock', 'Processing'],
-                                        'expedition' => ['badge-phoenix-success', 'truck', 'Shipped'],
-                                        'livree' => ['badge-phoenix-success', 'check', 'Delivered'],
-                                        'annulee' => ['badge-phoenix-danger', 'x', 'Cancelled'],
+                                        'en_attente' => ['badge-phoenix-secondary', 'clock', 'En attente de paiement'],
+                                        'paiement_declare' => ['badge-phoenix-warning', 'clock', 'Paiement à vérifier'],
+                                        'payee' => ['badge-phoenix-primary', 'check', 'Payée'],
+                                        'traitement' => ['badge-phoenix-info', 'clock', 'En préparation'],
+                                        'expedition' => ['badge-phoenix-success', 'truck', 'Expédiée'],
+                                        'expedie' => ['badge-phoenix-success', 'truck', 'Expédiée'],
+                                        'livree' => ['badge-phoenix-success', 'check', 'Livrée'],
+                                        'livre' => ['badge-phoenix-success', 'check', 'Livrée'],
+                                        'annulee' => ['badge-phoenix-danger', 'x', 'Annulée'],
+                                        'annule' => ['badge-phoenix-danger', 'x', 'Annulée'],
                                         'partiellement_livree' => [
                                             'badge-phoenix-warning',
                                             'clock',
-                                            'Partially Delivered',
+                                            'Partiellement livrée',
                                         ],
                                     ];
 
@@ -65,7 +70,7 @@
                                         'help-circle',
                                         'Unknown',
                                     ];
-                                    $isCancelled = $commande->statut === 'annulee';
+                                    $isCancelled = in_array($commande->statut, ['annulee', 'annule']);
                                 @endphp
 
                                 <tr

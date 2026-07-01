@@ -25,19 +25,31 @@
                             @php
                                 $statusClass = [
                                     'en_attente' => 'warning',
+                                    'paiement_declare' => 'warning',
+                                    'payee' => 'primary',
+                                    'traitement' => 'info',
                                     'en_cours' => 'info',
                                     'expediee' => 'primary',
+                                    'expedie' => 'primary',
                                     'livree' => 'success',
-                                    'annulee' => 'danger'
-                                ][$order->status] ?? 'secondary';
+                                    'livre' => 'success',
+                                    'annulee' => 'danger',
+                                    'annule' => 'danger'
+                                ][$order->statut] ?? 'secondary';
 
                                 $statusText = [
-                                    'en_attente' => 'En attente',
-                                    'en_cours' => 'En cours de traitement',
+                                    'en_attente' => 'En attente de paiement',
+                                    'paiement_declare' => 'Paiement en vérification',
+                                    'payee' => 'Payée',
+                                    'traitement' => 'En préparation',
+                                    'en_cours' => 'En préparation',
                                     'expediee' => 'Expédiée',
+                                    'expedie' => 'Expédiée',
                                     'livree' => 'Livrée',
-                                    'annulee' => 'Annulée'
-                                ][$order->status] ?? $order->status;
+                                    'livre' => 'Livrée',
+                                    'annulee' => 'Annulée',
+                                    'annule' => 'Annulée'
+                                ][$order->statut] ?? $order->statut;
                             @endphp
                             <span class="badge bg-{{ $statusClass }} fs-6">{{ $statusText }}</span>
 
@@ -154,13 +166,13 @@
                                 </button>
                                 <ul class="dropdown-menu">
                                     @foreach([
-                                        'en_attente' => 'En attente',
-                                        'en_cours' => 'En cours de traitement',
-                                        'expediee' => 'Marquer comme expédiée',
-                                        'livree' => 'Marquer comme livrée',
-                                        'annulee' => 'Annuler la commande'
+                                        'payee' => 'Marquer comme payée',
+                                        'traitement' => 'En préparation',
+                                        'expedie' => 'Marquer comme expédiée',
+                                        'livre' => 'Marquer comme livrée',
+                                        'annule' => 'Annuler la commande'
                                     ] as $status => $label)
-                                        @if($order->status !== $status)
+                                        @if($order->statut !== $status)
                                             <li>
                                                 <form action="{{ route('admin.orders.update-status', $order) }}" method="POST" class="d-inline">
                                                     @csrf

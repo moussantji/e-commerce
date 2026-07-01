@@ -48,11 +48,13 @@ class OrderController extends Controller
 
         // Récupérer les statuts disponibles pour le filtre
         $statuses = [
-            'en_attente' => 'En attente',
-            'traitement' => 'En traitement',
-            'expedie' => 'Expédié',
-            'livre' => 'Livré',
-            'annule' => 'Annulé'
+            'en_attente' => 'En attente de paiement',
+            'paiement_declare' => 'Paiement à vérifier',
+            'payee' => 'Payée',
+            'traitement' => 'En préparation',
+            'expedie' => 'Expédiée',
+            'livre' => 'Livrée',
+            'annule' => 'Annulée'
         ];
 
         return view('admin.orders.index', compact('commandes', 'statuses'));
@@ -79,8 +81,9 @@ class OrderController extends Controller
         }
 
         $allowed = [
-            'en_attente', 'en_traitement', 'expediee', 'expédition', 'expédition',
-            'expedie', 'en_cours', 'expediee', 'livree', 'livree', 'annulee', 'annule', 'payee'
+            'en_attente', 'paiement_declare', 'payee', 'traitement',
+            'en_traitement', 'en_cours', 'expediee', 'expedie',
+            'livree', 'livre', 'annulee', 'annule',
         ];
         if (! in_array($status, $allowed, true)) {
             return back()->with('error', 'Statut invalide.');
@@ -97,6 +100,7 @@ class OrderController extends Controller
                 break;
             case 'en_traitement':
             case 'en_cours':
+            case 'traitement':
                 $updates['date_traitement'] = $now;
                 break;
             case 'expediee':
@@ -104,6 +108,7 @@ class OrderController extends Controller
                 $updates['date_expedition'] = $now;
                 break;
             case 'livree':
+            case 'livre':
                 $updates['date_livraison'] = $now;
                 break;
             case 'annulee':
