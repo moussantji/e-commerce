@@ -19,6 +19,7 @@ import AccountScreen from "../screens/AccountScreen";
 import ProductListScreen from "../screens/ProductListScreen";
 import ProductDetailScreen from "../screens/ProductDetailScreen";
 import SearchScreen from "../screens/SearchScreen";
+import WriteReviewScreen from "../screens/WriteReviewScreen";
 import OrderDetailScreen from "../screens/OrderDetailScreen";
 import NotificationsScreen from "../screens/NotificationsScreen";
 import AddressesScreen from "../screens/AddressesScreen";
@@ -121,6 +122,11 @@ function AppStack() {
             <Stack.Screen
                 name="ProductDetail"
                 component={ProductDetailScreen}
+                options={{ headerShown: false }}
+            />
+            <Stack.Screen
+                name="WriteReview"
+                component={WriteReviewScreen}
                 options={{ headerShown: false }}
             />
             <Stack.Screen

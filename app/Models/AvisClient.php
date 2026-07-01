@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Models\Photos;
+use App\Models\photos as Photos;
 use App\Models\ReviewResponse;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

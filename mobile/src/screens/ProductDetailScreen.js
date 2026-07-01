@@ -9,9 +9,6 @@ import {
     ActivityIndicator,
     Alert,
     Dimensions,
-    Modal,
-    Pressable,
-    TextInput,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -57,12 +54,6 @@ export default function ProductDetailScreen({ route, navigation }) {
     const [activeImg, setActiveImg] = useState(0);
     const galleryRef = useRef(null);
 
-    // Formulaire d'avis
-    const [reviewOpen, setReviewOpen] = useState(false);
-    const [reviewRating, setReviewRating] = useState(0);
-    const [reviewComment, setReviewComment] = useState("");
-    const [submitting, setSubmitting] = useState(false);
-
     useEffect(() => {
         (async () => {
             setLoading(true);
@@ -97,45 +88,38 @@ export default function ProductDetailScreen({ route, navigation }) {
         }
     };
 
-    const submitReview = async () => {
+    const submitReview = () => {
         if (!token) {
-            setReviewOpen(false);
             Alert.alert("Connexion requise", "Connectez-vous pour laisser un avis.");
             return;
         }
-        if (reviewRating < 0.5) {
-            Alert.alert("Note requise", "Sélectionnez une note (1 à 5 étoiles).");
-            return;
-        }
-        setSubmitting(true);
-        try {
-            const { data } = await api.post(`/products/${id}/reviews`, {
-                rating: reviewRating,
-                comment: reviewComment.trim() || undefined,
-            });
-            // Ajoute l'avis en tête + met à jour le compteur/moyenne localement
-            setProduct((prev) => {
-                const reviews = [data.data, ...(prev.reviews ?? [])];
-                const count = (prev.rating_count ?? 0) + 1;
-                const avg =
-                    ((prev.rating_avg ?? 0) * (prev.rating_count ?? 0) + reviewRating) / count;
-                return {
-                    ...prev,
-                    reviews,
-                    rating_count: count,
-                    rating_avg: Math.round(avg * 10) / 10,
-                };
-            });
-            setReviewOpen(false);
-            setReviewRating(0);
-            setReviewComment("");
-            Alert.alert("Merci !", "Votre avis a bien été publié.");
-        } catch (e) {
-            Alert.alert("Impossible", apiError(e));
-        } finally {
-            setSubmitting(false);
-        }
+        navigation.navigate("WriteReview", {
+            productId: id,
+            productName: product?.name,
+        });
     };
+
+    // Réception d'un nouvel avis renvoyé par l'écran WriteReview
+    useEffect(() => {
+        const newReview = route.params?.newReview;
+        if (!newReview) return;
+        setProduct((prev) => {
+            if (!prev) return prev;
+            if ((prev.reviews ?? []).some((r) => r.id === newReview.id)) return prev;
+            const reviews = [newReview, ...(prev.reviews ?? [])];
+            const count = (prev.rating_count ?? 0) + 1;
+            const avg =
+                ((prev.rating_avg ?? 0) * (prev.rating_count ?? 0) + (newReview.rating ?? 0)) / count;
+            return {
+                ...prev,
+                reviews,
+                rating_count: count,
+                rating_avg: Math.round(avg * 10) / 10,
+            };
+        });
+        setTab("reviews");
+        navigation.setParams({ newReview: undefined });
+    }, [route.params?.newReview]);
 
     if (loading) {
         return (
@@ -363,13 +347,7 @@ export default function ProductDetailScreen({ route, navigation }) {
                                 </View>
                                 <TouchableOpacity
                                     style={styles.writeBtn}
-                                    onPress={() => {
-                                        if (!token) {
-                                            Alert.alert("Connexion requise", "Connectez-vous pour laisser un avis.");
-                                            return;
-                                        }
-                                        setReviewOpen(true);
-                                    }}
+                                    onPress={submitReview}
                                 >
                                     <Ionicons name="create-outline" size={16} color={COLORS.primaryDark} />
                                     <Text style={styles.writeBtnText}>Écrire un avis</Text>
@@ -462,56 +440,6 @@ export default function ProductDetailScreen({ route, navigation }) {
                     </LinearGradient>
                 </TouchableOpacity>
             </View>
-
-            {/* Modal : écrire un avis */}
-            <Modal visible={reviewOpen} transparent animationType="slide" onRequestClose={() => setReviewOpen(false)}>
-                <Pressable style={styles.backdrop} onPress={() => setReviewOpen(false)}>
-                    <Pressable style={[styles.reviewSheet, { paddingBottom: insets.bottom + 16 }]}>
-                        <View style={styles.reviewSheetHead}>
-                            <Text style={styles.reviewSheetTitle}>Votre avis</Text>
-                            <TouchableOpacity onPress={() => setReviewOpen(false)}>
-                                <Ionicons name="close" size={24} color={COLORS.text} />
-                            </TouchableOpacity>
-                        </View>
-
-                        {/* Étoiles cliquables */}
-                        <View style={styles.starPicker}>
-                            {[1, 2, 3, 4, 5].map((n) => (
-                                <TouchableOpacity key={n} onPress={() => setReviewRating(n)} hitSlop={6}>
-                                    <Ionicons
-                                        name={reviewRating >= n ? "star" : "star-outline"}
-                                        size={38}
-                                        color="#f59e0b"
-                                    />
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                        <Text style={styles.starHint}>
-                            {reviewRating > 0 ? `${reviewRating} / 5` : "Touchez pour noter"}
-                        </Text>
-
-                        <TextInput
-                            style={styles.reviewInput}
-                            placeholder="Partagez votre expérience (optionnel)"
-                            placeholderTextColor="#9ca3af"
-                            value={reviewComment}
-                            onChangeText={setReviewComment}
-                            multiline
-                            maxLength={1000}
-                        />
-
-                        <TouchableOpacity
-                            style={[styles.submitBtn, submitting && { opacity: 0.6 }]}
-                            onPress={submitReview}
-                            disabled={submitting}
-                        >
-                            <Text style={styles.submitText}>
-                                {submitting ? "Envoi..." : "Publier mon avis"}
-                            </Text>
-                        </TouchableOpacity>
-                    </Pressable>
-                </Pressable>
-            </Modal>
         </View>
     );
 }
