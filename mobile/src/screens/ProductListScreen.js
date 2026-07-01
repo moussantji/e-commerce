@@ -19,6 +19,7 @@ import api, { apiError } from "../api/client";
 import { useCart } from "../context/CartContext";
 import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
+import AnimatedPressable from "../components/AnimatedPressable";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = (SCREEN_WIDTH - 24) / 2;
@@ -159,9 +160,9 @@ export default function ProductListScreen({ route, navigation }) {
         const lowStock = item.stock != null && item.stock > 0 && item.stock <= 5;
 
         return (
-            <TouchableOpacity
+            <AnimatedPressable
                 style={styles.card}
-                activeOpacity={0.9}
+                scaleTo={0.97}
                 onPress={() =>
                     navigation.navigate("ProductDetail", { id: item.id, name: item.name })
                 }
@@ -202,7 +203,7 @@ export default function ProductListScreen({ route, navigation }) {
                         </Text>
                     ) : null}
                 </View>
-            </TouchableOpacity>
+            </AnimatedPressable>
         );
     };
 

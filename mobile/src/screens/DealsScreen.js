@@ -22,6 +22,7 @@ import { COLORS, RADIUS } from "../theme";
 import { useWishlist } from "../context/WishlistContext";
 import { useAuth } from "../context/AuthContext";
 import { Alert } from "react-native";
+import AnimatedPressable from "../components/AnimatedPressable";
 
 const HERO_IMAGE =
     "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1080&q=80";
@@ -169,9 +170,9 @@ export default function DealsScreen({ navigation }) {
             : 0;
 
         return (
-            <TouchableOpacity
+            <AnimatedPressable
                 style={[styles.card, { width: (SCREEN_WIDTH - 32) / 2 }]}
-                activeOpacity={0.9}
+                scaleTo={0.97}
                 onPress={() =>
                     navigation.navigate("ProductDetail", {
                         id: item.id,
@@ -228,7 +229,7 @@ export default function DealsScreen({ navigation }) {
                         </View>
                     )}
                 </View>
-            </TouchableOpacity>
+            </AnimatedPressable>
         );
     };
 
