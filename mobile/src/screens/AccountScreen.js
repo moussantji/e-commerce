@@ -126,6 +126,15 @@ export default function AccountScreen({ navigation }) {
         },
     ];
 
+    if (user?.role === "admin") {
+        menu.push({
+            icon: "shield-checkmark-outline",
+            label: "Espace vendeur (paiements)",
+            right: <Text style={styles.rightInfo}>Admin</Text>,
+            onPress: () => navigation.navigate("AdminPayments"),
+        });
+    }
+
     const initial = (user?.name || "?").charAt(0).toUpperCase();
 
     return (

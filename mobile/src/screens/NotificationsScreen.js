@@ -60,6 +60,10 @@ export default function NotificationsScreen({ navigation }) {
     const [refreshing, setRefreshing] = useState(false);
 
     const openNotification = (item) => {
+        // Marque comme lue localement au tap
+        setItems((prev) =>
+            prev.map((n) => (n.id === item.id ? { ...n, unread: false } : n)),
+        );
         const link = item.link || { type: "none" };
         switch (link.type) {
             case "order":
@@ -74,8 +78,24 @@ export default function NotificationsScreen({ navigation }) {
             case "home":
                 navigation.navigate("Tabs", { screen: "Accueil" });
                 break;
+            case "wallet":
+                navigation.navigate("Wallet");
+                break;
+            case "admin_payment":
+            case "admin_wallet":
+                navigation.navigate("AdminPayments");
+                break;
             default:
                 break;
+        }
+    };
+
+    const markAllRead = async () => {
+        setItems((prev) => prev.map((n) => ({ ...n, unread: false })));
+        try {
+            await api.post("/notifications/read-all");
+        } catch (e) {
+            /* ignore */
         }
     };
 
@@ -132,6 +152,8 @@ export default function NotificationsScreen({ navigation }) {
         );
     }
 
+    const hasUnread = items.some((n) => n.unread);
+
     return (
         <FlatList
             style={{ backgroundColor: COLORS.bg }}
@@ -139,6 +161,14 @@ export default function NotificationsScreen({ navigation }) {
             keyExtractor={(i) => i.id}
             renderItem={renderItem}
             contentContainerStyle={{ padding: 12, gap: 10 }}
+            ListHeaderComponent={
+                hasUnread ? (
+                    <TouchableOpacity style={styles.markAllBtn} onPress={markAllRead} activeOpacity={0.7}>
+                        <Ionicons name="checkmark-done-outline" size={16} color={COLORS.primaryDark} />
+                        <Text style={styles.markAllText}>Tout marquer comme lu</Text>
+                    </TouchableOpacity>
+                ) : null
+            }
             refreshControl={
                 <RefreshControl
                     refreshing={refreshing}
@@ -176,6 +206,17 @@ const styles = StyleSheet.create({
         alignItems: "center",
         backgroundColor: COLORS.bg,
     },
+    markAllBtn: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 6,
+        backgroundColor: "#fff",
+        borderRadius: RADIUS.pill,
+        paddingVertical: 10,
+        marginBottom: 4,
+    },
+    markAllText: { color: COLORS.primaryDark, fontWeight: "700", fontSize: 13 },
     card: {
         flexDirection: "row",
         gap: 12,

@@ -39,6 +39,7 @@ class OrderResource extends JsonResource
     {
         return match ($this->statut) {
             'en_attente' => 'En attente',
+            'payee' => 'Payée',
             'traitement' => 'En traitement',
             'expedie' => 'Expédiée',
             'livre' => 'Livrée',
