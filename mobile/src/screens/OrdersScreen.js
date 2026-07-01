@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api, { apiError } from "../api/client";
 import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
+import AnimatedPressable from "../components/AnimatedPressable";
 
 const TABS = [
     { key: "all", label: "Tout" },
@@ -94,10 +95,10 @@ export default function OrdersScreen({ navigation, route }) {
         const items = order.items ?? [];
         const cancelled = order.statut === "annule";
         return (
-            <TouchableOpacity
+            <AnimatedPressable
                 key={String(order.id)}
                 style={styles.card}
-                activeOpacity={0.9}
+                scaleTo={0.98}
                 onPress={() =>
                     navigation.navigate("OrderDetail", { id: order.id })
                 }
@@ -213,7 +214,7 @@ export default function OrdersScreen({ navigation, route }) {
                         </TouchableOpacity>
                     )}
                 </View>
-            </TouchableOpacity>
+            </AnimatedPressable>
         );
     };
 

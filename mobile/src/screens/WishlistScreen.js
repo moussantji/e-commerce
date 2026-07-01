@@ -15,6 +15,7 @@ import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
+import AnimatedPressable from "../components/AnimatedPressable";
 
 export default function WishlistScreen({ navigation }) {
     const { add } = useCart();
@@ -51,9 +52,9 @@ export default function WishlistScreen({ navigation }) {
     };
 
     const renderItem = ({ item }) => (
-        <TouchableOpacity
+        <AnimatedPressable
             style={styles.card}
-            activeOpacity={0.9}
+            scaleTo={0.97}
             onPress={() => navigation.navigate("ProductDetail", { id: item.id, name: item.name })}
         >
             <Image source={{ uri: item.image }} style={styles.image} />
@@ -74,7 +75,7 @@ export default function WishlistScreen({ navigation }) {
                     </TouchableOpacity>
                 </View>
             </View>
-        </TouchableOpacity>
+        </AnimatedPressable>
     );
 
     if (loading) {
