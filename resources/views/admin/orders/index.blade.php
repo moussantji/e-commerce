@@ -9,6 +9,11 @@
                 <div class="col-auto">
                     <h2 class="mb-0">Orders</h2>
                 </div>
+                <div class="col-auto ms-auto">
+                    <a href="{{ route('admin.payments.moderation') }}" class="btn btn-primary">
+                        <span class="fas fa-money-check-alt me-2"></span>Paiements à vérifier
+                    </a>
+                </div>
             </div>
             <div id="orderTable"
                 data-list='{"valueNames":["order","total","customer","payment_status","fulfilment_status","delivery_type","date"],"page":10,"pagination":true}'>
