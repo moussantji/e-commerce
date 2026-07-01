@@ -136,10 +136,10 @@ export default function AccountScreen({ navigation }) {
                     source={{ uri: user?.avatar || ACCOUNT_BG_IMAGE }}
                     style={[styles.header, { paddingTop: insets.top + 8 }]}
                     resizeMode="cover"
-                    blurRadius={user?.avatar ? 12 : 0}
+                    blurRadius={user?.avatar ? 6 : 0}
                 >
                     <LinearGradient
-                        colors={["rgba(102,126,234,0.82)", "rgba(118,75,162,0.92)"]}
+                        colors={["rgba(102,126,234,0.5)", "rgba(118,75,162,0.8)"]}
                         start={COLORS.gradientStart}
                         end={COLORS.gradientEnd}
                         style={StyleSheet.absoluteFill}
@@ -264,7 +264,7 @@ export default function AccountScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    header: { paddingHorizontal: 12, paddingBottom: 44 },
+    header: { paddingHorizontal: 12, paddingBottom: 44, minHeight: 200, justifyContent: "flex-start" },
     topRow: { flexDirection: "row", alignItems: "center", gap: 8 },
     langBtn: {
         flexDirection: "row",
