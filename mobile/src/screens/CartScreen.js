@@ -1,24 +1,26 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import {
     View,
     Text,
-    ScrollView,
     Image,
     TextInput,
     TouchableOpacity,
     StyleSheet,
     ActivityIndicator,
     Alert,
+    Animated,
+    ImageBackground,
+    Platform,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import api, { apiError } from "../api/client";
 import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
-import ScreenHeroHeader from "../components/ScreenHeroHeader";
 
 const CART_HERO_IMAGE =
     "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1080&q=80";
@@ -92,6 +94,34 @@ export default function CartScreen({ navigation }) {
     const [coupon, setCoupon] = useState(null);
     const [couponInput, setCouponInput] = useState("");
     const [placing, setPlacing] = useState(false);
+
+    const scrollY = useRef(new Animated.Value(0)).current;
+
+    // Responsive: extra padding above the header content to avoid system status bar
+    const STATUS_BAR_PADDING = Platform.OS === "ios" ? insets.top + 12 : insets.top + 16;
+
+    // Header shrinks slightly on scroll (no aggressive folding)
+    const HEADER_EXPANDED = 120;
+    const HEADER_COLLAPSED = 76;
+    const SCROLL_DISTANCE = HEADER_EXPANDED - HEADER_COLLAPSED;
+
+    const headerHeight = scrollY.interpolate({
+        inputRange: [0, SCROLL_DISTANCE],
+        outputRange: [HEADER_EXPANDED + STATUS_BAR_PADDING, HEADER_COLLAPSED + STATUS_BAR_PADDING],
+        extrapolate: "clamp",
+    });
+
+    const locationOpacity = scrollY.interpolate({
+        inputRange: [0, SCROLL_DISTANCE * 0.7],
+        outputRange: [1, 0],
+        extrapolate: "clamp",
+    });
+
+    const titleFontSize = scrollY.interpolate({
+        inputRange: [0, SCROLL_DISTANCE],
+        outputRange: [22, 18],
+        extrapolate: "clamp",
+    });
 
     const city =
         user?.ville || user?.city || user?.region || user?.pays || null;
@@ -208,33 +238,47 @@ export default function CartScreen({ navigation }) {
     const rightCol = recos.filter((_, i) => i % 2 === 1);
 
     const Header = (
-        <ScreenHeroHeader
-            image={CART_HERO_IMAGE}
-            height={130 + insets.top}
-            overlayOpacity="medium"
-            style={{ paddingTop: insets.top }}
-        >
-            <View style={styles.headerInner}>
-                <View>
-                    <Text style={styles.headerTitle}>Panier</Text>
-                    <TouchableOpacity style={styles.location} activeOpacity={0.7}>
-                        <Ionicons name="location-outline" size={15} color="rgba(255,255,255,0.85)" />
-                        <Text style={styles.locationText}>
-                            {city ? `Livrer à ${city}` : "Adresse de livraison"}
-                        </Text>
-                        <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.85)" />
-                    </TouchableOpacity>
-                </View>
-                <View style={styles.cartBadgeCircle}>
-                    <Ionicons name="bag" size={22} color="#fff" />
-                    {cart.count > 0 && (
-                        <View style={styles.cartBadgeDot}>
-                            <Text style={styles.cartBadgeNum}>{cart.count}</Text>
-                        </View>
-                    )}
+        <Animated.View style={[styles.headerWrapper, { height: headerHeight }]}>
+            <ImageBackground
+                source={{ uri: CART_HERO_IMAGE }}
+                style={StyleSheet.absoluteFill}
+                resizeMode="cover"
+            >
+                <LinearGradient
+                    colors={["rgba(102,126,234,0.6)", "rgba(118,75,162,0.88)"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                />
+            </ImageBackground>
+
+            <View style={[styles.headerContent, { paddingTop: STATUS_BAR_PADDING }]}>
+                <View style={styles.headerInner}>
+                    <View style={{ flex: 1 }}>
+                        <Animated.Text style={[styles.headerTitle, { fontSize: titleFontSize }]}>
+                            Panier
+                        </Animated.Text>
+                        <Animated.View style={{ opacity: locationOpacity }}>
+                            <TouchableOpacity style={styles.location} activeOpacity={0.7}>
+                                <Ionicons name="location-outline" size={15} color="rgba(255,255,255,0.85)" />
+                                <Text style={styles.locationText} numberOfLines={1}>
+                                    {city ? `Livrer à ${city}` : "Adresse de livraison"}
+                                </Text>
+                                <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.85)" />
+                            </TouchableOpacity>
+                        </Animated.View>
+                    </View>
+                    <View style={styles.cartBadgeCircle}>
+                        <Ionicons name="bag" size={22} color="#fff" />
+                        {cart.count > 0 && (
+                            <View style={styles.cartBadgeDot}>
+                                <Text style={styles.cartBadgeNum}>{cart.count}</Text>
+                            </View>
+                        )}
+                    </View>
                 </View>
             </View>
-        </ScreenHeroHeader>
+        </Animated.View>
     );
 
     const Recommendations = (
@@ -302,12 +346,18 @@ export default function CartScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <ScrollView
+            {/* Collapsing sticky header (photo + purple overlay) */}
+            {Header}
+
+            <Animated.ScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingBottom: isEmpty ? 24 : 160 }}
+                onScroll={Animated.event(
+                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                    { useNativeDriver: false }
+                )}
+                scrollEventThrottle={16}
             >
-                {Header}
-
                 {isEmpty ? (
                     <>
                         <View style={styles.emptyCard}>
@@ -488,7 +538,7 @@ export default function CartScreen({ navigation }) {
                         </View>
                     </View>
                 )}
-            </ScrollView>
+            </Animated.ScrollView>
 
             {!isEmpty && (
                 <View
@@ -545,14 +595,24 @@ export default function CartScreen({ navigation }) {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: COLORS.bg },
+    headerWrapper: {
+        width: "100%",
+        overflow: "hidden",
+    },
+    headerContent: {
+        flex: 1,
+        justifyContent: "flex-end",
+        paddingHorizontal: 16,
+        paddingBottom: 14,
+    },
     headerInner: {
         flexDirection: "row",
         alignItems: "flex-end",
         justifyContent: "space-between",
     },
-    headerTitle: { fontSize: 22, fontWeight: "900", color: "#fff" },
+    headerTitle: { fontWeight: "900", color: "#fff" },
     location: { flexDirection: "row", alignItems: "center", gap: 3, marginTop: 4 },
-    locationText: { color: "rgba(255,255,255,0.85)", fontSize: 13 },
+    locationText: { color: "rgba(255,255,255,0.85)", fontSize: 13, flexShrink: 1 },
     cartBadgeCircle: {
         width: 44,
         height: 44,
