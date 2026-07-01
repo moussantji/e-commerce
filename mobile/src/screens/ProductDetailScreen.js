@@ -16,8 +16,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api, { apiError } from "../api/client";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
+import { useWishlist } from "../context/WishlistContext";
 import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
+import { addRecentlyViewed } from "../recentlyViewed";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -104,9 +106,10 @@ export default function ProductDetailScreen({ route, navigation }) {
     const [qty, setQty] = useState(1);
     const [tab, setTab] = useState("description");
     const [activeImg, setActiveImg] = useState(0);
-    const [isFav, setIsFav] = useState(false);
     const [favLoading, setFavLoading] = useState(false);
     const galleryRef = useRef(null);
+    const { isFav: isFavId, toggle: toggleFavCtx } = useWishlist();
+    const isFav = isFavId(product?.id ?? Number(id));
 
     // Section "Vous aimerez aussi" avec filtres + grille + pagination
     const [recoFilter, setRecoFilter] = useState("for_you");
@@ -122,6 +125,7 @@ export default function ProductDetailScreen({ route, navigation }) {
             try {
                 const { data } = await api.get(`/products/${id}`);
                 setProduct(data.data);
+                addRecentlyViewed(data.data);
             } catch (e) {
                 Alert.alert("Erreur", apiError(e));
             } finally {
@@ -130,19 +134,7 @@ export default function ProductDetailScreen({ route, navigation }) {
         })();
     }, [id]);
 
-    // État favori (si connecté)
-    useEffect(() => {
-        if (!token) return;
-        (async () => {
-            try {
-                const { data } = await api.get(`/wishlist/${id}`);
-                setIsFav(!!data.favorited);
-            } catch (e) {
-                /* ignore */
-            }
-        })();
-    }, [id, token]);
-
+    // État favori (géré par le contexte partagé)
     const toggleFav = async () => {
         if (!token) {
             Alert.alert("Connexion requise", "Connectez-vous pour gérer vos favoris.");
@@ -150,13 +142,9 @@ export default function ProductDetailScreen({ route, navigation }) {
         }
         if (favLoading) return;
         setFavLoading(true);
-        // Optimiste
-        setIsFav((v) => !v);
         try {
-            const { data } = await api.post(`/wishlist/${id}`);
-            setIsFav(!!data.favorited);
+            await toggleFavCtx(product?.id ?? Number(id));
         } catch (e) {
-            setIsFav((v) => !v); // rollback
             Alert.alert("Impossible", apiError(e));
         } finally {
             setFavLoading(false);

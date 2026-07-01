@@ -12,11 +12,13 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import api from "../api/client";
 import { useCart } from "../context/CartContext";
+import { useWishlist } from "../context/WishlistContext";
 import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
 
 export default function WishlistScreen({ navigation }) {
     const { add } = useCart();
+    const { refresh: refreshWishlist } = useWishlist();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -42,6 +44,7 @@ export default function WishlistScreen({ navigation }) {
         setProducts((prev) => prev.filter((p) => p.id !== productId));
         try {
             await api.delete(`/wishlist/${productId}`);
+            refreshWishlist(); // garde le contexte (cœurs) synchronisé
         } catch (e) {
             load();
         }
