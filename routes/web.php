@@ -187,7 +187,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
 
     Route::resource('brands', BrandController::class);
 
-    Route::post('orders/{order}/update-status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
+    Route::match(['post', 'patch'], 'orders/{order}/update-status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
 
     // Confirmation manuelle du paiement par l'admin (preuve mobile money)
     Route::patch('orders/{order}/confirm-payment', [\App\Http\Controllers\PaymentController::class, 'confirmPayment'])->name('orders.confirm-payment');
