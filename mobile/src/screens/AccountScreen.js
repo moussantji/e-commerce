@@ -136,7 +136,7 @@ export default function AccountScreen({ navigation }) {
                     source={{ uri: user?.avatar || ACCOUNT_BG_IMAGE }}
                     style={[styles.header, { paddingTop: insets.top + 8 }]}
                     resizeMode="cover"
-                    blurRadius={user?.avatar ? 6 : 0}
+                    blurRadius={user?.avatar ? 2 : 0}
                 >
                     <LinearGradient
                         colors={["rgba(102,126,234,0.5)", "rgba(118,75,162,0.8)"]}
