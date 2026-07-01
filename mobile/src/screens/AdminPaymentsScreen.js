@@ -103,7 +103,9 @@ export default function AdminPaymentsScreen({ navigation }) {
                     <Ionicons name="chevron-back" size={26} color="#fff" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Espace vendeur</Text>
-                <View style={{ width: 26 }} />
+                <TouchableOpacity onPress={() => navigation.navigate("AdminOrders")} hitSlop={10}>
+                    <Ionicons name="cube-outline" size={24} color="#fff" />
+                </TouchableOpacity>
             </LinearGradient>
 
             {/* Résumé */}

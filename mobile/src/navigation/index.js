@@ -27,6 +27,7 @@ import SettingsScreen from "../screens/SettingsScreen";
 import AccountSecurityScreen from "../screens/AccountSecurityScreen";
 import PaymentScreen from "../screens/PaymentScreen";
 import AdminPaymentsScreen from "../screens/AdminPaymentsScreen";
+import AdminOrdersScreen from "../screens/AdminOrdersScreen";
 import OrderDetailScreen from "../screens/OrderDetailScreen";
 import NotificationsScreen from "../screens/NotificationsScreen";
 import AddressesScreen from "../screens/AddressesScreen";
@@ -171,6 +172,11 @@ function AppStack() {
             <Stack.Screen
                 name="AdminPayments"
                 component={AdminPaymentsScreen}
+                options={{ headerShown: false }}
+            />
+            <Stack.Screen
+                name="AdminOrders"
+                component={AdminOrdersScreen}
                 options={{ headerShown: false }}
             />
             <Stack.Screen
