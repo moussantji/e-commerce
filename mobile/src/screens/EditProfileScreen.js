@@ -21,7 +21,6 @@ import { COLORS, RADIUS } from "../theme";
 const FIELDS = [
     { key: "name", label: "Nom", icon: "person-outline", placeholder: "Votre nom" },
     { key: "prenom", label: "Prénom", icon: "person-outline", placeholder: "Votre prénom" },
-    { key: "email", label: "Email", icon: "mail-outline", placeholder: "email@exemple.com", keyboard: "email-address" },
     { key: "tel", label: "Téléphone", icon: "call-outline", placeholder: "+225 ...", keyboard: "phone-pad" },
     { key: "ville", label: "Ville", icon: "location-outline", placeholder: "Votre ville" },
     { key: "region", label: "Région", icon: "map-outline", placeholder: "Votre région" },
@@ -36,7 +35,6 @@ export default function EditProfileScreen({ navigation }) {
     const [form, setForm] = useState({
         name: user?.name || "",
         prenom: user?.prenom || "",
-        email: user?.email || "",
         tel: user?.tel || "",
         ville: user?.ville || "",
         region: user?.region || "",
@@ -103,6 +101,18 @@ export default function EditProfileScreen({ navigation }) {
 
                     {/* Champs */}
                     <View style={styles.card}>
+                        {/* Email : non modifiable */}
+                        <View style={[styles.field, styles.fieldBorder]}>
+                            <Text style={styles.label}>Email</Text>
+                            <View style={styles.inputRow}>
+                                <Ionicons name="mail-outline" size={18} color={COLORS.textLight} />
+                                <Text style={styles.readonly} numberOfLines={1}>
+                                    {user?.email || "—"}
+                                </Text>
+                                <Ionicons name="lock-closed" size={15} color="#c4c4c4" />
+                            </View>
+                        </View>
+
                         {FIELDS.map((f, i) => (
                             <View key={f.key} style={[styles.field, i < FIELDS.length - 1 && styles.fieldBorder]}>
                                 <Text style={styles.label}>{f.label}</Text>
@@ -186,6 +196,7 @@ const styles = StyleSheet.create({
     label: { fontSize: 12, color: COLORS.textLight, fontWeight: "600", marginBottom: 4 },
     inputRow: { flexDirection: "row", alignItems: "center", gap: 10 },
     input: { flex: 1, fontSize: 15, color: COLORS.text, paddingVertical: 4 },
+    readonly: { flex: 1, fontSize: 15, color: COLORS.textLight, paddingVertical: 4 },
     footer: {
         paddingHorizontal: 16,
         paddingTop: 10,

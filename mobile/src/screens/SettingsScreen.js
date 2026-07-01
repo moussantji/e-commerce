@@ -52,7 +52,7 @@ export default function SettingsScreen({ navigation }) {
                 {
                     icon: "lock-closed-outline",
                     label: "Sécurité du compte",
-                    onPress: () => soon("Sécurité du compte"),
+                    onPress: () => navigation.navigate("AccountSecurity"),
                 },
             ],
         },

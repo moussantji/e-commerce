@@ -64,7 +64,7 @@ class AuthController extends Controller
         return response()->json(['user' => $this->userPayload($request->user())]);
     }
 
-    /** Mise à jour du profil (mobile). */
+    /** Mise à jour du profil (mobile). L'email n'est pas modifiable. */
     public function updateProfile(Request $request)
     {
         $user = $request->user();
@@ -72,7 +72,6 @@ class AuthController extends Controller
         $data = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'prenom' => 'nullable|string|max:255',
-            'email' => 'sometimes|required|email|max:255|unique:users,email,' . $user->id,
             'tel' => 'nullable|string|max:30',
             'ville' => 'nullable|string|max:120',
             'pays' => 'nullable|string|max:120',
@@ -86,6 +85,31 @@ class AuthController extends Controller
             'message' => 'Profil mis à jour.',
             'user' => $this->userPayload($user->fresh()),
         ]);
+    }
+
+    /** Changement de mot de passe (sécurité du compte). */
+    public function changePassword(Request $request)
+    {
+        $data = $request->validate([
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        $user = $request->user();
+
+        if (!Hash::check($data['current_password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['Le mot de passe actuel est incorrect.'],
+            ]);
+        }
+
+        $user->forceFill(['password' => Hash::make($data['password'])])->save();
+
+        // Révoque les autres tokens, garde la session courante
+        $currentId = $request->user()->currentAccessToken()->id;
+        $user->tokens()->where('id', '!=', $currentId)->delete();
+
+        return response()->json(['message' => 'Mot de passe mis à jour.']);
     }
 
     public function logout(Request $request)
