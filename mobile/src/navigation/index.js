@@ -18,6 +18,7 @@ import CartScreen from "../screens/CartScreen";
 import AccountScreen from "../screens/AccountScreen";
 import ProductListScreen from "../screens/ProductListScreen";
 import ProductDetailScreen from "../screens/ProductDetailScreen";
+import SearchScreen from "../screens/SearchScreen";
 import OrderDetailScreen from "../screens/OrderDetailScreen";
 import NotificationsScreen from "../screens/NotificationsScreen";
 import AddressesScreen from "../screens/AddressesScreen";
@@ -111,6 +112,11 @@ function AppStack() {
                 name="ProductList"
                 component={ProductListScreen}
                 options={{ title: "Produits" }}
+            />
+            <Stack.Screen
+                name="Search"
+                component={SearchScreen}
+                options={{ headerShown: false }}
             />
             <Stack.Screen
                 name="ProductDetail"
