@@ -22,11 +22,11 @@ const ACCOUNT_BG_IMAGE =
     "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1080&q=80";
 
 const ORDER_STEPS = [
-    { key: "en_attente", statuses: ["en_attente"], icon: "wallet-outline", label: "À payer" },
-    { key: "verif", statuses: ["paiement_declare"], icon: "hourglass-outline", label: "En vérification" },
-    { key: "prep", statuses: ["payee", "traitement"], icon: "cube-outline", label: "En préparation" },
-    { key: "expedie", statuses: ["expedie"], icon: "car-outline", label: "Expédiée" },
-    { key: "livre", statuses: ["livre"], icon: "chatbox-ellipses-outline", label: "À évaluer" },
+    { key: "en_attente", statuses: ["en_attente"], tab: "en_attente", icon: "wallet-outline", label: "À payer" },
+    { key: "verif", statuses: ["paiement_declare"], tab: "verif", icon: "hourglass-outline", label: "En vérification" },
+    { key: "prep", statuses: ["payee", "traitement"], tab: "route", icon: "cube-outline", label: "En préparation" },
+    { key: "expedie", statuses: ["expedie"], tab: "route", icon: "car-outline", label: "Expédiée" },
+    { key: "livre", statuses: ["livre"], tab: "livre", icon: "chatbox-ellipses-outline", label: "À évaluer" },
 ];
 
 export default function AccountScreen({ navigation }) {
@@ -213,7 +213,9 @@ export default function AccountScreen({ navigation }) {
                                 <TouchableOpacity
                                     key={s.key}
                                     style={styles.step}
-                                    onPress={() => navigation.navigate("Orders")}
+                                    onPress={() =>
+                                        navigation.navigate("Orders", { initialTab: s.tab })
+                                    }
                                 >
                                     <View style={styles.stepIcon}>
                                         <Ionicons
