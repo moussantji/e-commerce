@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\OrderResource;
 use App\Models\Commandes;
+use App\Models\Paiements;
 use App\Models\Paniers;
+use App\Models\PaymentProof;
 use App\Models\Produits;
 use App\Models\PromoCode;
+use App\Support\AdminNotifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -208,5 +211,64 @@ class OrderController extends Controller
         $order->loadCount('produits')->load('produits.photos');
 
         return new OrderResource($order);
+    }
+
+    /**
+     * Le client déclare avoir payé sa commande (mobile money manuel).
+     * Crée une preuve de paiement en attente + notifie les admins.
+     */
+    public function pay(Request $request, $id)
+    {
+        $data = $request->validate([
+            'payment_method_id' => 'nullable|integer|exists:paiements,id',
+            'provider' => 'nullable|string|max:60',
+            'phone' => 'nullable|string|max:30',
+            'transaction_id' => 'nullable|string|max:120',
+        ]);
+
+        $user = $request->user();
+        $order = Commandes::where('user_id', $user->id)->findOrFail($id);
+
+        $method = null;
+        if (!empty($data['payment_method_id'])) {
+            $method = Paiements::find($data['payment_method_id']);
+        }
+        $providerLabel = $data['provider'] ?? ($method->method_name ?? 'Mobile Money');
+
+        // Enregistre la méthode choisie sur la commande + statut en attente de vérification
+        $order->paiement_id = $method->id ?? $order->paiement_id;
+        $order->statut = 'en_attente';
+        $order->date_en_attente = now();
+        $notePaiement = "Paiement déclaré via {$providerLabel}"
+            . (!empty($data['phone']) ? " — {$data['phone']}" : '')
+            . (!empty($data['transaction_id']) ? " — ref: {$data['transaction_id']}" : '');
+        $order->notes = trim(($order->notes ? $order->notes . "\n" : '') . $notePaiement);
+        $order->save();
+
+        // Preuve de paiement (à confirmer par l'admin)
+        PaymentProof::create([
+            'user_id' => $user->id,
+            'order_id' => $order->id,
+            'provider' => $providerLabel,
+            'phone' => $data['phone'] ?? null,
+            'amount' => $order->total,
+            'status' => 'pending',
+            'notes' => $data['transaction_id'] ?? null,
+        ]);
+
+        // Notifie les administrateurs (base + email)
+        $numero = $order->numero_commande ?? ('#' . $order->id);
+        AdminNotifier::notifyPayment(
+            'Nouveau paiement à vérifier',
+            "{$user->name} a déclaré avoir payé la commande {$numero} ({$providerLabel}) — "
+                . number_format((float) $order->total, 0, ',', ' ') . ' FCFA.',
+            ['type' => 'admin_payment', 'id' => $order->id],
+        );
+
+        $order->loadCount('produits')->load('produits.photos');
+
+        return (new OrderResource($order))->additional([
+            'message' => 'Paiement déclaré. En attente de confirmation par le vendeur.',
+        ]);
     }
 }
