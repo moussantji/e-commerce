@@ -28,7 +28,7 @@
                         @forelse(auth()->user()->notifications()->latest()->take(8)->get() as $notification)
                             <div
                                 class="px-2 px-sm-3 py-3 notification-card position-relative {{ !$notification->read_at ? 'unread' : 'read' }} border-bottom">
-                                <a href="{{ $notification->data['url'] ?? '#' }}" class="text-decoration-none">
+                                <a href="{{ \App\Support\NotificationLink::url($notification->data) }}" class="text-decoration-none">
                                     <div class="d-flex align-items-center justify-content-between position-relative">
                                         <div class="d-flex">
                                             {{-- Avatar --}}
@@ -44,11 +44,11 @@
                                             </div>
                                             <div class="flex-1 me-sm-3">
                                                 <h4 class="fs-9 text-body-emphasis mb-1">
-                                                    {{ $notification->data['user_name'] ?? 'Utilisateur' }}
+                                                    {{ \App\Support\NotificationLink::title($notification->data) }}
                                                 </h4>
                                                 <p class="fs-9 text-body-highlight mb-2 mb-sm-3 fw-normal">
                                                     <span class='me-1 fs-10'>{{ $notification->data['icon'] ?? '💬' }}</span>
-                                                    {{ $notification->data['message'] }}
+                                                    {{ \App\Support\NotificationLink::message($notification->data) }}
                                                     <span
                                                         class="ms-2 text-body-quaternary text-opacity-75 fw-bold fs-10">{{ $notification->created_at->diffForHumans() }}</span>
                                                 </p>

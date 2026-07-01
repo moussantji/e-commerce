@@ -40,7 +40,7 @@
                 @foreach ($notifications as $notification)
                     <div
                         class="d-flex align-items-center justify-content-between py-3 px-lg-6 px-4 notification-card border-top {{ !$notification->read_at ? 'unread' : 'read' }}">
-                        <a href="{{ $notification->data['url'] ?? '#' }}" class="text-decoration-none">
+                        <a href="{{ \App\Support\NotificationLink::url($notification->data) }}" class="text-decoration-none">
                             <div class="d-flex">
                                 {{-- Avatar --}}
                                 <div class="avatar avatar-xl me-3">
@@ -54,11 +54,11 @@
                                     @endif
                                 </div>
                                 <div class="me-3 flex-1 mt-2">
-                                    <h4 class="fs-9 text-body-emphasis">{{ $notification->data['user_name'] ?? 'Système' }}
+                                    <h4 class="fs-9 text-body-emphasis">{{ \App\Support\NotificationLink::title($notification->data) }}
                                     </h4>
                                     <p class="fs-9 text-body-highlight">
                                         <span class='me-1'>{{ $notification->data['icon'] ?? '🔔' }}</span>
-                                        {{ $notification->data['message'] }}
+                                        {{ \App\Support\NotificationLink::message($notification->data) }}
                                         <span class="ms-2 text-body-tertiary text-opacity-85 fw-bold fs-10">
                                             {{ $notification->created_at->diffForHumans() }}
                                         </span>
