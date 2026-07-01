@@ -12,6 +12,7 @@ import LoginScreen from "../screens/LoginScreen";
 import RegisterScreen from "../screens/RegisterScreen";
 import HomeScreen from "../screens/HomeScreen";
 import CategoriesScreen from "../screens/CategoriesScreen";
+import DealsScreen from "../screens/DealsScreen";
 import OrdersScreen from "../screens/OrdersScreen";
 import CartScreen from "../screens/CartScreen";
 import AccountScreen from "../screens/AccountScreen";
@@ -29,7 +30,7 @@ const Tab = createBottomTabNavigator();
 const ICONS = {
     Accueil: "home",
     Catégories: "grid",
-    Commande: "receipt",
+    "Bons Plans": "pricetag",
     Panier: "bag",
     Compte: "person",
 };
@@ -70,8 +71,8 @@ function Tabs() {
                 options={{ headerShown: false }}
             />
             <Tab.Screen
-                name="Commande"
-                component={OrdersScreen}
+                name="Bons Plans"
+                component={DealsScreen}
                 options={{ headerShown: false }}
             />
             <Tab.Screen
@@ -122,6 +123,11 @@ function AppStack() {
                 name="Notifications"
                 component={NotificationsScreen}
                 options={{ title: "Notifications" }}
+            />
+            <Stack.Screen
+                name="Orders"
+                component={OrdersScreen}
+                options={{ title: "Mes commandes" }}
             />
             <Stack.Screen
                 name="OrderDetail"
