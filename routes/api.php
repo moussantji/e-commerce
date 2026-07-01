@@ -29,6 +29,7 @@ Route::middleware('throttle:5,1')->group(function () {
 // Public — listing routes with moderate rate limiting (60 requests per minute)
 Route::middleware('throttle:60,1')->group(function () {
     Route::get('/products', [ProductController::class, 'index']);
+    Route::get('/products/filters', [ProductController::class, 'filters']);
     Route::get('/products/{id}', [ProductController::class, 'show']);
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::get('/search/suggestions', [SearchController::class, 'suggestions']);
