@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
 import api from "../api/client";
 import { COLORS, RADIUS } from "../theme";
+import { getRecentlyViewed } from "../recentlyViewed";
 
 const ORDER_STEPS = [
     { key: "en_attente", icon: "hourglass-outline", label: "En attente de paiement" },
@@ -30,6 +31,7 @@ export default function AccountScreen({ navigation }) {
     const [orders, setOrders] = useState([]);
     const [couponCount, setCouponCount] = useState(0);
     const [balance, setBalance] = useState(0);
+    const [recentThumbs, setRecentThumbs] = useState([]);
 
     const load = useCallback(async () => {
         try {
@@ -59,6 +61,9 @@ export default function AccountScreen({ navigation }) {
     useFocusEffect(
         useCallback(() => {
             load();
+            getRecentlyViewed().then((list) =>
+                setRecentThumbs(list.map((p) => p.image).filter(Boolean)),
+            );
         }, [load]),
     );
 
@@ -75,6 +80,14 @@ export default function AccountScreen({ navigation }) {
         </View>
     );
 
+    const RecentThumbs = () => (
+        <View style={styles.thumbRow}>
+            {recentThumbs.slice(0, 3).map((uri, i) => (
+                <Image key={i} source={{ uri }} style={styles.thumb} />
+            ))}
+        </View>
+    );
+
     const menu = [
         {
             icon: "heart",
@@ -83,16 +96,10 @@ export default function AccountScreen({ navigation }) {
             onPress: () => navigation.navigate("Wishlist"),
         },
         {
-            icon: "storefront-outline",
-            label: "Magasin suivi",
-            right: <ThumbRow from={3} />,
-            onPress: () => soon("Magasin suivi"),
-        },
-        {
             icon: "time-outline",
             label: "Vu récemment",
-            right: <ThumbRow from={6} />,
-            onPress: () => soon("Vu récemment"),
+            right: <RecentThumbs />,
+            onPress: () => navigation.navigate("RecentlyViewed"),
         },
         {
             icon: "ribbon-outline",

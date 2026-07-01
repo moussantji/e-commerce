@@ -16,6 +16,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api from "../api/client";
 import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
+import { useWishlist } from "../context/WishlistContext";
+import { useAuth } from "../context/AuthContext";
+import { Alert } from "react-native";
 
 const FILTERS = [
     { key: "for_you", label: "Pour vous", icon: null },
@@ -38,7 +41,7 @@ const ALL_TAB = { id: "all", name: "All" };
  * Carte produit "waterfall" : la hauteur de l'image s'adapte à ses dimensions
  * réelles (via onLoad) et le texte n'est pas tronqué → cadre à taille variable.
  */
-function MasonryCard({ item, onPress }) {
+function MasonryCard({ item, onPress, favorited, onToggleFav }) {
     const [ar, setAr] = useState(0.8);
     return (
         <TouchableOpacity style={styles.mCard} activeOpacity={0.9} onPress={onPress}>
@@ -57,13 +60,17 @@ function MasonryCard({ item, onPress }) {
                         <Text style={styles.badgeText}>Promo</Text>
                     </View>
                 ) : null}
-                <View style={styles.heart}>
+                <TouchableOpacity
+                    style={styles.heart}
+                    onPress={onToggleFav}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
                     <Ionicons
-                        name="heart-outline"
+                        name={favorited ? "heart" : "heart-outline"}
                         size={15}
-                        color={COLORS.primaryDark}
+                        color={favorited ? COLORS.badge : COLORS.primaryDark}
                     />
-                </View>
+                </TouchableOpacity>
             </View>
             <View style={styles.cardBody}>
                 <Text style={styles.name}>{item.name}</Text>
@@ -87,6 +94,20 @@ function MasonryCard({ item, onPress }) {
 
 export default function HomeScreen({ navigation }) {
     const insets = useSafeAreaInsets();
+    const { isFav, toggle: toggleFavId } = useWishlist();
+    const { token } = useAuth();
+
+    const onToggleFav = async (productId) => {
+        if (!token) {
+            Alert.alert("Connexion requise", "Connectez-vous pour gérer vos favoris.");
+            return;
+        }
+        try {
+            await toggleFavId(productId);
+        } catch (e) {
+            /* ignore */
+        }
+    };
     const [categories, setCategories] = useState([]);
     const [flash, setFlash] = useState([]);
     const [products, setProducts] = useState([]);
@@ -656,6 +677,8 @@ export default function HomeScreen({ navigation }) {
                                     key={p.id}
                                     item={p}
                                     onPress={() => goDetail(p)}
+                                    favorited={isFav(p.id)}
+                                    onToggleFav={() => onToggleFav(p.id)}
                                 />
                             ))}
                         </View>
@@ -665,6 +688,8 @@ export default function HomeScreen({ navigation }) {
                                     key={p.id}
                                     item={p}
                                     onPress={() => goDetail(p)}
+                                    favorited={isFav(p.id)}
+                                    onToggleFav={() => onToggleFav(p.id)}
                                 />
                             ))}
                         </View>

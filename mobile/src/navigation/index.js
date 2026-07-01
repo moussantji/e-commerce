@@ -21,6 +21,7 @@ import ProductDetailScreen from "../screens/ProductDetailScreen";
 import SearchScreen from "../screens/SearchScreen";
 import WriteReviewScreen from "../screens/WriteReviewScreen";
 import WishlistScreen from "../screens/WishlistScreen";
+import RecentlyViewedScreen from "../screens/RecentlyViewedScreen";
 import OrderDetailScreen from "../screens/OrderDetailScreen";
 import NotificationsScreen from "../screens/NotificationsScreen";
 import AddressesScreen from "../screens/AddressesScreen";
@@ -134,6 +135,11 @@ function AppStack() {
                 name="Wishlist"
                 component={WishlistScreen}
                 options={{ title: "Liste de souhait" }}
+            />
+            <Stack.Screen
+                name="RecentlyViewed"
+                component={RecentlyViewedScreen}
+                options={{ title: "Vu récemment" }}
             />
             <Stack.Screen
                 name="Notifications"
