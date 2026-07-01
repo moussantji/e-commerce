@@ -145,16 +145,22 @@ export default function WalletScreen({ navigation }) {
         );
     }
 
-    const statusBadge = (status) => {
+    const statusBadge = (tx) => {
         const map = {
             pending: { label: "En attente", color: "#f59e0b", bg: "#fef3c7" },
             confirmed: { label: "Confirmé", color: "#16a34a", bg: "#dcfce7" },
             rejected: { label: "Rejeté", color: "#dc2626", bg: "#fee2e2" },
+            cod: { label: "À la livraison", color: "#2563eb", bg: "#dbeafe" },
         };
-        const s = map[status] || map.confirmed;
+        const status = typeof tx === "string" ? tx : tx?.status;
+        // Fallback neutre sur "pending" (jamais "confirmé") pour un statut inconnu
+        const base = map[status] || map.pending;
+        // Priorité au libellé/couleur fournis par le serveur (source unique)
+        const label = (typeof tx === "object" && tx?.status_label) || base.label;
+        const color = (typeof tx === "object" && tx?.status_color) || base.color;
         return (
-            <View style={[styles.badge, { backgroundColor: s.bg }]}>
-                <Text style={[styles.badgeText, { color: s.color }]}>{s.label}</Text>
+            <View style={[styles.badge, { backgroundColor: base.bg }]}>
+                <Text style={[styles.badgeText, { color }]}>{label}</Text>
             </View>
         );
     };
@@ -211,7 +217,7 @@ export default function WalletScreen({ navigation }) {
                                 <Text style={[styles.txAmount, { color: t.incoming ? "#16a34a" : "#dc2626" }]}>
                                     {t.incoming ? "+" : "-"}{formatPrice(t.amount)}
                                 </Text>
-                                {statusBadge(t.status)}
+                                {statusBadge(t)}
                             </View>
                         </View>
                     ))

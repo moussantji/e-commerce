@@ -158,6 +158,8 @@ class WalletController extends Controller
             'incoming' => $incoming,
             'method' => $t->method,
             'status' => $t->status, // pending | confirmed | rejected
+            'status_label' => $t->status_label,
+            'status_color' => \App\Support\PaymentStatus::color($t->status),
             'reference' => $t->reference,
             'note' => $t->note,
             'date' => optional($t->created_at)->diffForHumans(),

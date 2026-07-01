@@ -40,7 +40,7 @@ class PaymentModerationController extends Controller
     public function confirmPayment(PaymentProof $proof)
     {
         DB::transaction(function () use ($proof) {
-            $proof->update(['status' => 'confirme']);
+            $proof->update(['status' => \App\Support\PaymentStatus::CONFIRMED]);
             if ($proof->order) {
                 // déclenche la notif de changement de statut (hook Commandes)
                 $proof->order->update(['statut' => 'payee', 'date_traitement' => now()]);
@@ -53,7 +53,7 @@ class PaymentModerationController extends Controller
     public function rejectPayment(Request $request, PaymentProof $proof)
     {
         $reason = $request->input('reason');
-        $proof->update(['status' => 'rejete']);
+        $proof->update(['status' => \App\Support\PaymentStatus::REJECTED]);
 
         if ($proof->order) {
             $proof->order->update(['statut' => 'en_attente']);
