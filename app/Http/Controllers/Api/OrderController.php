@@ -183,6 +183,16 @@ class OrderController extends Controller
 
         $order->loadCount('produits')->load('produits.photos');
 
+        // Confirmation de création de commande (base + email + push)
+        try {
+            $user->notify(new \App\Notifications\OrderStatusNotification(
+                $order,
+                'Commande créée — en attente de paiement',
+            ));
+        } catch (\Throwable $e) {
+            /* ignore */
+        }
+
         return (new OrderResource($order))
             ->response()
             ->setStatusCode(201);

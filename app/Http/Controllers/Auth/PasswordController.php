@@ -24,6 +24,17 @@ class PasswordController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
+        try {
+            $request->user()->notify(new \App\Notifications\SecurityNotification(
+                'Mot de passe modifié',
+                'Le mot de passe de votre compte vient d\'être changé.',
+                'lock-closed-outline',
+                true,
+            ));
+        } catch (\Throwable $e) {
+            // silencieux
+        }
+
         return back()->with('status', 'password-updated');
     }
 }
