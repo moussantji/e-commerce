@@ -61,8 +61,10 @@ export default function WalletScreen({ navigation }) {
     const loadMethods = useCallback(async () => {
         try {
             const { data } = await api.get("/payment-methods");
-            setMethods(data.data ?? []);
-            if ((data.data ?? []).length) setMethod(data.data[0]);
+            // Le paiement à la livraison ne s'applique pas au rechargement
+            const usable = (data.data ?? []).filter((m) => !m.cod);
+            setMethods(usable);
+            if (usable.length) setMethod(usable[0]);
         } catch (e) {
             setMethods([]);
         }

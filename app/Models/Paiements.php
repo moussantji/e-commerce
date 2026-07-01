@@ -44,6 +44,13 @@ class Paiements extends Model
         return $photo ? $photo->getImageUrl(200, 200) : null;
     }
 
+    /** Vrai s'il s'agit du paiement à la livraison (espèces). */
+    public function isCashOnDelivery(): bool
+    {
+        return strtolower((string) $this->provider_name) === 'cash'
+            || str_contains(strtolower((string) $this->method_name), 'livraison');
+    }
+
     public function orders(): HasMany
     {
         return $this->hasMany(Commandes::class, 'paiement_id');
