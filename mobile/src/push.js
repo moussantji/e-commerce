@@ -4,10 +4,17 @@ import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import api from "./api/client";
 
+// Depuis SDK 53, le push a été retiré d'Expo Go : on détecte cet
+// environnement pour ne pas déclencher d'erreur (le push fonctionne
+// normalement dans un build de dev ou l'APK autonome).
+const isExpoGo = Constants.executionEnvironment === "storeClient";
+
 // Affiche les notifications reçues quand l'app est au premier plan
+// (API SDK 54+ : shouldShowBanner / shouldShowList remplacent shouldShowAlert)
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
-        shouldShowAlert: true,
+        shouldShowBanner: true,
+        shouldShowList: true,
         shouldPlaySound: true,
         shouldSetBadge: true,
     }),
@@ -19,6 +26,9 @@ Notifications.setNotificationHandler({
  */
 export async function registerForPushNotifications() {
     try {
+        // Push non supporté dans Expo Go (SDK 53+) : on sort proprement.
+        // Ça marchera dans le development build et dans l'APK.
+        if (isExpoGo) return null;
         if (!Device.isDevice) return null; // pas de push sur émulateur/simulateur
 
         if (Platform.OS === "android") {
