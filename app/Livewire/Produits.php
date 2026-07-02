@@ -45,6 +45,15 @@ class Produits extends Component
 
     public $tag = [];
 
+    /** Nombre de produits affichés (chargement progressif au scroll). */
+    public int $perPage = 12;
+
+    /** Charge la tranche suivante de produits (déclenché au scroll). */
+    public function loadMore(): void
+    {
+        $this->perPage += 12;
+    }
+
 
 
     public function mount($category = null, $search = null, $tag = null)
@@ -136,6 +145,7 @@ class Produits extends Component
 
     public function updatedFilters()
     {
+        $this->perPage = 12;          // on repart du début à chaque changement de filtre
         $this->cleanEmptyFilters();  // ← NOUVEAU
     }
 
@@ -203,11 +213,16 @@ class Produits extends Component
             ->where('is_active', true);
 
         $this->applyFilters($query);
-        $products = $query->get();
+
+        // Chargement progressif : on ne charge que `perPage` produits, et on
+        // indique s'il en reste (pour déclencher le chargement au scroll).
+        $total = (clone $query)->count();
+        $products = $query->take($this->perPage)->get();
 
         return view('livewire.produits', [
             'products' => $products,
-            'brands_list' => $this->brands
+            'brands_list' => $this->brands,
+            'hasMore' => $total > $this->perPage,
         ]);
     }
 

@@ -739,6 +739,21 @@
                         <button class="btn btn-phoenix-primary" wire:click="clearFilters">Effacer tous les filtres</button>
                     </div>
                 @endforelse
+
+                {{-- Chargement progressif : se déclenche quand on approche du bas --}}
+                @if($hasMore ?? false)
+                    <div class="col-12 text-center py-4"
+                         x-data
+                         x-intersect.margin.400px="$wire.loadMore()">
+                        <div wire:loading wire:target="loadMore" class="text-body-secondary">
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            Chargement des produits…
+                        </div>
+                        <div wire:loading.remove wire:target="loadMore" class="text-body-tertiary small">
+                            Faites défiler pour voir plus de produits
+                        </div>
+                    </div>
+                @endif
             </div>
 
         </div>
