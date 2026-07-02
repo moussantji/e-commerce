@@ -46,7 +46,11 @@
         {
           "color": "#764ba2"
         }
-      ]
+      ],
+      "expo-secure-store",
+      "expo-status-bar",
+      "expo-web-browser",
+      "expo-splash-screen"
     ]
   }
 }
