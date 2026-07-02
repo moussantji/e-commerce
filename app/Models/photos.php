@@ -45,6 +45,14 @@ class photos extends Model
 
     public function getImageUrl(?int $width = null, ?int $height = null): string
     {
+        // Image déjà hébergée via une URL absolue (CDN / source externe) :
+        // on la renvoie telle quelle (le pipeline Glide/Storage ne s'applique
+        // qu'aux fichiers locaux).
+        $filename = (string) $this->filename;
+        if (str_starts_with($filename, 'http://') || str_starts_with($filename, 'https://')) {
+            return $filename;
+        }
+
         if ($width === null) {
             return Storage::disk('public')->url($this->filename);
         }
