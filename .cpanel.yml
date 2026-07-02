@@ -1,0 +1,21 @@
+---
+# Déploiement automatique cPanel (LWS) pour Laravel.
+# Ces tâches s'exécutent quand tu cliques "Deploy HEAD Commit" dans
+# cPanel > Git Version Control (elles tournent dans le dossier du dépôt cloné).
+#
+# ⚠️ À adapter :
+#   - Si "composer" n'est pas dans le PATH, remplace par le chemin complet
+#     (ex: /opt/cpanel/composer/bin/composer  ou  php composer.phar).
+#   - Les assets front (Vite) doivent être buildés EN LOCAL puis commités
+#     (dossier public/build), car npm n'est généralement pas dispo en mutualisé.
+deployment:
+  tasks:
+    - export APP_DIR="$PWD"
+    - /bin/echo "== Déploiement Laravel dans $APP_DIR =="
+    - composer install --no-dev --optimize-autoloader --no-interaction
+    - php artisan storage:link || /bin/true
+    - php artisan migrate --force
+    - php artisan config:cache
+    - php artisan route:cache
+    - php artisan view:cache
+    - /bin/echo "== Déploiement terminé =="
