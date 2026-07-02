@@ -7,6 +7,12 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "scheme": "ecommerce",
+    "newArchEnabled": false,
+    "splash": {
+      "image": "./assets/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#764ba2"
+    },
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -39,16 +45,6 @@
         "expo-notifications",
         {
           "color": "#764ba2"
-        }
-      ],
-      "expo-secure-store",
-      [
-        "expo-splash-screen",
-        {
-          "image": "./assets/logo.png",
-          "resizeMode": "contain",
-          "backgroundColor": "#764ba2",
-          "imageWidth": 200
         }
       ]
     ]

@@ -9,12 +9,10 @@ import api from "./api/client";
 // normalement dans un build de dev ou l'APK autonome).
 const isExpoGo = Constants.executionEnvironment === "storeClient";
 
-// Affiche les notifications reçues quand l'app est au premier plan
-// (API SDK 54+ : shouldShowBanner / shouldShowList remplacent shouldShowAlert)
+// Affiche les notifications reçues quand l'app est au premier plan (API SDK 52)
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
-        shouldShowBanner: true,
-        shouldShowList: true,
+        shouldShowAlert: true,
         shouldPlaySound: true,
         shouldSetBadge: true,
     }),
