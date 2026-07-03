@@ -14,7 +14,9 @@ import {
     Pressable,
     KeyboardAvoidingView,
     Platform,
+    Image,
 } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -105,6 +107,7 @@ export default function AdminManageScreen({ route, navigation }) {
         const initial = {};
         config.fields.forEach((f) => {
             if (f.type === "switch") initial[f.key] = f.default ?? false;
+            else if (f.type === "image") initial[f.key] = null;
             else if (f.default !== undefined) initial[f.key] = f.default;
             else initial[f.key] = "";
         });
@@ -118,6 +121,9 @@ export default function AdminManageScreen({ route, navigation }) {
         config.fields.forEach((f) => {
             if (f.type === "switch") initial[f.key] = !!item[f.key];
             else if (f.type === "password") initial[f.key] = "";
+            else if (f.type === "image")
+                // Image existante : on conserve son URL pour l'aperçu, sans la ré-uploader.
+                initial[f.key] = item[f.key] ? { url: item[f.key], existing: true } : null;
             else initial[f.key] = item[f.key] != null ? String(item[f.key]) : "";
         });
         setForm(initial);
@@ -127,9 +133,31 @@ export default function AdminManageScreen({ route, navigation }) {
 
     const setField = (key, value) => setForm((f) => ({ ...f, [key]: value }));
 
+    const pickImage = async (key) => {
+        const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!perm.granted) {
+            Alert.alert("Permission requise", "Autorisez l'accès aux photos.");
+            return;
+        }
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            quality: 0.7,
+        });
+        if (result.canceled) return;
+        const asset = result.assets[0];
+        const ext = (asset.uri.split(".").pop() || "jpg").toLowerCase();
+        setField(key, {
+            uri: asset.uri,
+            name: asset.fileName || `image_${Date.now()}.${ext}`,
+            type: asset.mimeType || `image/${ext === "jpg" ? "jpeg" : ext}`,
+        });
+    };
+
     const buildPayload = () => {
         const payload = {};
         for (const f of config.fields) {
+            if (f.type === "image") continue; // géré séparément (multipart)
             const v = form[f.key];
             if (f.type === "switch") {
                 payload[f.key] = !!v;
@@ -143,12 +171,50 @@ export default function AdminManageScreen({ route, navigation }) {
         return payload;
     };
 
+    // Retourne les champs image qui contiennent une NOUVELLE image sélectionnée.
+    const pickedImageFields = () =>
+        config.fields.filter(
+            (f) => f.type === "image" && form[f.key] && form[f.key].uri && !form[f.key].existing,
+        );
+
+    const buildFormData = () => {
+        const fd = new FormData();
+        for (const f of config.fields) {
+            if (f.type === "image") continue;
+            const v = form[f.key];
+            if (f.type === "switch") {
+                fd.append(f.key, v ? "1" : "0");
+            } else if (f.type === "number") {
+                if (v !== "" && v != null) fd.append(f.key, String(v));
+            } else {
+                const s = typeof v === "string" ? v.trim() : v;
+                if (s !== "" && s != null) fd.append(f.key, String(s));
+            }
+        }
+        pickedImageFields().forEach((f) => {
+            const img = form[f.key];
+            fd.append(f.key, {
+                uri: Platform.OS === "ios" ? img.uri.replace("file://", "") : img.uri,
+                name: img.name,
+                type: img.type,
+            });
+        });
+        return fd;
+    };
+
     const validate = () => {
         for (const f of config.fields) {
             const isRequired = f.required || (f.createRequired && !editing);
             if (!isRequired) continue;
             const v = form[f.key];
             if (f.type === "switch") continue;
+            if (f.type === "image") {
+                if (!v) {
+                    Alert.alert("Image requise", `Le champ « ${f.label} » est obligatoire.`);
+                    return false;
+                }
+                continue;
+            }
             if (v === "" || v == null) {
                 Alert.alert("Champ requis", `Le champ « ${f.label} » est obligatoire.`);
                 return false;
@@ -161,12 +227,26 @@ export default function AdminManageScreen({ route, navigation }) {
         if (!validate()) return;
         setSaving(true);
         try {
-            const payload = buildPayload();
-            if (editing) {
-                await api.put(`${base}/${editing.id}`, payload);
+            const hasNewImage = pickedImageFields().length > 0;
+
+            if (hasNewImage) {
+                // Envoi multipart (image + champs). PUT est simulé via _method
+                // car PHP ne parse pas le multipart sur une vraie requête PUT.
+                const fd = buildFormData();
+                if (editing) fd.append("_method", "PUT");
+                const url = editing ? `${base}/${editing.id}` : base;
+                await api.post(url, fd, {
+                    headers: { "Content-Type": "multipart/form-data" },
+                });
             } else {
-                await api.post(base, payload);
+                const payload = buildPayload();
+                if (editing) {
+                    await api.put(`${base}/${editing.id}`, payload);
+                } else {
+                    await api.post(base, payload);
+                }
             }
+
             setFormOpen(false);
             setEditing(null);
             load();
@@ -201,8 +281,18 @@ export default function AdminManageScreen({ route, navigation }) {
 
     const renderItem = ({ item }) => {
         const subtitle = config.subtitle ? config.subtitle(item) : "";
+        const hasImageField = config.fields.some((f) => f.type === "image");
         return (
             <View style={styles.row}>
+                {hasImageField ? (
+                    item.image ? (
+                        <Image source={{ uri: item.image }} style={styles.rowThumb} />
+                    ) : (
+                        <View style={[styles.rowThumb, { alignItems: "center", justifyContent: "center" }]}>
+                            <Ionicons name={config.icon} size={20} color="#c4c4c4" />
+                        </View>
+                    )
+                ) : null}
                 <TouchableOpacity
                     style={{ flex: 1 }}
                     onPress={() => openEdit(item)}
@@ -246,6 +336,53 @@ export default function AdminManageScreen({ route, navigation }) {
                         onValueChange={(v) => setField(f.key, v)}
                         trackColor={{ true: COLORS.primaryDark }}
                     />
+                </View>
+            );
+        }
+
+        if (f.type === "image") {
+            const preview = value?.uri || value?.url || null;
+            return (
+                <View key={f.key} style={{ marginTop: 12 }}>
+                    <Text style={styles.fieldLabel}>
+                        {f.label}
+                        {f.required || (f.createRequired && !editing) ? " *" : ""}
+                    </Text>
+                    <View style={styles.imageRow}>
+                        <TouchableOpacity
+                            style={styles.imagePickBox}
+                            onPress={() => pickImage(f.key)}
+                            activeOpacity={0.8}
+                        >
+                            {preview ? (
+                                <Image source={{ uri: preview }} style={styles.imagePreview} />
+                            ) : (
+                                <Ionicons name="image-outline" size={30} color="#9ca3af" />
+                            )}
+                        </TouchableOpacity>
+                        <View style={{ flex: 1, gap: 8 }}>
+                            <TouchableOpacity
+                                style={styles.imageBtn}
+                                onPress={() => pickImage(f.key)}
+                                activeOpacity={0.8}
+                            >
+                                <Ionicons name="cloud-upload-outline" size={18} color={COLORS.primaryDark} />
+                                <Text style={styles.imageBtnText}>
+                                    {preview ? "Changer l'image" : "Choisir une image"}
+                                </Text>
+                            </TouchableOpacity>
+                            {preview ? (
+                                <TouchableOpacity
+                                    style={styles.imageBtn}
+                                    onPress={() => setField(f.key, null)}
+                                    activeOpacity={0.8}
+                                >
+                                    <Ionicons name="trash-outline" size={18} color="#dc2626" />
+                                    <Text style={[styles.imageBtnText, { color: "#dc2626" }]}>Retirer</Text>
+                                </TouchableOpacity>
+                            ) : null}
+                        </View>
+                    </View>
                 </View>
             );
         }
@@ -515,6 +652,32 @@ const styles = StyleSheet.create({
     },
     textarea: { height: 90, textAlignVertical: "top" },
     hint: { fontSize: 11.5, color: COLORS.textLight, marginTop: 4 },
+    imageRow: { flexDirection: "row", gap: 12, alignItems: "center" },
+    imagePickBox: {
+        width: 88,
+        height: 88,
+        borderRadius: RADIUS.md,
+        backgroundColor: "#f3f4f6",
+        borderWidth: 1,
+        borderColor: "#e5e7eb",
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "hidden",
+    },
+    imagePreview: { width: "100%", height: "100%" },
+    imageBtn: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        backgroundColor: "#f9fafb",
+        borderWidth: 1,
+        borderColor: "#e5e7eb",
+        borderRadius: RADIUS.md,
+        paddingVertical: 9,
+        paddingHorizontal: 12,
+    },
+    imageBtnText: { fontSize: 13, fontWeight: "700", color: COLORS.primaryDark },
+    rowThumb: { width: 42, height: 42, borderRadius: 8, backgroundColor: "#f3f4f6" },
     switchRow: {
         flexDirection: "row",
         alignItems: "center",

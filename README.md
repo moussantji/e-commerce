@@ -268,6 +268,78 @@ Build de production : voir la documentation Expo (EAS Build) dans `mobile/README
 
 ---
 
+# 🔐 Connexion Google (Google Sign-In) : `GOOGLE_ALLOWED_CLIENT_IDS`
+
+La connexion Google de l'app mobile fonctionne ainsi : l'app obtient un `idToken`
+auprès de Google, l'envoie au backend (`POST /api/auth/social`), et le backend
+**vérifie ce jeton auprès de Google**. Lors de cette vérification, le backend
+contrôle l'**audience** (`aud`) du jeton, c'est-à-dire l'**identifiant client
+OAuth** (client ID) pour lequel le jeton a été émis.
+
+La variable `GOOGLE_ALLOWED_CLIENT_IDS` liste les client IDs **autorisés** à
+s'authentifier. Elle est nécessaire car l'app mobile peut utiliser plusieurs
+client IDs (Web / Android / iOS) selon la plateforme.
+
+## 1. Récupérer les client IDs Google
+
+Dans la [Google Cloud Console](https://console.cloud.google.com/) →
+**APIs & Services → Credentials → OAuth 2.0 Client IDs**, créez (ou récupérez)
+les identifiants dont vous avez besoin :
+
+- **Web application** — indispensable : c'est le `webClientId` utilisé par l'app
+  pour obtenir l'`idToken` (même sur Android/iOS avec `@react-native-google-signin`).
+- **Android** — pour un build Android natif (nécessite l'empreinte **SHA-1** de
+  votre clé de signature + le nom de package).
+- **iOS** — pour un build iOS natif.
+
+Chaque identifiant ressemble à :
+`123456789012-abcdefg....apps.googleusercontent.com`.
+
+## 2. Renseigner `.env` (backend)
+
+Ajoutez la variable dans le `.env` du backend, avec les client IDs **séparés par
+des virgules** (l'ordre n'a pas d'importance, les espaces sont ignorés) :
+
+```dotenv
+# Un seul client ID
+GOOGLE_ALLOWED_CLIENT_IDS=123456789012-web.apps.googleusercontent.com
+
+# Plusieurs (web + android + ios), séparés par des virgules
+GOOGLE_ALLOWED_CLIENT_IDS=123456789012-web.apps.googleusercontent.com,123456789012-android.apps.googleusercontent.com,123456789012-ios.apps.googleusercontent.com
+```
+
+> ℹ️ Le `GOOGLE_CLIENT_ID` éventuellement présent (utilisé pour le login Google
+> côté **site web**) est **aussi** accepté automatiquement : pas besoin de le
+> répéter dans `GOOGLE_ALLOWED_CLIENT_IDS`.
+
+Puis rechargez la configuration :
+```bash
+php artisan config:cache
+```
+
+## 3. Faire correspondre l'app mobile
+
+Les client IDs déclarés dans `GOOGLE_ALLOWED_CLIENT_IDS` doivent **correspondre**
+à ceux utilisés par l'app mobile dans `mobile/src/config.js` (objet
+`GOOGLE_CLIENT_IDS` : `web`, `android`, `ios`). En pratique, l'audience du jeton
+correspond au **Web client ID** (`webClientId`) ; assurez-vous donc qu'il figure
+bien dans `GOOGLE_ALLOWED_CLIENT_IDS`.
+
+## 4. Comportement et dépannage
+
+- **Variable vide / absente** : aucune vérification d'audience n'est effectuée
+  (pratique en début d'intégration, mais **renseignez-la en production**).
+- **Erreur « Audience du jeton invalide » / « Jeton social invalide »** : le
+  client ID du jeton n'est pas dans la liste → ajoutez le Web client ID de l'app
+  dans `GOOGLE_ALLOWED_CLIENT_IDS`, puis `php artisan config:cache`.
+- **« Configuration Google incomplète » (DEVELOPER_ERROR) côté app** : problème
+  de configuration Android (empreinte **SHA-1** non enregistrée, mauvais package
+  ou mauvais `webClientId`).
+- **« Indisponible dans Expo Go »** : la connexion Google native ne fonctionne
+  pas dans Expo Go ; utilisez un **development build** ou l'**APK** installé.
+
+---
+
 # ✅ Récapitulatif post-déploiement
 
 - [ ] `.env` renseigné (DB, `APP_URL`, `APP_KEY`, SMTP)
@@ -278,4 +350,5 @@ Build de production : voir la documentation Expo (EAS Build) dans `mobile/README
 - [ ] Email pro créé + SMTP configuré + SPF/DKIM/DMARC
 - [ ] Cron `schedule:run` (+ `queue:work` si file d'attente)
 - [ ] `mobile/src/config.js` → `API_BASE_URL` en HTTPS
+- [ ] Connexion Google : `GOOGLE_ALLOWED_CLIENT_IDS` renseigné (client IDs de l'app mobile)
 - [ ] Un compte administrateur (`role = admin`) pour valider les paiements

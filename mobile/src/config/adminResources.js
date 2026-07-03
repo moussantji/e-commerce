@@ -21,6 +21,7 @@ export const ADMIN_RESOURCES = [
                 it.stock != null ? ` · stock ${it.stock}` : ""
             }${it.category ? ` · ${it.category}` : ""}`,
         fields: [
+            { key: "image", label: "Image du produit", type: "image" },
             { key: "name", label: "Nom", type: "text", required: true },
             { key: "description", label: "Description", type: "textarea" },
             { key: "price", label: "Prix (FCFA)", type: "number", required: true },
@@ -38,6 +39,7 @@ export const ADMIN_RESOURCES = [
         primary: (it) => it.name,
         subtitle: (it) => (it.is_active ? "Active" : "Inactive"),
         fields: [
+            { key: "image", label: "Image de la catégorie", type: "image" },
             { key: "name", label: "Nom", type: "text", required: true },
             { key: "description", label: "Description", type: "textarea" },
             { key: "parent_id", label: "Catégorie parente", type: "select", options: "categories" },
@@ -94,6 +96,7 @@ export const ADMIN_RESOURCES = [
                 it.delivery_time ? ` · ${it.delivery_time}` : ""
             }`,
         fields: [
+            { key: "image", label: "Logo", type: "image" },
             { key: "method_name", label: "Nom", type: "text", required: true },
             { key: "price", label: "Prix (FCFA)", type: "number", required: true },
             { key: "delivery_time_min", label: "Délai min. (jours)", type: "number" },
@@ -110,6 +113,7 @@ export const ADMIN_RESOURCES = [
         subtitle: (it) =>
             `${it.provider_name || ""}${it.is_active ? "" : " · inactive"}`,
         fields: [
+            { key: "image", label: "Logo", type: "image" },
             { key: "method_name", label: "Nom", type: "text", required: true },
             { key: "provider_name", label: "Fournisseur (ex : Orange, Wave)", type: "text" },
             { key: "account_number", label: "Numéro du compte", type: "text" },

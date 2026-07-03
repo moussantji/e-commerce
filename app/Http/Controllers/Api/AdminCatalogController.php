@@ -17,6 +17,13 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
+/*
+ * NB : les ressources « imageables » (produits, catégories, méthodes de
+ * livraison et de paiement) acceptent l'envoi d'un fichier `image` en
+ * multipart/form-data. L'image est stockée sur le disque public et reliée au
+ * modèle via la table `photos` (comme le panneau admin web).
+ */
+
 /**
  * Gestion (CRUD) du catalogue et des paramètres par l'administrateur depuis
  * l'app mobile : produits, catégories, caractéristiques, marques, tags,
@@ -85,11 +92,16 @@ class AdminCatalogController extends Controller
         $cfg = $this->resource($resource);
 
         $rules = $cfg['rules']($request, null);
+        if (!empty($cfg['image_folder'])) {
+            $rules['image'] = 'nullable|image|max:4096';
+        }
         $data = $request->validate($rules);
+        unset($data['image']); // fichier géré séparément (voir handleImageUpload)
         $data = isset($cfg['prepare']) ? $cfg['prepare']($data, null) : $data;
 
         $model = $cfg['model'];
         $item = $model::create($data);
+        $this->handleImageUpload($request, $item, $cfg);
 
         return response()->json([
             'message' => 'Créé avec succès.',
@@ -107,10 +119,15 @@ class AdminCatalogController extends Controller
         $item = $model::findOrFail($id);
 
         $rules = $cfg['rules']($request, $item);
+        if (!empty($cfg['image_folder'])) {
+            $rules['image'] = 'nullable|image|max:4096';
+        }
         $data = $request->validate($rules);
+        unset($data['image']); // fichier géré séparément (voir handleImageUpload)
         $data = isset($cfg['prepare']) ? $cfg['prepare']($data, $item) : $data;
 
         $item->update($data);
+        $this->handleImageUpload($request, $item, $cfg);
 
         return response()->json([
             'message' => 'Mis à jour avec succès.',
@@ -153,6 +170,58 @@ class AdminCatalogController extends Controller
         ]);
     }
 
+    /**
+     * Stocke l'image envoyée (le cas échéant) et la relie au modèle via la
+     * table `photos`. L'ancienne image est remplacée.
+     */
+    private function handleImageUpload(Request $request, $item, array $cfg): void
+    {
+        if (empty($cfg['image_folder']) || ! $request->hasFile('image')) {
+            return;
+        }
+
+        $file = $request->file('image');
+        if (! $file || $file->getError()) {
+            return;
+        }
+
+        // Supprime les anciennes photos (fichier + enregistrement).
+        foreach ($item->photos()->get() as $old) {
+            $old->delete();
+        }
+
+        $filename = $file->store($cfg['image_folder'] . '/' . $item->id, 'public');
+        $item->photos()->create(['filename' => $filename]);
+
+        // Conserve aussi le chemin dans la colonne dédiée (compatibilité web).
+        $column = $cfg['image_column'] ?? 'image';
+        $item->forceFill([$column => $filename])->save();
+    }
+
+    /** URL absolue de l'image principale d'un modèle (via getPhoto()), ou null. */
+    private function photoUrl($model): ?string
+    {
+        if (! method_exists($model, 'getPhoto')) {
+            return null;
+        }
+        $photo = $model->getPhoto();
+
+        return $photo ? $this->abs($photo->getImageUrl(400, 400)) : null;
+    }
+
+    /** Transforme un chemin relatif en URL absolue joignable depuis le mobile. */
+    private function abs(?string $path): ?string
+    {
+        if (! $path) {
+            return null;
+        }
+        if (str_starts_with($path, 'http')) {
+            return $path;
+        }
+
+        return rtrim(request()->getSchemeAndHttpHost(), '/') . '/' . ltrim($path, '/');
+    }
+
     // ---------------------------------------------------------------------
     // Configuration déclarative des ressources gérables.
     // ---------------------------------------------------------------------
@@ -164,6 +233,8 @@ class AdminCatalogController extends Controller
                 'model' => Categories::class,
                 'searchable' => ['name'],
                 'order' => ['name', 'asc'],
+                'image_folder' => 'Category',
+                'image_column' => 'image',
                 'rules' => fn (Request $r, $item) => [
                     'name' => 'required|string|max:255',
                     'description' => 'nullable|string',
@@ -181,6 +252,7 @@ class AdminCatalogController extends Controller
                     'description' => $m->description,
                     'parent_id' => $m->parent_id,
                     'is_active' => (bool) $m->is_active,
+                    'image' => $this->photoUrl($m),
                 ],
             ],
 
@@ -257,6 +329,8 @@ class AdminCatalogController extends Controller
                 'model' => Livraison::class,
                 'searchable' => ['method_name'],
                 'order' => ['id', 'desc'],
+                'image_folder' => 'Livraison',
+                'image_column' => 'logo',
                 'rules' => fn (Request $r, $item) => [
                     'method_name' => 'required|string|max:255',
                     'price' => 'required|numeric|min:0',
@@ -284,6 +358,7 @@ class AdminCatalogController extends Controller
                     ),
                     'description' => $m->description,
                     'is_active' => (bool) $m->is_active,
+                    'image' => $this->photoUrl($m),
                 ],
             ],
 
@@ -292,6 +367,8 @@ class AdminCatalogController extends Controller
                 'model' => Paiements::class,
                 'searchable' => ['method_name', 'provider_name'],
                 'order' => ['sort_order', 'asc'],
+                'image_folder' => 'Paiement',
+                'image_column' => 'logo',
                 'rules' => fn (Request $r, $item) => [
                     'method_name' => 'required|string|max:255',
                     'provider_name' => 'nullable|string|max:255',
@@ -312,6 +389,7 @@ class AdminCatalogController extends Controller
                     'instructions' => $m->instructions,
                     'account_number' => $m->account_number,
                     'is_active' => (bool) $m->is_active,
+                    'image' => $this->photoUrl($m),
                 ],
             ],
 
@@ -355,6 +433,8 @@ class AdminCatalogController extends Controller
                 'with' => ['category', 'brand'],
                 'searchable' => ['name', 'sku'],
                 'order' => ['id', 'desc'],
+                'image_folder' => 'Produits',
+                'image_column' => 'image',
                 'rules' => fn (Request $r, $item) => [
                     'name' => 'required|string|max:255',
                     'description' => 'nullable|string',
@@ -389,7 +469,7 @@ class AdminCatalogController extends Controller
                     'brand_id' => $m->brand_id,
                     'brand' => optional($m->brand)->name,
                     'is_active' => (bool) $m->is_active,
-                    'image' => $m->image,
+                    'image' => $this->photoUrl($m),
                 ],
             ],
 
