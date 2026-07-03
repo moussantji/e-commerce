@@ -233,6 +233,17 @@ function AppStack() {
                 component={WalletScreen}
                 options={{ title: "Mon portefeuille" }}
             />
+            {/* Connexion/Inscription accessibles depuis le mode invité */}
+            <Stack.Screen
+                name="Login"
+                component={LoginScreen}
+                options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+                name="Register"
+                component={RegisterScreen}
+                options={{ headerShown: false, presentation: "modal" }}
+            />
         </Stack.Navigator>
     );
 }
@@ -273,7 +284,7 @@ function routeFromLink(nav, link) {
 }
 
 export default function RootNavigator() {
-    const { token, loading } = useAuth();
+    const { token, hasOnboarded, loading } = useAuth();
     const navRef = useRef(null);
 
     // Temps d'affichage minimum du loader (logo) pour un rendu soigné
@@ -303,9 +314,13 @@ export default function RootNavigator() {
         return <AppLoader />;
     }
 
+    // Comportement Kikuu : dès que l'utilisateur s'est connecté au moins une
+    // fois (hasOnboarded), on ne bloque plus sur le mur de connexion après une
+    // déconnexion → il navigue en invité. Le mur n'apparaît qu'au tout premier
+    // lancement (jamais connecté).
     return (
         <NavigationContainer ref={navRef}>
-            {token ? <AppStack /> : <AuthStack />}
+            {token || hasOnboarded ? <AppStack /> : <AuthStack />}
         </NavigationContainer>
     );
 }

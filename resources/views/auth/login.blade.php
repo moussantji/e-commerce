@@ -55,9 +55,7 @@
                                             <p class="text-body-tertiary">Prend acces a ton compte</p>
                                         </div><a href="{{ url('/auth/google/redirect') }}" class="btn btn-phoenix-secondary w-100 mb-3"><span
                                                 class="fab fa-google text-danger me-2 fs-9"></span>Connecte-toi avec
-                                            google</a><a href="{{ url('/auth/facebook/redirect') }}" class="btn btn-phoenix-secondary w-100"><span
-                                                class="fab fa-facebook text-primary me-2 fs-9"></span>Connecte-toi avec
-                                            facebook</a>
+                                            google</a>
                                         <div class="position-relative">
                                             <hr class="bg-body-secondary mt-5 mb-4" />
                                             <div class="divider-content-center bg-body-emphasis">or utilise email</div>

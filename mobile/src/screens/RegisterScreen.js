@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     View,
     Text,
@@ -18,7 +18,12 @@ import AuthBackground from "../components/AuthBackground";
 import { COLORS } from "../theme";
 
 export default function RegisterScreen({ navigation }) {
-    const { register } = useAuth();
+    const { register, token } = useAuth();
+
+    // Retour auto à la boutique une fois inscrit (contexte invité empilé).
+    useEffect(() => {
+        if (token && navigation.canGoBack()) navigation.goBack();
+    }, [token]);
     const [form, setForm] = useState({
         name: "",
         email: "",

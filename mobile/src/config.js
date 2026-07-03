@@ -14,9 +14,8 @@ export const API_BASE_URL = "https://sugu.mandenbaoubab.com/api";
 export const CURRENCY = "FCFA";
 
 /**
- * Identifiants OAuth pour la connexion Google / Facebook.
- * Laissez vides tant que non configurés (les boutons afficheront un rappel).
- * Voir mobile/README.md (section "Connexion Google / Facebook").
+ * Identifiants OAuth pour la connexion Google.
+ * Laissez vides tant que non configurés (le bouton affichera un rappel).
  */
 export const GOOGLE_CLIENT_IDS = {
     expo: "767565152255-6t15btstu5uej5u3k8vl1bcipfj25c0h.apps.googleusercontent.com", // Web client ID (utilisé dans Expo Go)
@@ -24,8 +23,6 @@ export const GOOGLE_CLIENT_IDS = {
     ios: "767565152255-6t15btstu5uej5u3k8vl1bcipfj25c0h.apps.googleusercontent.com", // iOS client ID
     web: "767565152255-6t15btstu5uej5u3k8vl1bcipfj25c0h.apps.googleusercontent.com", // Web client ID
 };
-
-export const FACEBOOK_APP_ID = "";
 
 /**
  * Fond des écrans Connexion / Inscription.

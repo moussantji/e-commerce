@@ -55,9 +55,7 @@
                                             <p class="text-body-tertiary">Create your account today</p>
                                         </div><a href="{{ url('/auth/google/redirect') }}" class="btn btn-phoenix-secondary w-100 mb-3"><span
                                                 class="fab fa-google text-danger me-2 fs-9"></span>Sign up with
-                                            google</a><a hreff="{{ url('/auth/facebook/redirect') }}" class="btn btn-phoenix-secondary w-100"><span
-                                                class="fab fa-facebook text-primary me-2 fs-9"></span>Sign up with
-                                            facebook</a>
+                                            google</a>
                                         <div class="position-relative mt-4">
                                             <hr class="bg-body-secondary" />
                                             <div class="divider-content-center bg-body-emphasis">or use email</div>

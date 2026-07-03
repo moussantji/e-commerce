@@ -189,17 +189,33 @@ export default function AccountScreen({ navigation }) {
                             </View>
                         )}
                         <View style={{ flex: 1 }}>
-                            <View style={styles.nameRow}>
-                                <Text style={styles.name} numberOfLines={1}>
-                                    {user?.name || "Mon compte"}
-                                </Text>
-                                <TouchableOpacity onPress={() => navigation.navigate("EditProfile")}>
-                                    <Ionicons name="create-outline" size={18} color={COLORS.textLight} />
-                                </TouchableOpacity>
-                            </View>
-                            <View style={styles.vip}>
-                                <Text style={styles.vipText}>VIP 0</Text>
-                            </View>
+                            {user ? (
+                                <>
+                                    <View style={styles.nameRow}>
+                                        <Text style={styles.name} numberOfLines={1}>
+                                            {user?.name || "Mon compte"}
+                                        </Text>
+                                        <TouchableOpacity onPress={() => navigation.navigate("EditProfile")}>
+                                            <Ionicons name="create-outline" size={18} color={COLORS.textLight} />
+                                        </TouchableOpacity>
+                                    </View>
+                                    <View style={styles.vip}>
+                                        <Text style={styles.vipText}>VIP 0</Text>
+                                    </View>
+                                </>
+                            ) : (
+                                <>
+                                    <Text style={styles.name} numberOfLines={1}>Invité</Text>
+                                    <TouchableOpacity
+                                        style={styles.loginCta}
+                                        onPress={() => navigation.navigate("Login")}
+                                    >
+                                        <Text style={styles.loginCtaText}>
+                                            Se connecter / S'inscrire
+                                        </Text>
+                                    </TouchableOpacity>
+                                </>
+                            )}
                         </View>
                     </View>
                 </ImageBackground>
@@ -269,10 +285,22 @@ export default function AccountScreen({ navigation }) {
                     ))}
                 </View>
 
-                <TouchableOpacity style={styles.logout} onPress={logout}>
-                    <Ionicons name="log-out-outline" size={20} color="#dc2626" />
-                    <Text style={styles.logoutText}>Se déconnecter</Text>
-                </TouchableOpacity>
+                {user ? (
+                    <TouchableOpacity style={styles.logout} onPress={logout}>
+                        <Ionicons name="log-out-outline" size={20} color="#dc2626" />
+                        <Text style={styles.logoutText}>Se déconnecter</Text>
+                    </TouchableOpacity>
+                ) : (
+                    <TouchableOpacity
+                        style={styles.logout}
+                        onPress={() => navigation.navigate("Login")}
+                    >
+                        <Ionicons name="log-in-outline" size={20} color={COLORS.primaryDark} />
+                        <Text style={[styles.logoutText, { color: COLORS.primaryDark }]}>
+                            Se connecter
+                        </Text>
+                    </TouchableOpacity>
+                )}
 
                 <View style={{ height: 16 }} />
             </ScrollView>
@@ -328,6 +356,15 @@ const styles = StyleSheet.create({
         marginTop: 6,
     },
     vipText: { color: COLORS.primaryDark, fontWeight: "700", fontSize: 11 },
+    loginCta: {
+        alignSelf: "flex-start",
+        backgroundColor: COLORS.primaryDark,
+        borderRadius: RADIUS.pill,
+        paddingHorizontal: 14,
+        paddingVertical: 6,
+        marginTop: 6,
+    },
+    loginCtaText: { color: "#fff", fontWeight: "800", fontSize: 12 },
 
     block: {
         backgroundColor: "#fff",
