@@ -20,6 +20,7 @@ import { useCart } from "../context/CartContext";
 import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
 import AnimatedPressable from "../components/AnimatedPressable";
+import SmartImage from "../components/SmartImage";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = (SCREEN_WIDTH - 24) / 2;
@@ -169,7 +170,7 @@ export default function ProductListScreen({ route, navigation }) {
                 }
             >
                 <View style={styles.imgWrap}>
-                    <Image source={{ uri: item.image }} style={styles.image} />
+                    <SmartImage source={item.image} style={styles.image} />
                     {hasDiscount ? (
                         <View style={styles.badge}>
                             <Text style={styles.badgeText}>-{discount}%</Text>

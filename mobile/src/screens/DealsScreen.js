@@ -23,6 +23,7 @@ import { useWishlist } from "../context/WishlistContext";
 import { useAuth } from "../context/AuthContext";
 import { Alert } from "react-native";
 import AnimatedPressable from "../components/AnimatedPressable";
+import SmartImage from "../components/SmartImage";
 
 const HERO_IMAGE =
     "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1080&q=80";
@@ -182,10 +183,9 @@ export default function DealsScreen({ navigation }) {
                 }
             >
                 <View style={styles.imageContainer}>
-                    <Image
-                        source={{ uri: item.image }}
+                    <SmartImage
+                        source={item.image}
                         style={styles.productImage}
-                        resizeMode="cover"
                     />
                     {hasDiscount && (
                         <View style={styles.discountBadge}>

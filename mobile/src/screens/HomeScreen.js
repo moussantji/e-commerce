@@ -22,6 +22,7 @@ import { Alert } from "react-native";
 import { getReadIds } from "../notifRead";
 import FadeInView from "../components/FadeInView";
 import AnimatedPressable from "../components/AnimatedPressable";
+import SmartImage from "../components/SmartImage";
 
 const FILTERS = [
     { key: "for_you", label: "Pour vous", icon: null },
@@ -49,13 +50,13 @@ function MasonryCard({ item, onPress, favorited, onToggleFav }) {
     return (
         <AnimatedPressable style={styles.mCard} scaleTo={0.97} onPress={onPress}>
             <View>
-                <Image
-                    source={{ uri: item.image }}
+                <SmartImage
+                    source={item.image}
                     style={[styles.mImage, { aspectRatio: ar }]}
-                    resizeMode="cover"
                     onLoad={(e) => {
-                        const s = e?.nativeEvent?.source;
-                        if (s?.width && s?.height) setAr(s.width / s.height);
+                        const w = e?.source?.width;
+                        const h = e?.source?.height;
+                        if (w && h) setAr(w / h);
                     }}
                 />
                 {item.sale_price ? (
