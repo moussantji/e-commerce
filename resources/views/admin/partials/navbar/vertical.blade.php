@@ -257,30 +257,16 @@
                                         </div>
                                     </a>
                                 </li>
-                                <li class="nav-item">
-                                    <a class="nav-link {{ request()->get('status') === 'en_attente' ? 'active' : '' }}"
-                                        href="{{ route('admin.orders.index') }}?status=en_attente">
-                                        <div class="d-flex align-items-center">
-                                            <span class="nav-link-text">Commandes en attente</span>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link {{ request()->get('status') === 'en_cours' ? 'active' : '' }}"
-                                        href="{{ route('admin.orders.index') }}?status=en_cours">
-                                        <div class="d-flex align-items-center">
-                                            <span class="nav-link-text">Commandes en cours</span>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link {{ request()->get('status') === 'expediee' ? 'active' : '' }}"
-                                        href="{{ route('admin.orders.index') }}?status=expediee">
-                                        <div class="d-flex align-items-center">
-                                            <span class="nav-link-text">Commandes terminées</span>
-                                        </div>
-                                    </a>
-                                </li>
+                                @foreach(\App\Support\OrderStatus::LABELS as $statusKey => $statusLabel)
+                                    <li class="nav-item">
+                                        <a class="nav-link {{ request()->get('status') === $statusKey ? 'active' : '' }}"
+                                            href="{{ route('admin.orders.index') }}?status={{ $statusKey }}">
+                                            <div class="d-flex align-items-center">
+                                                <span class="nav-link-text">{{ $statusLabel }}</span>
+                                            </div>
+                                        </a>
+                                    </li>
+                                @endforeach
                             </ul>
                         </div>
                     </div>

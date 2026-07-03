@@ -68,24 +68,14 @@
                             Toutes les commandes
                         </a>
                     </li>
-                    <li>
-                        <a class="dropdown-item {{ request()->get('status') === 'pending' ? 'active' : '' }}"
-                            href="{{ route('admin.orders.index') }}?status=pending">
-                            En attente
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item {{ request()->get('status') === 'processing' ? 'active' : '' }}"
-                            href="{{ route('admin.orders.index') }}?status=processing">
-                            En cours
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item {{ request()->get('status') === 'completed' ? 'active' : '' }}"
-                            href="{{ route('admin.orders.index') }}?status=completed">
-                            Terminées
-                        </a>
-                    </li>
+                    @foreach(\App\Support\OrderStatus::LABELS as $statusKey => $statusLabel)
+                        <li>
+                            <a class="dropdown-item {{ request()->get('status') === $statusKey ? 'active' : '' }}"
+                                href="{{ route('admin.orders.index') }}?status={{ $statusKey }}">
+                                {{ $statusLabel }}
+                            </a>
+                        </li>
+                    @endforeach
                 </ul>
             </li>
 

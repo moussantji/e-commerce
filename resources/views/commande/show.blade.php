@@ -41,11 +41,8 @@
                         'expedie' => 'Expédiée',
                         'livre' => 'Livrée',
                     ];
-                    $normalized = [
-                        'expedition' => 'expedie',
-                        'livree' => 'livre',
-                    ][$commande->statut] ?? $commande->statut;
-                    $isCancelled = in_array($commande->statut, ['annule', 'annulee']);
+                    $normalized = \App\Support\OrderStatus::normalize($commande->statut);
+                    $isCancelled = $normalized === \App\Support\OrderStatus::ANNULE;
                     $currentIndex = array_search($normalized, $flow);
                     if ($currentIndex === false) { $currentIndex = 0; }
                 @endphp

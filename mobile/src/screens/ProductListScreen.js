@@ -19,6 +19,8 @@ import api, { apiError } from "../api/client";
 import { useCart } from "../context/CartContext";
 import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
+import AnimatedPressable from "../components/AnimatedPressable";
+import SmartImage from "../components/SmartImage";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = (SCREEN_WIDTH - 24) / 2;
@@ -151,7 +153,7 @@ export default function ProductListScreen({ route, navigation }) {
     const activeFilterCount =
         selBrands.length + Object.values(selCarac).reduce((n, v) => n + v.length, 0);
 
-    const renderItem = ({ item }) => {
+    const renderItem = ({ item, index }) => {
         const hasDiscount = item.sale_price && item.sale_price < item.price;
         const discount = hasDiscount
             ? Math.round(((item.price - item.sale_price) / item.price) * 100)
@@ -159,15 +161,16 @@ export default function ProductListScreen({ route, navigation }) {
         const lowStock = item.stock != null && item.stock > 0 && item.stock <= 5;
 
         return (
-            <TouchableOpacity
+            <AnimatedPressable
                 style={styles.card}
-                activeOpacity={0.9}
+                scaleTo={0.97}
+                index={index}
                 onPress={() =>
                     navigation.navigate("ProductDetail", { id: item.id, name: item.name })
                 }
             >
                 <View style={styles.imgWrap}>
-                    <Image source={{ uri: item.image }} style={styles.image} />
+                    <SmartImage source={item.image} style={styles.image} />
                     {hasDiscount ? (
                         <View style={styles.badge}>
                             <Text style={styles.badgeText}>-{discount}%</Text>
@@ -202,7 +205,7 @@ export default function ProductListScreen({ route, navigation }) {
                         </Text>
                     ) : null}
                 </View>
-            </TouchableOpacity>
+            </AnimatedPressable>
         );
     };
 

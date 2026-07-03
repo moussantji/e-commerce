@@ -15,6 +15,8 @@ import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
+import AnimatedPressable from "../components/AnimatedPressable";
+import SmartImage from "../components/SmartImage";
 
 export default function WishlistScreen({ navigation }) {
     const { add } = useCart();
@@ -50,13 +52,14 @@ export default function WishlistScreen({ navigation }) {
         }
     };
 
-    const renderItem = ({ item }) => (
-        <TouchableOpacity
+    const renderItem = ({ item, index }) => (
+        <AnimatedPressable
             style={styles.card}
-            activeOpacity={0.9}
+            scaleTo={0.97}
+            index={index}
             onPress={() => navigation.navigate("ProductDetail", { id: item.id, name: item.name })}
         >
-            <Image source={{ uri: item.image }} style={styles.image} />
+            <SmartImage source={item.image} style={styles.image} />
             <TouchableOpacity style={styles.heart} onPress={() => removeFav(item.id)}>
                 <Ionicons name="heart" size={18} color={COLORS.badge} />
             </TouchableOpacity>
@@ -74,7 +77,7 @@ export default function WishlistScreen({ navigation }) {
                     </TouchableOpacity>
                 </View>
             </View>
-        </TouchableOpacity>
+        </AnimatedPressable>
     );
 
     if (loading) {

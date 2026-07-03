@@ -26,23 +26,9 @@
     <tbody class="list" id="order-table-body">
         @foreach ($commandes as $commande)
             @php
-                $statusClasses = [
-                    'en_attente' => 'warning',
-                    'traitement' => 'info',
-                    'expedie' => 'primary',
-                    'livre' => 'success',
-                    'annule' => 'danger',
-                ];
-                $statusIcons = [
-                    'en_attente' => 'clock',
-                    'traitement' => 'loader',
-                    'expedie' => 'truck',
-                    'livre' => 'check',
-                    'annule' => 'x',
-                ];
-                $statusClass = $statusClasses[$commande->statut] ?? 'secondary';
-                $statusIcon = $statusIcons[$commande->statut] ?? 'alert-circle';
-                $statusLabel = ucfirst(str_replace('_', ' ', $commande->statut));
+                $statusClass = $commande->status_badge_class;
+                $statusIcon = $commande->status_icon;
+                $statusLabel = $commande->status_label;
             @endphp
             <tr class="hover-actions-trigger btn-reveal-trigger position-static">
                 <td class="fs-9 align-middle px-0 py-3">
@@ -79,23 +65,9 @@
                     @endif
                 </td>
                 @php
-                    $statusClasses = [
-                        'en_attente' => 'warning',
-                        'traitement' => 'info',
-                        'expedie' => 'primary',
-                        'livre' => 'success',
-                        'annule' => 'danger',
-                    ];
-                    $statusIcons = [
-                        'en_attente' => 'clock',
-                        'traitement' => 'loader',
-                        'expedie' => 'truck',
-                        'livre' => 'check',
-                        'annule' => 'x',
-                    ];
-                    $statusClass = $statusClasses[$commande->statut] ?? 'secondary';
-                    $statusIcon = $statusIcons[$commande->statut] ?? 'alert-circle';
-                    $statusLabel = ucfirst(str_replace('_', ' ', $commande->statut));
+                    $statusClass = $commande->status_badge_class;
+                    $statusIcon = $commande->status_icon;
+                    $statusLabel = $commande->status_label;
                 @endphp
 
                 <td class="payment_status align-middle white-space-nowrap text-start fw-bold">
@@ -112,7 +84,7 @@
                 <td class="date align-middle white-space-nowrap text-body-tertiary fs-9 ps-4 text-end">{{ $commande->created_at->format('d/m/Y H:i') }}</td>
                 <td class="align-middle text-end pe-0 white-space-nowrap">
                     @php
-                        $terminal = in_array($commande->statut, ['livre', 'livree', 'annule', 'annulee']);
+                        $terminal = \App\Support\OrderStatus::isTerminal($commande->statut);
                     @endphp
                     <div class="btn-group">
                         <a href="{{ route('admin.orders.show', $commande) }}"

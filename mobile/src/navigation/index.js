@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from "react";
-import { View, ActivityIndicator } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { Animated } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -8,6 +8,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { COLORS, GradientBackground } from "../theme";
+import AppLoader from "../components/AppLoader";
 import LoginScreen from "../screens/LoginScreen";
 import RegisterScreen from "../screens/RegisterScreen";
 import HomeScreen from "../screens/HomeScreen";
@@ -47,6 +48,28 @@ const ICONS = {
     Compte: "person",
 };
 
+/** Icône d'onglet animée : léger rebond/agrandissement quand elle devient active. */
+function AnimatedTabIcon({ base, color, size, focused }) {
+    const scale = useRef(new Animated.Value(1)).current;
+    useEffect(() => {
+        Animated.spring(scale, {
+            toValue: focused ? 1.18 : 1,
+            friction: 5,
+            tension: 160,
+            useNativeDriver: true,
+        }).start();
+    }, [focused, scale]);
+    return (
+        <Animated.View style={{ transform: [{ scale }] }}>
+            <Ionicons
+                name={focused ? base : `${base}-outline`}
+                size={size}
+                color={color}
+            />
+        </Animated.View>
+    );
+}
+
 function Tabs() {
     const { cart } = useCart();
     return (
@@ -60,16 +83,15 @@ function Tabs() {
                 tabBarInactiveTintColor: "#9ca3af",
                 tabBarStyle: { height: 58, paddingBottom: 6, paddingTop: 6 },
                 tabBarLabelStyle: { fontSize: 11, fontWeight: "600" },
-                tabBarIcon: ({ color, size, focused }) => {
-                    const base = ICONS[route.name] || "ellipse";
-                    return (
-                        <Ionicons
-                            name={focused ? base : `${base}-outline`}
-                            size={size}
-                            color={color}
-                        />
-                    );
-                },
+                tabBarHideOnKeyboard: true,
+                tabBarIcon: ({ color, size, focused }) => (
+                    <AnimatedTabIcon
+                        base={ICONS[route.name] || "ellipse"}
+                        color={color}
+                        size={size}
+                        focused={focused}
+                    />
+                ),
             })}
         >
             <Tab.Screen
@@ -112,6 +134,8 @@ function AppStack() {
                 headerStyle: { backgroundColor: COLORS.primary },
                 headerTintColor: "#fff",
                 headerTitleStyle: { fontWeight: "800" },
+                animation: "slide_from_right",
+                animationDuration: 260,
             }}
         >
             <Stack.Screen
@@ -215,7 +239,7 @@ function AppStack() {
 
 function AuthStack() {
     return (
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Navigator screenOptions={{ headerShown: false, animation: "fade" }}>
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />
         </Stack.Navigator>
@@ -252,6 +276,13 @@ export default function RootNavigator() {
     const { token, loading } = useAuth();
     const navRef = useRef(null);
 
+    // Temps d'affichage minimum du loader (logo) pour un rendu soigné
+    const [minReady, setMinReady] = useState(false);
+    useEffect(() => {
+        const t = setTimeout(() => setMinReady(true), 1500);
+        return () => clearTimeout(t);
+    }, []);
+
     // Enregistre le token push dès qu'on est connecté
     useEffect(() => {
         if (token) {
@@ -268,18 +299,8 @@ export default function RootNavigator() {
         return () => sub.remove();
     }, []);
 
-    if (loading) {
-        return (
-            <View
-                style={{
-                    flex: 1,
-                    justifyContent: "center",
-                    alignItems: "center",
-                }}
-            >
-                <ActivityIndicator size="large" color={COLORS.primary} />
-            </View>
-        );
+    if (loading || !minReady) {
+        return <AppLoader />;
     }
 
     return (
