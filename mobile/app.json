@@ -46,7 +46,8 @@
         {
           "color": "#764ba2"
         }
-      ]
+      ],
+      "@react-native-google-signin/google-signin"
     ]
   }
 }
