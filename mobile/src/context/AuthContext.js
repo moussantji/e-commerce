@@ -77,10 +77,10 @@ export function AuthProvider({ children }) {
         return data;
     };
 
-    const socialLogin = async (provider, accessToken) => {
+    const socialLogin = async (provider, idToken) => {
         const { data } = await api.post("/auth/social", {
             provider,
-            access_token: accessToken,
+            id_token: idToken,
         });
         await persist(data.token, data.user);
         return data;

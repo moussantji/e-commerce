@@ -8,94 +8,63 @@ import {
     ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import * as WebBrowser from "expo-web-browser";
-import * as Google from "expo-auth-session/providers/google";
+import {
+    GoogleSignin,
+    statusCodes,
+} from "@react-native-google-signin/google-signin";
 import { useAuth } from "../context/AuthContext";
 import { apiError } from "../api/client";
 import { GOOGLE_CLIENT_IDS } from "../config";
 
-WebBrowser.maybeCompleteAuthSession();
+const WEB_CLIENT_ID = GOOGLE_CLIENT_IDS.web || GOOGLE_CLIENT_IDS.expo || "";
 
-const GOOGLE_ON = !!(
-    GOOGLE_CLIENT_IDS.android ||
-    GOOGLE_CLIENT_IDS.ios ||
-    GOOGLE_CLIENT_IDS.web ||
-    GOOGLE_CLIENT_IDS.expo
-);
-
-/** Bouton présentationnel Google. */
-function GoogleFace({ busy, onPress }) {
-    return (
-        <TouchableOpacity style={styles.btn} onPress={onPress} disabled={busy}>
-            {busy ? (
-                <ActivityIndicator color="#111" />
-            ) : (
-                <>
-                    <Ionicons name="logo-google" size={20} color="#EA4335" />
-                    <Text style={styles.googleText}>Continuer avec Google</Text>
-                </>
-            )}
-        </TouchableOpacity>
-    );
-}
-
-/** Bouton Google réel (monté uniquement si configuré). */
-function GoogleButton() {
-    const { socialLogin } = useAuth();
-    const [busy, setBusy] = useState(false);
-    const [, response, promptAsync] = Google.useAuthRequest({
-        androidClientId: GOOGLE_CLIENT_IDS.android || undefined,
-        iosClientId: GOOGLE_CLIENT_IDS.ios || undefined,
-        webClientId: GOOGLE_CLIENT_IDS.web || GOOGLE_CLIENT_IDS.expo || undefined,
+// Configuration du SDK natif Google (flux conforme à la policy OAuth 2.0).
+// webClientId = client OAuth de type "Web" → sert à obtenir un idToken.
+// Le client Android (package + SHA-1) est détecté automatiquement par le SDK.
+if (WEB_CLIENT_ID) {
+    GoogleSignin.configure({
+        webClientId: WEB_CLIENT_ID,
+        offlineAccess: false,
     });
-
-    useEffect(() => {
-        if (!response) return;
-        if (response.type === "success") {
-            (async () => {
-                try {
-                    await socialLogin(
-                        "google",
-                        response.authentication?.accessToken,
-                    );
-                } catch (e) {
-                    Alert.alert("Google", apiError(e));
-                } finally {
-                    setBusy(false);
-                }
-            })();
-        } else {
-            setBusy(false);
-        }
-    }, [response]);
-
-    return (
-        <GoogleFace
-            busy={busy}
-            onPress={() => {
-                setBusy(true);
-                promptAsync();
-            }}
-        />
-    );
-}
-
-/** Bouton Google non configuré : rappel. */
-function NotConfiguredButton() {
-    return (
-        <GoogleFace
-            busy={false}
-            onPress={() =>
-                Alert.alert(
-                    "À configurer",
-                    "Renseignez le client Google dans mobile/src/config.js.",
-                )
-            }
-        />
-    );
 }
 
 export default function SocialButtons() {
+    const { socialLogin } = useAuth();
+    const [busy, setBusy] = useState(false);
+
+    const onGoogle = async () => {
+        if (!WEB_CLIENT_ID) {
+            Alert.alert(
+                "À configurer",
+                "Renseignez le webClientId Google dans mobile/src/config.js.",
+            );
+            return;
+        }
+        setBusy(true);
+        try {
+            await GoogleSignin.hasPlayServices({
+                showPlayServicesUpdateDialog: true,
+            });
+            const result = await GoogleSignin.signIn();
+            // SDK v13+: { type, data: { idToken, ... } } ; anciennes: { idToken, ... }
+            const idToken = result?.data?.idToken ?? result?.idToken;
+            if (!idToken) {
+                throw new Error("idToken introuvable");
+            }
+            await socialLogin("google", idToken);
+        } catch (e) {
+            if (e?.code === statusCodes.SIGN_IN_CANCELLED) {
+                // annulé par l'utilisateur : rien à faire
+            } else if (e?.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+                Alert.alert("Google", "Google Play Services indisponible.");
+            } else {
+                Alert.alert("Google", apiError(e) || "Connexion Google échouée.");
+            }
+        } finally {
+            setBusy(false);
+        }
+    };
+
     return (
         <View>
             <View style={styles.divider}>
@@ -104,7 +73,16 @@ export default function SocialButtons() {
                 <View style={styles.line} />
             </View>
 
-            {GOOGLE_ON ? <GoogleButton /> : <NotConfiguredButton />}
+            <TouchableOpacity style={styles.btn} onPress={onGoogle} disabled={busy}>
+                {busy ? (
+                    <ActivityIndicator color="#111" />
+                ) : (
+                    <>
+                        <Ionicons name="logo-google" size={20} color="#EA4335" />
+                        <Text style={styles.googleText}>Continuer avec Google</Text>
+                    </>
+                )}
+            </TouchableOpacity>
         </View>
     );
 }
