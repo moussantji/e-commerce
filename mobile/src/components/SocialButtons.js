@@ -18,14 +18,17 @@ import { GOOGLE_CLIENT_IDS } from "../config";
 
 const WEB_CLIENT_ID = GOOGLE_CLIENT_IDS.web || GOOGLE_CLIENT_IDS.expo || "";
 
-// Configuration du SDK natif Google (flux conforme à la policy OAuth 2.0).
-// webClientId = client OAuth de type "Web" → sert à obtenir un idToken.
-// Le client Android (package + SHA-1) est détecté automatiquement par le SDK.
-if (WEB_CLIENT_ID) {
+// Configuration paresseuse : le SDK natif n'existe PAS dans Expo Go.
+// On configure au 1er clic, dans un try/catch, pour ne jamais crasher l'app
+// au démarrage si le module natif est absent (« RNGoogleSignin could not be found »).
+let googleConfigured = false;
+function ensureGoogleConfigured() {
+    if (googleConfigured) return;
     GoogleSignin.configure({
         webClientId: WEB_CLIENT_ID,
         offlineAccess: false,
     });
+    googleConfigured = true;
 }
 
 export default function SocialButtons() {
@@ -42,6 +45,7 @@ export default function SocialButtons() {
         }
         setBusy(true);
         try {
+            ensureGoogleConfigured();
             await GoogleSignin.hasPlayServices({
                 showPlayServicesUpdateDialog: true,
             });
@@ -53,10 +57,17 @@ export default function SocialButtons() {
             }
             await socialLogin("google", idToken);
         } catch (e) {
-            if (e?.code === statusCodes.SIGN_IN_CANCELLED) {
+            const msg = String(e?.message || "");
+            if (e?.code === statusCodes?.SIGN_IN_CANCELLED) {
                 // annulé par l'utilisateur : rien à faire
-            } else if (e?.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+            } else if (e?.code === statusCodes?.PLAY_SERVICES_NOT_AVAILABLE) {
                 Alert.alert("Google", "Google Play Services indisponible.");
+            } else if (msg.includes("RNGoogleSignin")) {
+                // Module natif absent : on est dans Expo Go, pas dans un vrai build.
+                Alert.alert(
+                    "Indisponible ici",
+                    "La connexion Google nécessite l'application installée (APK / development build). Elle ne fonctionne pas dans Expo Go.",
+                );
             } else {
                 Alert.alert("Google", apiError(e) || "Connexion Google échouée.");
             }
