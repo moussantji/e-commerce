@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     View,
     Text,
@@ -18,7 +18,14 @@ import AuthBackground from "../components/AuthBackground";
 import { COLORS } from "../theme";
 
 export default function LoginScreen({ navigation }) {
-    const { login } = useAuth();
+    const { login, token, continueAsGuest } = useAuth();
+
+    // Si l'écran est ouvert en mode invité (empilé) et que l'utilisateur se
+    // connecte (y compris via Google), on revient automatiquement à la boutique.
+    useEffect(() => {
+        if (token && navigation.canGoBack()) navigation.goBack();
+    }, [token]);
+
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPass, setShowPass] = useState(false);
@@ -133,6 +140,18 @@ export default function LoginScreen({ navigation }) {
                                 </Text>
                             </Text>
                         </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.guestBtn}
+                            onPress={async () => {
+                                await continueAsGuest();
+                                if (navigation.canGoBack()) navigation.goBack();
+                            }}
+                        >
+                            <Text style={styles.guestText}>
+                                Continuer sans compte
+                            </Text>
+                        </TouchableOpacity>
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
@@ -189,4 +208,10 @@ const styles = StyleSheet.create({
     buttonText: { color: "#fff", fontWeight: "800", fontSize: 16 },
     link: { textAlign: "center", marginTop: 18, color: "#6b7280" },
     linkBold: { color: COLORS.primaryDark, fontWeight: "800" },
+    guestBtn: { marginTop: 16, alignItems: "center", paddingVertical: 6 },
+    guestText: {
+        color: COLORS.primaryDark,
+        fontWeight: "700",
+        textDecorationLine: "underline",
+    },
 });

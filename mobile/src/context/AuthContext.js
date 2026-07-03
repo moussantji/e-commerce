@@ -6,17 +6,26 @@ const AuthContext = createContext(null);
 export const useAuth = () => useContext(AuthContext);
 
 const TOKEN_KEY = "auth_token";
+// Marqueur : l'utilisateur a déjà connu l'écran de connexion au moins une fois.
+// Une fois posé, il n'est PAS effacé à la déconnexion → l'app passe en mode
+// invité (comportement Kikuu : on ne bloque plus sur le mur de connexion).
+const ONBOARDED_KEY = "has_onboarded";
 
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [token, setToken] = useState(null);
+    const [hasOnboarded, setHasOnboarded] = useState(false);
     const [loading, setLoading] = useState(true);
 
     // Restaure la session au démarrage
     useEffect(() => {
         (async () => {
             try {
-                const stored = await SecureStore.getItemAsync(TOKEN_KEY);
+                const [stored, onboarded] = await Promise.all([
+                    SecureStore.getItemAsync(TOKEN_KEY),
+                    SecureStore.getItemAsync(ONBOARDED_KEY),
+                ]);
+                if (onboarded === "1") setHasOnboarded(true);
                 if (stored) {
                     setAuthToken(stored);
                     setToken(stored);
@@ -34,8 +43,23 @@ export function AuthProvider({ children }) {
         })();
     }, []);
 
+    const markOnboarded = async () => {
+        try {
+            await SecureStore.setItemAsync(ONBOARDED_KEY, "1");
+        } catch (e) {
+            /* ignore */
+        }
+        setHasOnboarded(true);
+    };
+
+    // Permet, depuis le tout premier écran de connexion, de continuer sans compte.
+    const continueAsGuest = async () => {
+        await markOnboarded();
+    };
+
     const persist = async (newToken, newUser) => {
         await SecureStore.setItemAsync(TOKEN_KEY, newToken);
+        await markOnboarded();
         setAuthToken(newToken);
         setToken(newToken);
         setUser(newUser);
@@ -91,11 +115,13 @@ export function AuthProvider({ children }) {
             value={{
                 user,
                 token,
+                hasOnboarded,
                 loading,
                 login,
                 register,
                 socialLogin,
                 logout,
+                continueAsGuest,
                 updateProfile,
                 updateUserData,
             }}
