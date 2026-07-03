@@ -17,6 +17,7 @@ import api, { apiError } from "../api/client";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { useWishlist } from "../context/WishlistContext";
+import useRequireAuth from "../hooks/useRequireAuth";
 import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
 import { addRecentlyViewed } from "../recentlyViewed";
@@ -109,6 +110,7 @@ export default function ProductDetailScreen({ route, navigation }) {
     const [favLoading, setFavLoading] = useState(false);
     const galleryRef = useRef(null);
     const { isFav: isFavId, toggle: toggleFavCtx } = useWishlist();
+    const ensureAuth = useRequireAuth();
     const isFav = isFavId(product?.id ?? Number(id));
 
     // Section "Vous aimerez aussi" avec filtres + grille + pagination
@@ -136,10 +138,7 @@ export default function ProductDetailScreen({ route, navigation }) {
 
     // État favori (géré par le contexte partagé)
     const toggleFav = async () => {
-        if (!token) {
-            Alert.alert("Connexion requise", "Connectez-vous pour gérer vos favoris.");
-            return;
-        }
+        if (!ensureAuth("Connectez-vous pour gérer vos favoris.")) return;
         if (favLoading) return;
         setFavLoading(true);
         try {
@@ -217,10 +216,7 @@ export default function ProductDetailScreen({ route, navigation }) {
     };
 
     const addToCart = async () => {
-        if (!token) {
-            Alert.alert("Connexion requise", "Connectez-vous pour ajouter au panier.");
-            return;
-        }
+        if (!ensureAuth("Connectez-vous pour ajouter au panier.")) return;
         setAdding(true);
         try {
             await add(product.id, qty);

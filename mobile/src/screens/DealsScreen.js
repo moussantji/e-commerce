@@ -24,6 +24,7 @@ import { useAuth } from "../context/AuthContext";
 import { Alert } from "react-native";
 import AnimatedPressable from "../components/AnimatedPressable";
 import SmartImage from "../components/SmartImage";
+import useRequireAuth from "../hooks/useRequireAuth";
 
 const HERO_IMAGE =
     "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1080&q=80";
@@ -46,6 +47,7 @@ export default function DealsScreen({ navigation }) {
     const insets = useSafeAreaInsets();
     const { isFav, toggle } = useWishlist();
     const { token } = useAuth();
+    const ensureAuth = useRequireAuth();
     const [activeTab, setActiveTab] = useState("on_sale");
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -113,10 +115,7 @@ export default function DealsScreen({ navigation }) {
     };
 
     const onToggleFav = async (productId) => {
-        if (!token) {
-            Alert.alert("Connexion requise", "Connectez-vous pour gérer vos favoris.");
-            return;
-        }
+        if (!ensureAuth("Connectez-vous pour gérer vos favoris.")) return;
         try {
             await toggle(productId);
         } catch (e) {

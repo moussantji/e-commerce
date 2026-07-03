@@ -23,6 +23,7 @@ import { getReadIds } from "../notifRead";
 import FadeInView from "../components/FadeInView";
 import AnimatedPressable from "../components/AnimatedPressable";
 import SmartImage from "../components/SmartImage";
+import useRequireAuth from "../hooks/useRequireAuth";
 
 const FILTERS = [
     { key: "for_you", label: "Pour vous", icon: null },
@@ -99,13 +100,10 @@ function MasonryCard({ item, onPress, favorited, onToggleFav }) {
 export default function HomeScreen({ navigation }) {
     const insets = useSafeAreaInsets();
     const { isFav, toggle: toggleFavId } = useWishlist();
-    const { token } = useAuth();
+    const ensureAuth = useRequireAuth();
 
     const onToggleFav = async (productId) => {
-        if (!token) {
-            Alert.alert("Connexion requise", "Connectez-vous pour gérer vos favoris.");
-            return;
-        }
+        if (!ensureAuth("Connectez-vous pour gérer vos favoris.")) return;
         try {
             await toggleFavId(productId);
         } catch (e) {
