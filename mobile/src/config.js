@@ -19,10 +19,10 @@ export const CURRENCY = "FCFA";
  * Voir mobile/README.md (section "Connexion Google / Facebook").
  */
 export const GOOGLE_CLIENT_IDS = {
-    expo: "291532697068-625tb5paksrf63blhfanuv9it3168hr7.apps.googleusercontent.com", // Web client ID (utilisé dans Expo Go)
-    android: "291532697068-625tb5paksrf63blhfanuv9it3168hr7.apps.googleusercontent.com", // Android client ID
-    ios: "291532697068-625tb5paksrf63blhfanuv9it3168hr7.apps.googleusercontent.com", // iOS client ID
-    web: "291532697068-625tb5paksrf63blhfanuv9it3168hr7.apps.googleusercontent.com", // Web client ID
+    expo: "767565152255-6t15btstu5uej5u3k8vl1bcipfj25c0h.apps.googleusercontent.com", // Web client ID (utilisé dans Expo Go)
+    android: "767565152255-6t15btstu5uej5u3k8vl1bcipfj25c0h.apps.googleusercontent.com", // Android client ID
+    ios: "767565152255-6t15btstu5uej5u3k8vl1bcipfj25c0h.apps.googleusercontent.com", // iOS client ID
+    web: "767565152255-6t15btstu5uej5u3k8vl1bcipfj25c0h.apps.googleusercontent.com", // Web client ID
 };
 
 export const FACEBOOK_APP_ID = "";
