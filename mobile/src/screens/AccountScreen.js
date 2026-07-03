@@ -224,7 +224,7 @@ export default function AccountScreen({ navigation }) {
                 <View style={styles.block}>
                     <View style={styles.blockHead}>
                         <Text style={styles.blockTitle}>Ma Commande</Text>
-                        <TouchableOpacity onPress={() => navigation.navigate("Orders")}>
+                        <TouchableOpacity onPress={() => (user ? navigation.navigate("Orders") : navigation.navigate("Login"))}>
                             <Text style={styles.seeAll}>Voir tout</Text>
                         </TouchableOpacity>
                     </View>
@@ -236,7 +236,9 @@ export default function AccountScreen({ navigation }) {
                                     key={s.key}
                                     style={styles.step}
                                     onPress={() =>
-                                        navigation.navigate("Orders", { initialTab: s.tab })
+                                        user
+                                            ? navigation.navigate("Orders", { initialTab: s.tab })
+                                            : navigation.navigate("Login")
                                     }
                                 >
                                     <View style={styles.stepIcon}>
@@ -269,7 +271,7 @@ export default function AccountScreen({ navigation }) {
                                 styles.row,
                                 i < menu.length - 1 && styles.rowBorder,
                             ]}
-                            onPress={m.onPress}
+                            onPress={user ? m.onPress : () => navigation.navigate("Login")}
                             activeOpacity={0.7}
                         >
                             <Ionicons name={m.icon} size={22} color={COLORS.text} />

@@ -17,6 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCart } from "../context/CartContext";
+import useRequireAuth from "../hooks/useRequireAuth";
 import { useAuth } from "../context/AuthContext";
 import { useWishlist } from "../context/WishlistContext";
 import api, { apiError } from "../api/client";
@@ -98,6 +99,7 @@ function RecoCard({ item, onPress, onAdd, favorited, onToggleFav }) {
 
 export default function CartScreen({ navigation }) {
     const { cart, loading, refresh, update, remove, add } = useCart();
+    const ensureAuth = useRequireAuth();
     const { user, token } = useAuth();
     const { isFav, toggle: toggleFav } = useWishlist();
     const insets = useSafeAreaInsets();
@@ -241,6 +243,7 @@ export default function CartScreen({ navigation }) {
 
     const checkout = async () => {
         if (placing) return;
+        if (!ensureAuth("Connectez-vous pour passer votre commande.")) return;
         setPlacing(true);
         try {
             const { data } = await api.post("/orders", {

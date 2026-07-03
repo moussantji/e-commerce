@@ -21,6 +21,7 @@ import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
 import AnimatedPressable from "../components/AnimatedPressable";
 import SmartImage from "../components/SmartImage";
+import useRequireAuth from "../hooks/useRequireAuth";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = (SCREEN_WIDTH - 24) / 2;
@@ -36,6 +37,7 @@ export default function ProductListScreen({ route, navigation }) {
     const params = route.params || {};
     const insets = useSafeAreaInsets();
     const { add } = useCart();
+    const ensureAuth = useRequireAuth();
 
     const [search] = useState(params.search || "");
     const [products, setProducts] = useState([]);
@@ -193,7 +195,10 @@ export default function ProductListScreen({ route, navigation }) {
                         ) : null}
                         <TouchableOpacity
                             style={styles.addBtn}
-                            onPress={() => add(item.id, 1).catch(() => {})}
+                            onPress={() => {
+                                if (!ensureAuth("Connectez-vous pour ajouter au panier.")) return;
+                                add(item.id, 1).catch(() => {});
+                            }}
                             activeOpacity={0.8}
                         >
                             <Ionicons name="cart" size={16} color="#fff" />
