@@ -140,6 +140,12 @@ export default function AccountScreen({ navigation }) {
             right: <Text style={styles.rightInfo}>Admin</Text>,
             onPress: () => navigation.navigate("AdminOrders"),
         });
+        menu.push({
+            icon: "settings-outline",
+            label: "Gestion du catalogue",
+            right: <Text style={styles.rightInfo}>Admin</Text>,
+            onPress: () => navigation.navigate("AdminHub"),
+        });
     }
 
     const initial = (user?.name || "?").charAt(0).toUpperCase();

@@ -37,7 +37,9 @@ const TYPE_LABEL = {
 
 export default function SearchScreen({ navigation, route }) {
     const insets = useSafeAreaInsets();
-    const [query, setQuery] = useState("");
+    // Pré-remplit la barre avec la recherche en cours (ex : depuis la liste de
+    // produits) pour que le terme reste visible et modifiable.
+    const [query, setQuery] = useState(route.params?.query ?? "");
     const [recent, setRecent] = useState([]);
     const [popular, setPopular] = useState([]);
     const [suggestions, setSuggestions] = useState([]);

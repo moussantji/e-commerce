@@ -10,6 +10,8 @@ use App\Models\Paniers;
 use App\Models\PaymentProof;
 use App\Models\Produits;
 use App\Models\PromoCode;
+use App\Models\User;
+use App\Models\WalletTransaction;
 use App\Support\AdminNotifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -243,10 +245,16 @@ class OrderController extends Controller
             'provider' => 'nullable|string|max:60',
             'phone' => 'nullable|string|max:30',
             'transaction_id' => 'nullable|string|max:120',
+            'wallet' => 'nullable|boolean',
         ]);
 
         $user = $request->user();
         $order = Commandes::where('user_id', $user->id)->findOrFail($id);
+
+        // === Paiement direct avec le portefeuille (solde rechargé) ===
+        if ($request->boolean('wallet')) {
+            return $this->payWithWallet($user, $order);
+        }
 
         $method = null;
         if (!empty($data['payment_method_id'])) {
@@ -322,6 +330,72 @@ class OrderController extends Controller
 
         return (new OrderResource($order))->additional([
             'message' => 'Paiement déclaré. En attente de confirmation par le vendeur.',
+        ]);
+    }
+
+    /**
+     * Règle une commande directement avec le solde du portefeuille.
+     * Le paiement est confirmé immédiatement (pas de vérification vendeur).
+     */
+    private function payWithWallet(User $user, Commandes $order)
+    {
+        // On ne paie pas deux fois une commande déjà réglée/traitée.
+        if (in_array($order->statut, ['payee', 'traitement', 'expedie', 'livre'], true)) {
+            return response()->json(['message' => 'Cette commande est déjà réglée.'], 422);
+        }
+
+        $total = (float) $order->total;
+        if ((float) ($user->wallet_balance ?? 0) < $total) {
+            return response()->json([
+                'message' => 'Solde du portefeuille insuffisant. Rechargez votre portefeuille.',
+            ], 422);
+        }
+
+        DB::transaction(function () use ($user, $order, $total) {
+            $payer = User::whereKey($user->id)->lockForUpdate()->first();
+            if ((float) ($payer->wallet_balance ?? 0) < $total) {
+                throw new \RuntimeException('Solde insuffisant.');
+            }
+            $payer->decrement('wallet_balance', $total);
+
+            $order->statut = 'payee';
+            $order->date_traitement = now();
+            $order->notes = trim(($order->notes ? $order->notes . "\n" : '')
+                . 'Payée avec le portefeuille.');
+            $order->save();
+
+            WalletTransaction::create([
+                'user_id' => $payer->id,
+                'type' => 'purchase',
+                'amount' => $total,
+                'method' => 'wallet',
+                'status' => 'confirmed',
+                'reference' => $order->numero_commande ?? ('CMD-' . $order->id),
+                'note' => 'Paiement de la commande ' . ($order->numero_commande ?? ('#' . $order->id)),
+            ]);
+
+            PaymentProof::create([
+                'user_id' => $payer->id,
+                'order_id' => $order->id,
+                'provider' => 'Portefeuille',
+                'amount' => $total,
+                'status' => 'confirme',
+            ]);
+        });
+
+        // Informe l'administration qu'une commande a été payée via portefeuille.
+        $numero = $order->numero_commande ?? ('#' . $order->id);
+        AdminNotifier::notifyPayment(
+            'Commande payée via portefeuille',
+            "{$user->name} a payé la commande {$numero} avec son portefeuille — "
+                . number_format($total, 0, ',', ' ') . ' FCFA.',
+            ['type' => 'admin_payment', 'id' => $order->id],
+        );
+
+        $order->loadCount('produits')->load('produits.photos');
+
+        return (new OrderResource($order))->additional([
+            'message' => 'Commande payée avec votre portefeuille.',
         ]);
     }
 }

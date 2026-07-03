@@ -16,6 +16,9 @@ export function AuthProvider({ children }) {
     const [token, setToken] = useState(null);
     const [hasOnboarded, setHasOnboarded] = useState(false);
     const [loading, setLoading] = useState(true);
+    // Incrémenté à la déconnexion pour forcer un remontage complet de l'app
+    // (= « rechargement ») afin de repartir d'un état propre.
+    const [sessionKey, setSessionKey] = useState(0);
 
     // Restaure la session au démarrage
     useEffect(() => {
@@ -96,6 +99,9 @@ export function AuthProvider({ children }) {
         setAuthToken(null);
         setToken(null);
         setUser(null);
+        // Recharge l'app (remontage de la navigation) pour vider tout état
+        // résiduel (paniers, écrans protégés, caches d'écran...).
+        setSessionKey((k) => k + 1);
     };
 
     // Met à jour le profil et le state utilisateur
@@ -117,6 +123,7 @@ export function AuthProvider({ children }) {
                 token,
                 hasOnboarded,
                 loading,
+                sessionKey,
                 login,
                 register,
                 socialLogin,

@@ -40,7 +40,8 @@ export default function WalletScreen({ navigation }) {
 
     // Transfer form
     const [tAmount, setTAmount] = useState("");
-    const [recipient, setRecipient] = useState("");
+    const [tMethod, setTMethod] = useState(null);
+    const [tPhone, setTPhone] = useState("");
     const [note, setNote] = useState("");
 
     const load = useCallback(async () => {
@@ -64,7 +65,10 @@ export default function WalletScreen({ navigation }) {
             // Le paiement à la livraison ne s'applique pas au rechargement
             const usable = (data.data ?? []).filter((m) => !m.cod);
             setMethods(usable);
-            if (usable.length) setMethod(usable[0]);
+            if (usable.length) {
+                setMethod(usable[0]);
+                setTMethod(usable[0]);
+            }
         } catch (e) {
             setMethods([]);
         }
@@ -115,21 +119,33 @@ export default function WalletScreen({ navigation }) {
             Alert.alert("Montant invalide", "Le montant minimum est de 100 FCFA.");
             return;
         }
-        if (!recipient.trim()) {
-            Alert.alert("Destinataire requis", "Entrez l'email ou le téléphone du destinataire.");
+        if (!tMethod) {
+            Alert.alert("Méthode requise", "Choisissez un mode de paiement.");
+            return;
+        }
+        if (!tPhone.trim()) {
+            Alert.alert("Numéro requis", "Le numéro de téléphone est obligatoire.");
+            return;
+        }
+        if (amt > Number(wallet.balance || 0)) {
+            Alert.alert("Solde insuffisant", "Le montant dépasse votre solde disponible.");
             return;
         }
         setBusy(true);
         try {
             await api.post("/wallet/transfer", {
                 amount: amt,
-                recipient: recipient.trim(),
+                method: tMethod.name,
+                phone: tPhone.trim(),
                 note: note.trim() || undefined,
             });
             setTransferOpen(false);
-            setTAmount(""); setRecipient(""); setNote("");
+            setTAmount(""); setTPhone(""); setNote("");
             load();
-            Alert.alert("Transfert effectué ✅", "Le montant a été envoyé.");
+            Alert.alert(
+                "Transfert enregistré ✅",
+                "Votre demande de transfert est en attente de traitement par le vendeur.",
+            );
         } catch (e) {
             Alert.alert("Impossible", apiError(e));
         } finally {
@@ -300,6 +316,28 @@ export default function WalletScreen({ navigation }) {
                         <Pressable style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
                             <Text style={styles.sheetTitle}>Transférer de l'argent</Text>
 
+                            <Text style={styles.fieldLabel}>Mode de paiement</Text>
+                            {methods.length === 0 ? (
+                                <Text style={styles.hint}>Aucun mode de paiement disponible.</Text>
+                            ) : (
+                                <View style={styles.methodRow}>
+                                    {methods.map((m) => {
+                                        const on = tMethod?.id === m.id;
+                                        return (
+                                            <TouchableOpacity
+                                                key={m.id}
+                                                style={[styles.methodChip, on && styles.methodChipOn]}
+                                                onPress={() => setTMethod(m)}
+                                            >
+                                                <Text style={[styles.methodChipText, on && { color: "#fff" }]}>
+                                                    {m.name}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        );
+                                    })}
+                                </View>
+                            )}
+
                             <Text style={styles.fieldLabel}>Montant (FCFA)</Text>
                             <TextInput
                                 style={styles.input}
@@ -309,14 +347,14 @@ export default function WalletScreen({ navigation }) {
                                 value={tAmount}
                                 onChangeText={setTAmount}
                             />
-                            <Text style={styles.fieldLabel}>Destinataire (email ou téléphone)</Text>
+                            <Text style={styles.fieldLabel}>Numéro de téléphone (obligatoire)</Text>
                             <TextInput
                                 style={styles.input}
-                                placeholder="email@exemple.com ou 07..."
+                                placeholder="Ex : 07 00 00 00 00"
                                 placeholderTextColor="#9ca3af"
-                                autoCapitalize="none"
-                                value={recipient}
-                                onChangeText={setRecipient}
+                                keyboardType="phone-pad"
+                                value={tPhone}
+                                onChangeText={setTPhone}
                             />
                             <Text style={styles.fieldLabel}>Note (optionnel)</Text>
                             <TextInput

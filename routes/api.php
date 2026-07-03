@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PaymentMethodController;
 use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\AdminCatalogController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\SearchController;
@@ -95,6 +96,15 @@ Route::middleware('auth:sanctum')->group(function () {
         // Gestion des commandes (état)
         Route::get('/orders', [AdminController::class, 'orders']);
         Route::post('/orders/{id}/status', [AdminController::class, 'updateOrderStatus']);
+
+        // Gestion (CRUD) du catalogue et des paramètres :
+        // products, categories, caracteristiques, brands, tags,
+        // shipping-methods, payment-methods, coupons, users.
+        Route::get('/manage/options', [AdminCatalogController::class, 'options']);
+        Route::get('/manage/{resource}', [AdminCatalogController::class, 'index']);
+        Route::post('/manage/{resource}', [AdminCatalogController::class, 'store']);
+        Route::put('/manage/{resource}/{id}', [AdminCatalogController::class, 'update']);
+        Route::delete('/manage/{resource}/{id}', [AdminCatalogController::class, 'destroy']);
     });
 
     // Adresses de livraison

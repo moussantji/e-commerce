@@ -187,12 +187,16 @@ export default function ProductListScreen({ route, navigation }) {
                         <Text style={styles.lowStock}>⏳ Plus que {item.stock}</Text>
                     ) : null}
                     <View style={styles.priceRow}>
-                        <Text style={styles.price}>
-                            {formatPrice(item.sale_price ?? item.price)}
-                        </Text>
-                        {hasDiscount ? (
-                            <Text style={styles.oldPrice}>{formatPrice(item.price)}</Text>
-                        ) : null}
+                        <View style={styles.priceInfo}>
+                            <Text style={styles.price} numberOfLines={1}>
+                                {formatPrice(item.sale_price ?? item.price)}
+                            </Text>
+                            {hasDiscount ? (
+                                <Text style={styles.oldPrice} numberOfLines={1}>
+                                    {formatPrice(item.price)}
+                                </Text>
+                            ) : null}
+                        </View>
                         <TouchableOpacity
                             style={styles.addBtn}
                             onPress={() => {
@@ -226,14 +230,14 @@ export default function ProductListScreen({ route, navigation }) {
                 <TouchableOpacity
                     style={styles.searchBox}
                     activeOpacity={0.8}
-                    onPress={() => navigation.navigate("Search", { focusSearch: true })}
+                    onPress={() => navigation.navigate("Search", { focusSearch: true, query: search })}
                 >
                     <Text style={styles.searchText} numberOfLines={1}>
                         {search || "Rechercher..."}
                     </Text>
                     <Ionicons name="camera-outline" size={19} color="#9ca3af" />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => navigation.navigate("Search", { focusSearch: true })} hitSlop={8}>
+                <TouchableOpacity onPress={() => navigation.navigate("Search", { focusSearch: true, query: search })} hitSlop={8}>
                     <Ionicons name="search" size={22} color={COLORS.text} />
                 </TouchableOpacity>
             </View>
@@ -591,15 +595,22 @@ const styles = StyleSheet.create({
     cardBody: { padding: 8 },
     name: { fontSize: 12.5, color: "#1f2937", lineHeight: 16, minHeight: 32 },
     lowStock: { fontSize: 11, color: "#f59e0b", fontWeight: "600", marginTop: 3 },
-    priceRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 4 },
-    price: { fontSize: 15, fontWeight: "900", color: COLORS.accent },
+    priceRow: { flexDirection: "row", alignItems: "center", marginTop: 4 },
+    priceInfo: {
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 5,
+        marginRight: 6,
+    },
+    price: { fontSize: 15, fontWeight: "900", color: COLORS.accent, flexShrink: 1 },
     oldPrice: {
         fontSize: 11,
         color: "#9ca3af",
         textDecorationLine: "line-through",
+        flexShrink: 1,
     },
     addBtn: {
-        marginLeft: "auto",
         width: 30,
         height: 30,
         borderRadius: 15,

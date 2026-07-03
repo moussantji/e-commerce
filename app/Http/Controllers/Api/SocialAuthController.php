@@ -105,9 +105,17 @@ class SocialAuthController extends Controller
 
         $payload = $resp->json();
 
-        // Vérifie l'audience si le client Google est configuré côté serveur.
-        $expectedAud = config('services.google.client_id');
-        if ($expectedAud && ($payload['aud'] ?? null) !== $expectedAud) {
+        // Vérifie l'audience UNIQUEMENT si des client IDs sont configurés côté
+        // serveur. On accepte le client_id principal ainsi que la liste
+        // `allowed_client_ids` (web / android / ios). Si rien n'est configuré,
+        // on ne bloque pas (utile en dev / première intégration mobile).
+        $allowedAudiences = array_values(array_filter(array_merge(
+            [config('services.google.client_id')],
+            (array) config('services.google.allowed_client_ids', []),
+        )));
+
+        if (! empty($allowedAudiences)
+            && ! in_array($payload['aud'] ?? null, $allowedAudiences, true)) {
             throw new \RuntimeException('Audience du jeton invalide');
         }
 

@@ -70,19 +70,76 @@ class WalletController extends Controller
     }
 
     /**
-     * Transfert vers un autre utilisateur (débité immédiatement du solde).
+     * Transfert / retrait du portefeuille vers un compte mobile money.
+     *
+     * L'utilisateur choisit un mode de paiement (Orange Money, Wave...), un
+     * montant et SON numéro de téléphone (obligatoire). Le montant est réservé
+     * (débité immédiatement du solde) et une demande « en attente » est créée
+     * pour que l'administrateur exécute le versement vers le numéro indiqué.
+     *
+     * Compat : si un `recipient` (email/téléphone d'un autre utilisateur) est
+     * fourni à la place du couple method+phone, on effectue un transfert entre
+     * utilisateurs (ancien comportement).
      */
     public function transfer(Request $request)
     {
         $data = $request->validate([
             'amount' => 'required|numeric|min:100',
-            'recipient' => 'required|string|max:255', // email ou téléphone
+            'method' => 'required_without:recipient|nullable|string|max:60',
+            'phone' => 'required_without:recipient|nullable|string|max:30',
+            'recipient' => 'nullable|string|max:255', // (compat) email ou téléphone
             'note' => 'nullable|string|max:255',
         ]);
 
         $user = $request->user();
         $amount = (float) $data['amount'];
 
+        if ((float) ($user->wallet_balance ?? 0) < $amount) {
+            return response()->json(['message' => 'Solde insuffisant.'], 422);
+        }
+
+        // === Transfert entre utilisateurs (compat) ===
+        if (! empty($data['recipient'])) {
+            return $this->transferToUser($user, $amount, $data);
+        }
+
+        // === Transfert / retrait vers mobile money (nouveau) ===
+        $tx = DB::transaction(function () use ($user, $amount, $data) {
+            $sender = User::whereKey($user->id)->lockForUpdate()->first();
+            if ((float) ($sender->wallet_balance ?? 0) < $amount) {
+                throw new \RuntimeException('Solde insuffisant.');
+            }
+            $sender->decrement('wallet_balance', $amount);
+
+            return WalletTransaction::create([
+                'user_id' => $sender->id,
+                'type' => 'withdrawal',
+                'amount' => $amount,
+                'method' => $data['method'],
+                'phone' => $data['phone'],
+                'status' => 'pending',
+                'reference' => 'TRF-' . strtoupper(Str::random(6)),
+                'note' => $data['note'] ?? "Transfert vers {$data['phone']} ({$data['method']})",
+            ]);
+        });
+
+        AdminNotifier::notifyPayment(
+            'Demande de transfert à traiter',
+            "{$user->name} demande un transfert de "
+                . number_format($amount, 0, ',', ' ') . " FCFA vers {$data['phone']} ({$data['method']}).",
+            ['type' => 'admin_wallet', 'id' => $tx->id],
+        );
+
+        return response()->json([
+            'message' => 'Transfert enregistré. En attente de traitement par le vendeur.',
+            'balance' => (float) $user->fresh()->wallet_balance,
+            'transaction' => $this->format($tx, $user->id),
+        ]);
+    }
+
+    /** Transfert de solde entre deux utilisateurs (ancien comportement). */
+    private function transferToUser(User $user, float $amount, array $data)
+    {
         $recipient = User::where('email', $data['recipient'])
             ->orWhere('tel', $data['recipient'])
             ->first();
@@ -93,12 +150,8 @@ class WalletController extends Controller
         if ($recipient->id === $user->id) {
             return response()->json(['message' => 'Vous ne pouvez pas vous transférer à vous-même.'], 422);
         }
-        if ((float) ($user->wallet_balance ?? 0) < $amount) {
-            return response()->json(['message' => 'Solde insuffisant.'], 422);
-        }
 
         DB::transaction(function () use ($user, $recipient, $amount, $data) {
-            // Débit expéditeur
             $sender = User::whereKey($user->id)->lockForUpdate()->first();
             if ((float) ($sender->wallet_balance ?? 0) < $amount) {
                 throw new \RuntimeException('Solde insuffisant.');
@@ -146,6 +199,7 @@ class WalletController extends Controller
             'topup' => 'Rechargement',
             'transfer_out' => 'Transfert envoyé',
             'transfer_in' => 'Transfert reçu',
+            'withdrawal' => 'Transfert / Retrait',
             'purchase' => 'Achat',
             'refund' => 'Remboursement',
         ];

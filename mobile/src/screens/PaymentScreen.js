@@ -24,6 +24,7 @@ export default function PaymentScreen({ route, navigation }) {
     const { orderId, numero, total } = route.params || {};
 
     const [methods, setMethods] = useState([]);
+    const [balance, setBalance] = useState(0);
     const [loading, setLoading] = useState(true);
     const [selected, setSelected] = useState(null);
     const [phone, setPhone] = useState("");
@@ -31,10 +32,34 @@ export default function PaymentScreen({ route, navigation }) {
     const [paying, setPaying] = useState(false);
 
     const load = useCallback(async () => {
+        // Solde du portefeuille (permet de proposer le paiement direct si rechargé)
+        let walletBalance = 0;
+        try {
+            const { data: w } = await api.get("/wallet");
+            walletBalance = Number(w.balance ?? 0);
+            setBalance(walletBalance);
+        } catch (e) {
+            /* invité ou erreur : pas de portefeuille */
+        }
+
         try {
             const { data } = await api.get("/payment-methods");
-            setMethods(data.data ?? []);
-            if ((data.data ?? []).length) setSelected(data.data[0]);
+            const serverMethods = data.data ?? [];
+
+            // Le portefeuille n'apparaît QUE si le solde est rechargé (> 0),
+            // et suffisant pour couvrir le montant de la commande.
+            const list = [...serverMethods];
+            if (walletBalance > 0) {
+                list.unshift({
+                    id: "wallet",
+                    name: "Mon portefeuille",
+                    provider: `Solde : ${formatPrice(walletBalance)}`,
+                    wallet: true,
+                });
+            }
+
+            setMethods(list);
+            if (list.length) setSelected(list[0]);
         } catch (e) {
             setMethods([]);
         } finally {
@@ -53,6 +78,31 @@ export default function PaymentScreen({ route, navigation }) {
         }
         setPaying(true);
         try {
+            // === Paiement direct avec le portefeuille ===
+            if (selected.wallet) {
+                if (Number(balance) < Number(total ?? 0)) {
+                    Alert.alert(
+                        "Solde insuffisant",
+                        "Votre solde ne couvre pas le montant. Rechargez votre portefeuille.",
+                    );
+                    setPaying(false);
+                    return;
+                }
+                await api.post(`/orders/${orderId}/pay`, { wallet: true });
+                Alert.alert(
+                    "Commande payée ✅",
+                    "Votre commande a été réglée avec votre portefeuille.",
+                    [
+                        {
+                            text: "Voir ma commande",
+                            onPress: () => navigation.navigate("OrderDetail", { id: orderId }),
+                        },
+                    ],
+                );
+                setPaying(false);
+                return;
+            }
+
             if (!selected.cod && !phone.trim()) {
                 Alert.alert("Numéro requis", "Renseignez le numéro utilisé pour le paiement.");
                 setPaying(false);
@@ -132,7 +182,11 @@ export default function PaymentScreen({ route, navigation }) {
                                             <Image source={{ uri: m.logo }} style={styles.methodLogo} />
                                         ) : (
                                             <View style={styles.methodIcon}>
-                                                <Ionicons name="phone-portrait-outline" size={20} color={COLORS.primaryDark} />
+                                                <Ionicons
+                                                    name={m.wallet ? "wallet-outline" : "phone-portrait-outline"}
+                                                    size={20}
+                                                    color={COLORS.primaryDark}
+                                                />
                                             </View>
                                         )}
                                         <View style={{ flex: 1 }}>
@@ -151,26 +205,43 @@ export default function PaymentScreen({ route, navigation }) {
                             {/* Instructions de la méthode choisie */}
                             {selected ? (
                                 <View style={styles.instructionsCard}>
-                                    {!selected.cod && selected.account_number ? (
-                                        <View style={styles.accountRow}>
-                                            <Text style={styles.accountLabel}>Numéro à créditer</Text>
-                                            <Text style={styles.accountNumber}>{selected.account_number}</Text>
-                                        </View>
-                                    ) : null}
-                                    <Text style={styles.instructionsTitle}>
-                                        {selected.cod ? "Paiement à la livraison" : "Instructions"}
-                                    </Text>
-                                    <Text style={styles.instructionsText}>
-                                        {selected.instructions ||
-                                            (selected.cod
-                                                ? "Vous réglez en espèces à la réception."
-                                                : "Envoyez le montant exact puis marquez comme payé.")}
-                                    </Text>
+                                    {selected.wallet ? (
+                                        <>
+                                            <View style={styles.accountRow}>
+                                                <Text style={styles.accountLabel}>Solde disponible</Text>
+                                                <Text style={styles.accountNumber}>{formatPrice(balance)}</Text>
+                                            </View>
+                                            <Text style={styles.instructionsTitle}>Paiement par portefeuille</Text>
+                                            <Text style={styles.instructionsText}>
+                                                {Number(balance) >= Number(total ?? 0)
+                                                    ? "Le montant sera débité immédiatement de votre portefeuille et votre commande sera confirmée."
+                                                    : "Votre solde est insuffisant pour régler cette commande. Rechargez votre portefeuille."}
+                                            </Text>
+                                        </>
+                                    ) : (
+                                        <>
+                                            {!selected.cod && selected.account_number ? (
+                                                <View style={styles.accountRow}>
+                                                    <Text style={styles.accountLabel}>Numéro à créditer</Text>
+                                                    <Text style={styles.accountNumber}>{selected.account_number}</Text>
+                                                </View>
+                                            ) : null}
+                                            <Text style={styles.instructionsTitle}>
+                                                {selected.cod ? "Paiement à la livraison" : "Instructions"}
+                                            </Text>
+                                            <Text style={styles.instructionsText}>
+                                                {selected.instructions ||
+                                                    (selected.cod
+                                                        ? "Vous réglez en espèces à la réception."
+                                                        : "Envoyez le montant exact puis marquez comme payé.")}
+                                            </Text>
+                                        </>
+                                    )}
                                 </View>
                             ) : null}
 
                             {/* Champs de confirmation (mobile money uniquement) */}
-                            {selected && !selected.cod ? (
+                            {selected && !selected.cod && !selected.wallet ? (
                                 <>
                                     <Text style={styles.sectionTitle}>Confirmez votre paiement</Text>
                                     <View style={styles.field}>
@@ -212,7 +283,11 @@ export default function PaymentScreen({ route, navigation }) {
                             <ActivityIndicator color="#fff" />
                         ) : (
                             <Text style={styles.payText}>
-                                {selected?.cod ? "Confirmer la commande" : "J'ai payé"}
+                                {selected?.wallet
+                                    ? "Payer avec mon portefeuille"
+                                    : selected?.cod
+                                    ? "Confirmer la commande"
+                                    : "J'ai payé"}
                             </Text>
                         )}
                     </TouchableOpacity>

@@ -58,18 +58,38 @@ export default function SocialButtons() {
             await socialLogin("google", idToken);
         } catch (e) {
             const msg = String(e?.message || "");
-            if (e?.code === statusCodes?.SIGN_IN_CANCELLED) {
+            const code = e?.code;
+            if (code === statusCodes?.SIGN_IN_CANCELLED) {
                 // annulé par l'utilisateur : rien à faire
-            } else if (e?.code === statusCodes?.PLAY_SERVICES_NOT_AVAILABLE) {
-                Alert.alert("Google", "Google Play Services indisponible.");
-            } else if (msg.includes("RNGoogleSignin")) {
+            } else if (code === statusCodes?.IN_PROGRESS) {
+                // une connexion est déjà en cours : on ignore
+            } else if (code === statusCodes?.PLAY_SERVICES_NOT_AVAILABLE) {
+                Alert.alert(
+                    "Google Play Services",
+                    "Google Play Services est indisponible ou doit être mis à jour sur cet appareil.",
+                );
+            } else if (msg.includes("RNGoogleSignin") || msg.includes("could not be found")) {
                 // Module natif absent : on est dans Expo Go, pas dans un vrai build.
                 Alert.alert(
-                    "Indisponible ici",
-                    "La connexion Google nécessite l'application installée (APK / development build). Elle ne fonctionne pas dans Expo Go.",
+                    "Indisponible dans Expo Go",
+                    "La connexion Google nécessite l'application installée (APK ou development build). Elle ne fonctionne pas dans Expo Go.",
+                );
+            } else if (code === "DEVELOPER_ERROR" || String(code) === "10") {
+                // Erreur de configuration Google la plus fréquente sur Android.
+                Alert.alert(
+                    "Configuration Google incomplète",
+                    "La connexion Google n'est pas correctement configurée pour cette version de l'app " +
+                        "(empreinte SHA-1 ou identifiant client manquant). Utilisez l'email/mot de passe en attendant.",
                 );
             } else {
-                Alert.alert("Google", apiError(e) || "Connexion Google échouée.");
+                // On affiche le message du serveur s'il existe, sinon un message clair.
+                const detail = apiError(e, "");
+                Alert.alert(
+                    "Connexion Google échouée",
+                    detail ||
+                        "Impossible de finaliser la connexion Google. Réessayez ou utilisez votre email et mot de passe." +
+                            (code ? `\n(code : ${code})` : ""),
+                );
             }
         } finally {
             setBusy(false);

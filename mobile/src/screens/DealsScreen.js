@@ -20,6 +20,7 @@ import api from "../api/client";
 import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
 import { useWishlist } from "../context/WishlistContext";
+import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { Alert } from "react-native";
 import AnimatedPressable from "../components/AnimatedPressable";
@@ -46,6 +47,7 @@ const TAB_PARAMS = {
 export default function DealsScreen({ navigation }) {
     const insets = useSafeAreaInsets();
     const { isFav, toggle } = useWishlist();
+    const { add } = useCart();
     const { token } = useAuth();
     const ensureAuth = useRequireAuth();
     const [activeTab, setActiveTab] = useState("on_sale");
@@ -208,14 +210,27 @@ export default function DealsScreen({ navigation }) {
                         {item.name}
                     </Text>
                     <View style={styles.priceRow}>
-                        <Text style={styles.price}>
-                            {formatPrice(item.sale_price || item.price)}
-                        </Text>
-                        {hasDiscount && (
-                            <Text style={styles.oldPrice}>
-                                {formatPrice(item.price)}
+                        <View style={styles.priceInfo}>
+                            <Text style={styles.price} numberOfLines={1}>
+                                {formatPrice(item.sale_price || item.price)}
                             </Text>
-                        )}
+                            {hasDiscount && (
+                                <Text style={styles.oldPrice} numberOfLines={1}>
+                                    {formatPrice(item.price)}
+                                </Text>
+                            )}
+                        </View>
+                        <TouchableOpacity
+                            style={styles.addBtn}
+                            onPress={() => {
+                                if (!ensureAuth("Connectez-vous pour ajouter au panier.")) return;
+                                add(item.id, 1).catch(() => {});
+                            }}
+                            activeOpacity={0.8}
+                            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                        >
+                            <Ionicons name="cart" size={16} color="#fff" />
+                        </TouchableOpacity>
                     </View>
                     {item.reviews_count > 0 && (
                         <View style={styles.ratingRow}>
@@ -569,17 +584,33 @@ const styles = StyleSheet.create({
     priceRow: {
         flexDirection: "row",
         alignItems: "center",
+    },
+    priceInfo: {
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
         gap: 6,
+        marginRight: 6,
     },
     price: {
         fontSize: 14,
         fontWeight: "800",
         color: COLORS.primaryDark,
+        flexShrink: 1,
     },
     oldPrice: {
         fontSize: 11,
         color: "#9ca3af",
         textDecorationLine: "line-through",
+        flexShrink: 1,
+    },
+    addBtn: {
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: COLORS.primaryDark,
+        alignItems: "center",
+        justifyContent: "center",
     },
     ratingRow: {
         flexDirection: "row",

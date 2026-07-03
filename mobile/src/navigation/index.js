@@ -36,6 +36,8 @@ import * as Notifications from "expo-notifications";
 import { registerForPushNotifications } from "../push";
 import CouponsScreen from "../screens/CouponsScreen";
 import WalletScreen from "../screens/WalletScreen";
+import AdminHubScreen from "../screens/AdminHubScreen";
+import AdminManageScreen from "../screens/AdminManageScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -204,6 +206,16 @@ function AppStack() {
                 options={{ headerShown: false }}
             />
             <Stack.Screen
+                name="AdminHub"
+                component={AdminHubScreen}
+                options={{ headerShown: false }}
+            />
+            <Stack.Screen
+                name="AdminManage"
+                component={AdminManageScreen}
+                options={{ headerShown: false }}
+            />
+            <Stack.Screen
                 name="Notifications"
                 component={NotificationsScreen}
                 options={{ title: "Notifications" }}
@@ -284,7 +296,7 @@ function routeFromLink(nav, link) {
 }
 
 export default function RootNavigator() {
-    const { token, hasOnboarded, loading } = useAuth();
+    const { token, hasOnboarded, loading, sessionKey } = useAuth();
     const navRef = useRef(null);
 
     // Temps d'affichage minimum du loader (logo) pour un rendu soigné
@@ -319,7 +331,7 @@ export default function RootNavigator() {
     // déconnexion → il navigue en invité. Le mur n'apparaît qu'au tout premier
     // lancement (jamais connecté).
     return (
-        <NavigationContainer ref={navRef}>
+        <NavigationContainer key={sessionKey} ref={navRef}>
             {token || hasOnboarded ? <AppStack /> : <AuthStack />}
         </NavigationContainer>
     );

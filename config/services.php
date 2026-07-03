@@ -45,6 +45,16 @@ return [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect' => env('GOOGLE_REDIRECT_URI'),
+
+        // Audiences (client IDs) acceptées pour la vérification des idToken
+        // envoyés par l'app mobile (@react-native-google-signin). On accepte
+        // plusieurs valeurs : web / android / ios. Renseignez-les dans .env,
+        // séparées par des virgules, ex :
+        //   GOOGLE_ALLOWED_CLIENT_IDS=xxx-web.apps..., yyy-android.apps...
+        'allowed_client_ids' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('GOOGLE_ALLOWED_CLIENT_IDS', ''))
+        ))),
     ],
 
 ];
