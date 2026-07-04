@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -40,6 +41,18 @@ class SocialAuthController extends Controller
                 ? $this->verifyGoogleIdToken($data['id_token'])
                 : $this->profileFromAccessToken($data['access_token']);
         } catch (\Throwable $e) {
+            // On journalise la VRAIE raison de l'échec pour faciliter le débogage
+            // (visible dans storage/logs/laravel.log), tout en renvoyant un
+            // message générique au client.
+            Log::warning('Connexion Google échouée', [
+                'reason' => $e->getMessage(),
+                'flow' => ! empty($data['id_token']) ? 'id_token' : 'access_token',
+                'configured_audiences' => array_values(array_filter(array_merge(
+                    [config('services.google.client_id')],
+                    (array) config('services.google.allowed_client_ids', []),
+                ))),
+            ]);
+
             return response()->json(['message' => 'Jeton social invalide ou expiré.'], 422);
         }
 
@@ -116,7 +129,10 @@ class SocialAuthController extends Controller
 
         if (! empty($allowedAudiences)
             && ! in_array($payload['aud'] ?? null, $allowedAudiences, true)) {
-            throw new \RuntimeException('Audience du jeton invalide');
+            throw new \RuntimeException(
+                'Audience du jeton invalide. Reçu: ' . ($payload['aud'] ?? 'null')
+                . ' | Autorisés: ' . implode(', ', $allowedAudiences)
+            );
         }
 
         // L'e-mail doit être vérifié par Google.
