@@ -45,20 +45,42 @@ export default function SocialButtons() {
         }
         setBusy(true);
         try {
+            console.log("[GoogleSignIn] webClientId =", WEB_CLIENT_ID);
             ensureGoogleConfigured();
             await GoogleSignin.hasPlayServices({
                 showPlayServicesUpdateDialog: true,
             });
+            console.log("[GoogleSignIn] Play Services OK, ouverture du sélecteur…");
             const result = await GoogleSignin.signIn();
             // SDK v13+: { type, data: { idToken, ... } } ; anciennes: { idToken, ... }
             const idToken = result?.data?.idToken ?? result?.idToken;
+            console.log(
+                "[GoogleSignIn] signIn terminé — type:",
+                result?.type,
+                "| idToken présent:",
+                !!idToken,
+                "| longueur:",
+                idToken ? idToken.length : 0,
+            );
             if (!idToken) {
+                // Cause fréquente : webClientId n'est PAS un client de type « Web ».
                 throw new Error("idToken introuvable");
             }
+            console.log("[GoogleSignIn] Envoi de l'idToken au backend /auth/social…");
             await socialLogin("google", idToken);
+            console.log("[GoogleSignIn] Connexion backend réussie");
         } catch (e) {
             const msg = String(e?.message || "");
             const code = e?.code;
+            // Trace complète pour le débogage (visible via: adb logcat | grep GoogleSignIn)
+            console.warn(
+                "[GoogleSignIn] ECHEC — code:",
+                code,
+                "| message:",
+                msg,
+                "| reponse backend:",
+                JSON.stringify(e?.response?.data ?? null),
+            );
             if (code === statusCodes?.SIGN_IN_CANCELLED) {
                 // annulé par l'utilisateur : rien à faire
             } else if (code === statusCodes?.IN_PROGRESS) {
