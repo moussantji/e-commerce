@@ -7,6 +7,17 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Ressources de lancement e-commerce Mali
+
+Ce dépôt contient aussi des documents pratiques pour lancer la boutique avec de vrais produits au Mali :
+
+- [`docs/plan-lancement-ecommerce-mali.md`](docs/plan-lancement-ecommerce-mali.md) : plan d’action produits gagnants + publicité gratuite.
+- [`docs/catalogue-produits-gagnants-mali.csv`](docs/catalogue-produits-gagnants-mali.csv) : catalogue de départ à valider avec fournisseurs réels.
+- [`docs/calendrier-contenu-14-jours.md`](docs/calendrier-contenu-14-jours.md) : idées de publications TikTok/Facebook/WhatsApp sans budget pub.
+- [`docs/emploi-du-temps-mise-en-place-site-app-pub.md`](docs/emploi-du-temps-mise-en-place-site-app-pub.md) : planning quotidien et sur 30 jours pour mettre en place le site, l’app installable et la publicité.
+- [`docs/emploi-du-temps-tableau-site-app-pub.md`](docs/emploi-du-temps-tableau-site-app-pub.md) : version en tableaux de l’emploi du temps site/app/pub.
+- [`docs/emploi-du-temps-tableau-laravel-expo-pub.md`](docs/emploi-du-temps-tableau-laravel-expo-pub.md) : version adaptée au projet Laravel + API + application mobile Expo.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
