@@ -768,6 +768,8 @@
 
 
 
+    @include('partials.mobile-bottom-nav')
+
     @stack('scripts')
 
     <script>

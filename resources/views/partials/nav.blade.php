@@ -1,4 +1,4 @@
-<nav class="navbar-responsive-navitems navbar-expand navbar-light bg-body-emphasis justify-content-between">
+<nav class="navbar-responsive-navitems navbar-expand navbar-light bg-body-emphasis justify-content-between d-none d-lg-block">
     <div class="container-small d-flex flex-between-center" data-navbar="data-navbar">
         <div class="dropdown"><button class="btn text-body ps-0 pe-5 text-nowrap dropdown-toggle dropdown-caret-none"
                 data-category-btn="data-category-btn" data-bs-toggle="dropdown"><span

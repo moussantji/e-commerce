@@ -1,1 +1,87 @@
-/* prettier-ignore */
+/* ================================================================
+   PROPOSITION 3 : TITANIUM NEO-LUXE STYLING & MOBILE NAVIGATION
+   ================================================================ */
+
+:root {
+    --neo-bg-body: #080C14;
+    --neo-bg-surface: #0E1524;
+    --neo-bg-card: #121B2D;
+    --neo-sapphire: #38BDF8;
+    --neo-sapphire-glow: rgba(56, 189, 248, 0.25);
+    --neo-border: rgba(56, 189, 248, 0.2);
+}
+
+/* Dark mode enhancements */
+[data-bs-theme="dark"], body {
+    background-color: var(--neo-bg-body) !important;
+    color: #F8FAFC;
+}
+
+/* Glassmorphism for cards */
+.product-card, .card {
+    background: var(--neo-bg-card) !important;
+    border: 1px solid var(--neo-border) !important;
+    border-radius: 16px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.product-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--neo-sapphire) !important;
+    box-shadow: 0 10px 30px rgba(56, 189, 248, 0.2) !important;
+}
+
+/* Category Icons & Pills */
+.icon-container {
+    background: rgba(56, 189, 248, 0.1) !important;
+    border: 1px solid rgba(56, 189, 248, 0.2) !important;
+    color: var(--neo-sapphire) !important;
+    border-radius: 16px !important;
+}
+
+.icon-nav-item:hover .icon-container {
+    background: var(--neo-sapphire) !important;
+    color: #080C14 !important;
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.5) !important;
+}
+
+/* Buttons Neo-Luxe */
+.btn-primary {
+    background: linear-gradient(135deg, #38BDF8 0%, #0284C7 100%) !important;
+    border: none !important;
+    color: #080C14 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3) !important;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #7DD3FC 0%, #0369A1 100%) !important;
+    box-shadow: 0 6px 20px rgba(56, 189, 248, 0.5) !important;
+}
+
+/* Wishlist Button */
+.btn-wish {
+    background: rgba(14, 21, 36, 0.8) !important;
+    backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #94A3B8 !important;
+    border-radius: 50% !important;
+}
+
+.btn-wish:hover {
+    color: #F43F5E !important;
+    border-color: #F43F5E !important;
+    background: rgba(244, 63, 94, 0.15) !important;
+}
+
+/* Clean mobile layout - no clutter */
+@media (max-width: 768px) {
+    .ecommerce-topbar {
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+    
+    .product-card {
+        margin-bottom: 12px;
+    }
+}
