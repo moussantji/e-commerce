@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>NEXUS LUXE - E-Commerce Ultra Premium (Proposition 3)</title>
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        /* ==========================================================
+           1. DESIGN SYSTEM - TITANIUM NEO-LUXE & SAPPHIRE
+           ========================================================== */
+        :root {
+            --bg-body: #080C14;
+            --bg-surface: #0E1524;
+            --bg-card: #121B2D;
+            --bg-card-hover: #17233B;
+            --bg-glass: rgba(14, 21, 36, 0.85);
+            
+            --border-subtle: rgba(255, 255, 255, 0.07);
+            --border-glow: rgba(56, 189, 248, 0.35);
+            --border-neon: rgba(56, 189, 248, 0.6);
+            
+            --sapphire-primary: #38BDF8;
+            --sapphire-dark: #0284C7;
+            --sapphire-glow: rgba(56, 189, 248, 0.25);
+            
+            --emerald-accent: #10B981;
+            --rose-accent: #F43F5E;
+            --amber-accent: #F59E0B;
+            
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+            --text-dim: #64748B;
+            
+            --radius-sm: 8px;
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --radius-full: 9999px;
+            
+            --shadow-card: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 25px rgba(56, 189, 248, 0.2);
+            --shadow-dock: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(56, 189, 248, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.5;
+            overflow-x: hidden;
+            /* Espace suffisant en bas pour la barre de navigation mobile */
+            padding-bottom: 95px;
+        }
+
+        @media (min-width: 992px) {
+            body {
+                padding-bottom: 40px;
+            }
+        }
+
+        /* Ambient Cyber Lighting */
+        .ambient-glow-top {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100vw;
+            max-width: 1200px;
+            height: 380px;
+            background: radial-gradient(ellipse at 50% 0%, rgba(56, 189, 248, 0.15), rgba(2, 132, 199, 0.05) 50%, transparent 80%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ==========================================================
+           2. HEADER & NAVIGATION
+           ========================================================== */
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            background: rgba(8, 12, 20, 0.85);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--border-subtle);
+            transition: all 0.3s ease;
+        }
+
+        .header-container {
+            max-width: 1380px;
+            margin: 0 auto;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-main);
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 20px;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-symbol {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #38BDF8 0%, #0284C7 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #080C14;
+            font-size: 18px;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+        }
+
+        .logo-text span {
+            color: var(--sapphire-primary);
+        }
+
+        /* Desktop Nav Menu */
+        .desktop-nav {
+            display: none;
+            align-items: center;
+            gap: 28px;
+            list-style: none;
+        }
+
+        @media (min-width: 992px) {
+            .desktop-nav {
+                display: flex;
+            }
+        }
+
+        .nav-link-custom {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s ease;
+            position: relative;
+        }
+
+        .nav-link-custom:hover, .nav-link-custom.active {
+            color: var(--sapphire-primary);
+        }
+
+        .nav-link-custom.active::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--sapphire-primary);
+            border-radius: 2px;
+            box-shadow: 0 0 8px var(--sapphire-primary);
+        }
+
+        /* Search Bar */
+        .search-box-wrapper {
+            flex: 1;
+            max-width: 480px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-full);
+            padding: 9px 18px 9px 42px;
+            color: var(--text-main);
+            font-size: 13.5px;
+            outline: none;
+            transition: all 0.25s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--sapphire-primary);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+            background: var(--bg-card);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-dim);
+            font-size: 14px;
+        }
+
+        /* Header Right Actions */
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .action-icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-full);
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .action-icon-btn:hover {
+            border-color: var(--sapphire-primary);
+            color: var(--sapphire-primary);
+            background: var(--bg-card);
+        }
+
+        .badge-counter {
+            position: absolute;
+            top: -3px;
+            right: -3px;
+            background: var(--rose-accent);
+            color: #FFF;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 999px;
+            border: 2px solid var(--bg-body);
+        }
+
+        /* Sur mobile : On masque les boutons redondants pour garder le header ultra propre */
+        @media (max-width: 768px) {
+            .header-actions .desktop-only {
+                display: none !important;
+            }
+            .search-box-wrapper {
+                max-width: 100%;
+            }
+        }
+
+        /* ==========================================================
+           3. FLOATING ULTRA-PREMIUM MOBILE BOTTOM NAVBAR
+           ========================================================== */
+        .mobile-bottom-dock {
+            position: fixed;
+            bottom: 12px;
+            left: 14px;
+            right: 14px;
+            height: 64px;
+            background: rgba(14, 21, 36, 0.88);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            border-radius: 32px;
+            box-shadow: var(--shadow-dock);
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 0 8px;
+            z-index: 1000;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @media (min-width: 992px) {
+            .mobile-bottom-dock {
+                display: none; /* Masqué sur grand écran PC */
+            }
+        }
+
+        .dock-tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--text-dim);
+            font-size: 10px;
+            font-weight: 600;
+            width: 56px;
+            height: 50px;
+            border-radius: 20px;
+            position: relative;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .dock-tab i {
+            font-size: 18px;
+            margin-bottom: 2px;
+            transition: transform 0.2s ease;
+        }
+
+        .dock-tab.active {
+            color: var(--sapphire-primary);
+            background: rgba(56, 189, 248, 0.12);
+        }
+
+        .dock-tab.active i {
+            transform: scale(1.15);
+            filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.6));
+        }
+
+        .dock-tab:hover:not(.active) {
+            color: var(--text-main);
+        }
+
+        .dock-badge {
+            position: absolute;
+            top: 4px;
+            right: 10px;
+            background: var(--rose-accent);
+            color: #FFF;
+            font-size: 9px;
+            font-weight: 800;
+            padding: 1px 5px;
+            border-radius: 10px;
+            border: 2px solid #0E1524;
+            line-height: 1.2;
+        }
+
+        /* ==========================================================
+           4. HOME PAGE SECTIONS & DIRECT PRODUCT SHOWCASE
+           ========================================================== */
+        .container {
+            max-width: 1380px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* CATEGORIES STORIES / PILLS BAR */
+        .categories-scroll {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding: 4px 0 16px 0;
+            margin-bottom: 20px;
+        }
+
+        .categories-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .category-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-full);
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: all 0.25s ease;
+        }
+
+        .category-pill.active, .category-pill:hover {
+            background: rgba(56, 189, 248, 0.12);
+            border-color: var(--sapphire-primary);
+            color: var(--sapphire-primary);
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
+        }
+
+        .category-pill i {
+            font-size: 14px;
+        }
+
+        /* HERO SHOWCASE BANNER */
+        .hero-banner {
+            background: linear-gradient(135deg, rgba(14, 21, 36, 0.9) 0%, rgba(18, 27, 45, 0.7) 100%);
+            border: 1px solid var(--border-glow);
+            border-radius: var(--radius-lg);
+            padding: 36px 30px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 40px;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .hero-banner::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.2), transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+            align-items: center;
+        }
+
+        @media (min-width: 768px) {
+            .hero-grid {
+                grid-template-columns: 1.2fr 0.8fr;
+            }
+        }
+
+        .hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: var(--radius-full);
+            color: var(--sapphire-primary);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .hero-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #FFFFFF 40%, var(--sapphire-primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-desc {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 22px;
+            max-width: 480px;
+        }
+
+        .hero-cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 28px;
+            background: linear-gradient(135deg, #38BDF8 0%, #0284C7 100%);
+            color: #080C14;
+            font-weight: 700;
+            font-size: 14px;
+            border-radius: var(--radius-full);
+            text-decoration: none;
+            box-shadow: 0 4px 20px rgba(56, 189, 248, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .hero-cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(56, 189, 248, 0.6);
+        }
+
+        .hero-img-box {
+            text-align: center;
+            position: relative;
+        }
+
+        .hero-img-box img {
+            max-width: 100%;
+            height: auto;
+            max-height: 240px;
+            object-fit: contain;
+            filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.6));
+            animation: floatSlow 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes floatSlow {
+            from { transform: translateY(0); }
+            to { transform: translateY(-8px); }
+        }
+
+        /* SECTION HEADERS */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .section-title i {
+            color: var(--sapphire-primary);
+        }
+
+        .see-all-link {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--sapphire-primary);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            transition: gap 0.2s ease;
+        }
+
+        .see-all-link:hover {
+            gap: 10px;
+        }
+
+        /* ==========================================================
+           5. PRODUCT GRID & INTERACTIVE PRODUCT CARDS
+           ========================================================== */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* 2 colonnes sur Mobile */
+            gap: 16px;
+            margin-bottom: 48px;
+        }
+
+        @media (min-width: 640px) {
+            .products-grid {
+                grid-template-columns: repeat(3, 1fr); /* 3 colonnes Tablette Portrait */
+                gap: 18px;
+            }
+        }
+
+        @media (min-width: 992px) {
+            .products-grid {
+                grid-template-columns: repeat(4, 1fr); /* 4 colonnes Desktop */
+                gap: 24px;
+            }
+        }
+
+        @media (min-width: 1280px) {
+            .products-grid {
+                grid-template-columns: repeat(4, 1fr); /* 4-5 colonnes Ultra-Wide */
+            }
+        }
+
+        /* Product Card */
+        .product-card-neo {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-card);
+        }
+
+        .product-card-neo:hover {
+            transform: translateY(-6px);
+            border-color: var(--border-glow);
+            box-shadow: var(--shadow-glow);
+            background: var(--bg-card-hover);
+        }
+
+        .product-media {
+            position: relative;
+            background: #090D17;
+            padding: 20px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            aspect-ratio: 1/1;
+        }
+
+        .product-img {
+            max-width: 85%;
+            max-height: 85%;
+            object-fit: contain;
+            transition: transform 0.4s ease;
+        }
+
+        .product-card-neo:hover .product-img {
+            transform: scale(1.08);
+        }
+
+        .badge-discount {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: linear-gradient(135deg, #F43F5E 0%, #BE123C 100%);
+            color: #FFF;
+            font-size: 10.5px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: var(--radius-sm);
+            z-index: 2;
+        }
+
+        .badge-new {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            color: #080C14;
+            font-size: 10.5px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: var(--radius-sm);
+            z-index: 2;
+        }
+
+        .wishlist-btn-neo {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-full);
+            background: rgba(14, 21, 36, 0.7);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 2;
+            transition: all 0.2s ease;
+        }
+
+        .wishlist-btn-neo:hover, .wishlist-btn-neo.active {
+            color: var(--rose-accent);
+            border-color: var(--rose-accent);
+            background: rgba(244, 63, 94, 0.15);
+        }
+
+        .product-info {
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            justify-content: space-between;
+        }
+
+        .product-category-tag {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--sapphire-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .product-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 8px;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-decoration: none;
+        }
+
+        .product-title:hover {
+            color: var(--sapphire-primary);
+        }
+
+        .rating-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            color: var(--amber-accent);
+            margin-bottom: 10px;
+        }
+
+        .rating-count {
+            color: var(--text-dim);
+            margin-left: 4px;
+        }
+
+        .price-and-action {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-top: auto;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .price-col {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .price-current {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            color: #FFF;
+        }
+
+        .price-old {
+            font-size: 11px;
+            color: var(--text-dim);
+            text-decoration: line-through;
+        }
+
+        .btn-add-cart {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: var(--sapphire-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .btn-add-cart:hover {
+            background: linear-gradient(135deg, #38BDF8 0%, #0284C7 100%);
+            color: #080C14;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+            transform: scale(1.05);
+        }
+
+        /* TOAST NOTIFICATION */
+        .neo-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-glow);
+            border-radius: var(--radius-md);
+            padding: 12px 20px;
+            color: #FFF;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: var(--shadow-dock);
+            z-index: 2000;
+            transform: translateY(-50px);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .neo-toast.show {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-glow-top"></div>
+
+    <!-- ==========================================================
+         TOP HEADER (Clean, unstacked, responsive)
+         ========================================================== -->
+    <header class="site-header">
+        <div class="header-container">
+            <!-- Brand Logo -->
+            <a href="#" class="brand-logo">
+                <div class="logo-symbol">
+                    <i class="fas fa-cube"></i>
+                </div>
+                <div class="logo-text">
+                    NEXUS<span>LUXE</span>
+                </div>
+            </a>
+
+            <!-- Desktop Navigation Links -->
+            <ul class="desktop-nav">
+                <li><a href="#" class="nav-link-custom active">Accueil</a></li>
+                <li><a href="#produits" class="nav-link-custom">Produits</a></li>
+                <li><a href="#categories" class="nav-link-custom">Catégories</a></li>
+                <li><a href="#deals" class="nav-link-custom">Offres Flash</a></li>
+                <li><a href="#marques" class="nav-link-custom">Marques</a></li>
+            </ul>
+
+            <!-- Search Bar -->
+            <div class="search-box-wrapper">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="search-input" placeholder="Rechercher un produit, marque..." id="searchBar">
+            </div>
+
+            <!-- Header Actions (No stacked clutter on mobile!) -->
+            <div class="header-actions">
+                <!-- Desktop Only Actions (on mobile they are accessible via bottom navbar) -->
+                <a href="#favoris" class="action-icon-btn desktop-only" title="Favoris">
+                    <i class="far fa-heart"></i>
+                </a>
+                
+                <a href="#panier" class="action-icon-btn" title="Panier" onclick="triggerCartToast()">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span class="badge-counter" id="cartCount">3</span>
+                </a>
+
+                <a href="#compte" class="action-icon-btn desktop-only" title="Mon Compte">
+                    <i class="far fa-user"></i>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==========================================================
+         MAIN CONTENT & PRODUCTS DIRECTLY ON HOMEPAGE
+         ========================================================== -->
+    <main class="container">
+
+        <!-- 1. Horizontal Categories Quick Filter Bar -->
+        <div class="categories-scroll" id="categories">
+            <a href="#all" class="category-pill active" onclick="filterCategory('all', this)"><i class="fas fa-border-all"></i> Tout voir</a>
+            <a href="#phones" class="category-pill" onclick="filterCategory('phones', this)"><i class="fas fa-mobile-screen-button"></i> Smartphones</a>
+            <a href="#audio" class="category-pill" onclick="filterCategory('audio', this)"><i class="fas fa-headphones"></i> Audio & Son</a>
+            <a href="#watches" class="category-pill" onclick="filterCategory('watches', this)"><i class="fas fa-clock"></i> Montres Luxe</a>
+            <a href="#computing" class="category-pill" onclick="filterCategory('computing', this)"><i class="fas fa-laptop"></i> Ordinateurs</a>
+            <a href="#gaming" class="category-pill" onclick="filterCategory('gaming', this)"><i class="fas fa-gamepad"></i> Gaming</a>
+            <a href="#accessories" class="category-pill" onclick="filterCategory('accessories', this)"><i class="fas fa-gem"></i> Accessoires</a>
+        </div>
+
+        <!-- 2. Hero Showcase Banner -->
+        <section class="hero-banner">
+            <div class="hero-grid">
+                <div class="hero-text-content">
+                    <div class="hero-tag">
+                        <i class="fas fa-bolt"></i> Nouveauté Exclusivité 2026
+                    </div>
+                    <h1 class="hero-title">L'Expérience E-Commerce Redéfinie</h1>
+                    <p class="hero-desc">
+                        Découvrez notre collection high-tech et accessoires d'exception avec livraison express et garantie premium.
+                    </p>
+                    <a href="#produits" class="hero-cta-btn">
+                        Explorer les nouveautés <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="hero-img-box">
+                    <img src="mockups/prop3_mobile.png" alt="Featured Tech Product" style="border-radius: 16px; max-height: 200px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Direct Products Section (Meilleures Offres & Nouveautés) -->
+        <section id="produits">
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="fas fa-fire"></i>
+                    <h2>Offres Populaires & Nouveautés</h2>
+                </div>
+                <a href="#all" class="see-all-link">
+                    Voir tout <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
+
+            <!-- Responsive Product Grid: 2 cols on mobile, 3 on tablet, 4 on desktop -->
+            <div class="products-grid" id="productContainer">
+
+                <!-- Product 1 -->
+                <article class="product-card-neo" data-category="watches">
+                    <div class="product-media">
+                        <span class="badge-discount">-25%</span>
+                        <button class="wishlist-btn-neo" onclick="toggleWishlist(this)"><i class="far fa-heart"></i></button>
+                        <img src="mockups/prop3_tablet.png" alt="Montre Connectée Titane" class="product-img" style="border-radius: 8px;">
+                    </div>
+                    <div class="product-info">
+                        <div>
+                            <span class="product-category-tag">Horlogerie Connectée</span>
+                            <a href="#" class="product-title">Chrono Luxe Titanium Apex Edition OLED 46mm</a>
+                            <div class="rating-row">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                                <span class="rating-count">(48)</span>
+                            </div>
+                        </div>
+                        <div class="price-and-action">
+                            <div class="price-col">
+                                <span class="price-current">245 000 FCFA</span>
+                                <span class="price-old">320 000 FCFA</span>
+                            </div>
+                            <button class="btn-add-cart" onclick="addToCart('Chrono Luxe Titanium')">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Product 2 -->
+                <article class="product-card-neo" data-category="audio">
+                    <div class="product-media">
+                        <span class="badge-new">Nouveau</span>
+                        <button class="wishlist-btn-neo" onclick="toggleWishlist(this)"><i class="far fa-heart"></i></button>
+                        <img src="mockups/prop1_mobile.png" alt="Casque Spatial Audio" class="product-img" style="border-radius: 8px;">
+                    </div>
+                    <div class="product-info">
+                        <div>
+                            <span class="product-category-tag">Audio & Son</span>
+                            <a href="#" class="product-title">Casque Sans Fil Obsidian Pure ANC Hi-Res</a>
+                            <div class="rating-row">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+                                <span class="rating-count">(112)</span>
+                            </div>
+                        </div>
+                        <div class="price-and-action">
+                            <div class="price-col">
+                                <span class="price-current">185 000 FCFA</span>
+                                <span class="price-old">210 000 FCFA</span>
+                            </div>
+                            <button class="btn-add-cart" onclick="addToCart('Casque Sans Fil Obsidian')">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Product 3 -->
+                <article class="product-card-neo" data-category="phones">
+                    <div class="product-media">
+                        <span class="badge-discount">-15%</span>
+                        <button class="wishlist-btn-neo active" onclick="toggleWishlist(this)"><i class="fas fa-heart"></i></button>
+                        <img src="mockups/prop2_mobile.png" alt="Smartphone Flagship" class="product-img" style="border-radius: 8px;">
+                    </div>
+                    <div class="product-info">
+                        <div>
+                            <span class="product-category-tag">Smartphones</span>
+                            <a href="#" class="product-title">CyberPhone X Pro Max 512GB Titanium Silver</a>
+                            <div class="rating-row">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                                <span class="rating-count">(94)</span>
+                            </div>
+                        </div>
+                        <div class="price-and-action">
+                            <div class="price-col">
+                                <span class="price-current">650 000 FCFA</span>
+                                <span class="price-old">750 000 FCFA</span>
+                            </div>
+                            <button class="btn-add-cart" onclick="addToCart('CyberPhone X Pro Max')">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Product 4 -->
+                <article class="product-card-neo" data-category="computing">
+                    <div class="product-media">
+                        <span class="badge-discount">-20%</span>
+                        <button class="wishlist-btn-neo" onclick="toggleWishlist(this)"><i class="far fa-heart"></i></button>
+                        <img src="mockups/prop3_desktop.png" alt="Laptop Ultra Slim" class="product-img" style="border-radius: 8px;">
+                    </div>
+                    <div class="product-info">
+                        <div>
+                            <span class="product-category-tag">Ordinateurs</span>
+                            <a href="#" class="product-title">Ultrabook Neo Blade 14\" M3 Max 32GB RAM</a>
+                            <div class="rating-row">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                                <span class="rating-count">(36)</span>
+                            </div>
+                        </div>
+                        <div class="price-and-action">
+                            <div class="price-col">
+                                <span class="price-current">1 250 000 FCFA</span>
+                                <span class="price-old">1 450 000 FCFA</span>
+                            </div>
+                            <button class="btn-add-cart" onclick="addToCart('Ultrabook Neo Blade')">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Product 5 -->
+                <article class="product-card-neo" data-category="audio">
+                    <div class="product-media">
+                        <span class="badge-new">Tendance</span>
+                        <button class="wishlist-btn-neo" onclick="toggleWishlist(this)"><i class="far fa-heart"></i></button>
+                        <img src="mockups/prop1_tablet.png" alt="Écouteurs Pro" class="product-img" style="border-radius: 8px;">
+                    </div>
+                    <div class="product-info">
+                        <div>
+                            <span class="product-category-tag">Audio & Son</span>
+                            <a href="#" class="product-title">Écouteurs Intra-Auriculaires Pulse Neo avec Réduction de Bruit</a>
+                            <div class="rating-row">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                                <span class="rating-count">(72)</span>
+                            </div>
+                        </div>
+                        <div class="price-and-action">
+                            <div class="price-col">
+                                <span class="price-current">75 000 FCFA</span>
+                                <span class="price-old">90 000 FCFA</span>
+                            </div>
+                            <button class="btn-add-cart" onclick="addToCart('Écouteurs Pulse Neo')">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Product 6 -->
+                <article class="product-card-neo" data-category="accessories">
+                    <div class="product-media">
+                        <span class="badge-discount">-30%</span>
+                        <button class="wishlist-btn-neo" onclick="toggleWishlist(this)"><i class="far fa-heart"></i></button>
+                        <img src="mockups/prop2_tablet.png" alt="Sacoche Cuir Luxe" class="product-img" style="border-radius: 8px;">
+                    </div>
+                    <div class="product-info">
+                        <div>
+                            <span class="product-category-tag">Maroquinerie & Tech</span>
+                            <a href="#" class="product-title">Sacoche de Voyage Tech en Cuir Véritable et Fibre de Carbone</a>
+                            <div class="rating-row">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                                <span class="rating-count">(29)</span>
+                            </div>
+                        </div>
+                        <div class="price-and-action">
+                            <div class="price-col">
+                                <span class="price-current">130 000 FCFA</span>
+                                <span class="price-old">185 000 FCFA</span>
+                            </div>
+                            <button class="btn-add-cart" onclick="addToCart('Sacoche de Voyage Tech')">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </article>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ==========================================================
+         FLOATING ULTRA-PREMIUM MOBILE BOTTOM NAVBAR
+         (Strictly no stacked clutter on mobile!)
+         ========================================================== -->
+    <nav class="mobile-bottom-dock" aria-label="Navigation Mobile">
+        <a href="#accueil" class="dock-tab active" onclick="activateDock(this)">
+            <i class="fas fa-house"></i>
+            <span>Accueil</span>
+        </a>
+
+        <a href="#produits" class="dock-tab" onclick="activateDock(this)">
+            <i class="fas fa-layer-group"></i>
+            <span>Produits</span>
+        </a>
+
+        <a href="#panier" class="dock-tab" onclick="activateDock(this); triggerCartToast();">
+            <i class="fas fa-bag-shopping"></i>
+            <span class="dock-badge" id="dockCartBadge">3</span>
+            <span>Panier</span>
+        </a>
+
+        <a href="#favoris" class="dock-tab" onclick="activateDock(this)">
+            <i class="far fa-heart"></i>
+            <span>Favoris</span>
+        </a>
+
+        <a href="#compte" class="dock-tab" onclick="activateDock(this)">
+            <i class="far fa-user"></i>
+            <span>Compte</span>
+        </a>
+    </nav>
+
+    <!-- TOAST CONFIRMATION -->
+    <div class="neo-toast" id="toast">
+        <i class="fas fa-check-circle" style="color: var(--sapphire-primary); font-size: 20px;"></i>
+        <div>
+            <div style="font-weight: 700; font-size: 13.5px;" id="toastTitle">Panier mis à jour</div>
+            <div style="color: var(--text-muted); font-size: 12px;" id="toastDesc">Produit ajouté avec succès !</div>
+        </div>
+    </div>
+
+    <!-- Interactive Script -->
+    <script>
+        let cartTotal = 3;
+
+        function activateDock(el) {
+            document.querySelectorAll('.dock-tab').forEach(tab => tab.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function toggleWishlist(btn) {
+            btn.classList.toggle('active');
+            const icon = btn.querySelector('i');
+            if (btn.classList.contains('active')) {
+                icon.className = 'fas fa-heart';
+                showToast("Favoris", "Produit ajouté à votre liste de souhaits !");
+            } else {
+                icon.className = 'far fa-heart';
+                showToast("Favoris", "Produit retiré des favoris.");
+            }
+        }
+
+        function addToCart(productName) {
+            cartTotal++;
+            document.getElementById('cartCount').innerText = cartTotal;
+            document.getElementById('dockCartBadge').innerText = cartTotal;
+            showToast("Panier", `${productName} ajouté au panier !`);
+        }
+
+        function triggerCartToast() {
+            showToast("Panier", `Vous avez ${cartTotal} articles dans votre panier.`);
+        }
+
+        function showToast(title, desc) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastTitle').innerText = title;
+            document.getElementById('toastDesc').innerText = desc;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function filterCategory(cat, btn) {
+            document.querySelectorAll('.category-pill').forEach(pill => pill.classList.remove('active'));
+            btn.classList.add('active');
+
+            const products = document.querySelectorAll('.product-card-neo');
+            products.forEach(p => {
+                if (cat === 'all' || p.getAttribute('data-category') === cat) {
+                    p.style.display = 'flex';
+                } else {
+                    p.style.display = 'none';
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>
