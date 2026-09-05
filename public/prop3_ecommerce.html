@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AETHERA - Uncompromising Sound & Tech</title>
+    <title>AETHERA - E-Commerce Ultra Premium</title>
     
     <!-- Google Fonts & FontAwesome -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,7 +13,7 @@
     
     <style>
         /* ==========================================================
-           PIXEL-PERFECT RECREATION OF PROP3_DESKTOP & PROP3_MOBILE
+           PIXEL-PERFECT RECREATION OF PROP3_DESKTOP & PROP3_MOBILE (FRANÇAIS)
            ========================================================== */
         :root {
             --bg-dark: #0A0E17;
@@ -89,7 +89,7 @@
             position: sticky;
             top: 0;
             z-index: 1000;
-            background: rgba(10, 14, 23, 0.85);
+            background: rgba(10, 14, 23, 0.88);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border-glass);
@@ -127,7 +127,7 @@
             filter: drop-shadow(0 0 10px rgba(0, 229, 255, 0.7));
         }
 
-        /* Center Nav Links (Desktop) */
+        /* Center Nav Links (Desktop En Français) */
         .center-nav {
             display: none;
             align-items: center;
@@ -202,7 +202,7 @@
             color: var(--cyan-glow);
         }
 
-        /* Glowing Pill Cart Button (from photo) */
+        /* Glowing Pill Cart Button */
         .cart-pill-btn {
             display: flex;
             align-items: center;
@@ -225,7 +225,7 @@
             transform: scale(1.03);
         }
 
-        /* Mobile Search Input (under logo on mobile, like prop3_mobile) */
+        /* Mobile Search Input (En Français) */
         .mobile-search-bar {
             display: none;
             margin-top: 12px;
@@ -265,7 +265,7 @@
         }
 
         /* ==========================================================
-           2. HERO SECTION (Exact replica of prop3_desktop & mobile)
+           2. HERO SECTION
            ========================================================== */
         .hero-section {
             padding: 40px 0 50px;
@@ -354,7 +354,7 @@
             transform: translateY(-2px);
         }
 
-        /* Floating Holographic Product Showcase (Headphones on Stage) */
+        /* Floating Holographic Product Showcase */
         .hero-showcase-stage {
             position: relative;
             display: flex;
@@ -363,7 +363,6 @@
             min-height: 320px;
         }
 
-        /* Glowing circular holographic base */
         .hologram-stage-glow {
             position: absolute;
             bottom: 20px;
@@ -391,7 +390,6 @@
             to { transform: translateY(-10px); }
         }
 
-        /* Vertical Slide Dots on Desktop Right */
         .slider-vertical-dots {
             position: absolute;
             right: 0;
@@ -423,7 +421,7 @@
         }
 
         /* ==========================================================
-           3. PRODUCT GRID (Exact 4 Cards from prop3_desktop & mobile)
+           3. PRODUCT GRID (En Français)
            ========================================================== */
         .section-heading-row {
             display: flex;
@@ -442,26 +440,18 @@
 
         .products-grid-container {
             display: grid;
-            grid-template-columns: repeat(2, 1fr); /* 2 colonnes sur Mobile */
+            grid-template-columns: repeat(2, 1fr);
             gap: 16px;
             margin-bottom: 40px;
         }
 
-        @media (min-width: 768px) {
-            .products-grid-container {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 20px;
-            }
-        }
-
         @media (min-width: 992px) {
             .products-grid-container {
-                grid-template-columns: repeat(4, 1fr); /* 4 colonnes sur Desktop */
+                grid-template-columns: repeat(4, 1fr);
                 gap: 20px;
             }
         }
 
-        /* The Neo-Luxe Product Card */
         .neo-card {
             background: var(--bg-card);
             backdrop-filter: blur(14px);
@@ -484,7 +474,6 @@
             box-shadow: 0 15px 35px -5px rgba(0, 229, 255, 0.25);
         }
 
-        /* Circular Neon Tag in Top Right (like in photo) */
         .circular-neon-badge {
             position: absolute;
             top: 14px;
@@ -505,7 +494,6 @@
             z-index: 3;
         }
 
-        /* Product Image Container (Neat, contained, takes only part of the div) */
         .card-img-wrapper {
             height: 150px;
             width: 100%;
@@ -528,7 +516,6 @@
             transform: scale(1.1);
         }
 
-        /* Card Content */
         .card-title-row {
             display: flex;
             align-items: center;
@@ -573,7 +560,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* Color Dots (from desktop photo) */
         .color-swatches {
             display: flex;
             gap: 4px;
@@ -590,7 +576,6 @@
         .c-dot.blue { background: #3B82F6; }
         .c-dot.dark { background: #1E293B; border: 1px solid #475569; }
 
-        /* QUICK BUY / ADD TO CART BUTTON (Glowing Cyan/Mint Border Pill) */
         .btn-quick-buy {
             width: 100%;
             padding: 9px 0;
@@ -619,7 +604,7 @@
         }
 
         /* ==========================================================
-           4. FLOATING ULTRA-PREMIUM MOBILE BOTTOM NAVBAR (from photo)
+           4. NAVBAR BASSE MOBILE EN FRANÇAIS
            ========================================================== */
         .mobile-bottom-dock {
             position: fixed;
@@ -677,7 +662,6 @@
             filter: drop-shadow(0 0 10px var(--cyan-glow));
         }
 
-        /* Glowing green active indicator dot under HOME */
         .dock-active-dot {
             position: absolute;
             bottom: 4px;
@@ -701,7 +685,7 @@
             box-shadow: 0 0 8px var(--cyan-glow);
         }
 
-        /* Toast Confirmation */
+        /* Toast Notification */
         .toast-notify {
             position: fixed;
             top: 20px;
@@ -734,12 +718,12 @@
     <div class="cyber-grid-bg"></div>
 
     <!-- ==========================================================
-         TOPBAR / HEADER
+         TOPBAR / HEADER PC (En Français)
          ========================================================== -->
     <header class="site-header">
         <div class="container">
             <div class="header-inner">
-                <!-- Brand Logo -->
+                <!-- Logo de la marque -->
                 <a href="#" class="brand-logo">
                     <div class="logo-delta">
                         <i class="fas fa-play" style="transform: rotate(-90deg);"></i>
@@ -747,20 +731,20 @@
                     <span>AETHERA</span>
                 </a>
 
-                <!-- Desktop Center Navigation -->
+                <!-- Liens de Navigation Desktop Centrés -->
                 <ul class="center-nav">
-                    <li><a href="#" class="active">Audio</a></li>
-                    <li><a href="#tech">Tech</a></li>
-                    <li><a href="#accessories">Accessories</a></li>
-                    <li><a href="#explore">Explore</a></li>
-                    <li><a href="#support">Support</a></li>
+                    <li><a href="#" class="active">Accueil</a></li>
+                    <li><a href="#tech">High-Tech</a></li>
+                    <li><a href="#audio">Audio & Son</a></li>
+                    <li><a href="#accessories">Accessoires</a></li>
+                    <li><a href="#explore">Catalogue</a></li>
                 </ul>
 
-                <!-- Header Right Actions -->
+                <!-- Actions à Droite -->
                 <div class="header-right">
-                    <span class="currency-label">$USD ▾</span>
-                    <a href="#account" class="icon-btn-header" title="Account"><i class="far fa-user"></i></a>
-                    <a href="#search" class="icon-btn-header" title="Search"><i class="fas fa-search"></i></a>
+                    <span class="currency-label">FCFA ▾</span>
+                    <a href="#account" class="icon-btn-header" title="Mon Compte"><i class="far fa-user"></i></a>
+                    <a href="#search" class="icon-btn-header" title="Rechercher"><i class="fas fa-search"></i></a>
                     <a href="#cart" class="cart-pill-btn" onclick="triggerCartToast()">
                         <i class="fas fa-shopping-cart"></i>
                         <span id="cartCountNum">2</span>
@@ -768,42 +752,38 @@
                 </div>
             </div>
 
-            <!-- Mobile Search Bar (From prop3_mobile photo) -->
+            <!-- Barre de recherche mobile -->
             <div class="mobile-search-bar">
                 <i class="fas fa-search mobile-search-icon"></i>
-                <input type="text" class="mobile-search-input" placeholder="Search devices, sound, tech...">
+                <input type="text" class="mobile-search-input" placeholder="Rechercher appareils, son, tech...">
             </div>
         </div>
     </header>
 
     <!-- ==========================================================
-         MAIN CONTENT
+         CONTENU PRINCIPAL
          ========================================================== -->
     <main class="container">
 
-        <!-- HERO SHOWCASE SECTION -->
+        <!-- SECTION HERO PRINCIPALE -->
         <section class="hero-section">
             <div class="hero-layout">
-                <!-- Left Headline & Buttons -->
                 <div class="hero-left">
                     <h1 class="hero-headline">
                         AETHERA <span class="highlight">NOVA</span>.<br>
-                        UNCOMPROMISING<br>
-                        SOUND.
+                        UN SON<br>
+                        D'EXCEPTION.
                     </h1>
                     <div class="hero-buttons-group">
-                        <a href="#explore" class="btn-pill-explore">Explore</a>
-                        <a href="#order" class="btn-pill-preorder" onclick="addToCart('AETHERA NOVA')">Pre-Order Now</a>
+                        <a href="#tech" class="btn-pill-explore">Explorer</a>
+                        <a href="#order" class="btn-pill-preorder" onclick="addToCart('AETHERA NOVA')">Commander</a>
                     </div>
                 </div>
 
-                <!-- Right Holographic Headphone Stage -->
                 <div class="hero-showcase-stage">
                     <div class="hologram-stage-glow"></div>
-                    <!-- Contained Headphone Image -->
-                    <img src="mockups/prop1_mobile.png" alt="AETHERA NOVA Headphones" class="hero-headphone-img" style="border-radius: 12px;">
+                    <img src="mockups/prop1_mobile.png" alt="Casque AETHERA NOVA" class="hero-headphone-img" style="border-radius: 12px;">
                     
-                    <!-- Vertical Slider Dots -->
                     <div class="slider-vertical-dots">
                         <span class="v-dot active"></span>
                         <span class="v-dot"></span>
@@ -814,100 +794,100 @@
             </div>
         </section>
 
-        <!-- PRODUCTS GRID SECTION (Exact 4 Cards from photo) -->
+        <!-- SECTION SÉLECTION EXCLUSIVE (4 Cartes) -->
         <section class="featured-products-section" id="tech">
             <div class="section-heading-row">
-                <span class="section-label">Curated Collection</span>
+                <span class="section-label">Sélection Exclusive</span>
             </div>
 
             <div class="products-grid-container">
 
-                <!-- CARD 1: QUANTUM EARBUDS -->
+                <!-- CARTE 1: ÉCOUTEURS QUANTUM -->
                 <article class="neo-card">
                     <div class="circular-neon-badge">TECH</div>
                     <div class="card-img-wrapper">
-                        <img src="mockups/prop3_tablet.png" alt="Quantum Earbuds" class="card-thumb-img" style="border-radius: 8px;">
+                        <img src="mockups/prop3_tablet.png" alt="Écouteurs Quantum" class="card-thumb-img" style="border-radius: 8px;">
                     </div>
                     <div class="card-body-info">
                         <div class="card-title-row">
-                            <span class="card-product-title">QUANTUM EARBUDS</span>
+                            <span class="card-product-title">ÉCOUTEURS QUANTUM</span>
                             <span class="rating-pill">★ 4.3</span>
                         </div>
                         <div class="card-meta-row">
-                            <span class="card-price">$349</span>
+                            <span class="card-price">225 000 FCFA</span>
                             <div class="color-swatches">
                                 <span class="c-dot cyan"></span>
                                 <span class="c-dot blue"></span>
                                 <span class="c-dot dark"></span>
                             </div>
                         </div>
-                        <button class="btn-quick-buy" onclick="addToCart('Quantum Earbuds')">Quick Buy</button>
+                        <button class="btn-quick-buy" onclick="addToCart('Écouteurs Quantum')">Achat Rapide</button>
                     </div>
                 </article>
 
-                <!-- CARD 2: TITAN AI SMARTPHONE -->
+                <!-- CARTE 2: SMARTPHONE TITAN AI -->
                 <article class="neo-card">
-                    <div class="circular-neon-badge">AI</div>
+                    <div class="circular-neon-badge">IA</div>
                     <div class="card-img-wrapper">
-                        <img src="mockups/prop2_mobile.png" alt="Titan AI Smartphone" class="card-thumb-img" style="border-radius: 8px;">
+                        <img src="mockups/prop2_mobile.png" alt="Smartphone Titan IA" class="card-thumb-img" style="border-radius: 8px;">
                     </div>
                     <div class="card-body-info">
                         <div class="card-title-row">
-                            <span class="card-product-title">TITAN AI SMARTPHONE</span>
+                            <span class="card-product-title">SMARTPHONE TITAN IA</span>
                             <span class="rating-pill">★ 4.8</span>
                         </div>
                         <div class="card-meta-row">
-                            <span class="card-price">$1,899</span>
+                            <span class="card-price">850 000 FCFA</span>
                             <div class="color-swatches">
                                 <span class="c-dot cyan"></span>
                                 <span class="c-dot dark"></span>
                             </div>
                         </div>
-                        <button class="btn-quick-buy" onclick="addToCart('Titan AI Smartphone')">Quick Buy</button>
+                        <button class="btn-quick-buy" onclick="addToCart('Smartphone Titan IA')">Achat Rapide</button>
                     </div>
                 </article>
 
-                <!-- CARD 3: AETHERA ARC SPEAKER -->
+                <!-- CARTE 3: ENCEINTE AETHERA ARC -->
                 <article class="neo-card">
                     <div class="circular-neon-badge">PRO</div>
                     <div class="card-img-wrapper">
-                        <img src="mockups/prop3_desktop.png" alt="Aethera Arc Speaker" class="card-thumb-img" style="border-radius: 8px;">
+                        <img src="mockups/prop3_desktop.png" alt="Enceinte Aethera Arc" class="card-thumb-img" style="border-radius: 8px;">
                     </div>
                     <div class="card-body-info">
                         <div class="card-title-row">
-                            <span class="card-product-title">AETHERA ARC SPEAKER</span>
+                            <span class="card-product-title">ENCEINTE AETHERA ARC</span>
                             <span class="rating-pill">★ 5.0</span>
                         </div>
                         <div class="card-meta-row">
-                            <span class="card-price">$1,250</span>
+                            <span class="card-price">490 000 FCFA</span>
                             <div class="color-swatches">
                                 <span class="c-dot cyan"></span>
                                 <span class="c-dot dark"></span>
                             </div>
                         </div>
-                        <button class="btn-quick-buy" onclick="addToCart('Aethera Arc Speaker')">Quick Buy</button>
+                        <button class="btn-quick-buy" onclick="addToCart('Enceinte Aethera Arc')">Achat Rapide</button>
                     </div>
                 </article>
 
-                <!-- CARD 4: NEBULA WATCH -->
+                <!-- CARTE 4: MONTRE NEBULA OLED -->
                 <article class="neo-card">
                     <div class="circular-neon-badge">OLED</div>
                     <div class="card-img-wrapper">
-                        <img src="mockups/prop1_tablet.png" alt="Nebula Watch" class="card-thumb-img" style="border-radius: 8px;">
+                        <img src="mockups/prop1_tablet.png" alt="Montre Nebula OLED" class="card-thumb-img" style="border-radius: 8px;">
                     </div>
                     <div class="card-body-info">
                         <div class="card-title-row">
-                            <span class="card-product-title">NEBULA WATCH</span>
+                            <span class="card-product-title">MONTRE NEBULA OLED</span>
                             <span class="rating-pill">★ 4.7</span>
                         </div>
                         <div class="card-meta-row">
-                            <span class="card-price">$699</span>
+                            <span class="card-price">340 000 FCFA</span>
                             <div class="color-swatches">
                                 <span class="c-dot cyan"></span>
                                 <span class="c-dot blue"></span>
                             </div>
                         </div>
-                        <button class="btn-quick-buy" onclick="addToCart('Nebula Watch')">Quick Buy</button>
+                        <button class="btn-quick-buy" onclick="addToCart('Montre Nebula OLED')">Achat Rapide</button>
                     </div>
                 </article>
 
@@ -917,34 +897,34 @@
     </main>
 
     <!-- ==========================================================
-         FLOATING MOBILE BOTTOM DOCK (From prop3_mobile photo)
+         NAVBAR BASSE FLOTTANTE SUR MOBILE (En Français)
          ========================================================== -->
     <nav class="mobile-bottom-dock">
         <a href="#" class="dock-tab active" onclick="activateTab(this)">
             <i class="fas fa-home"></i>
-            <span>Home</span>
+            <span>Accueil</span>
             <div class="dock-active-dot"></div>
         </a>
 
         <a href="#tech" class="dock-tab" onclick="activateTab(this)">
             <i class="fas fa-border-all"></i>
-            <span>Catalog</span>
+            <span>Catalogue</span>
         </a>
 
         <a href="#cart" class="dock-tab" onclick="activateTab(this); triggerCartToast();">
             <i class="fas fa-shopping-cart"></i>
             <span class="dock-badge-num" id="dockCartNum">2</span>
-            <span>Cart</span>
+            <span>Panier</span>
         </a>
 
         <a href="#favorites" class="dock-tab" onclick="activateTab(this)">
             <i class="far fa-star"></i>
-            <span>Favorites</span>
+            <span>Favoris</span>
         </a>
 
         <a href="#profile" class="dock-tab" onclick="activateTab(this)">
             <i class="far fa-user"></i>
-            <span>Profile</span>
+            <span>Compte</span>
         </a>
     </nav>
 
@@ -952,8 +932,8 @@
     <div class="toast-notify" id="toastBox">
         <i class="fas fa-check-circle" style="color: var(--cyan-glow); font-size: 18px;"></i>
         <div>
-            <div style="font-weight: 700; font-size: 13px;" id="toastTitle">Added to Bag</div>
-            <div style="color: var(--text-gray); font-size: 11.5px;" id="toastDesc">Product added successfully</div>
+            <div style="font-weight: 700; font-size: 13px;" id="toastTitle">Panier mis à jour</div>
+            <div style="color: var(--text-gray); font-size: 11.5px;" id="toastDesc">Produit ajouté avec succès</div>
         </div>
     </div>
 
@@ -976,11 +956,11 @@
             itemsCount++;
             document.getElementById('cartCountNum').innerText = itemsCount;
             document.getElementById('dockCartNum').innerText = itemsCount;
-            showToast("Item Added", `${productName} added to your bag!`);
+            showToast("Panier mis à jour", `${productName} a été ajouté à votre panier !`);
         }
 
         function triggerCartToast() {
-            showToast("Your Bag", `You have ${itemsCount} items ready for checkout.`);
+            showToast("Votre Panier", `Vous avez ${itemsCount} articles prêts pour la commande.`);
         }
 
         function showToast(title, desc) {

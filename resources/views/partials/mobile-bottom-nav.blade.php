@@ -1,48 +1,48 @@
 {{-- ==========================================================
-     EXACT MOBILE BOTTOM DOCK (FROM PROP3_MOBILE.PNG)
+     NAVBAR BASSE MOBILE EN FRANÇAIS (STYLE ULTRA-PREMIUM NEO-LUXE)
      ========================================================== --}}
-<nav class="mobile-bottom-dock d-flex d-lg-none" aria-label="Mobile Bottom Navigation">
-    <!-- HOME -->
+<nav class="mobile-bottom-dock d-flex d-lg-none" aria-label="Navigation Mobile Inférieure">
+    <!-- ACCUEIL -->
     <a href="{{ route('home') }}" class="dock-tab {{ request()->routeIs('home') ? 'active' : '' }}">
         <i class="fas fa-home"></i>
-        <span>Home</span>
+        <span>Accueil</span>
         @if(request()->routeIs('home'))
             <div class="dock-active-dot"></div>
         @endif
     </a>
 
-    <!-- CATALOG -->
+    <!-- CATALOGUE -->
     <a href="{{ route('products') }}" class="dock-tab {{ request()->routeIs('products') || request()->routeIs('categories.*') ? 'active' : '' }}">
         <i class="fas fa-border-all"></i>
-        <span>Catalog</span>
+        <span>Catalogue</span>
         @if(request()->routeIs('products') || request()->routeIs('categories.*'))
             <div class="dock-active-dot"></div>
         @endif
     </a>
 
-    <!-- CART WITH BADGE -->
+    <!-- PANIER AVEC BADGE -->
     <a href="{{ route('panier') }}" class="dock-tab {{ request()->routeIs('panier') ? 'active' : '' }}">
         <i class="fas fa-shopping-cart"></i>
         @livewire('navbar-cart-count')
-        <span>Cart</span>
+        <span>Panier</span>
     </a>
 
-    <!-- FAVORITES -->
+    <!-- FAVORIS -->
     <a href="{{ route('favoris') }}" class="dock-tab {{ request()->routeIs('favoris') ? 'active' : '' }}">
         <i class="far fa-star"></i>
-        <span>Favorites</span>
+        <span>Favoris</span>
     </a>
 
-    <!-- PROFILE -->
+    <!-- COMPTE / PROFIL -->
     @auth
         <a href="{{ route('dashboard') }}" class="dock-tab {{ request()->routeIs('dashboard') || request()->routeIs('profile.*') ? 'active' : '' }}">
             <i class="far fa-user"></i>
-            <span>Profile</span>
+            <span>Compte</span>
         </a>
     @else
         <a href="{{ route('login') }}" class="dock-tab {{ request()->routeIs('login') ? 'active' : '' }}">
             <i class="far fa-user"></i>
-            <span>Profile</span>
+            <span>Connexion</span>
         </a>
     @endauth
 </nav>

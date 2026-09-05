@@ -1,6 +1,6 @@
 @extends('base')
 
-@section('title', 'AETHERA - Uncompromising Sound & Tech')
+@section('title', 'AETHERA - E-Commerce Ultra Premium')
 
 @section('content')
     <!-- LOADING SCREEN -->
@@ -20,7 +20,7 @@
         <div class="container pt-3 pb-8">
 
             <!-- ============================================-->
-            <!-- 1. HERO SHOWCASE SECTION (Identique à la photo) -->
+            <!-- 1. HERO SHOWCASE SECTION (En Français) -->
             <!-- ============================================-->
             <section class="hero-section">
                 <div class="hero-layout">
@@ -28,19 +28,19 @@
                     <div class="hero-left">
                         <h1 class="hero-headline">
                             AETHERA <span class="highlight">NOVA</span>.<br>
-                            UNCOMPROMISING<br>
-                            SOUND.
+                            UN SON<br>
+                            D'EXCEPTION.
                         </h1>
                         <div class="hero-buttons-group">
-                            <a href="{{ route('products') }}" class="btn-pill-explore">Explore</a>
-                            <a href="{{ route('products') }}" class="btn-pill-preorder">Pre-Order Now</a>
+                            <a href="{{ route('products') }}" class="btn-pill-explore">Explorer</a>
+                            <a href="{{ route('products') }}" class="btn-pill-preorder">Commander</a>
                         </div>
                     </div>
 
                     <!-- Right Holographic Product Stage -->
                     <div class="hero-showcase-stage">
                         <div class="hologram-stage-glow"></div>
-                        <img src="{{ asset('mockups/prop1_mobile.png') }}" alt="Aethera Nova Headphones" class="hero-headphone-img" style="border-radius: 14px;">
+                        <img src="{{ asset('mockups/prop1_mobile.png') }}" alt="Casque Aethera Nova" class="hero-headphone-img" style="border-radius: 14px;">
                         
                         <!-- Vertical Slide Dots -->
                         <div class="slider-vertical-dots">
@@ -54,27 +54,27 @@
             </section>
 
             <!-- ============================================-->
-            <!-- 2. CURATED COLLECTION PRODUCT GRID (4 Cartes de la photo) -->
+            <!-- 2. SÉLECTION EXCLUSIVE (4 Cartes Produits) -->
             <!-- ============================================-->
             <section class="featured-products-section mb-6" id="tech">
                 <div class="section-heading-row">
-                    <span class="section-label">Curated Collection</span>
+                    <span class="section-label">Sélection Exclusive</span>
                     <a href="{{ route('products') }}" class="text-decoration-none fs-9 fw-bold" style="color: #00E5FF;">
-                        See All <i class="fas fa-chevron-right ms-1 fs-10"></i>
+                        Voir tout <i class="fas fa-chevron-right ms-1 fs-10"></i>
                     </a>
                 </div>
 
                 <div class="products-grid-container">
 
-                    <!-- CARD 1: QUANTUM EARBUDS -->
+                    <!-- CARTE 1: ÉCOUTEURS QUANTUM -->
                     <article class="neo-card">
                         <div class="circular-neon-badge">TECH</div>
                         <div class="card-img-wrapper">
-                            <img src="{{ asset('mockups/prop3_tablet.png') }}" alt="Quantum Earbuds" class="card-thumb-img" style="border-radius: 8px;">
+                            <img src="{{ asset('mockups/prop3_tablet.png') }}" alt="Écouteurs Quantum" class="card-thumb-img" style="border-radius: 8px;">
                         </div>
                         <div class="card-body-info">
                             <div class="card-title-row">
-                                <span class="card-product-title">QUANTUM EARBUDS</span>
+                                <span class="card-product-title">ÉCOUTEURS QUANTUM</span>
                                 <span class="rating-pill">★ 4.3</span>
                             </div>
                             <div class="card-meta-row">
@@ -85,19 +85,19 @@
                                     <span class="c-dot dark"></span>
                                 </div>
                             </div>
-                            <a href="{{ route('products') }}" class="btn-quick-buy">Quick Buy</a>
+                            <a href="{{ route('products') }}" class="btn-quick-buy">Achat Rapide</a>
                         </div>
                     </article>
 
-                    <!-- CARD 2: TITAN AI SMARTPHONE -->
+                    <!-- CARTE 2: SMARTPHONE TITAN AI -->
                     <article class="neo-card">
-                        <div class="circular-neon-badge">AI</div>
+                        <div class="circular-neon-badge">IA</div>
                         <div class="card-img-wrapper">
-                            <img src="{{ asset('mockups/prop2_mobile.png') }}" alt="Titan AI Smartphone" class="card-thumb-img" style="border-radius: 8px;">
+                            <img src="{{ asset('mockups/prop2_mobile.png') }}" alt="Smartphone Titan AI" class="card-thumb-img" style="border-radius: 8px;">
                         </div>
                         <div class="card-body-info">
                             <div class="card-title-row">
-                                <span class="card-product-title">TITAN AI SMARTPHONE</span>
+                                <span class="card-product-title">SMARTPHONE TITAN IA</span>
                                 <span class="rating-pill">★ 4.8</span>
                             </div>
                             <div class="card-meta-row">
@@ -107,19 +107,19 @@
                                     <span class="c-dot dark"></span>
                                 </div>
                             </div>
-                            <a href="{{ route('products') }}" class="btn-quick-buy">Quick Buy</a>
+                            <a href="{{ route('products') }}" class="btn-quick-buy">Achat Rapide</a>
                         </div>
                     </article>
 
-                    <!-- CARD 3: AETHERA ARC SPEAKER -->
+                    <!-- CARTE 3: ENCEINTE AETHERA ARC -->
                     <article class="neo-card">
                         <div class="circular-neon-badge">PRO</div>
                         <div class="card-img-wrapper">
-                            <img src="{{ asset('mockups/prop3_desktop.png') }}" alt="Aethera Arc Speaker" class="card-thumb-img" style="border-radius: 8px;">
+                            <img src="{{ asset('mockups/prop3_desktop.png') }}" alt="Enceinte Aethera Arc" class="card-thumb-img" style="border-radius: 8px;">
                         </div>
                         <div class="card-body-info">
                             <div class="card-title-row">
-                                <span class="card-product-title">AETHERA ARC SPEAKER</span>
+                                <span class="card-product-title">ENCEINTE AETHERA ARC</span>
                                 <span class="rating-pill">★ 5.0</span>
                             </div>
                             <div class="card-meta-row">
@@ -129,19 +129,19 @@
                                     <span class="c-dot dark"></span>
                                 </div>
                             </div>
-                            <a href="{{ route('products') }}" class="btn-quick-buy">Quick Buy</a>
+                            <a href="{{ route('products') }}" class="btn-quick-buy">Achat Rapide</a>
                         </div>
                     </article>
 
-                    <!-- CARD 4: NEBULA WATCH -->
+                    <!-- CARTE 4: MONTRE NEBULA OLED -->
                     <article class="neo-card">
                         <div class="circular-neon-badge">OLED</div>
                         <div class="card-img-wrapper">
-                            <img src="{{ asset('mockups/prop1_tablet.png') }}" alt="Nebula Watch" class="card-thumb-img" style="border-radius: 8px;">
+                            <img src="{{ asset('mockups/prop1_tablet.png') }}" alt="Montre Nebula OLED" class="card-thumb-img" style="border-radius: 8px;">
                         </div>
                         <div class="card-body-info">
                             <div class="card-title-row">
-                                <span class="card-product-title">NEBULA WATCH</span>
+                                <span class="card-product-title">MONTRE NEBULA OLED</span>
                                 <span class="rating-pill">★ 4.7</span>
                             </div>
                             <div class="card-meta-row">
@@ -151,7 +151,7 @@
                                     <span class="c-dot blue"></span>
                                 </div>
                             </div>
-                            <a href="{{ route('products') }}" class="btn-quick-buy">Quick Buy</a>
+                            <a href="{{ route('products') }}" class="btn-quick-buy">Achat Rapide</a>
                         </div>
                     </article>
 
@@ -159,11 +159,11 @@
             </section>
 
             <!-- ============================================-->
-            <!-- 3. LIVEWIRE DYNAMIC PRODUCTS CATALOG -->
+            <!-- 3. FLUX DYNAMIQUE LIVEWIRE DU CATALOGUE -->
             <!-- ============================================-->
             <section class="mb-6">
                 <div class="section-heading-row">
-                    <span class="section-label">Toutes les offres & Promotions</span>
+                    <span class="section-label">Toutes les offres & Nouveautés</span>
                 </div>
                 <div class="swiper-theme-container products-slider mb-5">
                     <div class="swiper swiper theme-slider"
