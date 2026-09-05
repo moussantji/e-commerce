@@ -6,7 +6,7 @@
             <div class="position-relative text-decoration-none product-card h-100">
                 <div class="d-flex flex-column justify-content-between h-100">
                     <div>
-                        <div class="border border-1 border-translucent rounded-3 position-relative mb-3">
+                        <div class="product-img-box position-relative mb-3">
                             @if (auth()->check())
                                 {{-- ✅ CONNECTÉ : wire:click ACTIF --}}
                                 <button wire:click="toggleWishlist({{ $produit->id }})"
@@ -23,7 +23,7 @@
                                         class="far fa-heart d-none-hover" data-fa-transform="down-1"></span>
                                 </a>
                             @endif
-                            <img class="img-fluid"
+                            <img class="product-contained-img"
                                 src="{{ $produit->getPhoto() ? $produit->getPhoto()->getImageUrl(530,530) : asset('assets/img/products/1.png') }}"
                                 alt="{{ $produit->name }}" />
                             @if ($produit->is_featured)
