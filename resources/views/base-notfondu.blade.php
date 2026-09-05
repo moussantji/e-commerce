@@ -289,6 +289,8 @@
 
 
 
+    @include('partials.mobile-bottom-nav')
+
 </body>
 
 

@@ -1,87 +1,265 @@
 /* ================================================================
-   PROPOSITION 3 : TITANIUM NEO-LUXE STYLING & MOBILE NAVIGATION
+   PROPOSITION 3 : TITANIUM NEO-LUXE & SAPPHIRE REDESIGN
    ================================================================ */
 
 :root {
     --neo-bg-body: #080C14;
     --neo-bg-surface: #0E1524;
     --neo-bg-card: #121B2D;
+    --neo-bg-card-hover: #162238;
     --neo-sapphire: #38BDF8;
+    --neo-sapphire-dark: #0284C7;
     --neo-sapphire-glow: rgba(56, 189, 248, 0.25);
-    --neo-border: rgba(56, 189, 248, 0.2);
+    --neo-border: rgba(56, 189, 248, 0.22);
+    --neo-border-subtle: rgba(255, 255, 255, 0.08);
 }
 
-/* Dark mode enhancements */
-[data-bs-theme="dark"], body {
+/* Global body & dark surface styling */
+body {
     background-color: var(--neo-bg-body) !important;
-    color: #F8FAFC;
+    color: #F8FAFC !important;
 }
 
-/* Glassmorphism for cards */
-.product-card, .card {
-    background: var(--neo-bg-card) !important;
+[data-bs-theme="dark"] body {
+    background-color: var(--neo-bg-body) !important;
+}
+
+/* ================================================================
+   CADRAGE PHOTO PRODUIT ULTRA-PREMIUM (NE RECOUVRE PAS TOUTE LA DIV)
+   ================================================================ */
+.product-img-box,
+.product-card .border.position-relative,
+.product-card-container .border.position-relative {
+    background: #090E1A !important;
     border: 1px solid var(--neo-border) !important;
     border-radius: 16px !important;
+    height: 220px !important;
+    max-height: 220px !important;
+    padding: 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    position: relative !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-.product-card:hover {
-    transform: translateY(-4px);
-    border-color: var(--neo-sapphire) !important;
-    box-shadow: 0 10px 30px rgba(56, 189, 248, 0.2) !important;
+/* Photo contenue, prend juste une partie centrale avec marge et ombre propre */
+.product-card img,
+.product-card .img-fluid,
+.product-card-container img,
+.product-contained-img {
+    max-width: 78% !important;
+    max-height: 78% !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+    margin: auto !important;
+    display: block !important;
+    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5)) !important;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-/* Category Icons & Pills */
+/* Animation de zoom délicat au survol */
+.product-card:hover .product-card img,
+.product-card:hover img,
+.product-card-container:hover img {
+    transform: scale(1.08) !important;
+}
+
+/* Cartes produits globales */
+.product-card, 
+.product-card-container .card {
+    background: var(--neo-bg-card) !important;
+    border: 1px solid var(--neo-border-subtle) !important;
+    border-radius: 18px !important;
+    padding: 14px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 10px 25px -10px rgba(0, 0, 0, 0.5) !important;
+}
+
+.product-card:hover {
+    transform: translateY(-5px) !important;
+    border-color: var(--neo-sapphire) !important;
+    box-shadow: 0 15px 35px -5px rgba(56, 189, 248, 0.2) !important;
+    background: var(--neo-bg-card-hover) !important;
+}
+
+/* Titres et textes des cartes produits */
+.product-name, 
+.product-card h6 {
+    color: #F8FAFC !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    transition: color 0.2s ease !important;
+}
+
+.product-card:hover .product-name {
+    color: var(--neo-sapphire) !important;
+}
+
+/* Prix */
+.text-body-emphasis {
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+}
+
+/* Wishlist Button */
+.btn-wish, .btn-wish-primary {
+    background: rgba(14, 21, 36, 0.85) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 50% !important;
+    width: 34px !important;
+    height: 34px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #94A3B8 !important;
+    top: 10px !important;
+    right: 10px !important;
+    position: absolute !important;
+    z-index: 5 !important;
+    transition: all 0.2s ease !important;
+}
+
+.btn-wish:hover, .btn-wish.active {
+    color: #F43F5E !important;
+    border-color: #F43F5E !important;
+    background: rgba(244, 63, 94, 0.2) !important;
+}
+
+/* ================================================================
+   TOPBAR & HEADER ÉPURÉ SUR MOBILE (PAS DE BOUTONS EMPILÉS)
+   ================================================================ */
+.ecommerce-topbar {
+    padding: 10px 0 !important;
+}
+
+@media (max-width: 991.98px) {
+    /* Cache les éléments redondants du header sur mobile */
+    .navbar-nav-icons .desktop-only,
+    .navbar-responsive-navitems {
+        display: none !important;
+    }
+
+    /* Ajustement de la barre de recherche sur mobile */
+    .ecommerce-topbar .search-box {
+        width: 100% !important;
+        margin-top: 8px !important;
+    }
+
+    /* Marge inférieure pour la navbar basse */
+    body {
+        padding-bottom: 90px !important;
+    }
+}
+
+/* ================================================================
+   NAVBAR BASSE FLOTTANTE MOBILE
+   ================================================================ */
+.mobile-bottom-dock {
+    position: fixed;
+    bottom: 12px;
+    left: 14px;
+    right: 14px;
+    height: 64px;
+    background: rgba(14, 21, 36, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(56, 189, 248, 0.28);
+    border-radius: 32px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 20px rgba(56, 189, 248, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 8px;
+    z-index: 1040;
+}
+
+@media (min-width: 992px) {
+    .mobile-bottom-dock {
+        display: none !important;
+    }
+}
+
+.mobile-bottom-dock .dock-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: #64748B;
+    font-size: 10.5px;
+    font-weight: 600;
+    width: 54px;
+    height: 48px;
+    border-radius: 18px;
+    position: relative;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mobile-bottom-dock .dock-tab i {
+    font-size: 18px;
+    margin-bottom: 2px;
+    transition: transform 0.2s ease;
+}
+
+.mobile-bottom-dock .dock-tab.active {
+    color: var(--neo-sapphire) !important;
+    background: rgba(56, 189, 248, 0.12);
+}
+
+.mobile-bottom-dock .dock-tab.active i {
+    transform: scale(1.15);
+    filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.6));
+}
+
+/* ================================================================
+   CATÉGORIES DÉFILANTES EN HAUT D'ACCUEIL
+   ================================================================ */
 .icon-container {
-    background: rgba(56, 189, 248, 0.1) !important;
+    background: rgba(56, 189, 248, 0.08) !important;
     border: 1px solid rgba(56, 189, 248, 0.2) !important;
     color: var(--neo-sapphire) !important;
     border-radius: 16px !important;
+    transition: all 0.25s ease !important;
 }
 
 .icon-nav-item:hover .icon-container {
     background: var(--neo-sapphire) !important;
     color: #080C14 !important;
     box-shadow: 0 0 15px rgba(56, 189, 248, 0.5) !important;
+    transform: translateY(-2px) !important;
 }
 
-/* Buttons Neo-Luxe */
-.btn-primary {
+.nav-label {
+    color: #94A3B8 !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+}
+
+/* ================================================================
+   BANNIÈRES HERO ULTRA-PREMIUM (PHOTOS CADRÉES DÉLICATEMENT)
+   ================================================================ */
+.whooping-banner, .gift-items-banner, .best-in-market-banner {
+    background-color: #0E1524 !important;
+    border: 1px solid var(--neo-border) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.6) !important;
+}
+
+.banner-button, .btn-primary {
     background: linear-gradient(135deg, #38BDF8 0%, #0284C7 100%) !important;
     border: none !important;
     color: #080C14 !important;
     font-weight: 700 !important;
     box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3) !important;
+    border-radius: 999px !important;
 }
 
-.btn-primary:hover {
+.banner-button:hover, .btn-primary:hover {
     background: linear-gradient(135deg, #7DD3FC 0%, #0369A1 100%) !important;
     box-shadow: 0 6px 20px rgba(56, 189, 248, 0.5) !important;
-}
-
-/* Wishlist Button */
-.btn-wish {
-    background: rgba(14, 21, 36, 0.8) !important;
-    backdrop-filter: blur(8px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    color: #94A3B8 !important;
-    border-radius: 50% !important;
-}
-
-.btn-wish:hover {
-    color: #F43F5E !important;
-    border-color: #F43F5E !important;
-    background: rgba(244, 63, 94, 0.15) !important;
-}
-
-/* Clean mobile layout - no clutter */
-@media (max-width: 768px) {
-    .ecommerce-topbar {
-        padding-top: 8px;
-        padding-bottom: 8px;
-    }
-    
-    .product-card {
-        margin-bottom: 12px;
-    }
 }

@@ -644,14 +644,13 @@
                                 <div class="d-flex flex-column justify-content-between h-100">
                                     {{-- Image + Wishlist --}}
                                     <div>
-                                        <div
-                                            class="border border-1 border-translucent rounded-3 position-relative mb-3">
+                                        <div class="product-img-box position-relative mb-3">
                                             <!-- ✅ Bouton Livewire qui ENREGISTRE DIRECT dans wishlist_user_produit -->
                                             @if (auth()->check())
                                                 {{-- ✅ CONNECTÉ : wire:click ACTIF --}}
                                                 <button wire:click="toggleWishlist({{ $product->id }})"
                                                     class="btn btn-wish btn-wish-primary z-2 p-2" tabindex="-1"
-                                                    style="box-shadow: none; outline: none;"**
+                                                    style="box-shadow: none; outline: none;"
                                                     data-bs-toggle="tooltip" title="Liste de souhaits">
                                                     <i
                                                         class="{{ auth()->user()->wishlistProducts->contains($product->id) ? 'fas fa-heart text-danger' : 'far fa-heart' }}"></i>
@@ -668,7 +667,7 @@
                                                 </a>
                                             @endif
 
-                                        <img class="img-fluid" src="{{ $product->getPhoto() ? $product->getPhoto()->getImageUrl(530, 530) : asset('assets/img/products/1.png') }}" alt="{{ $product->name }}" >
+                                        <img class="product-contained-img" src="{{ $product->getPhoto() ? $product->getPhoto()->getImageUrl(530, 530) : asset('assets/img/products/1.png') }}" alt="{{ $product->name }}" >
 
                                             @if ($product->is_verified)
                                                 <span class="badge text-bg-success fs-10 product-verified-badge">

@@ -5,13 +5,13 @@
             <div class="position-relative text-decoration-none product-card h-100 top-deals-card">
                 <div class="d-flex flex-column justify-content-between h-100">
                     <div>
-                        <div class="border border-1 border-translucent rounded-3 position-relative mb-3">
+                        <div class="product-img-box position-relative mb-3">
                             <!-- ✅ Bouton Livewire qui ENREGISTRE DIRECT dans wishlist_user_produit -->
                             @if (auth()->check())
                                 {{-- ✅ CONNECTÉ : wire:click ACTIF --}}
                                 <button wire:click="toggleWishlist({{ $produit->id }})"
                                     class="btn btn-wish btn-wish-primary z-2 p-2" tabindex="-1"
-                                    style="box-shadow: none; outline: none;"** data-bs-toggle="tooltip" title="Wishlist">
+                                    style="box-shadow: none; outline: none;" data-bs-toggle="tooltip" title="Wishlist">
                                     <i
                                         class="{{ auth()->user()->wishlistProducts->contains($produit->id) ? 'fas fa-heart text-danger' : 'far fa-heart' }}"></i>
                                 </button>
@@ -26,7 +26,7 @@
                             @endif
 
 
-                            <img class="img-fluid"
+                            <img class="product-contained-img"
                                 src="{{ $produit->getPhoto() ? $produit->getPhoto()->getImageUrl(530, 530) : asset('assets/img/products/1.png') }}"
                                 alt="{{ $produit->name }}" />
                             @if ($produit->is_featured)
