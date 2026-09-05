@@ -1,61 +1,65 @@
 {{-- ==========================================================
-     NAVBAR MOBILE EN BAS ULTRA-PREMIUM (PROPOSITION 3 NEO-LUXE)
-     Pas de boutons empilés, navigation fluide au pouce
+     EXACT MOBILE BOTTOM DOCK (FROM PROP3_MOBILE.PNG)
      ========================================================== --}}
-<nav class="mobile-bottom-dock d-flex d-lg-none" aria-label="Navigation Mobile Inférieure">
-    <!-- Accueil -->
+<nav class="mobile-bottom-dock d-flex d-lg-none" aria-label="Mobile Bottom Navigation">
+    <!-- HOME -->
     <a href="{{ route('home') }}" class="dock-tab {{ request()->routeIs('home') ? 'active' : '' }}">
-        <i class="fas fa-house"></i>
-        <span>Accueil</span>
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+        @if(request()->routeIs('home'))
+            <div class="dock-active-dot"></div>
+        @endif
     </a>
 
-    <!-- Catalogue / Produits -->
+    <!-- CATALOG -->
     <a href="{{ route('products') }}" class="dock-tab {{ request()->routeIs('products') || request()->routeIs('categories.*') ? 'active' : '' }}">
-        <i class="fas fa-layer-group"></i>
-        <span>Produits</span>
+        <i class="fas fa-border-all"></i>
+        <span>Catalog</span>
+        @if(request()->routeIs('products') || request()->routeIs('categories.*'))
+            <div class="dock-active-dot"></div>
+        @endif
     </a>
 
-    <!-- Panier avec badge dynamique -->
+    <!-- CART WITH BADGE -->
     <a href="{{ route('panier') }}" class="dock-tab {{ request()->routeIs('panier') ? 'active' : '' }}">
-        <i class="fas fa-bag-shopping"></i>
+        <i class="fas fa-shopping-cart"></i>
         @livewire('navbar-cart-count')
-        <span>Panier</span>
+        <span>Cart</span>
     </a>
 
-    <!-- Favoris / Wishlist -->
+    <!-- FAVORITES -->
     <a href="{{ route('favoris') }}" class="dock-tab {{ request()->routeIs('favoris') ? 'active' : '' }}">
-        <i class="fas fa-heart"></i>
-        <span>Favoris</span>
+        <i class="far fa-star"></i>
+        <span>Favorites</span>
     </a>
 
-    <!-- Compte / Profil -->
+    <!-- PROFILE -->
     @auth
         <a href="{{ route('dashboard') }}" class="dock-tab {{ request()->routeIs('dashboard') || request()->routeIs('profile.*') ? 'active' : '' }}">
-            <i class="fas fa-user-circle"></i>
-            <span>Compte</span>
+            <i class="far fa-user"></i>
+            <span>Profile</span>
         </a>
     @else
         <a href="{{ route('login') }}" class="dock-tab {{ request()->routeIs('login') ? 'active' : '' }}">
-            <i class="fas fa-user"></i>
-            <span>Connexion</span>
+            <i class="far fa-user"></i>
+            <span>Profile</span>
         </a>
     @endauth
 </nav>
 
 <style>
-/* STYLES NAVBAR MOBILE ULTRA PREMIUM */
 .mobile-bottom-dock {
     position: fixed;
-    bottom: 12px;
-    left: 14px;
-    right: 14px;
+    bottom: 14px;
+    left: 16px;
+    right: 16px;
     height: 64px;
-    background: rgba(14, 21, 36, 0.92);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(56, 189, 248, 0.28);
+    background: rgba(14, 20, 32, 0.94);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(0, 229, 255, 0.35);
     border-radius: 32px;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 20px rgba(56, 189, 248, 0.15);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.85), 0 0 20px rgba(0, 229, 255, 0.2);
     display: flex;
     align-items: center;
     justify-content: space-around;
@@ -76,39 +80,38 @@
     justify-content: center;
     text-decoration: none;
     color: #64748B;
-    font-size: 10.5px;
-    font-weight: 600;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
     width: 54px;
-    height: 48px;
+    height: 50px;
     border-radius: 18px;
     position: relative;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.25s ease;
 }
 
 .mobile-bottom-dock .dock-tab i {
-    font-size: 18px;
-    margin-bottom: 2px;
+    font-size: 17px;
+    margin-bottom: 3px;
     transition: transform 0.2s ease;
 }
 
 .mobile-bottom-dock .dock-tab.active {
-    color: #38BDF8 !important;
-    background: rgba(56, 189, 248, 0.12);
+    color: #00E5FF !important;
 }
 
 .mobile-bottom-dock .dock-tab.active i {
-    transform: scale(1.15);
-    filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.6));
+    filter: drop-shadow(0 0 10px #00E5FF);
 }
 
-.mobile-bottom-dock .dock-tab:hover:not(.active) {
-    color: #F8FAFC;
-}
-
-/* Ajustement du padding bas du body sur mobile */
-@media (max-width: 991.98px) {
-    body {
-        padding-bottom: 85px !important;
-    }
+.mobile-bottom-dock .dock-active-dot {
+    position: absolute;
+    bottom: 4px;
+    width: 4px;
+    height: 4px;
+    background: #00F5A0;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #00F5A0;
 }
 </style>
