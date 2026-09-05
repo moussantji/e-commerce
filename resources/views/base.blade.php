@@ -1,18 +1,26 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="ltr" data-navigation-type="default"
-    data-navbar-horizontal-shape="default">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="ltr" data-bs-theme="dark" data-navigation-type="default"
+    data-navbar-horizontal-shape="default" class="dark">
 
 <meta http-equiv="content-type" content="text/html;charset=utf-8" />
 
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 
     <!-- ===============================================-->
     <!--    Document Title-->
     <!-- ===============================================-->
     <title>@yield('title')</title>
+
+    <script>
+        // Force le thème Titanium Neo-Luxe (Dark Mode)
+        try {
+            localStorage.setItem('phoenixTheme', 'dark');
+            document.documentElement.setAttribute('data-bs-theme', 'dark');
+        } catch (e) {}
+    </script>
 
     <!-- ===============================================-->
     <!--    Favicons-->
@@ -54,28 +62,27 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #080C14;
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 99999;
-            /* Transition EXACTE 0.8s */
-            transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
         .page-loader.fade-out {
             opacity: 0;
-            transform: scale(1.05);
+            transform: scale(1.03);
             visibility: hidden;
         }
 
         .loader-circle {
-            width: 80px;
-            height: 80px;
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            border-top: 4px solid #fff;
+            width: 70px;
+            height: 70px;
+            border: 3px solid rgba(56, 189, 248, 0.15);
+            border-top: 3px solid #38BDF8;
             border-radius: 50%;
-            animation: spinPro 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            animation: spinPro 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
             position: relative;
         }
 
@@ -86,9 +93,9 @@
             right: -10px;
             bottom: -10px;
             margin: auto;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.35) 0%, transparent 70%);
             border-radius: 50%;
-            animation: pulseGlow 2s ease-out infinite;
+            animation: pulseGlow 1.8s ease-out infinite;
         }
 
         @keyframes spinPro {
@@ -556,6 +563,80 @@
         /*Fond sombre semi-transparent*/
         .modal-backdrop {
             opacity: 0.5 !important;
+        }
+
+        /* ================================================================
+           PROPOSITION 3 TITANIUM NEO-LUXE GLOBAL OVERRIDE
+           ================================================================ */
+        body, html, [data-bs-theme="dark"] body {
+            background-color: #080C14 !important;
+            color: #F8FAFC !important;
+        }
+
+        .bg-body-emphasis, .bg-body {
+            background-color: #0E1524 !important;
+        }
+
+        .product-card, .card {
+            background: #121B2D !important;
+            border: 1px solid rgba(56, 189, 248, 0.18) !important;
+            border-radius: 18px !important;
+            box-shadow: 0 10px 25px -10px rgba(0, 0, 0, 0.6) !important;
+        }
+
+        .product-card:hover {
+            border-color: #38BDF8 !important;
+            box-shadow: 0 15px 35px -5px rgba(56, 189, 248, 0.25) !important;
+            background: #162238 !important;
+        }
+
+        .product-img-box, .product-card .border.position-relative {
+            background: #090E1A !important;
+            border: 1px solid rgba(56, 189, 248, 0.15) !important;
+            border-radius: 14px !important;
+            height: 200px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 14px !important;
+            overflow: hidden !important;
+        }
+
+        .product-contained-img, .product-card img, .product-card .img-fluid {
+            max-width: 78% !important;
+            max-height: 78% !important;
+            width: auto !important;
+            height: auto !important;
+            object-fit: contain !important;
+            margin: auto !important;
+            filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5)) !important;
+            transition: transform 0.35s ease !important;
+        }
+
+        .product-card:hover .product-contained-img, 
+        .product-card:hover img {
+            transform: scale(1.08) !important;
+        }
+
+        .product-name, .product-card h6 {
+            color: #F8FAFC !important;
+            font-weight: 600 !important;
+        }
+
+        .text-body-emphasis, h1, h2, h3, h4, h5, h6 {
+            color: #FFFFFF !important;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #38BDF8 0%, #0284C7 100%) !important;
+            border: none !important;
+            color: #080C14 !important;
+            font-weight: 700 !important;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3) !important;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #7DD3FC 0%, #0369A1 100%) !important;
         }
     </style>
     <script>
