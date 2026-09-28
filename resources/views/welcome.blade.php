@@ -6,11 +6,24 @@
 <main>
 <section class="hero">
 <div class="shop-wrap hero-grid">
-<div class="banner">
+@php
+$heroBanner = isset($banners) ? $banners->where('is_active', true)->first() : null;
+$heroImg = $heroBanner && $heroBanner->getPhoto() ? $heroBanner->getPhoto()->getImageUrl(1200, 600) : null;
+$heroLink = $heroBanner && $heroBanner->button_link ? $heroBanner->button_link : route('products');
+@endphp
+<div class="banner"@if($heroImg) style="background:linear-gradient(105deg,var(--violet-800) 0%,rgba(109,40,217,.88) 34%,rgba(168,85,247,.55) 68%,rgba(168,85,247,.22) 100%),var(--violet-800) url('{{ $heroImg }}') center/cover no-repeat"@endif>
+@if($heroBanner)
+@php $heroPct = $heroBanner->percentage ? rtrim(rtrim((string) $heroBanner->percentage, '0'), '.') : ''; @endphp
+<span class="pill rise" style="animation-delay:.05s">{{ $heroPct !== '' ? '-' . $heroPct . '%' : '#Promo' }}</span>
+<h1 class="rise" style="animation-delay:.12s">{!! nl2br(e($heroBanner->title1)) !!}</h1>
+@if($heroBanner->title2)<p class="sub rise" style="animation-delay:.2s">{{ $heroBanner->title2 }}</p>@endif
+<a class="btn-buy rise" style="animation-delay:.28s" href="{{ $heroLink }}">ACHETEZ MAINTENANT <svg class="ic ic-sm"><use href="#i-chevron"/></svg></a>
+@else
 <span class="pill rise" style="animation-delay:.05s">#MégaSoldes</span>
 <h1 class="rise" style="animation-delay:.12s">ÉCONOMISEZ<br>GROS</h1>
 <p class="sub rise" style="animation-delay:.2s">Jusqu'à -50% sur la sélection</p>
 <a class="btn-buy rise" style="animation-delay:.28s" href="{{ route('products') }}">ACHETEZ MAINTENANT <svg class="ic ic-sm"><use href="#i-chevron"/></svg></a>
+@endif
 </div>
 <div class="promos">
 <a href="#promos" class="promo light rise" style="animation-delay:.16s"><h2>SOLDES</h2><p>Jusqu'à -50% sur la sélection</p></a>

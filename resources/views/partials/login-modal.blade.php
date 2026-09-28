@@ -55,6 +55,16 @@
                     <button class="btn-line" type="button" data-close-modal>Fermer</button>
                 </div>
             </form>
+            <div
+                style="display:flex;align-items:center;gap:12px;margin:16px 0 12px;font-size:12px;color:var(--grey)">
+                <span style="flex:1;height:1px;background:var(--line)"></span> ou <span
+                    style="flex:1;height:1px;background:var(--line)"></span>
+            </div>
+            <div class="pdp-actions">
+                <a class="btn-line" style="flex:1" href="{{ url('/auth/google/redirect') }}"><span
+                        style="font-weight:800;background:linear-gradient(135deg,#4285F4,#EA4335,#FBBC05,#34A853);-webkit-background-clip:text;background-clip:text;color:transparent">G</span>
+                    Continuer avec Google</a>
+            </div>
             <p class="muted-sm" style="text-align:center;margin-top:14px">
                 <a class="lien" href="{{ route('password.request') }}">Mot de passe oublié ?</a> ·
                 <a class="lien" href="{{ route('register') }}">Créer un compte</a>
