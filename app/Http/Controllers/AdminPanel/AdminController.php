@@ -83,6 +83,11 @@ class AdminController extends Controller
                 'last_activity' => now()
             ];
 
+            // Changement d'email -> revérification requise.
+            if (($validated['email'] ?? null) !== $user->email) {
+                $userData['email_verified_at'] = null;
+            }
+
             // Gestion de l'adresse
             if (isset($validated['adresse'])) {
                 $adresseData = [
@@ -174,5 +179,26 @@ class AdminController extends Controller
 
         return redirect()->route('admin.profile')
             ->with('success', 'Mot de passe mis à jour avec succès');
+    }
+
+    /**
+     * Supprime le compte administrateur (avec confirmation par mot de passe).
+     */
+    public function destroy(Request $request)
+    {
+        $request->validateWithBag('userDeletion', [
+            'password' => ['required', 'current_password'],
+        ]);
+
+        $user = Auth::user();
+
+        Auth::logout();
+
+        $user->delete();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('home');
     }
 }

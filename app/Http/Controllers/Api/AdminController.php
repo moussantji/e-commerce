@@ -224,7 +224,7 @@ class AdminController extends Controller
         $this->ensureAdmin($request);
 
         $allowed = [
-            'en_attente', 'paiement_declare', 'payee', 'traitement',
+            'en_attente', 'paiement_declare', 'payee',
             'expedie', 'livre', 'annule',
         ];
 
@@ -240,7 +240,6 @@ class AdminController extends Controller
         $now = now();
         $dateField = [
             'en_attente' => 'date_en_attente',
-            'traitement' => 'date_traitement',
             'payee' => 'date_traitement',
             'expedie' => 'date_expedition',
             'livre' => 'date_livraison',

@@ -74,7 +74,7 @@ class OrderController extends Controller
             return back()->with('error', 'Statut requis.');
         }
 
-        // Normalise vers le vocabulaire canonique (en_cours -> traitement, etc.)
+        // Normalise vers le vocabulaire canonique (anciennes valeurs -> code actuel)
         $status = OrderStatus::normalize($status);
 
         if (! array_key_exists($status, OrderStatus::LABELS)) {
@@ -87,7 +87,6 @@ class OrderController extends Controller
         $dateField = [
             OrderStatus::EN_ATTENTE => 'date_en_attente',
             OrderStatus::PAYEE => 'date_traitement',
-            OrderStatus::TRAITEMENT => 'date_traitement',
             OrderStatus::EXPEDIE => 'date_expedition',
             OrderStatus::LIVRE => 'date_livraison',
             OrderStatus::ANNULE => 'date_annulation',

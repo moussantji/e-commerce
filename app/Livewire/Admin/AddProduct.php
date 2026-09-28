@@ -18,7 +18,6 @@ class AddProduct extends Component
 
     // Champs principaux
     public $name, $description, $sku, $category_id, $brand_id;
-    public $tags = [];
     public $images = [];
     public $selected_tags = [];
     public $is_active = true, $is_featured = false;
@@ -52,8 +51,8 @@ class AddProduct extends Component
         'regular_price' => 'required|numeric|min:0',
         'sale_price' => 'nullable|numeric|min:0',
         'stock_quantity' => 'nullable|integer|min:0',
-        'tags' => 'array',
-        'tags.*' => 'exists:tags,id',
+        'selected_tags' => 'array',
+        'selected_tags.*' => 'exists:tags,id',
         'variant_options.*.values_input' => 'nullable|string',
         'variant_options.*.type' => 'nullable|string',
         'images' => 'nullable|array|max:10',  // max 10 images
@@ -131,9 +130,9 @@ class AddProduct extends Component
             'brand_id' => $this->brand_id,
         ]);
 
-        // Tags
-        if (!empty($this->tags)) {
-            $produit->tags()->sync($this->tags);
+        // Tags (sélection multiple du formulaire)
+        if (!empty($this->selected_tags)) {
+            $produit->tags()->sync($this->selected_tags);
         }
         // ✅ ATTACHE les images avec ta méthode
         if ($this->images) {

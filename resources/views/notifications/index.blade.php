@@ -1,5 +1,7 @@
 @extends('base')
 
+@section('title', 'Notifications')
+
 @section('content')
     <!-- ============================================-->
     <!-- <section> begin ============================-->

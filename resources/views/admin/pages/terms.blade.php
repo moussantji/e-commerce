@@ -1,15 +1,28 @@
 @extends('admin.base')
 
-@section('title', 'Conditions d\'utilisation')
+@section('title', 'Conditions d'utilisation')
 
 @section('content')
-    <div class="container-fluid">
-        <div class="row mb-4">
-            <div class="col-12">
-                <h2 class="mb-4">Conditions générales d'utilisation</h2>
-                <div class="card">
-                    <div class="card-body">
-                        <h4>1. Acceptation des conditions</h4>
+    <nav class="crumb" aria-label="Fil d'Ariane">
+        <div class="wrap">
+            <a href="{{ route('admin.dashboard') }}">Administration</a>
+            <svg class="ic">
+                <use href="#i-chevron" />
+            </svg>
+            <span class="here">Conditions</span>
+        </div>
+    </nav>
+
+    <section class="phead">
+        <div class="wrap">
+            <h1>Conditions d'utilisation</h1>
+        </div>
+    </section>
+
+    <section>
+        <div class="wrap">
+            <div class="panel boutique-texte">
+<h4>1. Acceptation des conditions</h4>
                         <p>En accédant et en utilisant ce site web, vous acceptez d'être lié par ces conditions d'utilisation, toutes les lois et réglementations applicables, et vous convenez que vous êtes responsable du respect des lois locales applicables.</p>
                         
                         <h4 class="mt-4">2. Utilisation de la licence</h4>
@@ -33,5 +46,5 @@
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 @endsection

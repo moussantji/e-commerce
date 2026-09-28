@@ -12,8 +12,7 @@ namespace App\Support;
  * Vocabulaire canonique (codes stockés dans commandes.statut) :
  *   - en_attente        : en attente de paiement
  *   - paiement_declare  : preuve envoyée, à vérifier par l'admin
- *   - payee             : paiement confirmé
- *   - traitement        : en préparation
+ *   - payee             : paiement confirmé (prête à expédier)
  *   - expedie           : expédiée
  *   - livre             : livrée (terminal)
  *   - annule            : annulée (terminal)
@@ -23,7 +22,6 @@ class OrderStatus
     public const EN_ATTENTE = 'en_attente';
     public const PAIEMENT_DECLARE = 'paiement_declare';
     public const PAYEE = 'payee';
-    public const TRAITEMENT = 'traitement';
     public const EXPEDIE = 'expedie';
     public const LIVRE = 'livre';
     public const ANNULE = 'annule';
@@ -33,7 +31,6 @@ class OrderStatus
         self::EN_ATTENTE => 'En attente de paiement',
         self::PAIEMENT_DECLARE => 'Paiement à vérifier',
         self::PAYEE => 'Payée',
-        self::TRAITEMENT => 'En préparation',
         self::EXPEDIE => 'Expédiée',
         self::LIVRE => 'Livrée',
         self::ANNULE => 'Annulée',
@@ -44,7 +41,6 @@ class OrderStatus
         self::EN_ATTENTE => 'warning',
         self::PAIEMENT_DECLARE => 'warning',
         self::PAYEE => 'primary',
-        self::TRAITEMENT => 'info',
         self::EXPEDIE => 'primary',
         self::LIVRE => 'success',
         self::ANNULE => 'danger',
@@ -55,7 +51,6 @@ class OrderStatus
         self::EN_ATTENTE => 'clock',
         self::PAIEMENT_DECLARE => 'clock',
         self::PAYEE => 'credit-card',
-        self::TRAITEMENT => 'loader',
         self::EXPEDIE => 'truck',
         self::LIVRE => 'check',
         self::ANNULE => 'x',
@@ -66,7 +61,6 @@ class OrderStatus
         self::EN_ATTENTE => '#f59e0b',
         self::PAIEMENT_DECLARE => '#f59e0b',
         self::PAYEE => '#6d28d9',
-        self::TRAITEMENT => '#0ea5e9',
         self::EXPEDIE => '#2563eb',
         self::LIVRE => '#16a34a',
         self::ANNULE => '#dc2626',
@@ -84,7 +78,7 @@ class OrderStatus
         $status = strtolower(trim((string) $status));
 
         return match ($status) {
-            'en_traitement', 'en_cours', 'en preparation', 'en_preparation' => self::TRAITEMENT,
+            'en_traitement', 'en_cours', 'en preparation', 'en_preparation', 'traitement' => self::PAYEE,
             'expediee', 'expedition', 'expédiée', 'expédition' => self::EXPEDIE,
             'livree', 'livrée', 'delivered' => self::LIVRE,
             'annulee', 'annulée', 'cancelled', 'canceled' => self::ANNULE,

@@ -37,15 +37,6 @@ class OrderResource extends JsonResource
 
     private function statutLabel(): string
     {
-        return match ($this->statut) {
-            'en_attente' => 'En attente de paiement',
-            'paiement_declare' => 'Paiement en vérification',
-            'payee' => 'Payée',
-            'traitement' => 'En préparation',
-            'expedie' => 'Expédiée',
-            'livre' => 'Livrée',
-            'annule' => 'Annulée',
-            default => ucfirst((string) $this->statut),
-        };
+        return \App\Support\OrderStatus::label($this->statut);
     }
 }

@@ -32,10 +32,19 @@ class ClientCategoryController extends Controller
             ->whereNull('parent_id')
             ->get();
 
+        // Produits de la catégorie + ses sous-catégories
+        $ids = $subcategories->pluck('id')->push($category->id);
+        $products = \App\Models\Produits::with(['photos'])
+            ->where('is_active', true)
+            ->whereIn('category_id', $ids)
+            ->latest()
+            ->get();
+
         return view('client.categories.index', compact(
             'category',
             'subcategories',
             'categories',
+            'products',
         ));
     }
 }

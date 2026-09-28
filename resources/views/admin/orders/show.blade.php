@@ -1,244 +1,221 @@
 @extends('admin.base')
 
-@section('title', 'Détails de la commande #' . $order->id)
+@section('title', 'Commande ' . ($order->numero_commande ?? '#' . $order->id))
 
 @section('content')
-<div class="content">
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Détails de la commande #{{ $order->id }}</h5>
-                </div>
-                <div class="card-body">
-                    @if (session('success'))
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            {{ session('success') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    @endif
-                    @if (session('error'))
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            {{ session('error') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    @endif
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6>Informations client</h6>
-                            <address>
-                                <strong>{{ $order->user->name ?? 'Client inconnu' }}</strong><br>
-                                {{ $order->user->email ?? 'Email non disponible' }}<br>
-                                Téléphone: {{ $order->user->tel ?? 'Non renseigné' }}
-                            </address>
-                        </div>
-                        <div class="col-md-6 text-md-end">
-                            <h6>Statut de la commande</h6>
-                            <span class="badge bg-{{ $order->status_badge_class }} fs-6">{{ $order->status_label }}</span>
+    @php
+        use App\Support\OrderStatus;
+        $st = OrderStatus::normalize($order->statut);
+        $terminal = OrderStatus::isTerminal($order->statut);
+        $stClass = ['en_attente' => 'conf', 'paiement_declare' => 'conf', 'payee' => 'prep', 'expedie' => 'exp', 'livre' => 'ok', 'annule' => 'ko'];
+        $liv = $order->adresse_livraison;
+        $fac = $order->adresse_facturation;
+    @endphp
 
-                            <div class="mt-2">
-                                <small class="text-muted">
-                                    Date de commande: {{ $order->created_at->format('d/m/Y H:i') }}
-                                </small>
-                            </div>
-                        </div>
+    <nav class="crumb" aria-label="Fil d'Ariane">
+        <div class="wrap">
+            <a href="{{ route('admin.dashboard') }}">Administration</a>
+            <svg class="ic">
+                <use href="#i-chevron" />
+            </svg>
+            <a href="{{ route('admin.orders.index') }}">Commandes</a>
+            <svg class="ic">
+                <use href="#i-chevron" />
+            </svg>
+            <span class="here">{{ $order->numero_commande ?? 'CMD-' . $order->id }}</span>
+        </div>
+    </nav>
+
+    <section class="phead">
+        <div class="wrap">
+            <h1>Commande {{ $order->numero_commande ?? '#' . $order->id }}</h1>
+            <p>{{ $order->created_at?->format('d/m/Y H:i') }} · {{ optional($order->user)->name ?? 'Client inconnu' }} ·
+                <b style="color:var(--pink)">{{ number_format($order->total, 0, ',', ' ') }} FCFA</b>
+            </p>
+        </div>
+    </section>
+
+    <section>
+        <div class="wrap">
+            <div class="panel">
+                <div class="ocmd-top" style="margin-bottom:6px">
+                    <div>
+                        <h2 style="margin:0"><svg class="ic">
+                                <use href="#i-bag" />
+                            </svg> {{ $order->numero_commande ?? 'CMD-' . $order->id }}</h2>
+                        <span class="muted-sm">{{ optional($order->user)->email ?? '' }}
+                            {{ optional($order->user)->tel ? '· ' . optional($order->user)->tel : '' }}</span>
                     </div>
+                    <span class="st {{ $stClass[$st] ?? 'conf' }}">{{ $order->status_label }}</span>
+                </div>
 
-                    <hr>
+                @unless ($terminal)
+                    <div class="tagline-band">
+                        <svg class="ic">
+                            <use href="#i-bolt" />
+                        </svg>
+                        <span>Faites avancer la commande : le client est notifié à chaque changement.</span>
+                    </div>
+                    <div class="pdp-actions" style="margin-top:12px">
+                        @if (in_array($st, ['en_attente', 'paiement_declare']))
+                            <form action="{{ route('admin.orders.update-status', $order) }}" method="POST"
+                                style="display:inline">
+                                @csrf @method('PATCH')
+                                <input type="hidden" name="status" value="payee">
+                                <button class="btn-solid" style="font-size:13.5px;padding:11px 22px"
+                                    onclick="return confirm('Confirmer le paiement ?')"><svg class="ic"
+                                        style="width:16px;height:16px">
+                                        <use href="#i-b2-check" />
+                                    </svg> Confirmer le paiement</button>
+                            </form>
+                        @endif
+                        @if (in_array($st, ['payee']))
+                            <form action="{{ route('admin.orders.update-status', $order) }}" method="POST"
+                                style="display:inline">
+                                @csrf @method('PATCH')
+                                <input type="hidden" name="status" value="expedie">
+                                <button class="btn-line" type="submit"><svg class="ic">
+                                        <use href="#i-truck" />
+                                    </svg> Marquer expédiée</button>
+                            </form>
+                        @endif
+                        @if (in_array($st, ['expedie']))
+                            <form action="{{ route('admin.orders.update-status', $order) }}" method="POST"
+                                style="display:inline">
+                                @csrf @method('PATCH')
+                                <input type="hidden" name="status" value="livre">
+                                <button class="btn-line" type="submit"><svg class="ic">
+                                        <use href="#i-b2-check" />
+                                    </svg> Marquer livrée</button>
+                            </form>
+                        @endif
+                        <form action="{{ route('admin.orders.update-status', $order) }}" method="POST"
+                            style="display:inline">
+                            @csrf @method('PATCH')
+                            <input type="hidden" name="status" value="annule">
+                            <button class="btn-ghost-sm" type="submit"
+                                onclick="return confirm('Annuler cette commande ?')">Annuler</button>
+                        </form>
+                    </div>
+                @endunless
+            </div>
 
-                    <h6>Produits commandés</h6>
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead class="bg-light">
+            <div class="dash-grid">
+                <div class="panel">
+                    <h2><svg class="ic">
+                            <use href="#i-grid" />
+                        </svg> Produits commandés</h2>
+                    <div class="table-scroll">
+                        <table class="tbl">
+                            <thead>
                                 <tr>
                                     <th>Produit</th>
-                                    <th class="text-end">Prix unitaire</th>
-                                    <th class="text-center">Quantité</th>
-                                    <th class="text-end">Total</th>
+                                    <th>Prix unit.</th>
+                                    <th>Qté</th>
+                                    <th>Total</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($order->produits as $produit)
+                                @foreach ($order->produits as $produit)
+                                    @php
+                                        $pOpts = $produit->pivot->options ?? null;
+                                        if (is_string($pOpts)) {
+                                            $pOpts = json_decode($pOpts, true);
+                                        }
+                                    @endphp
                                     <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                @if($produit->image)
-                                                    <img src="{{ asset('storage/' . $produit->image) }}"
-                                                         alt="{{ $produit->name }}"
-                                                         class="img-thumbnail me-3"
-                                                         style="width: 60px; height: 60px; object-fit: cover;">
-                                                @endif
-                                                <div>
-                                                    <h6 class="mb-0">{{ $produit->name }}</h6>
-                                                    <small class="text-muted">
-                                                        Réf: {{ $produit->sku ?? 'N/A' }}
-                                                    </small>
-                                                </div>
-                                            </div>
+                                        <td><b>{{ $produit->name }}</b><br><small class="muted-sm">Réf :
+                                                {{ $produit->sku ?? 'N/A' }}</small>
+                                            @if (!empty($pOpts) && is_array($pOpts))
+                                                <br>
+                                                @foreach ($pOpts as $ok => $ov)
+                                                    <small
+                                                        style="display:inline-block;font-size:11px;font-weight:600;background:var(--lav-1);border:1px solid #ddd6fe;color:var(--violet-800);border-radius:999px;padding:2px 9px;margin:3px 4px 0 0">{{ $ok }}
+                                                        : {{ $ov }}</small>
+                                                @endforeach
+                                            @endif
                                         </td>
-                                        <td class="text-end">
-                                            {{ number_format($produit->pivot->prix_unitaire, 0, ',', ' ') }} FCFA
-                                        </td>
-                                        <td class="text-center">
-                                            {{ $produit->pivot->quantite }}
-                                        </td>
-                                        <td class="text-end">
-                                            {{ number_format($produit->pivot->total, 0, ',', ' ') }} FCFA
-                                        </td>
+                                        <td>{{ number_format($produit->pivot->prix_unitaire, 0, ',', ' ') }} FCFA</td>
+                                        <td>×{{ $produit->pivot->quantite }}</td>
+                                        <td><b>{{ number_format($produit->pivot->total, 0, ',', ' ') }} FCFA</b></td>
                                     </tr>
                                 @endforeach
-
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="srow"><span>Sous-total</span><b>{{ number_format($order->produits->sum('pivot.total'), 0, ',', ' ') }}
+                            FCFA</b></div>
+                    @if ($order->frais_livraison > 0)
+                        <div class="srow"><span>Livraison</span><b>{{ number_format($order->frais_livraison, 0, ',', ' ') }}
+                                FCFA</b></div>
+                    @endif
+                    @if (($order->remise ?? 0) > 0)
+                        <div class="srow ok"><span>Remise</span><b>−{{ number_format($order->remise, 0, ',', ' ') }}
+                                FCFA</b></div>
+                    @endif
+                    <div class="stotal"><span>Total</span><b>{{ number_format($order->total, 0, ',', ' ') }} FCFA</b>
+                    </div>
+                </div>
+                <div>
+                    <div class="panel">
+                        <h2><svg class="ic">
+                                <use href="#i-truck" />
+                            </svg> Livraison</h2>
+                        <table class="spec">
+                            <tbody>
                                 <tr>
-                                    <td colspan="3" class="text-end fw-bold">Sous-total</td>
-                                    <td class="text-end">
-                                        {{ number_format($order->produits->sum('pivot.total'), 0, ',', ' ') }} FCFA
+                                    <td>Client</td>
+                                    <td><b>{{ $order->user->name ?? '—' }}</b><br><small
+                                            class="muted-sm">{{ $order->user->email ?? '' }}</small></td>
+                                </tr>
+                                <tr>
+                                    <td>Adresse</td>
+                                    <td>
+                                        @if (is_array($liv) && !empty($liv))
+                                            {{ data_get($liv, 'adresse') }}<br>{{ data_get($liv, 'ville') }}@if (data_get($liv, 'pays'))
+                                                , {{ data_get($liv, 'pays') }}
+                                            @endif
+                                        @else
+                                            {{ is_string($liv) ? $liv : '—' }}
+                                        @endif
                                     </td>
                                 </tr>
-                                @if($order->frais_livraison > 0)
-                                    <tr>
-                                        <td colspan="3" class="text-end fw-bold">Frais de livraison</td>
-                                        <td class="text-end">
-                                            {{ number_format($order->frais_livraison, 0, ',', ' ') }} FCFA
-                                        </td>
-                                    </tr>
-                                @endif
                                 <tr>
-                                    <td colspan="3" class="text-end fw-bold">Total TTC</td>
-                                    <td class="text-end fw-bold">
-                                        {{ number_format($order->total, 0, ',', ' ') }} FCFA
-                                    </td>
+                                    <td>Mode</td>
+                                    <td>{{ optional($order->livraison)->method_name ?? '—' }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Paiement</td>
+                                    <td>{{ optional($order->paiement)->method_name ?? '—' }}</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-
-                    <div class="row mt-4">
-                        <div class="col-md-6">
-                            <h6>Adresse de livraison</h6>
-                            @php $liv = $order->adresse_livraison; @endphp
-                            @if (is_array($liv) && !empty($liv))
-                                <address class="mb-0">
-                                    <strong>{{ data_get($liv, 'nom', $order->user->name ?? '') }}</strong><br>
-                                    {{ data_get($liv, 'adresse') }}<br>
-                                    {{ data_get($liv, 'ville') }}@if(data_get($liv, 'pays')), {{ data_get($liv, 'pays') }}@endif<br>
-                                    @if(data_get($liv, 'telephone'))Tél. : {{ data_get($liv, 'telephone') }}@endif
-                                </address>
-                            @else
-                                <address class="mb-0">{{ is_string($liv) ? $liv : 'Non spécifiée' }}</address>
-                            @endif
-                        </div>
-                        <div class="col-md-6">
-                            <h6>Informations de facturation</h6>
-                            @php $fac = $order->adresse_facturation; @endphp
-                            @if (is_array($fac) && !empty($fac))
-                                <address class="mb-0">
-                                    <strong>{{ data_get($fac, 'nom', $order->user->name ?? '') }}</strong><br>
-                                    {{ data_get($fac, 'adresse') }}<br>
-                                    {{ data_get($fac, 'ville') }}@if(data_get($fac, 'pays')), {{ data_get($fac, 'pays') }}@endif<br>
-                                    @if(data_get($fac, 'telephone'))Tél. : {{ data_get($fac, 'telephone') }}@endif
-                                </address>
-                            @else
-                                <address class="mb-0">{{ is_string($fac) ? $fac : 'Identique à l\'adresse de livraison' }}</address>
-                            @endif
+                    <div class="panel">
+                        <h2><svg class="ic">
+                                <use href="#i-card" />
+                            </svg> Preuve de paiement</h2>
+                        @php $preuves = \App\Models\PaymentProof::where('order_id', $order->id)->latest()->get(); @endphp
+                        @forelse($preuves as $pv)
+                            <div class="dligne">
+                                <div><b>{{ ucfirst($pv->provider) }}</b>
+                                    <small>{{ $pv->phone ?? '' }} ·
+                                        {{ number_format($pv->amount, 0, ',', ' ') }} FCFA ·
+                                        {{ $pv->created_at?->format('d/m/Y H:i') }}</small>
+                                </div>
+                                <span class="st {{ $pv->status === 'confirme' ? 'ok' : ($pv->status === 'rejete' ? 'ko' : 'conf') }}">{{ $pv->status }}</span>
+                            </div>
+                        @empty
+                            <p class="muted-sm">Aucune preuve envoyée.</p>
+                        @endforelse
+                        <div class="pdp-actions" style="margin-top:14px">
+                            <a class="btn-line" href="{{ route('admin.payments.moderation') }}">Modérer les
+                                paiements</a>
+                            <a class="btn-ghost-sm" href="{{ route('admin.orders.index') }}">Retour à la liste</a>
                         </div>
                     </div>
-
-                    <div class="mt-4 d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
-                        <a href="{{ route('admin.orders.index') }}" class="btn btn-light">
-                            <i class="fas fa-arrow-left me-2"></i> Retour à la liste
-                        </a>
-                        @if($order->paiement && $order->paiement->photos->count())
-                            <div class="w-100 w-md-auto">
-                                <strong class="d-block mb-2">Preuve de paiement :</strong>
-                                <div class="d-flex flex-wrap gap-2">
-                                    @foreach($order->paiement->photos as $photo)
-                                        <a href="{{ asset('storage/' . $photo->filename) }}" target="_blank">
-                                            <img src="{{ asset('storage/' . $photo->filename) }}" alt="preuve"
-                                                class="img-thumbnail"
-                                                style="width:96px;height:96px;object-fit:cover;" />
-                                        </a>
-                                    @endforeach
-                                </div>
-                            </div>
-                        @endif
-                    </div>
-
-                    {{-- Workflow de traitement de la commande --}}
-                    @php
-                        $st = \App\Support\OrderStatus::normalize($order->statut);
-                        $terminal = \App\Support\OrderStatus::isTerminal($order->statut);
-                    @endphp
-                    @unless($terminal)
-                        <div class="card mt-4 border">
-                            <div class="card-body">
-                                <h6 class="mb-3">Traitement de la commande</h6>
-                                <div class="d-flex flex-wrap gap-2">
-                                    {{-- Étape paiement : confirmer si pas encore payée --}}
-                                    @if(in_array($st, ['en_attente', 'paiement_declare']))
-                                        <form action="{{ route('admin.orders.update-status', $order) }}" method="POST">
-                                            @csrf @method('PATCH')
-                                            <input type="hidden" name="status" value="payee">
-                                            <button class="btn btn-success"
-                                                onclick="return confirm('Confirmer le paiement et marquer la commande comme payée ?')">
-                                                <i class="fas fa-check me-1"></i> Confirmer le paiement (Payée)
-                                            </button>
-                                        </form>
-                                    @endif
-
-                                    {{-- Étape préparation --}}
-                                    @if(in_array($st, ['payee']))
-                                        <form action="{{ route('admin.orders.update-status', $order) }}" method="POST">
-                                            @csrf @method('PATCH')
-                                            <input type="hidden" name="status" value="traitement">
-                                            <button class="btn btn-info text-white">
-                                                <i class="fas fa-box me-1"></i> Marquer « En préparation »
-                                            </button>
-                                        </form>
-                                    @endif
-
-                                    {{-- Étape expédition --}}
-                                    @if(in_array($st, ['payee', 'traitement']))
-                                        <form action="{{ route('admin.orders.update-status', $order) }}" method="POST">
-                                            @csrf @method('PATCH')
-                                            <input type="hidden" name="status" value="expedie">
-                                            <button class="btn btn-primary">
-                                                <i class="fas fa-truck me-1"></i> Marquer « Expédiée »
-                                            </button>
-                                        </form>
-                                    @endif
-
-                                    {{-- Étape livraison --}}
-                                    @if(in_array($st, ['traitement', 'expedie']))
-                                        <form action="{{ route('admin.orders.update-status', $order) }}" method="POST">
-                                            @csrf @method('PATCH')
-                                            <input type="hidden" name="status" value="livre">
-                                            <button class="btn btn-success">
-                                                <i class="fas fa-check-double me-1"></i> Marquer « Livrée »
-                                            </button>
-                                        </form>
-                                    @endif
-
-                                    {{-- Annulation (toujours possible tant que non terminal) --}}
-                                    <form action="{{ route('admin.orders.update-status', $order) }}" method="POST">
-                                        @csrf @method('PATCH')
-                                        <input type="hidden" name="status" value="annule">
-                                        <button class="btn btn-outline-danger"
-                                            onclick="return confirm('Annuler cette commande ?')">
-                                            <i class="fas fa-times me-1"></i> Annuler
-                                        </button>
-                                    </form>
-                                </div>
-                                <small class="text-muted d-block mt-3">
-                                    Le client est notifié (email + push) à chaque changement de statut.
-                                </small>
-                            </div>
-                        </div>
-                    @endunless
                 </div>
             </div>
         </div>
-    </div>
-</div>
-</div>
+    </section>
 @endsection

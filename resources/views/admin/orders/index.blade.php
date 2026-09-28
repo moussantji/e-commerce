@@ -3,90 +3,107 @@
 @section('title', 'Gestion des commandes')
 
 @section('content')
-    <div class="content">
-        <div class="mb-9">
-            @if (session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            @endif
-            @if (session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    {{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            @endif
-            <div class="row g-3 mb-4">
-                <div class="col-auto">
-                    <h2 class="mb-0">Orders</h2>
-                </div>
-                <div class="col-auto ms-auto">
-                    <a href="{{ route('admin.payments.moderation') }}" class="btn btn-primary">
-                        <span class="fas fa-money-check-alt me-2"></span>Paiements à vérifier
-                    </a>
-                </div>
+    @php
+        use App\Support\OrderStatus;
+        $stClass = ['en_attente' => 'conf', 'paiement_declare' => 'conf', 'payee' => 'prep', 'expedie' => 'exp', 'livre' => 'ok', 'annule' => 'ko'];
+    @endphp
+
+    <nav class="crumb" aria-label="Fil d'Ariane">
+        <div class="wrap">
+            <a href="{{ route('admin.dashboard') }}">Administration</a>
+            <svg class="ic">
+                <use href="#i-chevron" />
+            </svg>
+            <span class="here">Commandes</span>
+        </div>
+    </nav>
+
+    <section class="phead">
+        <div class="wrap">
+            <h1>Commandes</h1>
+            <p>{{ $commandes->count() }} commande{{ $commandes->count() > 1 ? 's' : '' }} · suivi et statuts.</p>
+        </div>
+    </section>
+
+    <section>
+        <div class="wrap">
+            <div class="toolbar">
+                <form action="{{ route('admin.orders.index') }}" method="GET"
+                    style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex:1">
+                    <input class="ctrl" style="border-radius:12px;min-width:200px" type="search" name="search"
+                        placeholder="N°, client, email..." value="{{ request('search') }}" aria-label="Rechercher">
+                    <select class="ctrl" name="status" onchange="this.form.submit()" aria-label="Filtrer par statut">
+                        <option value="">Tous les statuts</option>
+                        @foreach ($statuses as $value => $label)
+                            <option value="{{ $value }}" {{ request('status') == $value ? 'selected' : '' }}>
+                                {{ $label }}</option>
+                        @endforeach
+                    </select>
+                    @if (request('search') || request('status'))
+                        <a class="btn-ghost-sm" href="{{ route('admin.orders.index') }}">Effacer</a>
+                    @endif
+                </form>
+                <span class="grow"></span>
+                <a class="btn-solid" style="font-size:13.5px;padding:11px 22px"
+                    href="{{ route('admin.payments.moderation') }}"><svg class="ic" style="width:16px;height:16px">
+                        <use href="#i-card" />
+                    </svg> Paiements à vérifier</a>
             </div>
-            <div id="orderTable"
-                data-list='{"valueNames":["order","total","customer","payment_status","fulfilment_status","delivery_type","date"],"page":10,"pagination":true}'>
-                <div class="mb-4">
-                    <div class="row g-3">
-                        <div class="col-auto">
-                            <div class="search-box">
-                                <form id="filterForm" action="{{ route('admin.orders.index') }}" method="GET" class="d-flex gap-2">
-                                    <div class="search-box">
-                                        <input class="form-control search-input search"
-                                            type="search"
-                                            name="search"
-                                            id="searchInput"
-                                            placeholder="Rechercher..."
-                                            value="{{ request('search') }}"
-                                            aria-label="Search" />
-                                        <span class="fas fa-search search-box-icon"></span>
-                                    </div>
-                                    <select name="status" class="form-select" onchange="this.form.submit()">
-                                        <option value="">Tous les statuts</option>
-                                        @foreach($statuses as $value => $label)
-                                            <option value="{{ $value }}" {{ request('status') == $value ? 'selected' : '' }}>
-                                                {{ $label }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @if(request('search') || request('status'))
-                                        <a href="{{ route('admin.orders.index') }}" class="btn btn-phoenix-secondary" title="Réinitialiser">
-                                            <span class="fas fa-times"></span>
-                                        </a>
-                                    @endif
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div
-                    class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis border-top border-bottom border-translucent position-relative top-1">
-                    <div class="table-responsive scrollbar mx-n1 px-1">
-                        @include('admin.partials.dashboard.table_commande')
-                    </div>
-                    <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
-                        <div class="col-auto d-flex">
-                            <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info">
-                            </p>
-                            <a class="fw-semibold" href="#!" data-list-view="*">View all<span
-                                    class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a
-                                class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span
-                                    class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
-                        </div>
-                        <div class="col-auto d-flex"><button class="page-link" data-list-pagination="prev"><span
-                                    class="fas fa-chevron-left"></span></button>
-                            <ul class="mb-0 pagination"></ul><button class="page-link pe-0"
-                                data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
-                        </div>
-                    </div>
+
+            <div class="panel">
+                <h2><svg class="ic">
+                        <use href="#i-bag" />
+                    </svg> Liste des commandes</h2>
+                <div class="table-scroll">
+                    <table class="tbl">
+                        <thead>
+                            <tr>
+                                <th>N°</th>
+                                <th>Date</th>
+                                <th>Client</th>
+                                <th>Paiement</th>
+                                <th>Total</th>
+                                <th>Statut</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($commandes as $c)
+                                @php $norm = OrderStatus::normalize($c->statut); @endphp
+                                <tr>
+                                    <td><b>{{ $c->numero_commande ?? 'CMD-' . $c->id }}</b></td>
+                                    <td>{{ $c->created_at?->format('d/m/Y H:i') }}</td>
+                                    <td>{{ optional($c->user)->name ?? '—' }}<br><small
+                                            class="muted-sm">{{ optional($c->user)->email ?? '' }}</small></td>
+                                    <td>{{ optional($c->paiement)->method_name ?? '—' }}</td>
+                                    <td><b>{{ number_format($c->total, 0, ',', ' ') }} FCFA</b></td>
+                                    <td>
+                                        <form action="{{ route('admin.orders.update-status', $c->id) }}" method="POST">
+                                            @csrf @method('PATCH')
+                                            <select class="ctrl ctrl-sm" name="status" onchange="this.form.submit()"
+                                                aria-label="Changer le statut">
+                                                @foreach ($statuses as $value => $label)
+                                                    <option value="{{ $value }}"
+                                                        {{ $norm === $value ? 'selected' : '' }}>{{ $label }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </form>
+                                        <span class="st {{ $stClass[$norm] ?? 'conf' }}"
+                                            style="margin-top:6px">{{ $c->status_label }}</span>
+                                    </td>
+                                    <td><a class="btn-ghost-sm"
+                                            href="{{ route('admin.orders.show', $c->id) }}">Voir</a></td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="muted-sm">Aucune commande.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-
-        @include('admin.partials.footer')
-
-    </div>
+    </section>
 @endsection

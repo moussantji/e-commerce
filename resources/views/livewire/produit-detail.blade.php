@@ -1,733 +1,611 @@
 <div>
-    <div class="pt-5 pb-9">
+    @php
+        $mainImg = $images[0] ?? asset('assets/img/products/1.png');
+        $stock = (int) ($product->stock ?? 0);
+        $discount = $original > $price && $original > 0 ? round((($original - $price) / $original) * 100) : 0;
+        $stCls = $stock <= 0 ? 'out' : ($stock <= 8 ? 'low' : 'ok');
+        $stTxt = $stock <= 0 ? 'Rupture de stock' : ($stock <= 8 ? 'Plus que ' . $stock . ' en stock' : "En stock — expédié aujourd'hui");
+        $catName = optional($product->category)->name ?? 'Produits';
+        $ref = $product->sku ?? 'REF-' . $product->id;
+        $desc = strip_tags($product->description ?? '');
+        $short = mb_strlen($desc) > 180 ? mb_substr($desc, 0, 180) . '...' : $desc;
+        $noteFmt = number_format((float) $ratingAvg, 1, ',', '');
+        $favIds = auth()->check() ? auth()->user()->wishlistProducts()->pluck('produits.id')->all() : [];
+        $hexMap = ['noir' => '#111827', 'blanc' => '#ffffff', 'rouge' => '#dc2626', 'bleu' => '#2563eb', 'vert' => '#16a34a', 'jaune' => '#facc15', 'rose' => '#f472b6', 'gris' => '#9ca3af', 'violet' => '#7c3aed', 'orange' => '#f97316', 'marron' => '#92400e', 'beige' => '#e7d8b7', 'dor' => '#d4af37', 'argent' => '#c0c0c0'];
+        $hexOf = function ($nom) use ($hexMap) {
+            $n = mb_strtolower(trim((string) $nom));
+            foreach ($hexMap as $k => $h) {
+                if (str_contains($n, $k)) {
+                    return $h;
+                }
+            }
+            return '#e5e7eb';
+        };
+        $catLower = mb_strtolower($catName);
+        $catIcon = 'i-phones';
+        if (str_contains($catLower, 'montre')) {
+            $catIcon = 'i-watch';
+        } elseif (str_contains($catLower, 'audio') || str_contains($catLower, 'enceinte') || str_contains($catLower, 'casque') || str_contains($catLower, 'son')) {
+            $catIcon = 'i-speaker';
+        } elseif (str_contains($catLower, 'electrom') || str_contains($catLower, 'lave') || str_contains($catLower, 'cuisine') || str_contains($catLower, 'maison')) {
+            $catIcon = 'i-washer';
+        } elseif (str_contains($catLower, 'ventil') || str_contains($catLower, 'clim')) {
+            $catIcon = 'i-fan';
+        } elseif (str_contains($catLower, 'phone') || str_contains($catLower, 'tel') || str_contains($catLower, 'smart') || str_contains($catLower, 'electron') || str_contains($catLower, 'informatique')) {
+            $catIcon = 'i-phone';
+        }
+    @endphp
 
-        <!-- ============================================-->
-        <!-- <section> begin ============================-->
-        <section class="py-0">
-            <div class="container-small">
-                <nav class="mb-3" aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a
-                                href="#">{{ optional($product->category)->name ?? 'Products' }}</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">{{ $product->name ?? 'Product' }}</li>
-                    </ol>
-                </nav>
-                <div class="row g-5 mb-5 mb-lg-8" data-product-details="data-product-details">
-                    <div class="col-12 col-lg-6">
-                        <div class="row g-3 mb-3">
-                            <div class="col-12 col-md-2 col-lg-12 col-xl-2">
-                                <div class="swiper-products-thumb swiper swiper theme-slider overflow-visible"
-                                    id="swiper-products-thumb" wire:ignore></div>
-                            </div>
-                            <div class="col-12 col-md-10 col-lg-12 col-xl-10">
-                                <div
-                                    class="d-flex align-items-center border border-translucent rounded-3 text-center h-100">
-                                    <div class="swiper swiper theme-slider" data-thumb-target="swiper-products-thumb"
-                                        data-products-swiper='{"slidesPerView":1,"spaceBetween":16,"thumbsEl":".swiper-products-thumb"}'
-                                        wire:ignore>
-                                    </div>
+    <div class="pdp" id="pdp">
+        <div class="pdp-gal">
+            <div class="g-main" id="gMain" style="background-image:url('{{ $mainImg }}')">
+                @if ($discount > 0)
+                    <span class="off">-{{ $discount }}%</span>
+                @endif
+                @auth
+                    <button class="fav{{ $iswishlisted ? ' on' : '' }}" type="button" aria-label="{{ $iswishlisted ? 'Retirer des favoris' : 'Ajouter aux favoris' }}" title="Favori"
+                        wire:click="toggleWishlist({{ $product->id }})"><svg class="ic">
+                            <use href="#i-heart" />
+                        </svg><span class="tip">{{ $iswishlisted ? 'Retirer des favoris' : 'Ajouter aux favoris' }}</span></button>
+                @else
+                    <a class="fav" href="{{ route('login') }}" aria-label="Ajouter aux favoris" title="Favori"><svg class="ic">
+                            <use href="#i-heart" />
+                        </svg><span class="tip">Connectez-vous pour liker</span></a>
+                @endauth
+                <button class="g-nav prev" type="button" data-gal="-1" aria-label="Image précédente"><svg class="ic">
+                        <use href="#i-chevron" />
+                    </svg></button>
+                <button class="g-nav next" type="button" data-gal="1" aria-label="Image suivante"><svg class="ic">
+                        <use href="#i-chevron" />
+                    </svg></button>
+            </div>
+            <div class="g-thumbs">
+                @foreach ($images as $i => $img)
+                    <button type="button" class="g-th{{ $i === 0 ? ' on' : '' }}" data-th="{{ $i }}"
+                        data-src="{{ $img }}" style="background-image:url('{{ $img }}')"><span>Vue
+                            {{ $i + 1 }}</span></button>
+                @endforeach
+            </div>
+        </div>
+
+        <div class="pdp-info">
+            @if ($prevProduct || $nextProduct)
+                <div class="siblings">
+                    @if ($prevProduct)
+                        <a class="sib"
+                            href="{{ route('produits.show', ['slug' => $prevProduct['slug'], 'id' => $prevProduct['id']]) }}"
+                            title="{{ $prevProduct['name'] }}"><span class="sib-k">← Précédent</span><span
+                                class="sib-n">{{ $prevProduct['name'] }}</span></a>
+                    @endif
+                    @if ($prevProduct)
+                        <span class="sib-c">{{ $prevProduct['pos'] }} / {{ $prevProduct['total'] }}</span>
+                    @endif
+                    @if ($nextProduct)
+                        <a class="sib next"
+                            href="{{ route('produits.show', ['slug' => $nextProduct['slug'], 'id' => $nextProduct['id']]) }}"
+                            title="{{ $nextProduct['name'] }}"><span class="sib-k">Suivant →</span><span
+                                class="sib-n">{{ $nextProduct['name'] }}</span></a>
+                    @endif
+                </div>
+            @endif
+            <div class="tagline"><svg class="ic">
+                    <use href="#i-b2-tag" />
+                </svg><span>{{ $catName }} · Réf. {{ $ref }}</span></div>
+            <h1>{{ $product->name ?? 'Produit' }}</h1>
+            <div class="rating-row">
+                <span class="stars" aria-hidden="true">@for ($i = 1; $i <= 5; $i++)<svg viewBox="0 0 24 24"
+                        class="{{ $i <= round($ratingAvg) ? '' : 'empty' }}">
+                        <use href="#i-b2-star" />
+                    </svg>@endfor</span>
+                <b>{{ $noteFmt }}</b><span>({{ $ratingCount }} avis)</span>
+                <span class="sep2"></span><span>{{ $vendus }} vendus</span>
+                <span class="sep2"></span><span class="stock {{ $stCls }}">{{ $stTxt }}</span>
+            </div>
+            <div class="pricebox">
+                <span class="now">{{ $this->formatFcfa($price) }}</span>
+                @if ($original > $price)
+                    <span class="was">{{ $this->formatFcfa($original) }}</span>
+                    <span class="save">Vous économisez {{ $this->formatFcfa($original - $price) }}</span>
+                @endif
+            </div>
+            @if ($original > $price)
+                <div class="flash-line"><svg class="ic" style="fill:currentColor;stroke:currentColor">
+                        <use href="#i-bolt" />
+                    </svg><span>Offre flash — se termine dans</span><span class="count" id="flash"><b>05</b><i>:</i><b>59</b><i>:</i><b>59</b></span>
+                </div>
+            @endif
+            @if ($short)
+                <p class="lead">{{ $short }}</p>
+            @endif
+
+            @if (!empty($couleurs) && count($couleurs))
+                <div class="opt" id="optCouleur">
+                    <label>Couleur : <b data-lab>{{ $couleurs->first()->pivot->value ?? '' }}</b></label>
+                    <div class="swatches">
+                        @foreach ($couleurs as $i => $c)
+                            <button type="button" class="swatch{{ $i === 0 ? ' on' : '' }}"
+                                data-optval="{{ $c->pivot->value ?? '' }}" style="background:{{ $hexOf($c->pivot->value ?? '') }}"
+                                title="{{ $c->pivot->value ?? '' }}" aria-label="{{ $c->pivot->value ?? '' }}"></button>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            @php
+                $iconFor = function ($type) {
+                    $t = mb_strtolower(trim((string) $type));
+                    if (str_contains($t, 'marque') || str_contains($t, 'brand')) return '#i-b2-tag';
+                    if (str_contains($t, 'stockage') || str_contains($t, 'disque') || str_contains($t, 'mémoire') || str_contains($t, 'memoire') || str_contains($t, 'rom')) return '#i-phone';
+                    if (str_contains($t, 'ram')) return '#i-bolt';
+                    if (str_contains($t, 'ecran') || str_contains($t, 'affichage') || str_contains($t, 'taille')) return '#i-grid';
+                    if (str_contains($t, 'batterie') || str_contains($t, 'autonomie')) return '#i-card';
+                    if (str_contains($t, 'process') || str_contains($t, 'cpu') || str_contains($t, 'puce')) return '#i-bolt';
+                    if (str_contains($t, 'cam') || str_contains($t, 'photo')) return '#i-search';
+                    if (str_contains($t, 'poids')) return '#i-bag';
+                    if (str_contains($t, 'garantie')) return '#i-b2-lock';
+                    return '#i-b2-check';
+                };
+                $selOpts = $this->selectedOptions ?? [];
+            @endphp
+
+            {{-- Options sélectionnables à l'achat : toutes les caractéristiques groupées par type --}}
+            @if (!empty($optionGroups))
+                <div class="opt" id="optChoix">
+                    <label>Choisir vos options <span style="font-weight:500;color:var(--grey)">· prises en
+                            compte dans le panier</span></label>
+                    @foreach ($optionGroups as $grp)
+                        @php
+                            $gKey = $grp['key'];
+                            $gSel = $selOpts[$gKey] ?? null;
+                            $isColor = in_array($gKey, ['couleur', 'couleur_tissu']);
+                        @endphp
+                        <div class="opt-grp" data-opt-group="{{ $gKey }}">
+                            <label>{{ $grp['label'] }} : <b>{{ $gSel ?? '—' }}</b></label>
+                            @if ($isColor)
+                                <div class="swatches">
+                                    @foreach ($grp['values'] as $v)
+                                        <button type="button" class="swatch{{ $gSel === $v['display'] ? ' on' : '' }}"
+                                            wire:click="selectOption({{ Js::from($gKey) }}, {{ Js::from($v['display']) }})"
+                                            style="background:{{ $hexOf($v['value']) }}"
+                                            title="{{ $v['display'] }}"
+                                            aria-label="{{ $grp['label'] }} {{ $v['display'] }}"></button>
+                                    @endforeach
                                 </div>
-                            </div>
-                        </div>
-                        <div class="d-flex">
-                            @if (auth()->check())
-                                @if ($iswishlisted)
-                                    <button wire:click="toggleWishlist({{ $product->id }})"
-                                        class="btn btn-lg btn-outline-warning rounded-pill w-100 me-3 px-2 px-sm-4 fs-9 fs-sm-8">
-
-                                        <span class="fas fa-heart text-danger"></span>Remove from wishlist
-
-                                    </button>
-                                @else
-                                    <button wire:click="toggleWishlist({{ $product->id }})"
-                                        class="btn btn-lg btn-outline-warning rounded-pill w-100 me-3 px-2 px-sm-4 fs-9 fs-sm-8"><span
-                                            class="me-2 far fa-heart"></span>Add to wishlist
-
-                                    </button>
-                                @endif
-                                @if ($inStock)
-                                    <a class="btn btn-lg btn-warning rounded-pill w-100 fs-9 fs-sm-8"
-                                        onclick="addToCartWithQty({{ $product->id }})"><span
-                                            class="fas fa-shopping-cart me-2"></span>Add to cart</a>
-                                @else
-                                    <button type="button"
-                                        class="btn btn-lg btn-secondary rounded-pill w-100 fs-9 fs-sm-8" disabled><span
-                                            class="fas fa-ban me-2"></span>Rupture de stock</button>
-                                @endif
                             @else
-                                <a href="{{ route('login') }}"
-                                    class="btn btn-lg btn-outline-warning rounded-pill w-100 me-3 px-2 px-sm-4 fs-9 fs-sm-8"><span
-                                        class="me-2 far fa-heart"></span>Add to wishlist</a>
-                                @if ($inStock)
-                                    <a class="btn btn-lg btn-warning rounded-pill w-100 fs-9 fs-sm-8"
-                                        href="{{ route('login') }}"><span class="fas fa-shopping-cart me-2"></span>Add to
-                                        cart</a>
-                                @else
-                                    <button type="button"
-                                        class="btn btn-lg btn-secondary rounded-pill w-100 fs-9 fs-sm-8" disabled><span
-                                            class="fas fa-ban me-2"></span>Rupture de stock</button>
-                                @endif
+                                <div class="opt-pills">
+                                    @foreach ($grp['values'] as $v)
+                                        <button type="button" class="opt-pill{{ $gSel === $v['display'] ? ' on' : '' }}"
+                                            wire:click="selectOption({{ Js::from($gKey) }}, {{ Js::from($v['display']) }})"
+                                            aria-label="{{ $grp['label'] }} {{ $v['display'] }}">{{ $v['display'] }}</button>
+                                    @endforeach
+                                </div>
                             @endif
                         </div>
-                    </div>
-                    <div class="col-12 col-lg-6">
-                        <div class="d-flex flex-column justify-content-between h-100">
-                            <div>
-                                <div class="d-flex flex-wrap align-items-center mb-2">
-                                    <div class="me-2">
-                                        @for ($i = 1; $i <= 5; $i++)
-                                            @php
-                                                $filled = $ratingAvg >= $i;
-                                                $half = !$filled && $ratingAvg >= $i - 0.5;
-                                            @endphp
-                                            @if ($filled)
-                                                <span class="fa fa-star text-warning"></span>
-                                            @elseif($half)
-                                                <span class="fa fa-star-half-alt star-icon text-warning"></span>
-                                            @else
-                                                <span class="fa-regular fa-star text-warning-light"
-                                                    data-bs-theme="light"></span>
-                                            @endif
-                                        @endfor
-                                    </div>
-                                    <p class="text-primary fw-semibold mb-0">{{ number_format($ratingAvg, 1) }} / 5 •
-                                        {{ $ratingCount }} avis
-                                    </p>
-                                </div>
-                                <h3 class="mb-3 lh-sm">{{ $product->name ?? 'Produit' }}</h3>
-                                <div class="d-flex flex-wrap align-items-start mb-3">
-                                    @if (optional($product->brand)->name)
-                                        <span
-                                            class="badge text-bg-success fs-9 rounded-pill me-2 fw-semibold">{{ optional($product->brand)->name }}</span>
-                                    @endif
-                                    @if ($product->sku ?? false)
-                                        <span class="fw-semibold">SKU: {{ $product->sku }}</span>
-                                    @endif
-                                </div>
-                                <div class="d-flex flex-wrap align-items-center">
-                                    <h1 class="me-3">{{ number_format($price, 2) }} {{ config('app.currency', '') }}
-                                    </h1>
-                                    @if ($original > $price)
-                                        <p class="text-body-quaternary text-decoration-line-through fs-6 mb-0 me-3">
-                                            {{ number_format($original, 2) }} {{ config('app.currency', '') }}
-                                        </p>
-                                        @php $discount = $original > 0 ? round((($original - $price) / $original) * 100) : 0; @endphp
-                                        <p class="text-warning fw-bolder fs-6 mb-0">{{ $discount }}% off</p>
-                                    @endif
-                                </div>
-                                @if ($inStock)
-                                    <p class="text-success fw-semibold fs-7 mb-2">En stock</p>
-                                @else
-                                    <p class="text-danger fw-semibold fs-7 mb-2">Rupture de stock</p>
-                                @endif
-                                @php
-                                    $desc = strip_tags($product->description ?? '');
-                                    $short = mb_strlen($desc) > 160 ? mb_substr($desc, 0, 160) . '...' : $desc;
-                                @endphp
-                                <p class="mb-2 text-body-secondary">{!! nl2br(e($short)) !!}</p>
-                            </div>
-                            <div>
-                                <div class="mb-3">
-                                    <p class="fw-semibold mb-2 text-body" wire:ignore>
-                                        Color :
-                                        <span class="text-body-emphasis" data-product-color="data-product-color">
-                                        </span>
-                                    </p>
-                                    <div class="d-flex product-color-variants"
-                                        data-product-color-variants="data-product-color-variants">
-                                        <div class="rounded-1 border border-translucent me-2 {{ $alwaysActive ? 'active' : '' }}"
-                                            data-variant="@foreach ($couleurs as $couleur)
-                                            {{ $couleur->pivot->value }}{{ !$loop->last ? ', ' : '' }} @endforeach "
-                                            data-products-images='{{ json_encode($images) }}'>
-                                            <img src="{{ $images[0] }}" alt="" width="38" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="row g-3 g-sm-5 align-items-end">
-                                    <div class="col-12 col-sm">
-                                        <p class="fw-semibold mb-2 text-body">Quantité : </p>
-                                        <div class="d-flex justify-content-between align-items-end">
-                                            <!-- Le FORM (invisible) -->
-                                            <form wire:submit="addToCart({{ $product->id }})"
-                                                id="cart-form-{{ $product->id }}" style="display: contents;">
-                                                <input type="number" name="quantity" hidden value="1"
-                                                    id="qty-hidden-{{ $product->id }}" />
-                                            </form>
-
-                                            <div id="qty-container-{{ $product->id }}"
-                                                class="d-flex flex-between-center" data-quantity="data-quantity">
-
-                                                <button class="btn btn-phoenix-primary px-3 js-qty-minus"
-                                                    id="qty-minus-{{ $product->id }}" data-action="decrement"><span
-                                                        class="fas fa-minus"></span></button>
-                                                <input
-                                                    class="form-control text-center input-spin-none bg-transparent border-0 outline-none qty-input"
-                                                    wire:model="quantity" style="width:60px;" type="number"
-                                                    min="1" value="1" disabled />
-                                                <button class="btn btn-phoenix-primary px-3 js-qty-plus"
-                                                    data-action="increment" id="qty-plus-{{ $product->id }}"><span
-                                                        class="fas fa-plus"></span></button>
-                                            </div>
-                                            <button id="shareBtn" class="btn btn-phoenix-primary px-3 border-0"
-                                                title="Partager">
-                                                <i class="fas fa-share-alt fs-7"></i>
-                                                <span class="share-status d-none ms-1">✓</span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    @endforeach
+                    @if (!empty($selOpts))
+                        <div class="sel-recap"><svg class="ic">
+                                <use href="#i-b2-check" />
+                            </svg><span><b>Sélection :</b>
+                                @foreach ($this->selectedOptionsLabels() as $lk => $lv)
+                                    {{ $lk }} : <b>{{ $lv }}</b>@if (!$loop->last) · @endif
+                                @endforeach
+                            </span></div>
+                    @endif
                 </div>
-            </div><!-- end of .container-->
-        </section><!-- <section> close ============================-->
-        <!-- ============================================-->
+            @endif
 
-
-
-        <!-- ============================================-->
-        <!-- <section> begin ============================-->
-        <section class="py-0">
-            <div class="container-small">
-                <ul class="nav nav-underline fs-9 mb-4" id="productTab" role="tablist">
-                    <li class="nav-item"><a class="nav-link {{ $tab === 'description' ? 'active' : '' }}"
-                            id="description-tab" data-bs-toggle="tab" href="#tab-description" role="tab"
-                            aria-controls="tab-description" aria-selected="true"
-                            wire:click="$set('tab', 'description')">Description</a></li>
-                    <li class="nav-item"><a class="nav-link {{ $tab === 'specification' ? 'active' : '' }}"
-                            id="specification-tab" data-bs-toggle="tab" href="#tab-specification" role="tab"
-                            aria-controls="tab-specification" aria-selected="false"
-                            wire:click="$set('tab', 'specification')">Specification</a></li>
-                    <li class="nav-item"><a class="nav-link {{ $tab === 'reviews' ? 'active' : '' }}"
-                            id="reviews-tab" data-bs-toggle="tab" href="#tab-reviews" role="tab"
-                            aria-controls="tab-reviews" aria-selected="false"
-                            wire:click="$set('tab', 'reviews')">Avis &amp; notes
-                            ({{ $ratingCount }})</a></li>
-                </ul>
-                <div class="row gx-3 gy-7">
-                    <div class="col-12 col-lg-7 col-xl-8">
-                        <div class="tab-content" id="productTabContent">
-                            <div class="tab-pane pe-lg-6 pe-xl-12 fade {{ $tab === 'description' ? 'show active' : '' }} text-body-emphasis"
-                                id="tab-description" role="tabpanel" aria-labelledby="description-tab">
-                                <p class="mb-5">{!! $product->description ?? 'Aucune description.' !!}</p>
-                                @php $descImage = optional($product->getPhoto())->getImageUrl(530, 530); @endphp
-                                @if ($descImage || !empty($images))
-                                    <a href="{{ $descImage ?? $images[0] }}" data-gallery="gallery-description"><img
-                                            class="img-fluid mb-5 rounded-3" src="{{ $descImage ?? $images[0] }}"
-                                            alt=""></a>
-                                @endif
-                            </div>
-                            <div class="tab-pane pe-lg-6 {{ $tab === 'specification' ? 'show active' : '' }} pe-xl-12 fade"
-                                id="tab-specification" role="tabpanel" aria-labelledby="specification-tab">
-
-                                <!-- Ici : autres blocs éventuels (Processor, Storage, etc.) si tu en veux -->
-
-                                <h3 class="mb-0 mt-6 ms-4 fw-bold">Additional Specifications</h3>
-
-                                @if ($product->caracteristiques->isNotEmpty())
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th style="width: 40%"> </th>
-                                                <th style="width: 60%"></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach ($product->caracteristiques as $c)
-                                                <tr>
-                                                    <td class="bg-body-highlight align-middle">
-                                                        <h6
-                                                            class="mb-0 text-body text-uppercase fw-bolder px-4 fs-9 lh-sm">
-                                                            {{ $c->name }}
-                                                        </h6>
-                                                    </td>
-                                                    <td class="px-5 mb-0">
-                                                        {{ $c->pivot->value }}
-                                                        @if ($c->unite)
-                                                            {{ $c->unite }}
-                                                        @endif
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                @else
-                                    <p class="ms-4 text-muted">Aucune spécification disponible pour ce produit.</p>
-                                @endif
-
-                            </div>
-
-                            <div class="tab-pane fade {{ $tab === 'reviews' ? 'show active' : '' }}" id="tab-reviews"
-                                role="tabpanel" aria-labelledby="reviews-tab">
-                                <div class="bg-body-emphasis rounded-3 p-4 border border-translucent">
-                                    <div class="row g-3 justify-content-between mb-4">
-                                        <div class="col-auto">
-                                            <div class="d-flex align-items-center flex-wrap">
-                                                <h2 class="fw-bolder me-3">{{ number_format($ratingAvg, 1) }}<span
-                                                        class="fs-8 text-body-quaternary fw-bold">/5</span></h2>
-                                                <div class="me-3">
-                                                    @for ($i = 1; $i <= 5; $i++)
-                                                        @php
-                                                            $filled = $ratingAvg >= $i;
-                                                            $half = !$filled && $ratingAvg >= $i - 0.5;
-                                                        @endphp
-                                                        @if ($filled)
-                                                            <span class="fa fa-star text-warning fs-6"></span>
-                                                        @elseif($half)
-                                                            <span
-                                                                class="fa fa-star-half-alt star-icon text-warning fs-6"></span>
-                                                        @else
-                                                            <span class="fa-regular fa-star text-warning-light fs-6"
-                                                                data-bs-theme="light"></span>
-                                                        @endif
-                                                    @endfor
-                                                </div>
-                                                <p class="text-body mb-0 fw-semibold fs-7">{{ $ratingCount }} notes
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <!-- Bouton pour ouvrir le modal -->
-                                            <button type="button" class="btn btn-outline-primary"
-                                                data-bs-toggle="modal" data-bs-target="#reviewModal">
-                                                Write a review
-                                            </button>
-
-                                            <!-- Modale principale (téléportée dans <body> pour un affichage correct) -->
-                                            @teleport('body')
-                                            <div class="modal fade" id="reviewModal" tabindex="-1"
-                                                aria-labelledby="reviewModalLabel" aria-hidden="true"
-                                                wire:ignore.self>
-                                                <div class="modal-dialog modal-dialog-centered modal-lg">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header border-0 pb-0">
-                                                            <h5 class="modal-title" id="reviewModalLabel">Add your
-                                                                review</h5>
-                                                            <button type="button" class="btn-close"
-                                                                data-bs-dismiss="modal" aria-label="Close"></button>
-                                                        </div>
-
-                                                        <form wire:submit.prevent="submitReview">
-                                                            <div class="modal-body pt-2 pb-4">
-
-                                                                <!-- Rater (5 étoiles) -->
-                                                                <div class="mb-4 text-center">
-                                                                    <div wire:ignore id="stars"
-                                                                        class="rating-stars mb-2 fs-1 text-warning">
-                                                                        ★ ★ ★ ★ ★
-                                                                    </div>
-                                                                    <div class="text-muted fs-7" hidden>
-                                                                        Selected: <span
-                                                                            id="rating-value">{{ $rating ?? 0 }} /
-                                                                            5</span>
-                                                                    </div>
-                                                                    <input type="hidden" wire:model="rating"
-                                                                        id="rating-input">
-                                                                </div>
-
-                                                                <!-- Commentaire -->
-                                                                <div class="mb-4">
-                                                                    <label class="form-label">Your review</label>
-                                                                    <textarea wire:model.defer="commentaire" class="form-control" rows="4"
-                                                                        placeholder="Tell us about your experience"></textarea>
-                                                                </div>
-
-                                                                <!-- Upload d'images -->
-                                                                <div class="mb-4">
-                                                                    <label class="form-label">Attach photos
-                                                                        (optional)</label>
-                                                                    <input type="file" wire:model="avisimages"
-                                                                        accept="image/*" multiple
-                                                                        class="form-control">
-                                                                </div>
-
-                                                            </div>
-                                                            <div class="modal-footer border-0 pt-0">
-                                                                <button type="button" class="btn btn-light"
-                                                                    data-bs-dismiss="modal">Cancel</button>
-                                                                <button type="submit"
-                                                                    class="btn btn-primary rounded-pill">
-                                                                    <span>Submit Review</span>
-                                                                </button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            @endteleport
-
-
-                                        </div>
-                                    </div>
-                                    @forelse($reviews as $review)
-                                        <div class="mb-4 hover-actions-trigger btn-reveal-trigger">
-                                            <div class="d-flex justify-content-between">
-                                                <h5 class="mb-2">
-                                                    @for ($i = 1; $i <= 5; $i++)
-
-                                                        <span
-                                                            class="{{ ($i <= (int) ($review->nb_etoiles ?? 0)) ? 'fa fa-star' : 'fa-regular fa-star' }} text-warning"></span>
-                                                    @endfor
-                                                    <span class="text-body-secondary ms-1">par</span>
-                                                    {{ optional($review->user)->name ?? 'Client' }}
-                                                </h5>
-                                            </div>
-                                            <p class="text-body-tertiary fs-9 mb-1">
-                                                {{ optional($review->created_at)->diffForHumans() }}
-                                            </p>
-                                            <p class="text-body-highlight mb-1">{{ $review->commentaire ?? '' }}</p>
-                                            <div class="row g-2 mb-2">
-                                                @if ($review->photos->isNotEmpty())
-                                                    <div class="row g-2 mb-2">
-                                                        @foreach ($review->photos as $photo)
-                                                            <div class="col-auto">
-                                                                <a href="{{ $photo->getImageUrl(800, 800) }}"
-                                                                    data-gallery="gallery-{{ $review->id }}">
-                                                                    <img src="{{ $photo->getImageUrl(164, 164) }}"
-                                                                        alt="" height="164" />
-                                                                </a>
-                                                            </div>
-                                                        @endforeach
-                                                    </div>
-                                                @endif
-                                            </div>
-                                            @if ($review->response)
-                                                <div class="d-flex">
-                                                    <span class="fas fa-reply fa-rotate-180 me-2"></span>
-                                                    <div>
-                                                        <h5 class="fs-8 mb-0">
-                                                            Respond from Admin
-                                                            <span class="text-body-tertiary fs-9 ms-2">
-                                                                {{ $review->response->created_at->diffForHumans() }}
-                                                            </span>
-                                                        </h5>
-                                                        <p class="text-body-highlight mb-0">
-                                                            {{ $review->response->message }}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            @endif
-
-                                        </div>
-                                    @empty
-                                        <p class="text-body-tertiary mb-0">Aucun avis pour le moment.</p>
-                                    @endforelse
-
-                                    {{ $reviews->links() }}
-                                </div>
-                            </div>
-                        </div>
+            @if (!empty($autresCaracs) && count($autresCaracs))
+                <div class="opt" id="optSpecs">
+                    <label>Détails produit <span style="font-weight:500;color:var(--grey)">· {{ count($autresCaracs) }} infos</span></label>
+                    <div class="spec-chips">
+                        @foreach ($autresCaracs->take(6) as $c)
+                            <span class="spec-chip" title="{{ $c->name }} : {{ $c->pivot->value ?? '' }}{{ $c->unite ? ' '.$c->unite : '' }}">
+                                <span class="e"><svg class="ic"><use href="{{ $iconFor($c->type ?? $c->name) }}" /></svg></span>
+                                <span class="k">{{ $c->name }}</span>
+                                <span class="v">{{ $c->pivot->value ?? '—' }}{{ $c->unite ? ' '.$c->unite : '' }}</span>
+                            </span>
+                        @endforeach
                     </div>
-                    {{-- Section Bundle --}}
-                    <div class="col-12 col-lg-5 col-xl-4">
-                        <div class="card shadow-sm h-100">
-                            <div class="card-body">
-                                <h5 class="text-body-emphasis mb-3">🛒 Souvent achetés ensemble</h5>
-
-                                <p class="text-body-secondary fs-8 mb-3">
-                                    avec <strong>{{ $product->name }}</strong>
-                                </p>
-
-                                <div class="border-dashed border-y border-translucent py-4 mb-4">
-                                    @forelse($bundleItems as $item)
-                                        <div class="d-flex align-items-center mb-4">
-                                            <div class="form-check me-3">
-                                                <input class="form-check-input bundle-checkbox" type="checkbox"
-                                                    id="bundle-{{ $item->id }}"
-                                                    wire:change="toggleBundleItem({{ $item->id }})"
-                                                    {{ in_array($item->id, $selectedItems) ? 'checked' : '' }}>
-                                                <label class="form-check-label"
-                                                    for="bundle-{{ $item->id }}"></label>
-                                            </div>
-
-                                            <div class="flex-grow-1">
-                                                <a href="{{ route('produits.show', ['slug' => $item->getSlug(), 'id' => $item->id]) }}"
-                                                    class="text-decoration-none">
-                                                    <img src="{{ $item->getPhoto() ? $item->getPhoto()->getImageUrl(60, 60) : asset('assets/img/products/1.png') }}"
-                                                        width="60" height="60" class="rounded shadow-sm me-3"
-                                                        alt="{{ $item->name }}">
-                                                    <div class="d-inline-block align-middle">
-                                                        <div class="fw-semibold line-clamp-2 fs-9 mb-1">
-                                                            {{ $item->name }}</div>
-                                                        <div class="text-primary fw-bold">
-                                                            {{ number_format($item->prix_promo ?? $item->price, 0, ',', ' ') }}
-                                                            FCFA</div>
-                                                    </div>
-                                                </a>
-                                            </div>
-                                        </div>
-                                    @empty
-                                        <p class="text-center text-muted py-4">Aucun produit complémentaire</p>
-                                    @endforelse
-                                </div>
-
-                                {{-- Total DYNAMIQUE --}}
-                                <div class="d-flex align-items-end justify-content-between pt-3">
-                                    <div>
-                                        <small class="text-muted mb-1 d-block">Total ({{ $selectedItemsCount }}
-                                            articles)</small>
-                                        <h3 class="mb-0 text-success fw-bold">
-                                            {{ number_format($bundleTotal, 0, ',', ' ') }} FCFA</h3>
-                                    </div>
-                                    <button class="btn btn-warning px-4 py-2" wire:click="addBundleToCart"
-                                        wire:loading.attr="disabled">
-                                        Ajouter {{ $selectedItemsCount }} articles
-                                        <i class="fas fa-shopping-cart ms-2"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-
+                    @if (count($autresCaracs) > 6 || $tab !== 'spec')
+                        <button type="button" class="spec-more" wire:click="$set('tab', 'spec')">Voir toutes les caractéristiques <svg class="ic ic-sm"><use href="#i-chevron" /></svg></button>
+                    @endif
                 </div>
-            </div><!-- end of .container-->
-        </section><!-- <section> close ============================-->
-        <!-- ============================================-->
+            @endif
 
+            <div class="qty-row">
+                <div class="stepper">
+                    <button type="button" wire:click="decrementQty" aria-label="Diminuer"><svg class="ic">
+                            <use href="#i-b2-minus" />
+                        </svg></button>
+                    <input type="number" min="1" max="{{ max($stock, 1) }}" wire:model.live.debounce.300ms="quantity"
+                        aria-label="Quantité">
+                    <button type="button" wire:click="incrementQty" aria-label="Augmenter"><svg class="ic">
+                            <use href="#i-b2-plus" />
+                        </svg></button>
+                </div>
+                <span class="hint">Total : <b style="color:var(--pink);font-size:15px">{{ $this->formatFcfa($price * max(1, (int) $quantity)) }}</b></span>
+            </div>
+
+            <div class="pdp-actions">
+                @auth
+                    <button class="btn-solid" type="button" wire:click="addToCart({{ $product->id }})"
+                        @if (!$inStock) disabled @endif><svg class="ic">
+                            <use href="#i-bag" />
+                        </svg> Ajouter au panier</button>
+                    <button class="btn-line" type="button" wire:click="addToCart({{ $product->id }})"
+                        @if (!$inStock) disabled @endif><svg class="ic">
+                            <use href="#i-bolt" />
+                        </svg> Acheter maintenant</button>
+                    <button class="btn-line{{ $iswishlisted ? ' on' : '' }}" type="button"
+                        wire:click="toggleWishlist({{ $product->id }})" aria-label="Favoris"><svg class="ic">
+                            <use href="#i-heart" />
+                        </svg> Favoris</button>
+                    <a class="btn-line" href="{{ $this->whatsappOrderUrl() }}" target="_blank" rel="noopener"
+                        aria-label="Commander {{ $product->name }} sur WhatsApp" title="Commander sur WhatsApp"><svg class="ic ic-wa">
+                            <use href="#i-whatsapp" />
+                        </svg> WhatsApp</a>
+                @else
+                    <a class="btn-solid" href="{{ route('login') }}"><svg class="ic">
+                            <use href="#i-bag" />
+                        </svg> Ajouter au panier</a>
+                    <a class="btn-line" href="{{ route('login') }}"><svg class="ic">
+                            <use href="#i-bolt" />
+                        </svg> Acheter maintenant</a>
+                    <a class="btn-line" href="{{ route('login') }}" aria-label="Favoris"><svg class="ic">
+                            <use href="#i-heart" />
+                        </svg> Favoris</a>
+                    <a class="btn-line" href="{{ $this->whatsappOrderUrl() }}" target="_blank" rel="noopener"
+                        aria-label="Commander {{ $product->name }} sur WhatsApp" title="Commander sur WhatsApp"><svg class="ic ic-wa">
+                            <use href="#i-whatsapp" />
+                        </svg> WhatsApp</a>
+                @endauth
+            </div>
+
+            <div class="assurances">
+                <div><svg class="ic">
+                        <use href="#i-truck" />
+                    </svg><span><b>Livraison offerte dès 25 000 FCFA</b>Bamako 24 h · Régions 48-72 h · sinon calculée au
+                        panier</span></div>
+                <div><svg class="ic">
+                        <use href="#i-card" />
+                    </svg><span><b>Paiement Mobile Money</b>Orange Money · Moov Money · Wave · espèces à la
+                        livraison</span></div>
+                <div><svg class="ic">
+                        <use href="#i-headset" />
+                    </svg><span><b>Support 7j/7 — +223 82 01 95 83</b>Conseil produit et suivi de commande</span></div>
+            </div>
+        </div>
     </div>
 
-    <!-- ============================================-->
-    <!-- <section> begin ============================-->
-    <section class="py-0 mb-9">
-        <div class="container">
-            <div class="d-flex flex-between-center mb-3">
-                <div>
-                    <h3>Produits similaires</h3>
-                    <p class="mb-0 text-body-tertiary fw-semibold">Essentiels pour une meilleure vie</p>
-                </div>
+    <div id="tabs">
+        <div class="tabs">
+            <div class="tabs-head">
+                <button type="button" class="tab-btn{{ $tab === 'desc' ? ' on' : '' }}"
+                    wire:click="$set('tab', 'desc')">Description</button>
+                <button type="button" class="tab-btn{{ $tab === 'spec' ? ' on' : '' }}"
+                    wire:click="$set('tab', 'spec')">Caractéristiques</button>
+                <button type="button" class="tab-btn{{ $tab === 'avis' ? ' on' : '' }}"
+                    wire:click="$set('tab', 'avis')">Avis ({{ $ratingCount }})</button>
+                <button type="button" class="tab-btn{{ $tab === 'exp' ? ' on' : '' }}"
+                    wire:click="$set('tab', 'exp')">Livraison &amp; retour</button>
             </div>
-            <div class="swiper-theme-container products-slider">
-                <div class="swiper swiper theme-slider"
-                    data-swiper='{"slidesPerView":1,"spaceBetween":16,"breakpoints":{"450":{"slidesPerView":2,"spaceBetween":16},"768":{"slidesPerView":3,"spaceBetween":16},"992":{"slidesPerView":4,"spaceBetween":16},"1200":{"slidesPerView":5,"spaceBetween":16},"1540":{"slidesPerView":6,"spaceBetween":16}}}'>
-                    <div class="swiper-wrapper">
-                        @forelse($similarProducts as $p)
-                            <div class="swiper-slide">
-                                <!-- Copie exacte de votre HTML avec variables dynamiques -->
-                                <div class="position-relative text-decoration-none product-card h-100">
-                                    <div class="d-flex flex-column justify-content-between h-100">
-                                        <div>
-                                            <div
-                                                class="border border-1 border-translucent rounded-3 position-relative mb-3">
-                                                <!-- ✅ Bouton Livewire qui ENREGISTRE DIRECT dans wishlist_user_produit -->
-                                                @if (auth()->check())
-                                                    {{-- ✅ CONNECTÉ : wire:click ACTIF --}}
-                                                    <button wire:click="toggleWishlist({{ $p->id }})"
-                                                        class="btn btn-wish btn-wish-primary z-2 p-2" tabindex="-1"
-                                                        style="box-shadow: none; outline: none;"**
-                                                        data-bs-toggle="tooltip" title="Wishlist">
-                                                        <i
-                                                            class="{{ auth()->user()->wishlistProducts->contains($p->id) ? 'fas fa-heart text-danger' : 'far fa-heart' }}"></i>
-                                                    </button>
-                                                @else
-                                                    {{-- ❌ NON CONNECTÉ : bouton disabled --}}
-                                                    <a class="btn btn-wish btn-wish-primary z-2 d-toggle-container"
-                                                        href="{{ route('login') }}" data-bs-toggle="tooltip"
-                                                        data-bs-placement="top" title="Add to wishlist"><span
-                                                            class="fas fa-heart d-block-hover"
-                                                            data-fa-transform="down-1"></span><span
-                                                            class="far fa-heart d-none-hover"
-                                                            data-fa-transform="down-1"></span>
-                                                    </a>
-                                                @endif
-
-
-                                                <img class="img-fluid"
-                                                    src="{{ $p->getPhoto() ? $p->getPhoto()->getImageUrl(530, 530) : asset('assets/img/products/1.png') }}"
-                                                    alt="{{ $p->name }}" />
-                                                @if ($p->is_featured)
-                                                    <span
-                                                        class="badge text-bg-success fs-10 product-verified-badge">Featured<span
-                                                            class="fas fa-star ms-1"></span></span>
-                                                @endif
-                                            </div>
-                                            <a class="stretched-link"
-                                                href="{{ route('produits.show', ['slug' => $p->getSlug(), 'id' => $p->id]) }}">
-                                                <h6 class="mb-2 lh-sm line-clamp-3 product-name">
-                                                    {{ Str::limit($p->name, 60) }}</h6>
-                                            </a>
-                                            <!-- Étoiles rating calculé -->
-                                            <p class="fs-9">
-                                                @for ($i = 1; $i <= 5; $i++)
-                                                    <span
-                                                        class="fa fa-star {{ $i <= round($p->reviews->avg('nb_etoiles') ?? 5) ? 'text-warning' : 'fa-regular text-warning-light' }}"></span>
-                                                @endfor
-                                                <span
-                                                    class="text-body-quaternary fw-semibold ms-1">({{ $p->reviews->count() }}
-                                                    rated)</span>
-                                            </p>
-                                        </div>
-                                        <div>
-                                            @if ($p->sale_price)
-                                                <p class="fs-9 text-body-highlight fw-bold mb-2">Promo spéciale</p>
-                                                <div class="d-flex align-items-center mb-1">
-                                                    <p class="me-2 text-body text-decoration-line-through mb-0">
-                                                        {{ $this->formatFcfa($p->price) }}</p>
-                                                    <h3 class="text-body-emphasis mb-0">
-                                                        {{ $this->formatFcfa($p->sale_price) }} </h3>
-                                                </div>
-                                            @else
-                                                <h3 class="text-body-emphasis">
-                                                    {{ $this->formatFcfa($p->price) }} </h3>
-                                            @endif
-                                            <p class="text-body-tertiary fw-semibold fs-9 lh-1 mb-0">
-                                                {{ $p->colors_count }}
-                                                couleur{{ $p->colors_count > 1 ? 's' : '' }}</p>
-                                        </div>
+            <div class="tabs-body">
+                @if ($tab === 'desc')
+                    {!! $product->description ?? '<p>Aucune description.</p>' !!}
+                @elseif($tab === 'spec')
+                    @php $specList = ($allCaracs ?? $product->caracteristiques ?? collect()); @endphp
+                    @if ($specList && $specList->isNotEmpty())
+                        <div class="spec-chips" style="margin-bottom:16px">
+                            @foreach ($specList as $c)
+                                <span class="spec-chip">
+                                    <span class="e"><svg class="ic"><use href="{{ $iconFor($c->type ?? $c->name) }}" /></svg></span>
+                                    <span class="k">{{ $c->name }}</span>
+                                    <span class="v">{{ $c->pivot->value ?? '—' }}@if ($c->unite) {{ $c->unite }}@endif</span>
+                                </span>
+                            @endforeach
+                        </div>
+                        <table class="spec">
+                            <tbody>
+                                @foreach ($specList as $c)
+                                    <tr>
+                                        <td><span style="display:inline-flex;align-items:center;gap:8px"><svg class="ic ic-sm" style="color:var(--violet-600)"><use href="{{ $iconFor($c->type ?? $c->name) }}" /></svg>{{ $c->name }}</span>@if($c->type)<br><small style="color:#9ca3af;font-size:11px">{{ ucfirst($c->type) }}</small>@endif</td>
+                                        <td><b>{{ $c->pivot->value ?? '—' }}</b>@if ($c->unite) {{ $c->unite }}@endif</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    @else
+                        <div class="empty" style="margin:0"><svg class="ic"><use href="#i-b2-info" /></svg>
+                            <h3 style="font-size:16px">Caractéristiques en cours d'ajout</h3>
+                            <p>Notre équipe complète la fiche technique de ce produit.</p>
+                        </div>
+                    @endif
+                @elseif($tab === 'avis')
+                    @forelse($reviews as $review)
+                        @php $rn = optional($review->user)->name ?? 'Client'; @endphp
+                        <div class="review"><span
+                                class="av">{{ mb_strtoupper(mb_substr(trim($rn), 0, 1)) }}</span>
+                            <div style="flex:1"><b>{{ $rn }}</b>
+                                <small>{{ optional($review->created_at)->format('d/m/Y') }}</small>
+                                <p>{{ $review->commentaire ?? '' }}</p>
+                                @if ($review->relationLoaded('photos') && $review->photos->isNotEmpty())
+                                    <div class="rphotos">
+                                        @foreach ($review->photos as $rp)
+                                            <img src="{{ $rp->getImageUrl(200, 200) }}" alt="Photo avis {{ $rn }}"
+                                                loading="lazy">
+                                        @endforeach
                                     </div>
+                                @endif
+                                @if ($review->relationLoaded('response') && $review->response)
+                                    <div class="rrep"><b>Réponse de la boutique</b>{{ $review->response->message }}</div>
+                                @endif
+                            </div>
+                            <span class="stars" aria-hidden="true">@for ($i = 1; $i <= 5; $i++)<svg
+                                    viewBox="0 0 24 24" class="{{ $i <= round((float) ($review->nb_etoiles ?? 0)) ? '' : 'empty' }}">
+                                    <use href="#i-b2-star" />
+                                </svg>@endfor</span>
+                        </div>
+                    @empty
+                        <p>Aucun avis pour le moment. Soyez le premier à partager votre expérience !</p>
+                    @endforelse
+                    @if ($reviews->hasPages())
+                        <div class="pager">
+                            <button type="button" class="pg-nav" wire:click="previousPage"
+                                @if ($reviews->onFirstPage()) disabled @endif>‹ Précédent</button>
+                            @foreach ($reviews->getUrlRange(1, $reviews->lastPage()) as $page => $url)
+                                <button type="button" wire:click="gotoPage({{ $page }})"
+                                    class="{{ $page == $reviews->currentPage() ? 'on' : '' }}">{{ $page }}</button>
+                            @endforeach
+                            <button type="button" class="pg-nav" wire:click="nextPage"
+                                @if (!$reviews->hasMorePages()) disabled @endif>Suivant ›</button>
+                        </div>
+                    @endif
+                    <div class="avis-card">
+                        @auth
+                            <div class="avis-card-head"><svg class="ic">
+                                    <use href="#i-b2-star" />
+                                </svg><b>Laisser un avis</b><span>{{ $rating }}/5</span></div>
+                            <div class="avis-card-body">
+                                @if (session('review_ok'))
+                                    <p class="avis-ok"><svg class="ic" style="width:17px;height:17px">
+                                            <use href="#i-b2-check" />
+                                        </svg>{{ session('review_ok') }}</p>
+                                @endif
+                                <div class="field">
+                                    <label>Votre note</label>
+                                    <div class="rate-pick">
+                                        @for ($i = 1; $i <= 5; $i++)
+                                            <button type="button" wire:click="$set('rating', {{ $i }})"
+                                                class="{{ $i <= $rating ? 'on' : '' }}"
+                                                aria-label="{{ $i }} étoile(s)">
+                                                <svg viewBox="0 0 24 24" width="24" height="24"
+                                                    style="stroke-width:1;fill:{{ $i <= $rating ? 'var(--pink)' : '#e5e7eb' }};stroke:{{ $i <= $rating ? 'var(--pink)' : '#d1d5db' }}">
+                                                    <use href="#i-b2-star" />
+                                                </svg>
+                                            </button>
+                                        @endfor
+                                    </div>
+                                    @error('rating') <span class="avis-err">{{ $message }}</span> @enderror
                                 </div>
+                                <div class="field">
+                                    <label for="avisComment">Votre commentaire</label>
+                                    <textarea id="avisComment" class="ctrl" rows="4" wire:model="commentaire" placeholder="Qualité, livraison, rapport qualité-prix..."
+                                        style="border-radius:12px;resize:vertical;min-height:96px"></textarea>
+                                    @error('commentaire') <span class="avis-err">{{ $message }}</span> @enderror
+                                </div>
+                                <div class="field">
+                                    <label for="avisPhotos">Photos (optionnel, 5 max)</label>
+                                    <label class="dropzone" for="avisPhotos"><svg class="ic">
+                                            <use href="#i-bag" />
+                                        </svg><span>Cliquez pour ajouter vos photos<br><small
+                                                style="color:var(--grey)">JPG, PNG — 10 Mo max par photo</small></span></label>
+                                    <input id="avisPhotos" type="file" wire:model="avisPhotos" multiple
+                                        accept="image/*" hidden>
+                                    @error('avisPhotos') <span class="avis-err">{{ $message }}</span> @enderror
+                                    @error('avisPhotos.*') <span class="avis-err">{{ $message }}</span> @enderror
+                                    @if (!empty($avisPhotos))
+                                        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px">
+                                            @foreach ($avisPhotos as $idx => $ph)
+                                                <span class="aprev">
+                                                    <img src="{{ $ph->temporaryUrl() }}" alt="Aperçu photo avis">
+                                                    <button type="button" wire:click="removeAvisPhoto({{ $idx }})"
+                                                        aria-label="Retirer cette photo">×</button>
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
+                                <button class="btn-solid" type="button" wire:click="submitReview"
+                                    wire:loading.attr="disabled" style="font-size:14px;padding:13px 26px">
+                                    <svg class="ic"><use href="#i-b2-check" /></svg>
+                                    <span wire:loading.remove wire:target="submitReview">Publier mon avis</span>
+                                    <span wire:loading wire:target="submitReview">Publication…</span>
+                                </button>
                             </div>
-                        @empty
-                            <div class="swiper-slide">
-                                <p class="text-body-tertiary">Aucun produit similaire.</p>
+                        @else
+                            <div class="avis-card-head"><svg class="ic">
+                                    <use href="#i-b2-lock" />
+                                </svg><b>Partagez votre expérience</b></div>
+                            <div class="avis-card-body" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+                                <p style="font-size:13.5px;color:#374151;flex:1;min-width:200px">Connectez-vous pour
+                                    noter ce produit et aider les autres clients.</p>
+                                <a class="btn-solid" href="{{ route('login') }}"
+                                    style="font-size:13.5px;padding:12px 24px">Se connecter</a>
                             </div>
-                        @endforelse
+                        @endauth
                     </div>
-                </div>
-                <div class="swiper-nav">
-                    <div class="swiper-button-next"><span class="fas fa-chevron-right nav-icon"></span></div>
-                    <div class="swiper-button-prev"><span class="fas fa-chevron-left nav-icon"></span></div>
-                </div>
+                @elseif($tab === 'exp')
+                    <table class="spec">
+                        <tbody>
+                            <tr>
+                                <td>Bamako (24 h)</td>
+                                <td>Offerte dès 25 000 FCFA, sinon calculée au panier</td>
+                            </tr>
+                            <tr>
+                                <td>Autres régions (48-72 h)</td>
+                                <td>Calculée au panier selon la destination</td>
+                            </tr>
+                            <tr>
+                                <td>Paiement</td>
+                                <td>Orange Money, Moov Money, Wave, espèces à la livraison</td>
+                            </tr>
+                            <tr>
+                                <td>Retour</td>
+                                <td>7 jours après réception, produit non utilisé dans son emballage</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                @endif
             </div>
-        </div><!-- end of .container-->
-    </section>
+        </div>
+    </div>
 
-    <!-- <section> close ============================-->
-    <!-- ============================================-->
+    @if (!empty($similarProducts) && count($similarProducts))
+        <section class="sec mini">
+            <div class="sec-head">
+                <h2><span>✨</span> Produits similaires</h2>
+                <a class="more" href="{{ route('products') }}">Tout voir <svg class="ic ic-sm">
+                        <use href="#i-chevron" />
+                    </svg></a>
+            </div>
+            <div class="grid plist" id="similaires">
+                @foreach ($similarProducts->take(4) as $p)
+                    @php
+                        $pp = $p->sale_price && $p->sale_price < $p->price ? $p->sale_price : $p->price;
+                        $po = $p->price;
+                        $pd = $po > $pp && $po > 0 ? round((($po - $pp) / $po) * 100) : 0;
+                        $pst = (int) ($p->stock ?? 0);
+                        $pstCls = $pst <= 0 ? 'out' : ($pst <= 8 ? 'low' : 'ok');
+                        $pstTxt = $pst <= 0 ? 'Rupture de stock' : ($pst <= 8 ? 'Plus que ' . $pst . ' en stock' : 'En stock');
+                        $pImg = $p->getPhoto() ? $p->getPhoto()->getImageUrl(530, 530) : null;
+                        $pAvg = round($p->reviews->avg('nb_etoiles') ?? 5);
+                        $pUrl = route('produits.show', ['slug' => $p->getSlug(), 'id' => $p->id]);
+                        $pFav = in_array($p->id, $favIds);
+                    @endphp
+                    <article class="card{{ $pst <= 0 ? ' sold' : '' }}">
+                        @if ($pImg)
+                            <img class="thumb" src="{{ $pImg }}" alt="{{ $p->name }}" loading="lazy">
+                        @else
+                            <div class="thumb"><svg class="ic" aria-hidden="true">
+                                    <use href="#{{ $catIcon }}" />
+                                </svg></div>
+                        @endif
+                        <div class="body">
+                            @if ($pd > 0)
+                                <span class="off">-{{ $pd }}%</span>
+                            @endif
+                            @auth
+                                <button class="fav{{ $pFav ? ' on' : '' }}" type="button" aria-label="{{ $pFav ? 'Retirer des favoris' : 'Ajouter aux favoris' }}" title="Favori"
+                                    wire:click="toggleWishlist({{ $p->id }})"><svg class="ic">
+                                        <use href="#i-heart" />
+                                    </svg><span class="tip">{{ $pFav ? 'Retirer des favoris' : 'Ajouter aux favoris' }}</span></button>
+                            @else
+                                <a class="fav" href="{{ route('login') }}" aria-label="Ajouter aux favoris" title="Favori"><svg class="ic">
+                                        <use href="#i-heart" />
+                                    </svg><span class="tip">Connectez-vous pour liker</span></a>
+                            @endauth
+                            <a class="name" href="{{ $pUrl }}">{{ Str::limit($p->name, 55) }}</a>
+                            <div class="rate"><span class="stars" aria-hidden="true">@for ($i = 1; $i <= 5; $i++)<svg
+                                        viewBox="0 0 24 24" class="{{ $i <= $pAvg ? '' : 'empty' }}">
+                                        <use href="#i-b2-star" />
+                                    </svg>@endfor</span><span>{{ number_format($p->reviews->avg('nb_etoiles') ?? 5, 1, ',', '') }}
+                                    ({{ $p->reviews->count() }})</span></div>
+                            @if ($po > $pp)
+                                <div class="was">{{ $this->formatFcfa($po) }}</div>
+                            @endif
+                            <div class="prices">
+                                <div class="price">{{ $this->formatFcfa($pp) }}</div>
+                            </div>
+                            <div class="stock {{ $pstCls }}">{{ $pstTxt }}</div>
+                            @auth
+                                <button class="add" type="button" wire:click="addToCart({{ $p->id }}, 1)"
+                                    @if ($pst <= 0) disabled @endif>{{ $pst <= 0 ? 'Indisponible' : 'Ajouter au panier' }}</button>
+                            @else
+                                <a class="add" href="{{ route('login') }}"
+                                    style="display:block">{{ $pst <= 0 ? 'Indisponible' : 'Ajouter au panier' }}</a>
+                            @endauth
+                        </div>
+                    </article>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
+    <div class="buybar" id="buybar">
+        <span class="now">{{ $this->formatFcfa($price * max(1, (int) $quantity)) }}</span>
+        @auth
+            <button class="btn-solid" type="button" wire:click="addToCart({{ $product->id }})"
+                @if (!$inStock) disabled @endif><svg class="ic">
+                    <use href="#i-bag" />
+                </svg> Ajouter</button>
+        @else
+            <a class="btn-solid" href="{{ route('login') }}"><svg class="ic">
+                    <use href="#i-bag" />
+                </svg> Ajouter</a>
+        @endauth
+    </div>
 
     <script>
-        const shareBtn = document.getElementById('shareBtn');
-        if (shareBtn) shareBtn.addEventListener('click', async () => {
-            const productData = {
-                title: '{{ $product->name }}',
-                url: '{{ route('produits.show', ['slug' => $product->getSlug(), 'id' => $product->id]) }}',
-                text: 'Découvrez ce produit : {{ $product->name }}'
-            };
-
-            try {
-                if (navigator.share) {
-                    await navigator.share(productData);
-                    showSuccess();
-                } else {
-                    // Fallback WhatsApp (le plus utilisé)
-                    window.open(
-                        `https://wa.me/?text=${encodeURIComponent(productData.text)} ${encodeURIComponent(productData.url)}`,
-                        '_blank',
-                        'width=600,height=400'
-                    );
-                }
-            } catch (err) {
-                console.log('Partage annulé ou erreur:', err);
+        (function() {
+            if (window._pdInit) return;
+            window._pdInit = true;
+            document.body.classList.add('has-buybar');
+            window._pdImg = window._pdImg || 0;
+            function thumbs() {
+                return Array.prototype.slice.call(document.querySelectorAll('#pdp .g-th'));
             }
-        });
-
-        function showSuccess() {
-            const btn = document.getElementById('shareBtn');
-            const icon = btn.querySelector('i');
-            const status = btn.querySelector('.share-status');
-
-            icon.classList.add('d-none');
-            status.classList.remove('d-none');
-
-            setTimeout(() => {
-                icon.classList.remove('d-none');
-                status.classList.add('d-none');
-            }, 1500);
-        }
-    </script>
-
-    <script>
-        function addToCartWithQty(productId) {
-            // Récupère la vraie quantité du DOM
-            const qtyInput = document.querySelector(`#qty-container-${productId} .qty-input`);
-            const quantity = parseInt(qtyInput.value) || 1;
-
-            // ENVOIE À LIVEWIRE ✅
-            @this.call('addToCart', productId, quantity);
-        }
-
-        document.addEventListener('livewire:initialized', () => {
-            const starsContainer = document.getElementById('stars');
-            const ratingSpan = document.getElementById('rating-value');
-            const ratingInput = document.getElementById('rating-input');
-
-            if (!starsContainer || !ratingSpan || !ratingInput) return;
-
-            // Transforme le texte en spans
-            function initStars() {
-                const content = starsContainer.textContent.trim();
-                starsContainer.innerHTML = '';
-                let count = 0;
-                for (const char of content) {
-                    if (char === '★') {
-                        const span = document.createElement('span');
-                        span.textContent = char;
-                        span.dataset.value = count + 1; // 1, 2, 3, 4, 5
-                        starsContainer.appendChild(span);
-                        count++;
-                    }
-                }
-            }
-
-            initStars();
-
-            // Affiche un nombre d’étoiles
-            function showStars(n) {
-                const spans = starsContainer.querySelectorAll('span');
-                spans.forEach((span, i) => {
-                    if (i < n) {
-                        span.classList.add('selected');
-                    } else {
-                        span.classList.remove('selected');
-                    }
+            function montrer(i) {
+                var list = thumbs();
+                if (!list.length) return;
+                i = ((i % list.length) + list.length) % list.length;
+                window._pdImg = i;
+                var main = document.getElementById('gMain');
+                if (main && list[i]) main.style.backgroundImage = 'url(' + list[i].getAttribute('data-src') + ')';
+                list.forEach(function(b, j) {
+                    b.classList.toggle('on', j === i);
                 });
             }
-
-            // Initialiser avec la valeur actuelle
-            showStars(parseFloat(ratingSpan.textContent) || 0);
-
-            // Mise à jour depuis Livewire (on reçoit { value: x })
-            Livewire.on('rater::value', (data) => {
-                const value = data?.value || 0;
-                ratingSpan.textContent = value;
-                ratingInput.value = value;
-                showStars(value);
-            });
-
-            // Hover
-            starsContainer.addEventListener('mouseover', (e) => {
-                if (e.target.matches('span')) {
-                    const value = parseInt(e.target.dataset.value);
-                    showStars(value);
+            document.addEventListener('click', function(e) {
+                var t = e.target;
+                if (!t.closest) return;
+                var th = t.closest('#pdp .g-th');
+                if (th) {
+                    montrer(thumbs().indexOf(th));
+                    return;
+                }
+                var nav = t.closest('#pdp [data-gal]');
+                if (nav) {
+                    montrer((window._pdImg || 0) + parseInt(nav.getAttribute('data-gal'), 10));
+                    return;
                 }
             });
-
-            // En dehors, revenir à la valeur actuelle
-            starsContainer.addEventListener('mouseout', () => {
-                showStars(parseFloat(ratingInput.value) || 0);
-            });
-
-            // Clic
-            starsContainer.addEventListener('click', (e) => {
-                if (e.target.matches('span')) {
-                    const value = parseFloat(e.target.dataset.value); // 1, 2, 3, 4, 5
-                    Livewire.dispatch('rater::value', {
-                        value: value
-                    }); // envoyé comme objet
+            function tic() {
+                var el = document.getElementById('flash');
+                if (!el) return;
+                var fin = new Date();
+                fin.setHours(23, 59, 59, 999);
+                var s = Math.max(0, Math.floor((fin - new Date()) / 1000));
+                var h = Math.floor(s / 3600),
+                    m = Math.floor((s % 3600) / 60),
+                    sec = s % 60;
+                function p2(n) {
+                    return String(n).padStart(2, '0');
                 }
-            });
-        });
-
-        document.addEventListener('livewire:initialized', () => {
-            // Au clic sur Submit Review
-            Livewire.on('submit-review', () => {
-                const input = document.getElementById('avisimages-temp');
-                @this.set('avisimages', input.files); // envoie les fichiers au composant
-            });
-        });
+                el.innerHTML = '<b>' + p2(h) + '</b><i>:</i><b>' + p2(m) + '</b><i>:</i><b>' + p2(sec) + '</b>';
+            }
+            if (document.getElementById('flash')) {
+                tic();
+                if (window._pdTimer) clearInterval(window._pdTimer);
+                window._pdTimer = setInterval(tic, 1000);
+            }
+            if (window.Livewire) {
+                try {
+                    Livewire.hook('morph.updated', function() {
+                        montrer(window._pdImg || 0);
+                        tic();
+                    });
+                } catch (err) {}
+            }
+        })();
     </script>
-
 </div>

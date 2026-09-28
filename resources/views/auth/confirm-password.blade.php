@@ -1,27 +1,52 @@
-<x-guest-layout>
-    <div class="mb-4 text-sm text-gray-600">
-        {{ __('This is a secure area of the application. Please confirm your password before continuing.') }}
-    </div>
+@extends('base')
 
-    <form method="POST" action="{{ route('password.confirm') }}">
-        @csrf
+@section('title', 'Confirmer le mot de passe')
 
-        <!-- Password -->
-        <div>
-            <x-input-label for="password" :value="__('Password')" />
+@section('content')
+    @include('section-begin')
 
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="current-password" />
-
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
+    <nav class="crumb" aria-label="Fil d'Ariane">
+        <div class="wrap">
+            <a href="{{ route('home') }}">Accueil</a>
+            <svg class="ic">
+                <use href="#i-chevron" />
+            </svg>
+            <span class="here">Sécurité</span>
         </div>
+    </nav>
 
-        <div class="flex justify-end mt-4">
-            <x-primary-button>
-                {{ __('Confirm') }}
-            </x-primary-button>
+    <section class="phead">
+        <div class="wrap">
+            <h1>Zone sécurisée</h1>
+            <p>Confirmez votre mot de passe pour continuer.</p>
         </div>
-    </form>
-</x-guest-layout>
+    </section>
+
+    <section>
+        <div class="wrap">
+            <div class="dash-narrow">
+                <div class="panel">
+                    <h2><svg class="ic">
+                            <use href="#i-b2-lock" />
+                        </svg> Confirmation</h2>
+                    <form method="POST" action="{{ route('password.confirm') }}" style="margin-top:14px">
+                        @csrf
+                        <div class="field @error('password') bad @enderror">
+                            <label for="password">Mot de passe</label>
+                            <input class="ctrl" id="password" type="password" name="password" placeholder="••••••••"
+                                required autocomplete="current-password">
+                            @error('password') <span class="avis-err">{{ $message }}</span> @enderror
+                        </div>
+                        <div class="pdp-actions">
+                            <button class="btn-solid" style="flex:1" type="submit"><svg class="ic">
+                                    <use href="#i-b2-check" />
+                                </svg> Confirmer</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    @include('partials.footer')
+@endsection

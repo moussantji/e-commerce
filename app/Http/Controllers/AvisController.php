@@ -32,6 +32,13 @@ class AvisController extends Controller
 
     public function destroy(AvisClient $avis)
     {
+        if (!auth()->check()) {
+            return redirect()->route('login');
+        }
+
+        // Suppression réservée à l'auteur de l'avis ou à un admin
+        abort_unless($avis->user_id == auth()->id() || auth()->user()->isAdmin(), 403);
+
         $avis->delete();
         return redirect()->route('dashboard')
             ->with('success', 'Avis supprimé avec succès');

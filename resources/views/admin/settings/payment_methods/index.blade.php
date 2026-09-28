@@ -1,107 +1,102 @@
 @extends('admin.base')
 
+@section('title', 'Moyens de paiement')
+
 @section('content')
-<div class="content">
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h4 class="mb-0">Méthodes de Paiement @if (session()->has('error')) {{ ' - ' }} {{ session('error') }}  @endif @if (session()->has('success')) {{ ' - ' }} {{ session('success') }}  @endif</h4>
-            <a href="{{ route('admin.payment-methods.create') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Ajouter une méthode
-            </a>
+    <nav class="crumb" aria-label="Fil d'Ariane">
+        <div class="wrap">
+            <a href="{{ route('admin.dashboard') }}">Administration</a>
+            <svg class="ic">
+                <use href="#i-chevron" />
+            </svg>
+            <span class="here">Moyens de paiement</span>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>ID</th>
-                            <th>Nom</th>
-                            <th>Description</th>
-                            <th>Frais</th>
-                            <th>Statut</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($paymentMethods as $method)
-                        <tr>
-                            <td>{{ $method->id }}</td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    @if($method->getPhoto())
-                                        <img src="{{ $method->getPhoto()->getImageUrl(80,80) }}" alt="{{ $method->method_name }}" class="img-thumbnail" style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">
-                                    @endif
-                                    {{ $method->method_name }}
-                                </div>
-                            </td>
-                            <td>{{ Str::limit($method->description, 50) }}</td>
-                            <td>
-                                @if($method->fee_percentage > 0)
-                                    {{ $method->fee_percentage }}%
-                                    @if($method->fee > 0)
-                                        + {{ number_format($method->fee, 2) }} FCFA
-                                    @endif
-                                @elseif($method->fee > 0)
-                                    {{ number_format($method->fee, 2) }} FCFA
-                                @else
-                                    Gratuit
-                                @endif
-                            </td>
-                            <td>
-                                <span class="badge bg-{{ $method->is_active ? 'success' : 'danger' }}">
-                                    {{ $method->is_active ? 'Actif' : 'Inactif' }}
-                                </span>
-                            </td>
-                            <td>
-                                <div class="btn-group">
-                                    <a href="{{ route('admin.payment-methods.edit', $method->id) }}" class="btn btn-sm btn-info">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deletePaymentMethod{{ $method->id }}">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+    </nav>
 
-                                    <!-- Modal de suppression -->
-                                    <div class="modal fade" id="deletePaymentMethod{{ $method->id }}" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">Confirmer la suppression</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    Êtes-vous sûr de vouloir supprimer la méthode de paiement "{{ $method->method_name }}" ?
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                                                    <form action="{{ route('admin.payment-methods.destroy', $method->id) }}" method="POST">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-danger">Supprimer</button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="6" class="text-center">Aucune méthode de paiement trouvée</td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+    <section class="phead">
+        <div class="wrap">
+            <h1>Moyens de paiement</h1>
+            <p>Orange Money, Wave, espèces à la livraison...</p>
+        </div>
+    </section>
 
-                <!-- Pagination -->
-                @if($paymentMethods->hasPages())
-                    <div class="d-flex justify-content-center mt-3">
-                        {{ $paymentMethods->links() }}
-                    </div>
-                @endif
+    <section>
+        <div class="wrap">
+            <div class="toolbar">
+                <span class="grow"></span>
+                <a class="btn-solid" style="font-size:13.5px;padding:11px 22px"
+                    href="{{ route('admin.payment-methods.create') }}"><svg class="ic" style="width:16px;height:16px">
+                        <use href="#i-b2-plus" />
+                    </svg> Ajouter une méthode</a>
+            </div>
+
+            <div class="panel">
+                <h2><svg class="ic">
+                        <use href="#i-card" />
+                    </svg> Liste des méthodes</h2>
+                <div class="table-scroll">
+                    <table class="tbl">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Nom</th>
+                                <th>Description</th>
+                                <th>Frais</th>
+                                <th>Statut</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($paymentMethods as $method)
+                                <tr>
+                                    <td>
+                                        @if ($method->getPhoto())
+                                            <img src="{{ $method->getPhoto()->getImageUrl(80, 80) }}"
+                                                alt="{{ $method->method_name }}"
+                                                style="width:40px;height:40px;object-fit:cover;border-radius:12px;border:1px solid var(--line)">
+                                        @else
+                                            <span
+                                                style="display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--lav-1);color:var(--violet-400)"><svg
+                                                    class="ic">
+                                                    <use href="#i-card" />
+                                                </svg></span>
+                                        @endif
+                                    </td>
+                                    <td><b>{{ $method->method_name }}</b></td>
+                                    <td>{{ Str::limit($method->description, 50) ?: '—' }}</td>
+                                    <td>
+                                        @if ($method->fee_percentage > 0)
+                                            {{ $method->fee_percentage }}%
+                                            @if ($method->fee > 0)
+                                                + {{ number_format($method->fee, 0, ',', ' ') }} FCFA
+                                            @endif
+                                        @elseif($method->fee > 0)
+                                            {{ number_format($method->fee, 0, ',', ' ') }} FCFA
+                                        @else
+                                            Gratuit
+                                        @endif
+                                    </td>
+                                    <td>{!! $method->is_active ? '<span class="st ok">Actif</span>' : '<span class="st ko">Inactif</span>' !!}</td>
+                                    <td style="white-space:nowrap">
+                                        <a class="btn-ghost-sm"
+                                            href="{{ route('admin.payment-methods.edit', $method->id) }}">Modifier</a>
+                                        <form action="{{ route('admin.payment-methods.destroy', $method->id) }}"
+                                            method="POST" style="display:inline"
+                                            onsubmit="return confirm('Supprimer cette méthode ?')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="btn-ghost-sm" style="color:var(--pink)">Supprimer</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="muted-sm">Aucune méthode.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </div>
-</div>
+    </section>
 @endsection

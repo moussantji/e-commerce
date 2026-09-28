@@ -1,116 +1,117 @@
 @extends('admin.base')
 
+@section('title', 'Utilisateur #' . $user->id)
+
 @section('content')
-<div class="content">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3">Utilisateur #{{ $user->id }}</h1>
-        <div class="d-flex gap-2">
-            <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-primary">
-                <i class="fas fa-edit"></i> Modifier
-            </a>
-            <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Retour
-            </a>
+    @php
+        use App\Support\OrderStatus;
+        $stClass = ['en_attente' => 'conf', 'paiement_declare' => 'conf', 'payee' => 'prep', 'expedie' => 'exp', 'livre' => 'ok', 'annule' => 'ko'];
+    @endphp
+    <nav class="crumb" aria-label="Fil d'Ariane">
+        <div class="wrap">
+            <a href="{{ route('admin.dashboard') }}">Administration</a>
+            <svg class="ic">
+                <use href="#i-chevron" />
+            </svg>
+            <a href="{{ route('admin.users.index') }}">Clients</a>
+            <svg class="ic">
+                <use href="#i-chevron" />
+            </svg>
+            <span class="here">{{ $user->name }}</span>
         </div>
-    </div>
+    </nav>
 
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
-    @endif
+    <section class="phead">
+        <div class="wrap">
+            <h1>{{ $user->name }}</h1>
+            <p>
+                {!! ($user->status ?? '') === 'active' ? '<span class="st ok">Actif</span>' : '<span class="st ko">Inactif</span>' !!}
+                <span class="muted-sm">{{ ucfirst($user->role) }} · inscrit le
+                    {{ $user->created_at?->format('d/m/Y') }}</span>
+            </p>
+        </div>
+    </section>
 
-    <div class="row g-3">
-        {{-- Fiche identité --}}
-        <div class="col-lg-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Profil</h5>
-                    <span class="badge {{ $user->role === 'admin' ? 'bg-primary' : 'bg-secondary' }}">
-                        {{ ucfirst($user->role) }}
-                    </span>
-                </div>
-                <div class="card-body">
-                    <dl class="row mb-0">
-                        <dt class="col-5 text-muted">Nom</dt>
-                        <dd class="col-7">{{ $user->name }}</dd>
-
-                        <dt class="col-5 text-muted">Email</dt>
-                        <dd class="col-7">{{ $user->email }}</dd>
-
-                        <dt class="col-5 text-muted">Téléphone</dt>
-                        <dd class="col-7">{{ $user->tel ?? 'N/A' }}</dd>
-
-                        <dt class="col-5 text-muted">Statut</dt>
-                        <dd class="col-7">
-                            <span class="badge {{ ($user->status ?? '') === 'active' ? 'bg-success' : 'bg-secondary' }}">
-                                {{ ($user->status ?? '') === 'active' ? 'Actif' : 'Inactif' }}
-                            </span>
-                        </dd>
-
-                        <dt class="col-5 text-muted">Inscrit le</dt>
-                        <dd class="col-7">{{ $user->created_at?->format('d/m/Y') ?? 'N/A' }}</dd>
-                    </dl>
-                </div>
-
-                {{-- Changement rapide de rôle --}}
-                <div class="card-footer">
+    <section>
+        <div class="wrap">
+            <div class="dash-grid">
+                <div class="panel">
+                    <h2><svg class="ic">
+                            <use href="#i-user" />
+                        </svg> Profil
+                        <span
+                            style="font-size:11.5px;font-weight:700;color:var(--violet-700)">{{ ucfirst($user->role) }}</span>
+                    </h2>
+                    <table class="spec">
+                        <tbody>
+                            <tr>
+                                <td>Nom</td>
+                                <td><b>{{ $user->name }}</b></td>
+                            </tr>
+                            <tr>
+                                <td>Email</td>
+                                <td><a class="lien" href="mailto:{{ $user->email }}">{{ $user->email }}</a></td>
+                            </tr>
+                            <tr>
+                                <td>Téléphone</td>
+                                <td>{{ $user->tel ?? 'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <td>Ville</td>
+                                <td>{{ $user->ville ?? 'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <td>Dernière connexion</td>
+                                <td>{{ $user->last_login ? $user->last_login->diffForHumans() : 'Jamais' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                     <form action="{{ route('admin.users.role', $user) }}" method="POST"
-                        class="d-flex align-items-center gap-2">
+                        style="display:flex;align-items:center;gap:10px;margin-top:14px">
                         @csrf @method('PATCH')
-                        <label class="form-label mb-0 small text-muted">Rôle :</label>
-                        <select name="role" class="form-select form-select-sm" style="width:auto;"
-                            onchange="this.form.submit()">
+                        <label class="muted-sm" for="role">Rôle :</label>
+                        <select class="ctrl ctrl-sm" id="role" name="role" onchange="this.form.submit()">
                             <option value="customer" {{ $user->role === 'customer' ? 'selected' : '' }}>Client</option>
                             <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>Admin</option>
                         </select>
                     </form>
+                    <div class="pdp-actions" style="margin-top:16px">
+                        <a class="btn-line" href="{{ route('admin.users.edit', $user) }}">Modifier</a>
+                        <a class="btn-ghost-sm" href="{{ route('admin.users.index') }}">Retour</a>
+                    </div>
                 </div>
-            </div>
-        </div>
 
-        {{-- Historique des commandes --}}
-        <div class="col-lg-8">
-            <div class="card shadow-sm h-100">
-                <div class="card-header">
-                    <h5 class="mb-0">Commandes ({{ $user->orders->count() }})</h5>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0 align-middle">
-                            <thead class="table-light">
+                <div class="panel">
+                    <h2><svg class="ic">
+                            <use href="#i-bag" />
+                        </svg> Commandes <span class="badge-nb">{{ $user->orders->count() }}</span></h2>
+                    <div class="table-scroll">
+                        <table class="tbl">
+                            <thead>
                                 <tr>
-                                    <th>#</th>
+                                    <th>N°</th>
                                     <th>Date</th>
                                     <th>Statut</th>
-                                    <th class="text-end">Total</th>
+                                    <th>Total</th>
                                     <th></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse($user->orders->sortByDesc('created_at') as $order)
+                                    @php $norm = OrderStatus::normalize($order->statut); @endphp
                                     <tr>
-                                        <td>#{{ $order->id }}</td>
+                                        <td><b>{{ $order->numero_commande ?? 'CMD-' . $order->id }}</b></td>
                                         <td>{{ $order->created_at?->format('d/m/Y H:i') }}</td>
-                                        <td>
-                                            <span class="badge bg-info text-dark">
-                                                {{ $order->status_label ?? $order->statut }}
-                                            </span>
+                                        <td><span
+                                                class="st {{ $stClass[$norm] ?? 'conf' }}">{{ $order->status_label ?? $order->statut }}</span>
                                         </td>
-                                        <td class="text-end fw-bold">
-                                            {{ number_format($order->total ?? 0, 0, ',', ' ') }} FCFA
-                                        </td>
-                                        <td class="text-end">
-                                            <a href="{{ route('admin.orders.show', $order) }}"
-                                                class="btn btn-sm btn-outline-primary">Voir</a>
-                                        </td>
+                                        <td><b>{{ number_format($order->total ?? 0, 0, ',', ' ') }} FCFA</b></td>
+                                        <td><a class="btn-ghost-sm"
+                                                href="{{ route('admin.orders.show', $order) }}">Voir</a></td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="text-center text-muted py-4">
-                                            Aucune commande
-                                        </td>
+                                        <td colspan="5" class="muted-sm">Aucune commande.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -119,6 +120,5 @@
                 </div>
             </div>
         </div>
-    </div>
-</div>
+    </section>
 @endsection

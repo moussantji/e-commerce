@@ -3,13 +3,26 @@
 @section('title', 'Politique de confidentialité')
 
 @section('content')
-    <div class="container-fluid">
-        <div class="row mb-4">
-            <div class="col-12">
-                <h2 class="mb-4">Politique de confidentialité</h2>
-                <div class="card">
-                    <div class="card-body">
-                        <h4>1. Collecte des informations</h4>
+    <nav class="crumb" aria-label="Fil d'Ariane">
+        <div class="wrap">
+            <a href="{{ route('admin.dashboard') }}">Administration</a>
+            <svg class="ic">
+                <use href="#i-chevron" />
+            </svg>
+            <span class="here">Confidentialité</span>
+        </div>
+    </nav>
+
+    <section class="phead">
+        <div class="wrap">
+            <h1>Politique de confidentialité</h1>
+        </div>
+    </section>
+
+    <section>
+        <div class="wrap">
+            <div class="panel boutique-texte">
+<h4>1. Collecte des informations</h4>
                         <p>Nous recueillons des informations lorsque vous vous inscrivez sur notre site, passez une commande, vous inscrivez à notre newsletter ou répondez à un sondage. Lors de l'enregistrement ou de la commande sur notre site, il vous sera demandé de saisir votre nom, votre adresse e-mail, votre numéro de téléphone ou votre numéro de carte de crédit.</p>
                         
                         <h4 class="mt-4">2. Utilisation des informations</h4>
@@ -35,5 +48,5 @@
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 @endsection

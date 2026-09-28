@@ -1,133 +1,76 @@
 <!DOCTYPE html>
-<html lang="en-US" dir="ltr" data-navigation-type="default" data-navbar-horizontal-shape="default">
-
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="content-type" content="text/html;charset=utf-8" />
-
-    <!-- ===============================================-->
-    <!--    Document Title-->
-    <!-- ===============================================-->
-    <title></title>
-
-    <!-- ===============================================-->
-    <!--    Favicons-->
-    <!-- ===============================================-->
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/img/favicons/apple-touch-icon.png') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/img/favicons/favicon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('assets/img/favicons/favicon-16x16.png') }}">
-    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('assets/img/favicons/favicon.ico') }}">
-    <link rel="manifest" href="{{ asset('assets/img/favicons/manifest.json') }}">
-    <meta name="msapplication-TileImage" content="{{ asset('assets/img/favicons/mstile-150x150.png') }}">
-    <meta name="theme-color" content="#ffffff">
-
-    <!-- ===============================================-->
-    <!--    JavaScripts-->
-    <!-- ===============================================-->
-    <script src="{{ asset('vendors/simplebar/simplebar.min.js') }}"></script>
-    <script src="{{ asset('assets/js/config.js') }}"></script>
-
-    <!-- ===============================================-->
-    <!--    Stylesheets-->
-    <!-- ===============================================-->
-
-
-    <link href="{{ asset('vendors/dropzone/dropzone.css') }}" rel="stylesheet" />
-    <link rel="preconnect" href="https://fonts.googleapis.com/">
-    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
-    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&amp;display=swap"
-        rel="stylesheet">
-    <link href="{{ asset('vendors/simplebar/simplebar.min.css') }}" rel="stylesheet">
-    <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.8/css/line.css">
-    <link href="{{ asset('assets/css/theme-rtl.min.css') }}" type="text/css" rel="stylesheet" id="style-rtl">
-    <link href="{{ asset('assets/css/theme.min.css') }}" type="text/css" rel="stylesheet" id="style-default">
-    <link href="{{ asset('assets/css/user-rtl.min.css') }}" type="text/css" rel="stylesheet" id="user-style-rtl">
-    <link href="{{ asset('assets/css/user.min.css') }}" type="text/css" rel="stylesheet" id="user-style-default">
-    <script>
-        var phoenixIsRTL = window.config.config.phoenixIsRTL;
-        if (phoenixIsRTL) {
-            var linkDefault = document.getElementById('style-default');
-            var userLinkDefault = document.getElementById('user-style-default');
-            linkDefault.setAttribute('disabled', true);
-            userLinkDefault.setAttribute('disabled', true);
-            document.querySelector('html').setAttribute('dir', 'rtl');
-        } else {
-            var linkRTL = document.getElementById('style-rtl');
-            var userLinkRTL = document.getElementById('user-style-rtl');
-            linkRTL.setAttribute('disabled', true);
-            userLinkRTL.setAttribute('disabled', true);
-        }
-    </script>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-
-    <link href="../../../vendors/choices/choices.min.css" rel="stylesheet" />
-    <link href="{{ asset('vendors/leaflet/leaflet.css') }}" rel="stylesheet">
-    <link href="{{ asset('vendors/leaflet.markercluster/MarkerCluster.css') }}" rel="stylesheet">
-    <link href="{{ asset('vendors/leaflet.markercluster/MarkerCluster.Default.css') }}" rel="stylesheet">
-    <link href="{{ asset('vendors/choices/choices.min.css') }}" rel="stylesheet" />
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>@yield('title', 'Administration') — Boutique</title>
+<meta name="description" content="Administration de la boutique en ligne.">
+<meta name="theme-color" content="#4c1d95">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+@include('partials.boutique-style')
+@stack('styles')
 </head>
-
 <body>
-    <!-- ===============================================-->
-    <!--    Main Content-->
-    <!-- ===============================================-->
-    <main class="main" id="top">
-        <!-- Navbar -->
-        @include('admin.partials.navbar')
+@include('partials.boutique-sprite')
 
-        @yield('content')
+<div class="page-loader" id="pageLoader"><div class="loader-circle"></div></div>
 
-    </main><!-- ===============================================-->
-    <!--    End of Main Content-->
-    <!-- ===============================================-->
+<div class="shop-topbar">
+<div class="shop-wrap">
+<div class="top-left"><svg class="ic ic-sm"><use href="#i-bolt"/></svg><b>Administration</b></div>
+<div class="top-push"><a href="{{ route('home') }}">Voir la boutique</a><a href="{{ route('admin.profile') }}">Mon profil</a></div>
+</div>
+</div>
+<header class="shop-header">
+<div class="shop-wrap header-row">
+<a class="brand" href="{{ route('admin.dashboard') }}" aria-label="Administration"><span class="mark"><svg class="ic"><use href="#i-store"/></svg></span><span class="brand-name">Boutique · Admin</span></a>
+<div class="shop-actions" style="margin-left:auto">
+<a href="{{ route('home') }}" aria-label="Voir la boutique" title="Voir la boutique"><svg class="ic"><use href="#i-home"/></svg></a>
+<a href="{{ route('admin.profile') }}" aria-label="Mon profil" title="Mon profil"><svg class="ic"><use href="#i-user"/></svg></a>
+</div>
+</div>
+</header>
+@include('admin.partials.nav-boutique')
 
+@yield('content')
 
+@include('partials.footer')
 
-    <!-- ===============================================-->
-    <!--    JavaScripts-->
-    <!-- ===============================================-->
-    <script src="{{ asset('vendors/dropzone/dropzone-min.js') }}"></script>
-    <script src="{{ asset('vendors/popper/popper.min.js') }}"></script>
-    <script src="{{ asset('vendors/bootstrap/bootstrap.min.js') }}"></script>
-    <script src="{{ asset('vendors/anchorjs/anchor.min.js') }}"></script>
-    <script src="{{ asset('vendors/is/is.min.js') }}"></script>
-    <script src="{{ asset('vendors/fontawesome/all.min.js') }}"></script>
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    <script src="{{ asset('vendors/lodash/lodash.min.js') }}"></script>
-    <script src="{{ asset('vendors/list.js/list.min.js') }}"></script>
-    <script src="{{ asset('vendors/feather-icons/feather.min.js') }}"></script>
-    <script src="{{ asset('vendors/dayjs/dayjs.min.js') }}"></script>
-    <script src="{{ asset('vendors/leaflet/leaflet.js') }}"></script>
-    <script src="{{ asset('vendors/leaflet.markercluster/leaflet.markercluster.js') }}"></script>
-    <script src="{{ asset('vendors/leaflet.tilelayer.colorfilter/leaflet-tilelayer-colorfilter.min.js') }}"></script>
-    <script src="{{ asset('assets/js/phoenix.js') }}"></script>
-    <script src="{{ asset('vendors/echarts/echarts.min.js') }}"></script>
-    <script src="{{ asset('assets/js/dashboards/ecommerce-dashboard.js') }}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const container = document.getElementById('users');
-            if (!container) return;
+@if(session('success') || session('error'))
+<div id="toastNotification" class="{{ session('error') ? 'err' : 'ok' }}">{{ session('error') ? '⚠️' : '✅' }} {{ session('error') ?? session('success') }}</div>
+@endif
 
-            // on limite la recherche au nom + email
-            const userList = new List(container, {
-                valueNames: ['name', 'email']
-            });
-
-            // si tu utilises le bouton "Réinitialiser"
-            document.querySelectorAll('[data-list-clear]').forEach(function(btn) {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    userList.search('');
-                });
-            });
-        });
-    </script>
-
-
-
+@livewireScripts
+<script>
+/* Coquille admin boutique : loader + toast + reveal (comme l'accueil). */
+(function(){
+function hideLoader(){var l=document.getElementById('pageLoader');if(l)l.classList.add('fade-out');}
+window.addEventListener('load',function(){setTimeout(hideLoader,300);});
+setTimeout(hideLoader,2500);
+var toast=document.getElementById('toastNotification');
+if(toast){setTimeout(function(){toast.style.opacity='0';setTimeout(function(){toast.remove();},400);},8000);}
+function cascadeCards(){document.querySelectorAll('.grid .card').forEach(function(c,i){if(!c.style.transitionDelay)c.style.transitionDelay=(Math.min(i,12)*70)+'ms';});}
+cascadeCards();
+var io=null;
+function observeRv(){
+var els=document.querySelectorAll('.rv:not(.in):not([data-rv-obs])');
+if(!('IntersectionObserver' in window)){els.forEach(function(el){el.classList.add('in');});return;}
+if(!io){io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12,rootMargin:'0px 0px -40px 0px'});}
+els.forEach(function(el){el.setAttribute('data-rv-obs','1');io.observe(el);});
+}
+observeRv();
+setTimeout(function(){document.querySelectorAll('.rv:not(.in)').forEach(function(el){el.classList.add('in');});},4000);
+function revealAfterLivewire(){cascadeCards();observeRv();setTimeout(function(){document.querySelectorAll('.rv:not(.in)').forEach(function(el){var r=el.getBoundingClientRect();if(r.top<window.innerHeight+200)el.classList.add('in');});},50);}
+document.addEventListener('livewire:update',revealAfterLivewire);
+document.addEventListener('livewire:morph-updated',revealAfterLivewire);
+document.addEventListener('livewire:load',function(){if(window.Livewire&&Livewire.hook){Livewire.hook('morph.updated',function(){revealAfterLivewire();});}});
+var barre=document.getElementById('progress'),planifie=false;
+function maj(){var y=window.scrollY||document.documentElement.scrollTop;var h=document.documentElement.scrollHeight-window.innerHeight;var p=h>0?Math.min(1,y/h):0;if(barre)barre.style.transform='scaleX('+p+')';document.documentElement.classList.toggle('scrolled',y>8);planifie=false;}
+window.addEventListener('scroll',function(){if(!planifie){planifie=true;requestAnimationFrame(maj);}},{passive:true});maj();
+})();
+</script>
+@stack('scripts')
 </body>
-
 </html>

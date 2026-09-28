@@ -17,7 +17,7 @@
         </div>
     </div>
 
-    <!-- Commandes en cours -->
+    <!-- Commandes payées -->
     <div class="col-12 col-md-auto">
         <div class="d-flex align-items-center">
             <span class="fa-stack" style="min-height: 46px; min-width: 46px;">
@@ -25,12 +25,12 @@
                     data-fa-transform="down-4 rotate--10 left-4"></span>
                 <span class="fa-solid fa-circle fa-stack-2x stack-circle text-stats-circle-info"
                     data-fa-transform="up-4 right-3 grow-2"></span>
-                <span class="fa-stack-1x fa-solid fa-spinner text-info"
+                <span class="fa-stack-1x fa-solid fa-credit-card text-info"
                     data-fa-transform="shrink-2 up-8 right-6"></span>
             </span>
             <div class="ms-3">
                 <h4 class="mb-0">{{ $processingOrders }} commande(s)</h4>
-                <p class="text-body-secondary fs-9 mb-0">En cours</p>
+                <p class="text-body-secondary fs-9 mb-0">Payées</p>
             </div>
         </div>
     </div>
@@ -84,7 +84,7 @@
             </span>
             <div class="ms-3">
                 <h4 class="mb-0">{{ $cancelledOrders }} commande(s)</h4>
-                <p class="text-body-secondary fs-9 mb-0">Out of stock</p>
+                <p class="text-body-secondary fs-9 mb-0">Annulées</p>
             </div>
         </div>
     </div>

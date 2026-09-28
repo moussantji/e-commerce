@@ -33,6 +33,13 @@ class Cart extends Component
     public $commandeId; // ← NOUVEAU
     public $isProcessing = false; // ← NOUVEAU
 
+    // ── Modals ultra-premium ──
+    public bool $showConfirmModal = false;
+    public bool $showRemoveModal = false;
+    public $productToRemove = null;
+    public string $productToRemoveName = '';
+    public string $productToRemoveImg = '';
+
     // ✅ VALIDATION
     protected $rules = [
         'paymentMethodId' => 'required|exists:paiements,id',
@@ -110,7 +117,8 @@ class Cart extends Component
                 $produit->pivot = (object) [
                     'quantite' => (int)($pivot->quantite ?? 1),
                     'prix_unitaire' => (float)($pivot->prix_unitaire ?? 0),
-                    'total_ligne' => (float)($pivot->total_ligne ?? 0)
+                    'total_ligne' => (float)($pivot->total_ligne ?? 0),
+                    'options' => $pivot->options ?? null,
                 ];
 
                 return $produit;
@@ -284,6 +292,70 @@ class Cart extends Component
         $this->loadCart(); // ✅ Recalcul total
     }
 
+    public function updatedPaymentMethodId()
+    {
+        // garde le modal synchronisé, rien à recalculer
+    }
+
+    /** Ouvre le modal premium de confirmation de commande. */
+    public function openCheckoutModal()
+    {
+        if (!$this->panier || $this->itemsCount === 0) {
+            $this->dispatch('error', ['message' => 'Panier vide']);
+            return;
+        }
+        // (ré)assure les méthodes par défaut
+        if (!$this->deliveryMethodId && $this->deliveryMethods && count($this->deliveryMethods)) {
+            $this->deliveryMethodId = $this->deliveryMethods->first()->id;
+            $this->shippingCost = $this->deliveryMethods->first()->price ?? 5000;
+        }
+        if (!$this->paymentMethodId && $this->paymentMethods && count($this->paymentMethods)) {
+            $this->paymentMethodId = $this->paymentMethods->first()->id;
+        }
+        $this->showConfirmModal = true;
+    }
+
+    public function closeCheckoutModal()
+    {
+        $this->showConfirmModal = false;
+    }
+
+    /** Confirmation finale depuis le modal premium. */
+    public function confirmCheckout()
+    {
+        $this->showConfirmModal = false;
+        return $this->checkout();
+    }
+
+    /** Ouvre le modal premium de suppression d'article. */
+    public function askRemove($productId)
+    {
+        $found = null;
+        if ($this->panier && isset($this->panier->products)) {
+            $found = collect($this->panier->products)->firstWhere('id', (int) $productId);
+        }
+        $this->productToRemove = $productId;
+        $this->productToRemoveName = $found->name ?? 'cet article';
+        $this->productToRemoveImg = ($found && method_exists($found, 'getPhoto') && $found->getPhoto())
+            ? $found->getPhoto()->getImageUrl(200, 200)
+            : asset('assets/img/products/1.png');
+        $this->showRemoveModal = true;
+    }
+
+    public function closeRemoveModal()
+    {
+        $this->showRemoveModal = false;
+        $this->productToRemove = null;
+    }
+
+    public function confirmRemove()
+    {
+        if ($this->productToRemove) {
+            $this->removeFromCart($this->productToRemove);
+        }
+        $this->closeRemoveModal();
+    }
+
     public function checkout()
     {
         if (!$this->panier || $this->itemsCount === 0) {
@@ -354,6 +426,7 @@ class Cart extends Component
                     'quantite' => $item->quantite,
                     'prix_unitaire' => $item->prix_unitaire,
                     'total' => $item->quantite * $item->prix_unitaire,
+                    'options' => $item->options ?? null,
                     'created_at' => now(),
                     'updated_at' => now()
                 ]);

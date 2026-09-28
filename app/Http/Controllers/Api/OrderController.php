@@ -204,7 +204,7 @@ class OrderController extends Controller
     {
         $order = Commandes::where('user_id', $request->user()->id)->findOrFail($id);
 
-        if (!in_array($order->statut, ['en_attente', 'traitement'], true)) {
+        if (!in_array($order->statut, ['en_attente', 'paiement_declare', 'payee'], true)) {
             return response()->json(
                 ['message' => 'Cette commande ne peut plus être annulée.'],
                 422,
@@ -266,7 +266,7 @@ class OrderController extends Controller
         // === Paiement à la livraison : commande confirmée directement ===
         if ($isCod) {
             $order->paiement_id = $method->id ?? $order->paiement_id;
-            $order->statut = 'traitement';
+            $order->statut = 'payee';
             $order->date_traitement = now();
             $order->notes = trim(($order->notes ? $order->notes . "\n" : '')
                 . 'Paiement à la livraison (espèces).');
@@ -340,7 +340,7 @@ class OrderController extends Controller
     private function payWithWallet(User $user, Commandes $order)
     {
         // On ne paie pas deux fois une commande déjà réglée/traitée.
-        if (in_array($order->statut, ['payee', 'traitement', 'expedie', 'livre'], true)) {
+        if (in_array($order->statut, ['payee', 'expedie', 'livre'], true)) {
             return response()->json(['message' => 'Cette commande est déjà réglée.'], 422);
         }
 

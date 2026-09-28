@@ -3,7 +3,7 @@
         <ul class="nav nav-underline fs-9 flex-nowrap mb-3 pb-1" id="myTab" role="tablist">
             <li class="nav-item me-3"><a class="nav-link text-nowrap active" id="orders-tab" data-bs-toggle="tab"
                     href="#tab-orders" role="tab" aria-controls="tab-orders" aria-selected="true"><span
-                        class="fas fa-shopping-cart me-2"></span>Ordres <span class="text-body-tertiary fw-normal">
+                        class="fas fa-shopping-cart me-2"></span>Commandes <span class="text-body-tertiary fw-normal">
                         ({{ $commandes->count() }})</span></a></li>
             <li class="nav-item me-3"><a class="nav-link text-nowrap" id="wishlist-tab" data-bs-toggle="tab"
                     href="#tab-wishlist" role="tab" aria-controls="tab-orders" aria-selected="true"><span
@@ -29,12 +29,12 @@
                         <thead>
                             <tr>
                                 <th class="sort white-space-nowrap align-middle pe-3 ps-0" scope="col"
-                                    data-sort="order" style="width:15%; min-width:140px">ORDRE</th>
+                                    data-sort="order" style="width:15%; min-width:140px">COMMANDE</th>
                                 <th class="sort align-middle pe-3" scope="col" data-sort="status"
-                                    style="width:15%; min-width:180px">STATUS</th>
+                                    style="width:15%; min-width:180px">STATUT</th>
                                 <th class="sort align-middle text-start" scope="col" data-sort="delivery"
-                                    style="width:20%; min-width:160px">LIVRAISON
-                                    METHOD</th>
+                                    style="width:20%; min-width:160px">MODE DE
+                                    LIVRAISON</th>
                                 <th class="sort align-middle pe-0 text-end" scope="col" data-sort="date"
                                     style="width:15%; min-width:160px">DATE</th>
                                 <th class="sort align-middle text-end" scope="col" data-sort="total"
@@ -102,10 +102,10 @@
                                             </button>
                                             <div class="dropdown-menu dropdown-menu-end py-2">
                                                 <a class="dropdown-item"
-                                                    href="{{ route('commande.show', $commande->id) }}">View</a>
-                                                @if ($commande->statut === 'payee' || $commande->statut === 'paid' || $commande->statut === 'payé')
+                                                    href="{{ route('commande.show', $commande->id) }}">Voir</a>
+                                                @if ($commande->isPaid())
                                                     <a class="dropdown-item"
-                                                        href="{{ route('commande.pdf', $commande->id) }}">Export</a>
+                                                        href="{{ route('commande.pdf', $commande->id) }}">Exporter</a>
                                                 @endif
 
                                                 <div class="dropdown-divider"></div>
@@ -119,7 +119,7 @@
                                                     onclick="event.preventDefault();
                                                         document.getElementById('delete-form-{{ $commande->id }}').submit();
                                                     ">
-                                                    Remove
+                                                    Supprimer
                                                 </a>
 
                                             </div>
@@ -141,9 +141,9 @@
                 <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
                     <div class="col-auto d-flex">
                         <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info">
-                        </p><a class="fw-semibold" href="#!" data-list-view="*">View all<span
+                        </p><a class="fw-semibold" href="#!" data-list-view="*">Tout voir<span
                                 class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a
-                            class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span
+                            class="fw-semibold d-none" href="#!" data-list-view="less">Voir moins<span
                                 class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
                     </div>
                     <div class="col-auto d-flex"><button class="page-link" data-list-pagination="prev"><span
@@ -164,14 +164,14 @@
                                 <th class="sort white-space-nowrap align-middle fs-10" scope="col"
                                     style="width:7%;"></th>
                                 <th class="sort white-space-nowrap align-middle" scope="col"
-                                    style="width:30%; min-width:250px;" data-sort="products">PRODUCTS
+                                    style="width:30%; min-width:250px;" data-sort="products">PRODUITS
                                 </th>
                                 <th class="sort align-middle" scope="col" data-sort="color" style="width:16%;">
-                                    COLOR</th>
+                                    COULEUR</th>
                                 <th class="sort align-middle" scope="col" data-sort="size" style="width:10%;">
-                                    SIZE</th>
+                                    TAILLE</th>
                                 <th class="sort align-middle text-end" scope="col" data-sort="price"
-                                    style="width:10%;">PRICE</th>
+                                    style="width:10%;">PRIX</th>
                                 <th class="sort align-middle text-end pe-0" scope="col" style="width:35%;"> </th>
                             </tr>
                         </thead>
@@ -243,9 +243,9 @@
                 <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
                     <div class="col-auto d-flex">
                         <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info">
-                        </p><a class="fw-semibold" href="#!" data-list-view="*">View all<span
+                        </p><a class="fw-semibold" href="#!" data-list-view="*">Tout voir<span
                                 class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a
-                            class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span
+                            class="fw-semibold d-none" href="#!" data-list-view="less">Voir moins<span
                                 class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
                     </div>
                     <div class="col-auto d-flex"><button class="page-link" data-list-pagination="prev"><span
@@ -432,3 +432,4 @@
             </form>
         </div>
     </div>
+</div>

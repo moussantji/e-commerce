@@ -92,7 +92,7 @@ class Commandes extends Model
     public function produits(): BelongsToMany
     {
         return $this->belongsToMany(Produits::class, 'commande_produit', 'commande_id', 'produit_id')
-            ->withPivot(['quantite', 'prix_unitaire', 'total']);
+            ->withPivot(['quantite', 'prix_unitaire', 'total', 'options']);
     }
 
     // Alias pour la relation produits (pour la rétrocompatibilité)
@@ -145,8 +145,6 @@ class Commandes extends Model
 
     public function isPaid()
     {
-        $statuts_payes = ['payé', 'payee', 'paid', 'paiement_accepte'];
-
-        return in_array($this->statut, $statuts_payes);
+        return in_array(OrderStatus::normalize($this->statut), [OrderStatus::PAYEE, OrderStatus::EXPEDIE, OrderStatus::LIVRE], true);
     }
 }

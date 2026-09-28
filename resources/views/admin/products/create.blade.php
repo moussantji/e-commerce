@@ -3,19 +3,23 @@
 @section('title', 'Ajouter un produit')
 
 @section('content')
-    <div class="content">
-        <nav class="mb-3" aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
+    <nav class="crumb" aria-label="Fil d'Ariane">
+        <div class="wrap">
+            <a href="{{ route('admin.dashboard') }}">Administration</a>
+            <svg class="ic">
+                <use href="#i-chevron" />
+            </svg>
+            <a href="{{ route('admin.products.index') }}">Produits</a>
+            <svg class="ic">
+                <use href="#i-chevron" />
+            </svg>
+            <span class="here">Ajouter</span>
+        </div>
+    </nav>
 
-                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('admin.products.index') }}">Produits</a></li>
-                <li class="breadcrumb-item active">Ajouter</li>
-            </ol>
-        </nav>
-        @livewire('admin.addProduct')
-        
-        @include('admin.partials.footer')
-    </div>
-
-
+    <section>
+        <div class="wrap">
+            @livewire('admin.addProduct')
+        </div>
+    </section>
 @endsection

@@ -21,13 +21,13 @@ class PaymentController extends Controller
 
     /**
      * Store manual mobile-money payment proof from customer
-     * Expected inputs: order_id, provider (orange|malitel|wave), phone (optional), photos[]
+     * Expected inputs: order_id, provider (orange|mtn|moov|malitel|wave), phone (optional), photos[]
      */
     public function storeManual(Request $request)
     {
         $data = $request->validate([
             'order_id' => 'required|exists:commandes,id',
-            'provider' => 'required|in:orange,malitel,wave',
+            'provider' => 'required|in:orange,mtn,moov,malitel,wave',
             'phone' => 'nullable|string',
             'photos.*' => 'nullable|image|max:5120'
         ]);
@@ -39,6 +39,10 @@ class PaymentController extends Controller
             return back()->with('error', 'Commande non autorisée.');
         }
 
+        // On ne paie pas deux fois une commande déjà réglée/expédiée/livrée.
+        if ($order->isPaid()) {
+            return back()->with('error', 'Cette commande est déjà réglée.');
+        }
 
         // Create a PaymentProof entry (separate from payment methods)
         $proofData = [
@@ -65,10 +69,21 @@ class PaymentController extends Controller
 
         $proof = PaymentProof::create($proofData);
 
-        // Lier la preuve à la commande (optionnel : garder référence dans commande)
-        $order->statut = 'en_attente';
-        $order->date_en_attente = now();
+        // Preuve envoyée -> en vérification par l'admin (plus "en attente").
+        $order->statut = 'paiement_declare';
+        $order->notes = trim(($order->notes ? $order->notes . "\n" : '')
+            . 'Paiement déclaré via ' . $data['provider']
+            . (!empty($data['phone']) ? ' — ' . $data['phone'] : ''));
         $order->save();
+
+        // Notifie les administrateurs (comme sur mobile).
+        \App\Support\AdminNotifier::notifyPayment(
+            'Nouveau paiement à vérifier',
+            auth()->user()->name . ' a déclaré avoir payé la commande '
+                . ($order->numero_commande ?? ('#' . $order->id)) . ' (' . $data['provider'] . ') — '
+                . number_format((float) $order->total, 0, ',', ' ') . ' FCFA.',
+            ['type' => 'admin_payment', 'id' => $order->id],
+        );
 
         return redirect()->route('commande.show', $order->id)->with('success', "Preuve envoyée — en attente de confirmation par l'admin.");
     }

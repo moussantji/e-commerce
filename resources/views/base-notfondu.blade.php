@@ -7,7 +7,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
     <!-- ===============================================-->
     <!--    Document Title-->
@@ -225,8 +225,6 @@
 
     @yield('content')
 
-    @includeIf('partials.bottom-nav')
-
     @if (session('success') || session('error'))
         <div id="toastNotification" class="toast {{ session('error') ? 'toast-error' : 'toast-success' }}">
             <div class="toast-icon">
@@ -370,6 +368,8 @@
 
 
     @include('partials.mobile-bottom-nav')
+
+    @include('partials.search-modal')
 
 </body>
 

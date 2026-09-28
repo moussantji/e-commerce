@@ -1,204 +1,191 @@
 @extends('base')
 
-@section('title', 'Tableau de bord')
+@section('title', 'Mon espace client')
 
 @section('content')
+    @include('section-begin')
 
-    <!-- ===============================================-->
-    <!--    Main Content-->
-    <!-- ===============================================-->
-    <main class="main" id="top">
+    @php
+        $user = auth()->user();
+        $cmds = $commandes ?? collect();
+        $total = $cmds->sum('total');
+        $enCours = $cmds->filter(fn($c) => \App\Support\OrderStatus::normalize($c->statut) !== \App\Support\OrderStatus::LIVRE)->count();
+        $points = min(100, $cmds->count() * 15);
+        $initiales = mb_strtoupper(mb_substr($user->prenom ?? $user->name ?? '?', 0, 1) . mb_substr(explode(' ', $user->name ?? '')[1] ?? '', 0, 1));
+        $stClass = [
+            'en_attente' => 'conf', 'paiement_declare' => 'conf', 'payee' => 'prep',
+            'expedie' => 'exp', 'livre' => 'ok', 'annule' => 'ko',
+        ];
+    @endphp
 
-        <!-- ============================================-->
-        <!-- <section> begin ============================-->
-        @include('section-begin')
-        <!-- <section> close ============================-->
-        <!-- ============================================-->
+    <nav class="crumb" aria-label="Fil d'Ariane">
+        <div class="wrap">
+            <a href="{{ route('home') }}">Accueil</a>
+            <svg class="ic">
+                <use href="#i-chevron" />
+            </svg>
+            <span class="here">Mon espace client</span>
+        </div>
+    </nav>
 
-        @include('partials.nav')
+    <section class="phead">
+        <div class="wrap">
+            <h1>Mon espace client</h1>
+            <p>Vos commandes, leur suivi, vos favoris et vos informations de livraison.</p>
+        </div>
+    </section>
 
-        <!-- ============================================-->
-        <!-- <section> begin ============================-->
-        <section class="pt-5 pb-9">
-            <div class="container-small">
-                <nav class="mb-3" aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item">
-                            <a href="{{ route('home') }}">
-                                <i class="fas fa-home me-1"></i>
-                                {{ __('Accueil') }}
-                            </a>
-                        </li>
-                        <li class="breadcrumb-item active" aria-current="page">
-                            <i class="fas fa-tachometer-alt me-1"></i>
-                            {{ __('Tableau de bord') }}
-                        </li>
-                    </ol>
-                </nav>
-                <div class="row align-items-center justify-content-between g-3 mb-4">
-                    <div class="col-auto">
-                        <h2 class="mb-0">{{ __('Tableau de bord') }}</h2>
-                    </div>
-                    <div class="col-auto">
-                        <div class="row g-2 g-sm-3">
-                            <div class="col-auto"><button class="btn btn-phoenix-secondary"
-                                    onclick="document.querySelector('a[href=\'#tab-password\']').click();
-                 document.getElementById('tab-password').scrollIntoView({behavior: 'smooth'})"><span
-                                        class="fas fa-key me-2"></span>{{ __('Réinitialiser le mot de passe') }}</button></div>
-                        </div>
+    <section>
+        <div class="wrap">
+            <div class="dash-head">
+                <div class="dash-who">
+                    <span class="av-lg">{{ $initiales }}</span>
+                    <div>
+                        <h1>Bonjour {{ $user->prenom ?? $user->name }}</h1>
+                        <p>{{ $user->email }} · client depuis {{ $user->created_at?->format('d/m/Y') }}</p>
                     </div>
                 </div>
-                <div class="row g-3 mb-6">
-                    <div class="col-12 col-lg-8">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <div class="border-bottom border-dashed pb-4">
-                                    <div class="row align-items-center g-3 g-sm-5 text-center text-sm-start">
-                                        <livewire:user-avatar :user="$user" />
-                                        <div class="col-12 col-sm-auto flex-1">
-                                            <h3>{{ $user->name }}</h3>
-                                            @php
-                                                $date = $user?->created_at ?? now();
-                                                $days = abs(floor(now()->diffInDays($date)));
-                                                $months = abs(floor(now()->diffInMonths($date)));
-                                            @endphp
+                <div class="pdp-actions" style="margin:0">
+                    <a class="btn-line" href="{{ route('products') }}"><svg class="ic">
+                            <use href="#i-bag" />
+                        </svg> Commander</a>
+                    <a class="btn-line" href="{{ route('profile.edit') }}"><svg class="ic">
+                            <use href="#i-user" />
+                        </svg> Mon profil</a>
+                    <form method="POST" action="{{ route('logout') }}" style="display:inline">
+                        @csrf
+                        <button class="btn-line" type="submit"><svg class="ic">
+                                <use href="#i-close" />
+                            </svg> Se déconnecter</button>
+                    </form>
+                </div>
+            </div>
 
-                                            <p class="text-body-secondary">
-                                                Rejoint il y a
-                                                @if ($days < 30)
-                                                    {{ $days }} {{ $days == 1 ? 'jour' : 'jours' }}
-                                                @elseif($months < 12)
-                                                    {{ $months }} {{ $months == 1 ? 'mois' : 'mois' }}
-                                                @else
-                                                    {{ abs(floor(now()->diffInYears($date))) }}
-                                                    {{ abs(floor(now()->diffInYears($date))) > 1 ? 'ans' : 'an' }}
-                                                @endif
-                                            </p>
+            <div class="kpis">
+                <div class="kpi"><span class="kpi-l">Commandes</span><b>{{ $cmds->count() }}</b><span
+                        class="kpi-n">passées avec ce compte</span></div>
+                <div class="kpi"><span class="kpi-l">En cours</span><b>{{ $enCours }}</b><span class="kpi-n">en
+                        préparation ou expédiées</span></div>
+                <div class="kpi"><span class="kpi-l">Total dépensé</span><b>{{ number_format($total, 0, ',', ' ') }}
+                        FCFA</b><span class="kpi-n">livraison comprise</span></div>
+                <div class="kpi"><span class="kpi-l">Fidélité</span><b>{{ $points }} / 100</b><span
+                        class="kpi-n">points cumulés</span></div>
+            </div>
 
-
-
-                                            <div><a class="me-2" href="#!"><span
-                                                        class="fab fa-linkedin-in text-body-quaternary text-opacity-75 text-primary-hover"></span></a><a
-                                                    class="me-2" href="#!"><span
-                                                        class="fab fa-facebook text-body-quaternary text-opacity-75 text-primary-hover"></span></a><a
-                                                    href="#!"><span
-                                                        class="fab fa-twitter text-body-quaternary text-opacity-75 text-primary-hover"></span></a>
-                                            </div>
-                                        </div>
-                                    </div>
+            <div class="dash-grid">
+                <div class="panel">
+                    <h2><svg class="ic">
+                            <use href="#i-bag" />
+                        </svg> Mes commandes</h2>
+                    @forelse($cmds as $c)
+                        @php $norm = \App\Support\OrderStatus::normalize($c->statut); @endphp
+                        <div class="ocmd">
+                            <div class="ocmd-top">
+                                <div><b>{{ $c->numero_commande ?? 'CMD-' . $c->id }}</b>
+                                    <span
+                                        class="muted-sm">{{ $c->date_commande?->format('d/m/Y') ?? $c->created_at?->format('d/m/Y') }}</span>
                                 </div>
-                                <div class="d-flex flex-between-center pt-4">
-                                    <div>
-                                        <h6 class="mb-2 text-body-secondary">{{ __('Total dépensé') }}</h6>
-                                        <h4 class="fs-7 text-body-highlight mb-0">
-                                            {{ number_format($user->orders()->sum('total'), 0) }} FCFA</h4>
-                                    </div>
-                                    <div class="text-end">
-                                        <h6 class="mb-2 text-body-secondary">{{ __('Dernière commande') }}</h6>
-                                        <h4 class="fs-7 text-body-highlight mb-0">
-                                            @php
-                                                $lastOrder = $user->orders()->latest()->first();
-                                            @endphp
-
-                                            @if ($lastOrder)
-                                                @php
-                                                    $date = $lastOrder->created_at;
-                                                    $days = abs(floor(now()->diffInDays($date)));
-                                                    $months = abs(floor(now()->diffInMonths($date)));
-                                                    $years = abs(floor(now()->diffInYears($date)));
-                                                @endphp
-
-                                                @if ($days < 30)
-                                                    il y a {{ $days }} {{ $days == 1 ? 'jour' : 'jours' }}
-                                                @elseif($months < 12)
-                                                    il y a {{ $months }} {{ $months == 1 ? 'mois' : 'mois' }}
-                                                @else
-                                                    il y a {{ $years }} {{ $years > 1 ? 'ans' : 'an' }}
-                                                @endif
-                                            @else
-                                                <span class="text-muted">Aucune commande</span>
-                                            @endif
-
-                                        </h4>
-                                    </div>
-                                    <div class="text-end">
-                                        <h6 class="mb-2 text-body-secondary">{{ __('Nombre total de commandes') }}</h6>
-                                        <h4 class="fs-7 text-body-highlight mb-0">{{ $user->orders()->count() }} </h4>
-                                    </div>
-                                </div>
+                                <span class="st {{ $stClass[$norm] ?? 'conf' }}">{{ $c->status_label }}</span>
+                            </div>
+                            <div class="ocmd-lignes">
+                                {{ $c->produits->map(fn($p) => Str::limit($p->name, 40) . ' ×' . ($p->pivot->quantite ?? 1))->join(' · ') }}
+                            </div>
+                            <div class="ocmd-foot">
+                                <span>{{ $c->adresse_livraison['ville'] ?? '' }}</span>
+                                <b>{{ number_format($c->total, 0, ',', ' ') }} FCFA</b>
+                            </div>
+                            <div class="pdp-actions" style="margin-top:10px">
+                                @if ($norm === 'en_attente')
+                                    <a class="btn-solid"
+                                        style="font-size:13px;padding:11px 22px"
+                                        href="{{ route('commande.show', $c->id) }}"><svg class="ic"
+                                            style="width:16px;height:16px">
+                                            <use href="#i-card" />
+                                        </svg> Payer ·
+                                        {{ number_format($c->total, 0, ',', ' ') }} FCFA</a>
+                                @endif
+                                <a class="btn-ghost-sm"
+                                    href="{{ route('commande.show', $c->id) }}"><svg class="ic"
+                                        style="width:15px;height:15px">
+                                        <use href="#i-b2-info" />
+                                    </svg> Suivre cette commande</a>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-12 col-lg-4">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <div class="border-bottom border-dashed">
-                                    <h4 class="mb-3">{{ __('Adresse par défaut') }}<button class="btn btn-link p-0"
-                                            onclick="document.querySelector('a[href=\'#tab-personal-info\']').click();
-                                        document.getElementById('tab-personal-info').scrollIntoView({behavior: 'smooth'})"
-                                            type="button">
-                                            <span class="fas fa-edit fs-9 ms-3 text-body-quaternary"></span></button></h4>
-                                </div>
-                                <div class="pt-4 mb-7 mb-lg-4 mb-xl-7">
-                                    <div class="row justify-content-between">
-                                        <div class="col-auto">
-                                            <h5 class="text-body-highlight">{{ __('Adresse') }}</h5>
-                                        </div>
-                                        <div class="col-auto">
-                                            <p class="text-body-secondary">
-                                                {{ $user->adresse['adresse'] ?? 'Aucune adresse' }}<br />
-                                                {{ $adresseData['pays'] ?? 'Pays inconnu' }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="border-top border-dashed pt-4">
-                                    <div class="row flex-between-center mb-2">
-                                        <div class="col-auto">
-                                            <h5 class="text-body-highlight mb-0">Courriel</h5>
-                                        </div>
-                                        <div class="col-auto"><a class="lh-1"
-                                                href="mailto:{{ $user->email }}">{{ $user->email }}</a></div>
-                                    </div>
-                                    <div class="row flex-between-center">
-                                        <div class="col-auto">
-                                            <h5 class="text-body-highlight mb-0">Téléphone</h5>
-                                        </div>
-                                        <div class="col-auto"><a
-                                                href="tel:{{ $user->tel }}">{{ $user->tel ?? 'Aucun' }}</a></div>
-                                    </div>
-                                </div>
+                    @empty
+                        <div class="empty" style="border:0;margin:0"><svg class="ic">
+                                <use href="#i-bag" />
+                            </svg>
+                            <h3>Pas encore de commande</h3>
+                            <p>Vos commandes apparaîtront ici avec leur suivi.</p>
+                            <div class="pdp-actions" style="justify-content:center;margin-top:14px">
+                                <a class="btn-solid" href="{{ route('products') }}">Commander</a>
                             </div>
                         </div>
-                    </div>
+                    @endforelse
                 </div>
 
+                <div class="panel">
+                    <h2><svg class="ic">
+                            <use href="#i-heart" />
+                        </svg> Mes favoris <span class="badge-nb">{{ ($wishlist ?? collect())->count() }}</span></h2>
+                    @forelse($wishlist ?? [] as $p)
+                        @php $img = $p->getPhoto() ? $p->getPhoto()->getImageUrl(120, 120) : asset('assets/img/products/1.png'); @endphp
+                        <div class="dligne">
+                            <a class="th" style="background-image:url('{{ $img }}')"
+                                href="{{ route('produits.show', ['slug' => $p->getSlug(), 'id' => $p->id]) }}"></a>
+                            <div><b><a
+                                        href="{{ route('produits.show', ['slug' => $p->getSlug(), 'id' => $p->id]) }}">{{ Str::limit($p->name, 45) }}</a></b>
+                                <small>{{ number_format($p->sale_price ?? $p->price, 0, ',', ' ') }} FCFA</small></div>
+                            <a class="btn-ghost-sm"
+                                href="{{ route('produits.show', ['slug' => $p->getSlug(), 'id' => $p->id]) }}">Voir</a>
+                        </div>
+                    @empty
+                        <p class="muted-sm">Aucun favori. Cliquez sur le cœur d'un produit pour l'enregistrer.</p>
+                    @endforelse
+                </div>
+            </div>
 
-                @include('partials.dashboard')
-            </div><!-- end of .container-->
-        </section><!-- <section> close ============================-->
-        <!-- ============================================-->
+            <div class="dash-grid">
+                <div class="panel">
+                    <h2><svg class="ic">
+                            <use href="#i-user" />
+                        </svg> Mes informations</h2>
+                    <table class="spec">
+                        <tbody>
+                            <tr>
+                                <td>Nom</td>
+                                <td>{{ $user->prenom ?? $user->name }}</td>
+                            </tr>
+                            <tr>
+                                <td>Email</td>
+                                <td>{{ $user->email }}</td>
+                            </tr>
+                            <tr>
+                                <td>Téléphone</td>
+                                <td>{{ $user->tel ?? '—' }}</td>
+                            </tr>
+                            <tr>
+                                <td>Adresse</td>
+                                <td>{{ $user->adresse ?? '—' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="panel">
+                    <h2><svg class="ic">
+                            <use href="#i-headset" />
+                        </svg> Besoin d'aide ?</h2>
+                    <p style="font-size:13.5px;color:#374151;line-height:1.75">Notre service client répond en moins
+                        d'une heure du lundi au samedi, de 8 h à 20 h.</p>
+                    <div class="pdp-actions" style="margin-top:14px">
+                        <a class="btn-solid" href="{{ route('products') }}"><svg class="ic">
+                                <use href="#i-headset" />
+                            </svg> Voir le catalogue</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-        <!-- Search Modal -->
-        @include('admin.partials.search_modal')
-
-        @include('partials.footer')
-
-    </main><!-- ===============================================-->
-    <!--    End of Main Content-->
-    <!-- ===============================================-->
-
-
-    <script>
-        document.getElementById('avatarFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('avatarPreview').src = e.target.result;
-                }
-                reader.readAsDataURL(file);
-            }
-        });
-    </script>
-
+    @include('partials.footer')
 @endsection

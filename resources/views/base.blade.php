@@ -1,861 +1,239 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="ltr" data-bs-theme="dark" data-navigation-type="default"
-    data-navbar-horizontal-shape="default" class="dark">
-
-<meta http-equiv="content-type" content="text/html;charset=utf-8" />
-
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-
-    <!-- ===============================================-->
-    <!--    Document Title-->
-    <!-- ===============================================-->
-    <title>@yield('title')</title>
-
-    <script>
-        // Force le thème Titanium Neo-Luxe (Dark Mode)
-        try {
-            localStorage.setItem('phoenixTheme', 'dark');
-            document.documentElement.setAttribute('data-bs-theme', 'dark');
-        } catch (e) {}
-    </script>
-
-    <!-- ===============================================-->
-    <!--    Favicons-->
-    <!-- ===============================================-->
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/img/favicons/apple-touch-icon.png') }}">
-    <link rel="icon" type="image/png" sizes="64x64" href="{{ asset('assets/img/favicons/favicon.png') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/img/favicons/favicon.png') }}">
-    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('assets/img/favicons/favicon.ico') }}">
-    <link rel="manifest" href="{{ asset('assets/img/favicons/manifest.json') }}">
-    <meta name="msapplication-TileImage" content="{{ asset('assets/img/favicons/mstile-150x150.png') }}">
-    <meta name="theme-color" content="#ffffff">
-
-    <!-- Scripts -->
-    <script src="{{ asset('vendors/simplebar/simplebar.min.js') }}"></script>
-    <script src="{{ asset('assets/js/config.js') }}"></script>
-
-    <!-- ===============================================-->
-    <!--    Stylesheets-->
-    <!-- ===============================================-->
-    <link rel="preconnect" href="https://fonts.googleapis.com/">
-    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
-    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap"
-        rel="stylesheet">
-    <link href="{{ asset('vendors/simplebar/simplebar.min.css') }}" rel="stylesheet">
-    <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.8/css/line.css">
-    <link href="{{ asset('assets/css/theme-rtl.min.css') }}" type="text/css" rel="stylesheet" id="style-rtl">
-    <link href="{{ asset('assets/css/theme.min.css') }}" type="text/css" rel="stylesheet" id="style-default">
-    <link href="{{ asset('assets/css/user-rtl.min.css') }}" type="text/css" rel="stylesheet" id="user-style-rtl">
-    <link href="{{ asset('assets/css/user.min.css') }}" type="text/css" rel="stylesheet" id="user-style-default">
-    <link href="{{ asset('vendors/swiper/swiper-bundle.min.css') }}" rel="stylesheet">
-
-    <style>
-        /* ANIMATION PAGE COMPLÈTE */
-        /* LOADING SCREEN PRO */
-        /* LOADER PRO */
-        .page-loader {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: #080C14;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 99999;
-            transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-
-        .page-loader.fade-out {
-            opacity: 0;
-            transform: scale(1.03);
-            visibility: hidden;
-        }
-
-        .loader-circle {
-            width: 70px;
-            height: 70px;
-            border: 3px solid rgba(56, 189, 248, 0.15);
-            border-top: 3px solid #38BDF8;
-            border-radius: 50%;
-            animation: spinPro 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-            position: relative;
-        }
-
-        .loader-glow {
-            position: absolute;
-            top: -10px;
-            left: -10px;
-            right: -10px;
-            bottom: -10px;
-            margin: auto;
-            background: radial-gradient(circle, rgba(56, 189, 248, 0.35) 0%, transparent 70%);
-            border-radius: 50%;
-            animation: pulseGlow 1.8s ease-out infinite;
-        }
-
-        @keyframes spinPro {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        @keyframes pulseGlow {
-            0% {
-                opacity: 1;
-                transform: scale(0.8);
-            }
-
-            100% {
-                opacity: 0;
-                transform: scale(1.2);
-            }
-        }
-    </style>
-
-    <style>
-        /* ANIMATION SECTION AU SCROLL */
-
-        /* banniere full width */
-        /* Bannières invisibles au début */
-        .whooping-banner,
-        .gift-items-banner,
-        .best-in-market-banner {
-            opacity: 0;
-        }
-
-        /* Délai + fade après loader */
-        .whooping-banner.fade-ready {
-            animation: fadeInBanner 1s ease-out 0.2s forwards;
-        }
-
-        .gift-items-banner.fade-ready {
-            animation: fadeInBanner 1s ease-out 0.5s forwards;
-        }
-
-        .best-in-market-banner.fade-ready {
-            animation: fadeInBanner 1s ease-out 0.8s forwards;
-        }
-
-        @keyframes fadeInBanner {
-            0% {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Animation d'entrée de la section entière */
-        /* Top Deals Header */
-        .d-flex.flex-between-center.mb-3 {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-
-        .d-flex.flex-between-center.mb-3.animate {
-            opacity: 1 !important;
-            transform: translateY(0) !important;
-        }
-
-        /* Bolts icons */
-        .d-flex.flex-between-center .fas.fa-bolt {
-            opacity: 0;
-            transform: scale(0.5);
-            transition: all 0.5s ease;
-        }
-
-        .d-flex.flex-between-center.animate .fas.fa-bolt {
-            opacity: 1 !important;
-            transform: scale(1) !important;
-        }
-
-        /* Swiper container */
-        .swiper-theme-container.products-slider {
-            opacity: 0;
-            transform: translateX(-50px) scale(0.95);
-            transition: all 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-
-        .swiper-theme-container.products-slider.animate {
-            opacity: 1 !important;
-            transform: translateX(0) scale(1) !important;
-        }
-
-        /* Sidebar image */
-        .col-lg-3 .h-100 {
-            opacity: 0;
-            transform: scale(0.8);
-            transition: all 0.8s ease;
-        }
-
-        .col-lg-3 .h-100.animate {
-            opacity: 1 !important;
-            transform: scale(1) !important;
-        }
-
-        /* Mobile image */
-        .col-12.d-lg-none img {
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.6s ease;
-        }
-
-        .col-12.d-lg-none img.animate {
-            opacity: 1 !important;
-            transform: translateY(0) !important;
-        }
-
-        /* SUPPRIME opacity:0 initial → utilise data-hidden */
-        [data-hidden] {
-            opacity: 0;
-            transform: translateY(60px);
-            transition: all 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-
-        [data-hidden].animate {
-            opacity: 1 !important;
-            transform: translateY(0) !important;
-        }
-
-        /* Animation SEULEMENT sur les product-card (PAS swiper-slide) */
-        .top-deals-card {
-            opacity: 0;
-            transform: translateY(40px);
-            transition: all 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-
-        .top-deals-card.animate {
-            opacity: 1 !important;
-            transform: translateY(0) !important;
-        }
-    </style>
-    <style>
-        /* Garde animation d'entrée */
-        .scrollbar {
-            opacity: 0;
-            transform: translateY(50px);
-            animation: slideInUpPro 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-        }
-
-        .scrollbar-nav {
-            overflow: hidden;
-            /* ✅ GARDÉ pour navbar */
-            white-space: nowrap;
-        }
-
-        @keyframes slideInUpPro {
-            0% {
-                opacity: 0;
-                transform: translateY(50px) scale(0.95);
-            }
-
-            50% {
-                opacity: 0.7;
-                transform: translateY(15px) scale(0.98);
-            }
-
-            100% {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        /* Les icônes arrivent une par une */
-        .scroll-content .icon-nav-item:nth-child(1) {
-            animation-delay: 0.1s;
-        }
-
-        .scroll-content .icon-nav-item:nth-child(2) {
-            animation-delay: 0.15s;
-        }
-
-        .scroll-content .icon-nav-item:nth-child(3) {
-            animation-delay: 0.2s;
-        }
-
-        .scroll-content .icon-nav-item:nth-child(4) {
-            animation-delay: 0.25s;
-        }
-
-        .scroll-content .icon-nav-item:nth-child(5) {
-            animation-delay: 0.3s;
-        }
-
-        .scroll-content .icon-nav-item:nth-child(6) {
-            animation-delay: 0.35s;
-        }
-
-        .scroll-content .icon-nav-item:nth-child(7) {
-            animation-delay: 0.4s;
-        }
-
-        .scroll-content .icon-nav-item:nth-child(8) {
-            animation-delay: 0.45s;
-        }
-
-        .scroll-content .icon-nav-item:nth-child(9) {
-            animation-delay: 0.5s;
-        }
-
-        .scroll-content .icon-nav-item:nth-child(10) {
-            animation-delay: 0.55s;
-        }
-
-        .scroll-content .icon-nav-item:nth-child(11) {
-            animation-delay: 0.6s;
-        }
-
-        .icon-nav-item {
-            opacity: 0;
-            transform: translateY(30px);
-            animation: fadeInUpItem 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-        }
-
-        @keyframes fadeInUpItem {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .scroll-track {
-            display: flex !important;
-            animation: scrollInfinite 35s linear infinite;
-            width: max-content;
-        }
-
-        .scroll-content {
-            display: flex;
-            gap: 30px;
-            flex-shrink: 0;
-            padding-right: 20px;
-        }
-
-        .icon-nav-item {
-            text-decoration: none;
-            color: inherit;
-            flex-shrink: 0;
-            min-width: 100px;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-
-        .icon-container {
-            width: 70px;
-            height: 70px;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 10px;
-            transition: all 0.3s ease;
-        }
-
-        .nav-label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin: 0;
-        }
-
-        @keyframes scrollInfinite {
-            0% {
-                transform: translateX(0);
-            }
-
-            100% {
-                transform: translateX(-50%);
-            }
-        }
-
-        /* Pause au hover */
-        .scrollbar:hover .scroll-track {
-            animation-play-state: paused !important;
-        }
-
-        /* Effets hover */
-        /* Effets hover SANS FOND BLANC */
-        .icon-nav-item:hover {
-            transform: scale(1.2) translateY(-10px);
-        }
-
-        .icon-nav-item:hover .icon-container {
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            /* ✅ SUPPRIMÉ: background: rgba(255,255,255,0.95) !important; */
-            border: 2px solid rgba(255, 255, 255, 0.4);
-            /* Bordure subtile à la place */
-        }
-
-        .icon-nav-item:hover .nav-label {
-            font-weight: 700;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-            color: inherit !important;
-            /* Garde la couleur originale */
-        }
-
-
-
-        /* Toast minimaliste très visible */
-        #toastNotification {
-            position: fixed !important;
-            top: 20px !important;
-            right: 20px !important;
-            max-width: 340px !important;
-            padding: 12px 16px !important;
-            border-radius: 8px !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
-            z-index: 10000 !important;
-            display: flex !important;
-            align-items: center !important;
-            gap: 10px !important;
-            font-size: 14px !important;
-            font-family: Arial, sans-serif !important;
-            background: #fff !important;
-            border: 2px solid #000 !important;
-            color: #000 !important;
-        }
-
-        /* Ne pas animer tout de suite, pour vérifier qu'il est bien là */
-        .toast-icon {
-            font-size: 18px !important;
-        }
-
-        .toast-message {
-            flex: 1 !important;
-        }
-
-        /* Désactive l'animation au début */
-        .toast.showing {
-            transform: translateX(0) !important;
-        }
-
-
-        .toast.toast-success {
-            background: #f0fdf4;
-            border: 1px solid #a7f3d0;
-            color: #065f46;
-        }
-
-        .rating-stars {
-            letter-spacing: 8px;
-            cursor: pointer;
-        }
-
-        .rating-stars span {
-            color: #aaa;
-        }
-
-        .rating-stars span.selected {
-            color: #f39c12;
-        }
-
-
-
-        .toast.toast-error {
-            background: #fdf2f2;
-            border: 1px solid #fca5a5;
-            color: #b91c1c;
-        }
-
-        .toast-progress {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 4px;
-            width: 100%;
-            background: currentColor;
-            opacity: 0.3;
-            border-radius: 0 0 8px 8px;
-        }
-    </style>
-
-    <style>
-        /* TOUTES les pages : fade in après loader.
-           ⚠️ On N'inclut PAS body ici : un transform sur body casserait
-           le position:fixed de la barre de navigation mobile. */
-        main,
-        .container,
-        .produit-main,
-        .content-wrapper {
-            opacity: 0;
-            animation: fadeInGlobal 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-        }
-
-        @keyframes fadeInGlobal {
-            0% {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @media (max-width: 576px) {
-            .order-items-scroll {
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-                padding: 10px 0;
-                scrollbar-width: thin;
-            }
-
-            /* ✅ CORRIGÉ : utilise flex au lieu d'inline-table */
-            .order-items-scroll>.border-dashed>.ms-n2 {
-                min-width: 420px;
-                /* Force scroll horizontal */
-                display: flex !important;
-                flex-direction: column;
-                gap: 12px;
-            }
-
-            /* Scrollbar discrète mais fluide */
-            .order-items-scroll::-webkit-scrollbar {
-                height: 4px;
-            }
-
-            .order-items-scroll::-webkit-scrollbar-track {
-                background: transparent;
-            }
-
-            .order-items-scroll::-webkit-scrollbar-thumb {
-                background: rgba(0, 0, 0, 0.4);
-                border-radius: 2px;
-            }
-        }
-    </style>
-
-    <style>
-        /*forcer le centrage vertical et horizontal du modal*/
-        .modal.fade .modal-dialog {
-            transform: none !important;
-            margin: auto !important;
-        }
-
-        .modal-dialog-centered {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: calc(100% - 1rem);
-        }
-
-        /*Sur mobile : garder un peu de marge sur les côtés*/
-        @media (max-width: 576px) {
-            .modal-dialog.modal-lg {
-                max-width: 95% !important;
-                margin: 0 auto !important;
-            }
-        }
-
-        /*Fond sombre semi-transparent*/
-        .modal-backdrop {
-            opacity: 0.5 !important;
-        }
-
-        /* ================================================================
-           PROPOSITION 3 TITANIUM NEO-LUXE GLOBAL OVERRIDE
-           ================================================================ */
-        body, html, [data-bs-theme="dark"] body {
-            background-color: #080C14 !important;
-            color: #F8FAFC !important;
-        }
-
-        .bg-body-emphasis, .bg-body {
-            background-color: #0E1524 !important;
-        }
-
-        .product-card, .card {
-            background: #121B2D !important;
-            border: 1px solid rgba(56, 189, 248, 0.18) !important;
-            border-radius: 18px !important;
-            box-shadow: 0 10px 25px -10px rgba(0, 0, 0, 0.6) !important;
-        }
-
-        .product-card:hover {
-            border-color: #38BDF8 !important;
-            box-shadow: 0 15px 35px -5px rgba(56, 189, 248, 0.25) !important;
-            background: #162238 !important;
-        }
-
-        .product-img-box, .product-card .border.position-relative {
-            background: #090E1A !important;
-            border: 1px solid rgba(56, 189, 248, 0.15) !important;
-            border-radius: 14px !important;
-            height: 200px !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            padding: 14px !important;
-            overflow: hidden !important;
-        }
-
-        .product-contained-img, .product-card img, .product-card .img-fluid {
-            max-width: 78% !important;
-            max-height: 78% !important;
-            width: auto !important;
-            height: auto !important;
-            object-fit: contain !important;
-            margin: auto !important;
-            filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5)) !important;
-            transition: transform 0.35s ease !important;
-        }
-
-        .product-card:hover .product-contained-img, 
-        .product-card:hover img {
-            transform: scale(1.08) !important;
-        }
-
-        .product-name, .product-card h6 {
-            color: #F8FAFC !important;
-            font-weight: 600 !important;
-        }
-
-        .text-body-emphasis, h1, h2, h3, h4, h5, h6 {
-            color: #FFFFFF !important;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #38BDF8 0%, #0284C7 100%) !important;
-            border: none !important;
-            color: #080C14 !important;
-            font-weight: 700 !important;
-            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3) !important;
-        }
-
-        .btn-primary:hover {
-            background: linear-gradient(135deg, #7DD3FC 0%, #0369A1 100%) !important;
-        }
-    </style>
-    <script>
-        var phoenixIsRTL = window.config.config.phoenixIsRTL;
-        if (phoenixIsRTL) {
-            var linkDefault = document.getElementById('style-default');
-            var userLinkDefault = document.getElementById('user-style-default');
-            linkDefault.setAttribute('disabled', true);
-            userLinkDefault.setAttribute('disabled', true);
-            document.querySelector('html').setAttribute('dir', 'rtl');
-        } else {
-            var linkRTL = document.getElementById('style-rtl');
-            var userLinkRTL = document.getElementById('user-style-rtl');
-            linkRTL.setAttribute('disabled', true);
-            userLinkRTL.setAttribute('disabled', true);
-        }
-    </script>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>@yield('title', 'Boutique')</title>
+<meta name="description" content="Boutique en ligne — offres flash, livraison offerte, paiement Mobile Money.">
+<meta name="theme-color" content="#4c1d95">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+@include('partials.boutique-style')
 </head>
-
 <body>
+@include('partials.boutique-sprite')
 
+<div id="progress" aria-hidden="true"></div>
 
-    @yield('content')
+@yield('content')
 
-    @includeIf('partials.bottom-nav')
+@if(session('success') || session('error'))
+<div id="toastNotification" class="{{ session('error') ? 'err' : 'ok' }}">{{ session('error') ? '⚠️' : '✅' }} {{ session('error') ?? session('success') }}</div>
+@endif
 
-    @if (session('success') || session('error'))
-        <div id="toastNotification" class="toast {{ session('error') ? 'toast-error' : 'toast-success' }}">
-            <div class="toast-icon">
-                {{ session('error') ? '⚠️' : '✅' }}
-            </div>
-            <div class="toast-message">
-                {{ session('error') ?? session('success') }}
-            </div>
-            <div class="toast-progress"></div>
-        </div>
-    @endif
+@livewireScripts
+@include('partials.search-modal')
+@include('partials.login-modal')
 
-
-
-
-    <!-- ===============================================-->
-    <!--    JavaScripts-->
-    <!-- ===============================================-->
-
-    <script>
-        document.querySelectorAll('.js-qty-minus, .js-qty-plus').forEach(btn => {
-            btn.addEventListener('click', function() {
-                // ✅ ID bouton = "qty-plus-10" → extrait "10"
-                const productId = this.id.match(/qty-(minus|plus)-(\d+)/)?.[2];
-
-                const input = this.closest('[data-quantity="data-quantity"]').querySelector('.qty-input');
-                const hiddenInput = document.getElementById(`qty-hidden-${productId}`);
-
-                let qty = parseInt(input.value) || 1;
-                if (this.dataset.action === 'decrement') {
-                    qty = Math.max(1, qty - 1);
-                } else {
-                    qty = Math.min(99, qty + 1);
-                }
-
-                input.value = qty;
-                hiddenInput.value = qty;
-            });
-        });
-    </script>
-
-
-    <script src="{{ asset('vendors/dropzone/dropzone-min.js') }}"></script>
-    <script src="{{ asset('vendors/popper/popper.min.js') }}"></script>
-    <script src="{{ asset('vendors/bootstrap/bootstrap.min.js') }}"></script>
-    <script src="{{ asset('vendors/anchorjs/anchor.min.js') }}"></script>
-    <script src="{{ asset('vendors/is/is.min.js') }}"></script>
-    <script src="{{ asset('vendors/fontawesome/all.min.js') }}"></script>
-    <script src="{{ asset('vendors/lodash/lodash.min.js') }}"></script>
-    <script src="{{ asset('vendors/list.js/list.min.js') }}"></script>
-    <script src="{{ asset('vendors/feather-icons/feather.min.js') }}"></script>
-    <script src="{{ asset('vendors/dayjs/dayjs.min.js') }}"></script>
-    <script src="{{ asset('assets/js/phoenix.js') }}"></script>
-    <script src="{{ asset('vendors/swiper/swiper-bundle.min.js') }}"></script>
-    <script src="{{ asset('assets/js/dashboards/ecommerce-dashboard.js') }}"></script>
-    <script src="{{ asset('vendors/rater-js/index.js') }}"></script>
-
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const toast = document.getElementById('toastNotification');
-            if (!toast) return;
-
-            const progress = toast.querySelector('.toast-progress');
-            progress.style.width = '100%';
-            progress.style.transition = 'width 10s linear';
-
-            // Lancer le décompte de la barre de progression
-            setTimeout(() => {
-                progress.style.width = '0';
-            }, 50);
-
-            // Fermer le toast après 10s
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateX(110%)';
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.remove();
-                    }
-                }, 300);
-            }, 10000);
-        });
-    </script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // --- 1. Carrousel de catégories : clone le contenu pour un défilement infini ---
-            const original = document.getElementById('scrollContent');
-            const clone = document.getElementById('scrollContentClone');
-            const scrollTrack = document.querySelector('.scroll-track');
-            if (original && clone) {
-                clone.innerHTML = original.innerHTML;
-            }
-
-            // --- 2. Observer de révélation au scroll (réutilisable, robuste) ---
-            const revealSelector = '[data-hidden], .top-deals-card, .d-flex.flex-between-center.mb-3, .swiper-theme-container.products-slider, .col-lg-3 .h-100, .col-12.d-lg-none img';
-
-            const revealObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('animate');
-                        revealObserver.unobserve(entry.target);
-                    }
-                });
-            }, {
-                threshold: 0.15,
-                rootMargin: '0px 0px -80px 0px'
-            });
-
-            const revealAll = () => {
-                document.querySelectorAll(revealSelector).forEach(el => revealObserver.observe(el));
-            };
-            revealAll();
-
-            // Filet de sécurité : si quelque chose empêche l'observer de se déclencher,
-            // on force l'affichage pour que le contenu ne reste jamais invisible.
-            const forceVisible = () => {
-                document.querySelectorAll(revealSelector).forEach(el => el.classList.add('animate'));
-                document.querySelectorAll('.whooping-banner, .gift-items-banner, .best-in-market-banner')
-                    .forEach(el => el.classList.add('fade-ready'));
-            };
-
-            // --- 3. Loader + démarrage des animations ---
-            const startPage = () => {
-                document.body.classList.add('fade-ready');
-                if (scrollTrack) {
-                    scrollTrack.style.animationPlayState = 'running';
-                }
-                document.querySelectorAll('.whooping-banner, .gift-items-banner, .best-in-market-banner')
-                    .forEach(el => el.classList.add('fade-ready'));
-                // Re-scanne le DOM (utile après le rendu des composants Livewire)
-                revealAll();
-            };
-
-            const loader = document.getElementById('pageLoader');
-            if (loader) {
-                // Met le carrousel en pause tant que le loader est visible
-                if (scrollTrack) scrollTrack.style.animationPlayState = 'paused';
-                const hideLoader = () => {
-                    loader.classList.add('fade-out');
-                    setTimeout(startPage, 600);
-                };
-                if (document.readyState === 'complete') {
-                    setTimeout(hideLoader, 800);
-                } else {
-                    let done = false;
-                    const run = () => { if (!done) { done = true; hideLoader(); } };
-                    window.addEventListener('load', () => setTimeout(run, 400));
-                    setTimeout(run, 2500); // garde-fou si l'évènement load tarde
-                }
-            } else {
-                startPage();
-            }
-
-            // Filet de sécurité global : tout est visible au plus tard après 4s
-            setTimeout(forceVisible, 4000);
-        });
-    </script>
-
-
-
-
-
-    @livewireScripts
-
-    {{-- 🔥 FIX FEATHER + LIVEWIRE --}}
-    <script>
-        document.addEventListener('livewire:init', () => {
-            // À CHAQUE update Livewire → re-init Feather
-            Livewire.hook('morph.updated', () => {
-                setTimeout(() => {
-                    if (typeof feather !== 'undefined') {
-                        feather.replace({
-                            'stroke-width': 2,
-                            width: '20',
-                            height: '20'
-                        });
-                    }
-                }, 100);
-            });
-        });
-    </script>
-
-
-
-    @include('partials.mobile-bottom-nav')
-
-    @stack('scripts')
-
-
+<script>
+/* JS nouveau uniquement — vanilla, aucun ancien script */
+(function(){
+function hideLoader(){var l=document.getElementById('pageLoader');if(l)l.classList.add('fade-out');}
+window.addEventListener('load',function(){setTimeout(hideLoader,300);});
+setTimeout(hideLoader,2500);
+var toast=document.getElementById('toastNotification');
+if(toast){setTimeout(function(){toast.style.opacity='0';setTimeout(function(){toast.remove();},400);},8000);}
+// reveal + cascade cartes + progression + nav
+function cascadeCards(){document.querySelectorAll('.grid .card').forEach(function(c,i){if(!c.style.transitionDelay)c.style.transitionDelay=(Math.min(i,12)*70)+'ms';});}
+cascadeCards();
+var io=null;
+function observeRv(){
+var els=document.querySelectorAll('.rv:not(.in):not([data-rv-obs])');
+if(!('IntersectionObserver' in window)){els.forEach(function(el){el.classList.add('in');});return;}
+if(!io){io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12,rootMargin:'0px 0px -40px 0px'});}
+els.forEach(function(el){el.setAttribute('data-rv-obs','1');io.observe(el);});
+}
+observeRv();
+setTimeout(function(){document.querySelectorAll('.rv:not(.in)').forEach(function(el){el.classList.add('in');});},4000);
+// Après chaque mise à jour Livewire (filtres, pagination...), les nouvelles cartes
+// .rv doivent redevenir visibles : on ré-observe + filet de sécurité immédiat.
+function revealAfterLivewire(){cascadeCards();observeRv();setTimeout(function(){document.querySelectorAll('.rv:not(.in)').forEach(function(el){var r=el.getBoundingClientRect();if(r.top<window.innerHeight+200)el.classList.add('in');});},50);}
+document.addEventListener('livewire:update',revealAfterLivewire);
+document.addEventListener('livewire:morph-updated',revealAfterLivewire);
+document.addEventListener('livewire:load',function(){if(window.Livewire&&Livewire.hook){Livewire.hook('morph.updated',function(){revealAfterLivewire();});}});
+var barre=document.getElementById('progress'),planifie=false;
+function maj(){var y=window.scrollY||document.documentElement.scrollTop;var h=document.documentElement.scrollHeight-window.innerHeight;var p=h>0?Math.min(1,y/h):0;if(barre)barre.style.transform='scaleX('+p+')';document.documentElement.classList.toggle('scrolled',y>8);planifie=false;}
+window.addEventListener('scroll',function(){if(!planifie){planifie=true;requestAnimationFrame(maj);}},{passive:true});maj();
+/* Recherche — identique au HTML : index lu dans les vraies cartes .grid .card */
+(function(){
+var sm=document.getElementById('sm');
+if(!sm||!sm.querySelector)return;
+var pan=sm.querySelector('.sm-pan');
+var champ=document.getElementById('sm-q');
+var corps=sm.querySelector('.sm-body');
+var bloc=document.getElementById('sm-default');
+var res=document.getElementById('sm-results');
+var zoneO=document.getElementById('sm-offres');
+var form=document.getElementById('shopSearchForm');
+if(!form)form=document.querySelector('.shop-search');
+var haut=form?form.querySelector('input'):document.getElementById('shopSearchInput');
+var reduit=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var garde=false,dernier=null;
+var produits=[];
+function norm(s){return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+function ech(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function pos(nom,cible){var n=0;for(var i=0;i<nom.length;i++){if(n===cible)return i;n+=norm(nom.charAt(i)).length;}return nom.length;}
+function surligne(nom,q){var plat=norm(nom),i=q?plat.indexOf(q):-1;if(i<0)return ech(nom);var a=pos(nom,i),b=pos(nom,i+q.length);return ech(nom.slice(0,a))+'<mark>'+ech(nom.slice(a,b))+'</mark>'+ech(nom.slice(b));}
+function buildIndex(force){
+var sig='';
+var list=[];
+Array.prototype.forEach.call(document.querySelectorAll('.grid .card'),function(c){
+if(sm&&sm.contains(c))return;
+var th=c.querySelector('.thumb'),nm=c.querySelector('.name');
+var pr=c.querySelector('.price'),av=c.querySelector('.was');
+var of=c.querySelector('.off');
+if(!nm||!pr)return;
+var nom=nm.textContent.trim(),prix=pr.textContent.trim();
+var avant=av?av.textContent.trim():'',remise=of?of.textContent.trim():'';
+sig+=nom+'|'+prix+'|'+avant+'|'+remise+';';
+list.push({el:c,nom:nom,prix:prix,avant:avant,remise:remise,bg:(th&&th.getAttribute('style'))||'',cle:norm(nom)});
+});
+list.forEach(function(p,i){p.id=i;});
+if(!force&&sig===buildIndex._sig)return;
+buildIndex._sig=sig;
+produits=list;
+var plus=produits.filter(function(p){return p.remise;}).sort(function(a,b){return parseInt(b.remise.replace(/\D/g,''),10)-parseInt(a.remise.replace(/\D/g,''),10);}).slice(0,3);
+if(zoneO){var html=plus.map(function(p,i){return ligne(p,'',0);}).join('');if(zoneO._html!==html){zoneO._html=html;zoneO.innerHTML=html;}}
+if(!sm.hidden&&champ&&champ.value)filtrer(champ.value,true);
+else if(champ&&!champ.value&&!sm.hidden)filtrer('',true);
+}
+buildIndex._sig=null;
+function ligne(p,q,delai){
+return '<button class="row" type="button" data-i="'+p.id+'"'+(delai?' style="animation-delay:'+delai+'ms"':'')+'>'+
+'<span class="th"'+(p.bg?' style="'+ech(p.bg)+'"':'')+'></span>'+
+'<span class="tx"><span class="nm">'+surligne(p.nom,q)+'</span>'+
+'<span class="mt">'+(p.remise?'<span class="bg">'+ech(p.remise)+'</span>':'')+(p.avant?'<s>'+ech(p.avant)+'</s>':'')+'</span></span>'+
+'<span class="pr">'+ech(p.prix)+'</span>'+
+'<svg class="ic" aria-hidden="true"><use href="#i-chevron"/></svg></button>';
+}
+function filtrer(v,fromRebuild){
+var q=norm(String(v).trim());
+if(!q){if(bloc.hidden===false&&res.hidden===true&&!res.innerHTML)return;bloc.hidden=false;res.hidden=true;res.innerHTML='';res._html='';if(corps&&!fromRebuild)corps.scrollTop=0;return;}
+bloc.hidden=true;res.hidden=false;
+var t=produits.filter(function(p){return p.cle.indexOf(q)>=0;});
+var html;
+if(!t.length){html='<div class="sm-empty"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg><b>Aucun produit ne correspond à « '+ech(String(v).trim())+' »</b><span>Essayez « smartphone », « machine à laver » ou « ventilateur ».</span></div>';}
+else{html='<div class="sm-sec"><div class="sm-h">Produits</div><div class="sm-list">'+t.map(function(p,i){return ligne(p,q,i*45);}).join('')+'</div></div>';}
+if(res._html===html+q)return;
+res._html=html+q;res.innerHTML=html;
+if(corps&&!fromRebuild)corps.scrollTop=0;
+}
+function versProduit(i){
+var p=produits[parseInt(i,10)];
+if(!p)return;
+fermer();
+window.setTimeout(function(){
+if(p.el.scrollIntoView){p.el.scrollIntoView({behavior:reduit?'auto':'smooth',block:'center'});}
+p.el.classList.add('flash');
+window.setTimeout(function(){p.el.classList.remove('flash');},1500);
+},200);
+}
+function ouvrir(){
+if(!sm.hidden)return;
+dernier=document.activeElement;
+if(haut&&haut.value&&champ&&!champ.value)champ.value=haut.value;
+buildIndex(true);
+filtrer(champ?champ.value:'');
+sm.hidden=false;
+document.documentElement.classList.add('sm-open');
+void sm.offsetWidth;
+sm.classList.add('on');
+window.setTimeout(function(){if(champ)champ.focus();},40);
+}
+function fermer(){
+if(sm.hidden)return;
+sm.classList.remove('on');
+document.documentElement.classList.remove('sm-open');
+window.setTimeout(function(){sm.hidden=true;},340);
+if(dernier&&dernier.focus&&dernier!==champ)dernier.focus();
+garde=true;
+window.setTimeout(function(){garde=false;},420);
+}
+buildIndex(true);
+/* L'index n'est reconstruit qu'à l'ouverture : aucun observateur Livewire/Mutation
+   ne touche à la modale, donc plus aucun re-rendu en arrière-plan. */
+if(form){
+form.addEventListener('mousedown',function(e){e.preventDefault();});
+form.addEventListener('click',function(e){e.preventDefault();ouvrir();});
+form.addEventListener('submit',function(e){e.preventDefault();});
+}
+if(haut){
+haut.addEventListener('focus',function(){if(!garde)ouvrir();});
+haut.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key==='ArrowDown'){e.preventDefault();ouvrir();}});
+}
+sm.addEventListener('click',function(e){
+var t=e.target;
+if(t.closest&&t.closest('[data-sm-close]')){e.preventDefault();fermer();return;}
+var r=t.closest?t.closest('.row'):null;
+if(r){e.preventDefault();versProduit(r.getAttribute('data-i'));return;}
+var p=t.closest?t.closest('.pop'):null;
+if(p&&champ){e.preventDefault();champ.value=p.getAttribute('data-q');if(haut)haut.value=champ.value;champ.focus();filtrer(champ.value);}
+});
+if(champ){
+champ.addEventListener('input',function(){if(haut)haut.value=champ.value;filtrer(champ.value);});
+champ.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();var r=res.querySelector('.row');if(r)versProduit(r.getAttribute('data-i'));}});
+}
+document.addEventListener('keydown',function(e){
+if(e.key==='Escape'){fermer();return;}
+var t=(document.activeElement&&document.activeElement.tagName)||'';
+var saisie=t==='INPUT'||t==='TEXTAREA';
+if((e.key==='/'&&!saisie)||((e.metaKey||e.ctrlKey)&&String(e.key).toLowerCase()==='k')){e.preventDefault();ouvrir();}
+});
+if(pan){
+pan.addEventListener('keydown',function(e){
+if(e.key!=='Tab')return;
+var f=pan.querySelectorAll('button, input, a[href]');
+if(!f.length)return;
+var premier=f[0],dernierEl=f[f.length-1];
+if(e.shiftKey&&document.activeElement===premier){e.preventDefault();dernierEl.focus();}
+else if(!e.shiftKey&&document.activeElement===dernierEl){e.preventDefault();premier.focus();}
+});
+}
+})();
+})();
+/* Modale connexion / compte du template : ouverte depuis l'icône compte */
+(function(){
+var modal=document.getElementById('loginModal');
+if(!modal)return;
+var box=modal.querySelector('.box');
+function ouvrir(){
+modal.classList.add('on');
+modal.setAttribute('aria-hidden','false');
+var premier=modal.querySelector('input[name="email"]');
+window.setTimeout(function(){if(premier)premier.focus();},60);
+}
+function fermer(){modal.classList.remove('on');modal.setAttribute('aria-hidden','true');}
+document.querySelectorAll('[data-account]').forEach(function(a){
+a.addEventListener('click',function(e){e.preventDefault();ouvrir();});
+});
+try{
+if(new URLSearchParams(window.location.search).has('connexion'))ouvrir();
+}catch(err){}
+modal.addEventListener('click',function(e){
+if(e.target===modal||(e.target.closest&&e.target.closest('[data-close-modal]')))fermer();
+});
+document.addEventListener('keydown',function(e){
+if(e.key==='Escape'&&modal.classList.contains('on'))fermer();
+});
+var form=document.getElementById('loginModalForm');
+if(form){
+form.addEventListener('submit',function(e){
+var mail=document.getElementById('lmMail'),mdp=document.getElementById('lmMdp');
+var zone=document.getElementById('lmErr'),txt=document.getElementById('lmErrTxt');
+var okMail=/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test((mail.value||'').trim());
+var okMdp=(mdp.value||'').length>0;
+mail.closest('.field').classList.toggle('bad',!okMail);
+mdp.closest('.field').classList.toggle('bad',!okMdp);
+if(!okMail||!okMdp){
+e.preventDefault();
+zone.style.display='block';
+txt.textContent=!okMail?'Adresse email invalide.':'Mot de passe requis.';
+}
+});
+}
+})();
+</script>
+@stack('scripts')
 </body>
-
-
 </html>

@@ -81,7 +81,7 @@ class NotificationController extends Controller
                 'title' => $title,
                 'body' => "Commande {$numero} — {$total} FCFA",
                 'time' => optional($order->created_at)->diffForHumans(),
-                'unread' => in_array($order->statut, ['en_attente', 'traitement', 'expedie'], true),
+                'unread' => in_array($order->statut, ['en_attente', 'paiement_declare', 'payee', 'expedie'], true),
                 'icon' => $icon,
                 'link' => ['type' => 'order', 'id' => $order->id],
             ];
@@ -126,7 +126,8 @@ class NotificationController extends Controller
     {
         return match ($statut) {
             'en_attente' => ['Commande en attente de paiement 💳', 'card-outline'],
-            'traitement' => ['Commande en préparation 📦', 'cube-outline'],
+            'paiement_declare' => ['Paiement en vérification ⏳', 'time-outline'],
+            'payee' => ['Commande payée ✅', 'checkmark-circle-outline'],
             'expedie' => ['Votre commande est expédiée 🚚', 'car-outline'],
             'livre' => ['Commande livrée ✅', 'checkmark-done-outline'],
             'annule' => ['Commande annulée', 'close-circle-outline'],

@@ -1,146 +1,102 @@
 @extends('admin.base')
 
+@section('title', 'Gestion des catégories')
+
 @section('content')
-<div class="content">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3">Gestion des catégories</h1>
-        <a href="{{ route('admin.categories.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Nouvelle catégorie
-        </a>
-    </div>
-
-    @if(session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
+    <nav class="crumb" aria-label="Fil d'Ariane">
+        <div class="wrap">
+            <a href="{{ route('admin.dashboard') }}">Administration</a>
+            <svg class="ic">
+                <use href="#i-chevron" />
+            </svg>
+            <span class="here">Catégories</span>
         </div>
-    @endif
+    </nav>
 
-    @if(session('error'))
-        <div class="alert alert-danger">
-            {{ session('error') }}
+    <section class="phead">
+        <div class="wrap">
+            <h1>Catégories</h1>
+            <p>Rayons et sous-rayons du catalogue.</p>
         </div>
-    @endif
+    </section>
 
-    <div class="card shadow">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>ID</th>
-                            <th>Photo</th>
-                            <th>Nom</th>
-                            <th>Hiérarchie</th>
-                            <th>Statut</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($categories as $category)
+    <section>
+        <div class="wrap">
+            <div class="toolbar">
+                <span class="grow"></span>
+                <a class="btn-solid" style="font-size:13.5px;padding:11px 22px"
+                    href="{{ route('admin.categories.create') }}"><svg class="ic" style="width:16px;height:16px">
+                        <use href="#i-b2-plus" />
+                    </svg> Nouvelle catégorie</a>
+            </div>
+
+            <div class="panel">
+                <h2><svg class="ic">
+                        <use href="#i-grid" />
+                    </svg> Liste des catégories</h2>
+                <div class="table-scroll">
+                    <table class="tbl">
+                        <thead>
                             <tr>
-                                <td>{{ $category->id }}</td>
-                                <td>
-                                    @if($category->getPhoto())
-                                        <img src="{{ $category->getPhoto()->getImageUrl(48, 48) }}"
-                                             alt="{{ $category->name }}"
-                                             class="rounded" style="width:48px;height:48px;object-fit:cover;">
-                                    @else
-                                        <span class="d-inline-flex align-items-center justify-content-center rounded bg-body-secondary text-body-tertiary"
-                                              style="width:48px;height:48px;">
-                                            <i class="fas fa-image"></i>
-                                        </span>
-                                    @endif
-                                </td>
-                                <td><strong>{{ $category->name }}</strong></td>
-                                <td>
-                                    <span class="badge bg-primary-subtle text-primary">Catégorie principale</span>
-                                    @if($category->children->count())
-                                        <span class="badge bg-secondary">{{ $category->children->count() }} sous-catégorie{{ $category->children->count() > 1 ? 's' : '' }}</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <span class="badge {{ $category->is_active ? 'bg-success' : 'bg-secondary' }}">
-                                        {{ $category->is_active ? 'Actif' : 'Inactif' }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        <a href="{{ route('admin.categories.edit', $category) }}"
-                                           class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <form action="{{ route('admin.categories.destroy', $category) }}" method="POST"
-                                              onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
+                                <th></th>
+                                <th>Nom</th>
+                                <th>Hiérarchie</th>
+                                <th>Statut</th>
+                                <th></th>
                             </tr>
-
-                            {{-- Sous-catégories, affichées en retrait sous leur parent --}}
-                            @foreach($category->children as $child)
-                                <tr class="table-light">
-                                    <td>{{ $child->id }}</td>
+                        </thead>
+                        <tbody>
+                            @forelse($categories as $category)
+                                <tr>
                                     <td>
-                                        @if($child->getPhoto())
-                                            <img src="{{ $child->getPhoto()->getImageUrl(40, 40) }}"
-                                                 alt="{{ $child->name }}"
-                                                 class="rounded" style="width:40px;height:40px;object-fit:cover;">
+                                        @if ($category->getPhoto())
+                                            <img src="{{ $category->getPhoto()->getImageUrl(100, 100) }}"
+                                                alt="{{ $category->name }}"
+                                                style="width:48px;height:48px;object-fit:cover;border-radius:12px;border:1px solid var(--line)">
                                         @else
-                                            <span class="d-inline-flex align-items-center justify-content-center rounded bg-body-secondary text-body-tertiary"
-                                                  style="width:40px;height:40px;">
-                                                <i class="fas fa-image"></i>
-                                            </span>
+                                            <span
+                                                style="display:grid;place-items:center;width:48px;height:48px;border-radius:12px;background:var(--lav-1);color:var(--violet-400)"><svg
+                                                    class="ic">
+                                                    <use href="#i-grid" />
+                                                </svg></span>
                                         @endif
                                     </td>
+                                    <td><b>{{ $category->name }}</b></td>
                                     <td>
-                                        <span class="text-muted me-1">&#8627;</span>{{ $child->name }}
+                                        @if ($category->parent)
+                                            <small class="muted-sm">Sous-catégorie de
+                                                <b>{{ $category->parent->name }}</b></small>
+                                        @else
+                                            <span
+                                                style="font-size:11.5px;font-weight:700;color:var(--violet-700)">Principale</span>
+                                            @if ($category->children->count())
+                                                <small class="muted-sm">·
+                                                    {{ $category->children->count() }}
+                                                    sous-catégorie{{ $category->children->count() > 1 ? 's' : '' }}</small>
+                                            @endif
+                                        @endif
                                     </td>
-                                    <td>
-                                        <span class="badge bg-info-subtle text-info-emphasis">
-                                            Sous-catégorie de {{ $category->name }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="badge {{ $child->is_active ? 'bg-success' : 'bg-secondary' }}">
-                                            {{ $child->is_active ? 'Actif' : 'Inactif' }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="btn-group" role="group">
-                                            <a href="{{ route('admin.categories.edit', $child) }}"
-                                               class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            <form action="{{ route('admin.categories.destroy', $child) }}" method="POST"
-                                                  onsubmit="return confirm('Supprimer cette sous-catégorie ?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </div>
+                                    <td>{!! $category->is_active ? '<span class="st ok">Actif</span>' : '<span class="st ko">Inactif</span>' !!}</td>
+                                    <td style="white-space:nowrap">
+                                        <a class="btn-ghost-sm"
+                                            href="{{ route('admin.categories.edit', $category) }}">Modifier</a>
+                                        <form action="{{ route('admin.categories.destroy', $category) }}" method="POST"
+                                            style="display:inline">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="btn-ghost-sm" style="color:var(--pink)"
+                                                onclick="return confirm('Supprimer cette catégorie ?')">Supprimer</button>
+                                        </form>
                                     </td>
                                 </tr>
-                            @endforeach
-                        @empty
-                            <tr>
-                                <td colspan="6" class="text-center">Aucune catégorie trouvée</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="mt-4">
-                {{ $categories->links() }}
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="muted-sm">Aucune catégorie.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </div>
-</div>
+    </section>
 @endsection

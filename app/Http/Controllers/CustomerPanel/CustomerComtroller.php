@@ -72,6 +72,11 @@ class CustomerComtroller extends Controller
                 'last_activity' => now()
             ];
 
+            // Changement d'email -> revérification requise.
+            if (($validated['email'] ?? null) !== $user->email) {
+                $userData['email_verified_at'] = null;
+            }
+
             // Gestion de l'adresse
             if (isset($validated['adresse'])) {
                 $adresseData = [
@@ -142,7 +147,7 @@ class CustomerComtroller extends Controller
             return back()->with('error', 'Une erreur est survenue lors de la mise à jour du profil');
         }
 
-        return redirect()->route('dashboard')
+        return redirect()->route('profile.edit')
             ->with('success', 'Profil mis à jour avec succès');
     }
 
@@ -158,7 +163,7 @@ class CustomerComtroller extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return redirect()->route('dashboard')
+        return redirect()->route('profile.edit')
             ->with('success', 'Mot de passe mis à jour avec succès');
     }
 }

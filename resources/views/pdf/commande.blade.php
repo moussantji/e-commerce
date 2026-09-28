@@ -133,7 +133,7 @@
                 <p><strong>Facture</strong> #{{ $commande->numero_commande ?? $commande->id }}</p>
                 <p>Date : {{ optional($commande->date_commande)->format('d/m/Y H:i') ?? now()->format('d/m/Y H:i') }}
                 </p>
-                <p>Statut : {{ $commande->statut ?? 'N/A' }}</p>
+                <p>Statut : {{ $commande->status_label ?? $commande->statut ?? 'N/A' }}</p>
             </div>
         </div>
 

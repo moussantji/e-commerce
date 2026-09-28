@@ -1,16 +1,33 @@
-{{-- resources/views/admin/caracteristiques/form.blade.php --}}
 @extends('admin.base')
 
+@section('title', (isset($caracteristique) ? 'Modifier « ' . $caracteristique->name . ' »' : 'Ajouter une caractéristique'))
+
 @section('content')
-    <div class="content">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="mb-0">
-                    {{ isset($caracteristique) ? 'Modifier "' . $caracteristique->name . '"' : 'Ajouter' }} une
-                    caractéristique
-                </h4>
-            </div>
-            <div class="card-body">
+    <nav class="crumb" aria-label="Fil d'Ariane">
+        <div class="wrap">
+            <a href="{{ route('admin.dashboard') }}">Administration</a>
+            <svg class="ic">
+                <use href="#i-chevron" />
+            </svg>
+            <a href="{{ route('admin.caracteristiques.index') }}">Caractéristiques</a>
+            <svg class="ic">
+                <use href="#i-chevron" />
+            </svg>
+            <span class="here">{{ isset($caracteristique) ? $caracteristique->name : 'Nouvelle' }}</span>
+        </div>
+    </nav>
+
+    <section class="phead">
+        <div class="wrap">
+            <h1>{{ isset($caracteristique) ? 'Modifier « ' . $caracteristique->name . ' »' : 'Ajouter une caractéristique' }}
+            </h1>
+            <p>Nom, type, unité et filtrabilité.</p>
+        </div>
+    </section>
+
+    <section>
+        <div class="wrap">
+            <div class="panel">
                 <form
                     action="{{ isset($caracteristique) ? route('admin.caracteristiques.update', $caracteristique) : route('admin.caracteristiques.store') }}"
                     method="POST">
@@ -19,61 +36,45 @@
                         @method('PUT')
                     @endif
 
-                    {{-- Nom + Type --}}
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="name" class="form-label">Nom de la caractéristique <span
-                                    class="text-danger">*</span></label>
-                            <input type="text" class="form-control @error('name') is-invalid @enderror" id="name"
-                                name="name" value="{{ old('name', $caracteristique->name ?? '') }}" required>
-                            @error('name')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                    <div class="dash-grid">
+                        <div class="field" style="margin-bottom:0">
+                            <label for="name">Nom de la caractéristique *</label>
+                            <input class="ctrl" id="name" type="text" name="name" required
+                                value="{{ old('name', $caracteristique->name ?? '') }}">
+                            @error('name') <span class="avis-err">{{ $message }}</span> @enderror
                         </div>
-                        <div class="col-md-6">
-                            <label for="type" class="form-label">Type <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control @error('type') is-invalid @enderror" id="type"
-                                name="type" value="{{ old('type', $caracteristique->type ?? '') }}"
-                                placeholder="ex: dimension, poids, couleur..." required>
-                            @error('type')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                        <div class="field" style="margin-bottom:0">
+                            <label for="type">Type *</label>
+                            <input class="ctrl" id="type" type="text" name="type" required
+                                placeholder="ex : stockage, taille, couleur..."
+                                value="{{ old('type', $caracteristique->type ?? '') }}">
+                            @error('type') <span class="avis-err">{{ $message }}</span> @enderror
                         </div>
                     </div>
 
-                    {{-- Unité + Filtrable --}}
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="unit" class="form-label">Unité</label>
-                            <input type="text" class="form-control @error('unit') is-invalid @enderror" id="unit"
-                                name="unit" value="{{ old('unit', $caracteristique->unit ?? '') }}"
-                                placeholder="ex: kg, cm, L, px...">
-                            @error('unit')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                    <div class="dash-grid">
+                        <div class="field" style="margin-bottom:0">
+                            <label for="unite">Unité</label>
+                            <input class="ctrl" id="unite" type="text" name="unite"
+                                placeholder="ex : Go, kg, cm..." value="{{ old('unite', $caracteristique->unite ?? '') }}">
+                            @error('unite') <span class="avis-err">{{ $message }}</span> @enderror
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-check form-switch pt-4">
-                                <input class="form-check-input" type="checkbox" id="is_filterable" name="is_filterable"
+                        <div class="field" style="margin-bottom:0;justify-content:end">
+                            <label class="switch"><input type="checkbox" id="is_filterable" name="is_filterable"
                                     value="1"
                                     {{ old('is_filterable', $caracteristique->is_filterable ?? false) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="is_filterable">Filtrable dans les recherches</label>
-                            </div>
+                                Filtrable dans les recherches</label>
                         </div>
                     </div>
 
-                    {{-- Boutons --}}
-                    <div class="d-flex justify-content-between">
-                        <a href="{{ route('admin.caracteristiques.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left me-2"></i>Retour
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-2"></i>
-                            {{ isset($caracteristique) ? 'Modifier' : 'Ajouter' }} la caractéristique
-                        </button>
+                    <div class="pdp-actions" style="margin-top:18px">
+                        <button class="btn-solid" type="submit"><svg class="ic">
+                                <use href="#i-b2-check" />
+                            </svg> {{ isset($caracteristique) ? 'Modifier' : 'Ajouter' }}</button>
+                        <a class="btn-line" href="{{ route('admin.caracteristiques.index') }}">Retour</a>
                     </div>
                 </form>
             </div>
         </div>
-    </div>
+    </section>
 @endsection

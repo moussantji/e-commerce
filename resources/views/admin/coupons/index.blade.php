@@ -1,101 +1,85 @@
 @extends('admin.base')
 
+@section('title', 'Gestion des coupons')
+
 @section('content')
-<div class="content">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3">Gestion des coupons</h1>
-        <a href="{{ route('admin.coupons.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Nouveau coupon
-        </a>
-    </div>
-
-    @if(session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
+    <nav class="crumb" aria-label="Fil d'Ariane">
+        <div class="wrap">
+            <a href="{{ route('admin.dashboard') }}">Administration</a>
+            <svg class="ic">
+                <use href="#i-chevron" />
+            </svg>
+            <span class="here">Coupons</span>
         </div>
-    @endif
+    </nav>
 
-    <div class="card shadow">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>ID</th>
-                            <th>Code</th>
-                            <th>Type</th>
-                            <th>Valeur</th>
-                            <th>Date début</th>
-                            <th>Date fin</th>
-                            <th>Utilisations</th>
-                            <th>Statut</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($coupons as $coupon)
+    <section class="phead">
+        <div class="wrap">
+            <h1>Coupons</h1>
+            <p>Codes promo pour le panier.</p>
+        </div>
+    </section>
+
+    <section>
+        <div class="wrap">
+            <div class="toolbar">
+                <span class="grow"></span>
+                <a class="btn-solid" style="font-size:13.5px;padding:11px 22px"
+                    href="{{ route('admin.coupons.create') }}"><svg class="ic" style="width:16px;height:16px">
+                        <use href="#i-b2-plus" />
+                    </svg> Nouveau coupon</a>
+            </div>
+
+            <div class="panel">
+                <h2><svg class="ic">
+                        <use href="#i-b2-tag" />
+                    </svg> Liste des coupons</h2>
+                <div class="table-scroll">
+                    <table class="tbl">
+                        <thead>
                             <tr>
-                                <td>{{ $coupon->id }}</td>
-                                <td>
-                                    <strong>{{ $coupon->code }}</strong>
-                                </td>
-                                <td>
-                                    <span class="badge bg-info">
-                                        {{ ucfirst($coupon->type) }}
-                                    </span>
-                                </td>
-                                <td>
-                                    @if($coupon->type === 'percentage')
-                                        {{ $coupon->value }} %
-                                    @else
-                                        {{ number_format($coupon->value, 2) }} FCFA
-                                    @endif
-                                </td>
-                                <td>{{ $coupon->starts_at->format('d/m/Y') }}</td>
-                                <td>{{ $coupon->expires_at->format('d/m/Y') }}</td>
-                                <td>
-                                    <span class="badge {{ $coupon->usage_count >= ($coupon->usage_limit ?? 0) ? 'bg-warning' : 'bg-success' }}">
-                                        {{ $coupon->usage_count }} / {{ $coupon->usage_limit ?? '∞' }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge {{ $coupon->is_active ? 'bg-success' : 'bg-secondary' }}">
-                                        {{ $coupon->is_active ? 'Actif' : 'Inactif' }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        <a href="{{ route('admin.coupons.edit', $coupon) }}"
-                                           class="btn btn-sm btn-outline-primary"
-                                           title="Modifier">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <form action="{{ route('admin.coupons.destroy', $coupon) }}"
-                                              method="POST"
-                                              class="d-inline"
-                                              onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce coupon ?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
+                                <th>Code</th>
+                                <th>Type</th>
+                                <th>Valeur</th>
+                                <th>Début</th>
+                                <th>Fin</th>
+                                <th>Utilisations</th>
+                                <th>Statut</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($coupons as $coupon)
+                                <tr>
+                                    <td><b>{{ $coupon->code }}</b></td>
+                                    <td>{{ $coupon->type === 'percentage' ? 'Pourcentage' : 'Montant fixe' }}</td>
+                                    <td><b>{{ $coupon->type === 'percentage' ? $coupon->value . ' %' : number_format($coupon->value, 0, ',', ' ') . ' FCFA' }}</b>
+                                    </td>
+                                    <td>{{ $coupon->starts_at?->format('d/m/Y') ?? '—' }}</td>
+                                    <td>{{ $coupon->expires_at?->format('d/m/Y') ?? '—' }}</td>
+                                    <td><span class="badge-nb">{{ $coupon->usage_count }} /
+                                            {{ $coupon->usage_limit ?? '∞' }}</span></td>
+                                    <td>{!! $coupon->is_active ? '<span class="st ok">Actif</span>' : '<span class="st ko">Inactif</span>' !!}</td>
+                                    <td style="white-space:nowrap">
+                                        <a class="btn-ghost-sm"
+                                            href="{{ route('admin.coupons.edit', $coupon) }}">Modifier</a>
+                                        <form action="{{ route('admin.coupons.destroy', $coupon) }}" method="POST"
+                                            style="display:inline"
+                                            onsubmit="return confirm('Supprimer ce coupon ?')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="btn-ghost-sm" style="color:var(--pink)">Supprimer</button>
                                         </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="9" class="text-center">Aucun coupon trouvé</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="mt-4">
-                {{ $coupons->links() }}
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="8" class="muted-sm">Aucun coupon.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </div>
-</div>
+    </section>
 @endsection

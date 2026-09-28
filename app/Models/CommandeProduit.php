@@ -15,7 +15,8 @@ class CommandeProduit extends Model
         'produit_id',
         'quantite',
         'prix_unitaire',
-        'total'
+        'total',
+        'options'
     ];
 
     public function commande()

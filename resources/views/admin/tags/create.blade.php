@@ -1,23 +1,34 @@
 @extends('admin.base')
-@include('admin.tags.form')
 
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Génération automatique du slug à partir du nom
-        const nameInput = document.getElementById('name');
-        const slugInput = document.getElementById('slug');
-        
-        if (nameInput && slugInput) {
-            nameInput.addEventListener('blur', function() {
-                if (!slugInput.value) {
-                    slugInput.value = this.value.toLowerCase()
-                        .replace(/[^\w\s-]/g, '') // Supprime les caractères spéciaux
-                        .replace(/\s+/g, '-')       // Remplace les espaces par des tirets
-                        .replace(/-+/g, '-');        // Évite les tirets multiples
-                }
-            });
-        }
-    });
-</script>
-@endpush
+@section('title', 'Créer un tag')
+
+@section('content')
+    <nav class="crumb" aria-label="Fil d'Ariane">
+        <div class="wrap">
+            <a href="{{ route('admin.dashboard') }}">Administration</a>
+            <svg class="ic">
+                <use href="#i-chevron" />
+            </svg>
+            <a href="{{ route('admin.tags.index') }}">Tags</a>
+            <svg class="ic">
+                <use href="#i-chevron" />
+            </svg>
+            <span class="here">Nouveau</span>
+        </div>
+    </nav>
+
+    <section class="phead">
+        <div class="wrap">
+            <h1>Nouveau tag</h1>
+            <p>Créez une étiquette pour le catalogue.</p>
+        </div>
+    </section>
+
+    <section>
+        <div class="wrap">
+            <div class="panel">
+                @include('admin.tags.form', ['tag' => null])
+            </div>
+        </div>
+    </section>
+@endsection

@@ -35,19 +35,16 @@ class ShippingMethodController extends Controller
     {
         $validated = $this->validateRequest($request);
 
-        // ✅ CRÉER d'ABORD le shipping method
+        // Conversion des champs JSON avant création.
+        $validated = $this->processJsonFields($validated);
+
+        // ✅ CRÉER le shipping method (une seule fois)
         $livraison = Livraison::create($validated);
 
-        // ✅ 2️⃣ ENSUITE attacher logo
+        // ✅ ENSUITE attacher logo
         if ($request->hasFile('logo')) {
             $livraison->attachfiles([$request->file('logo')]);
         }
-
-
-        // Conversion des champs JSON
-        $validated = $this->processJsonFields($validated);
-
-        Livraison::create($validated);
 
         return redirect()
             ->route('admin.shipping-methods.index')

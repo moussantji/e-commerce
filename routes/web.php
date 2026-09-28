@@ -112,9 +112,9 @@ Route::middleware(['auth', 'role:customer'])->group(function () {
     Route::put('/profile/password', [CustomerComtroller::class, 'updatePassword'])->name('profile.password');
     Route::put('/profile', [CustomerComtroller::class, 'updateProfile'])->name('profile.update');
 
-    // Profil utilisateur
+    // Profil utilisateur (style boutique) : un seul point de mise à jour
+    // pour éviter tout doublon de route — voir CustomerComtroller.
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Paiement mobile : envoi preuve (Orange / Malitel / Wave)
@@ -201,10 +201,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
 
     Route::delete('photo/{photo}', [PhotoControler::class, 'destroyPhoto'])->name('photo.destroy');
 
-    // Gestion du profil administrateur
+    // Gestion du profil administrateur (style boutique, comme l'accueil)
     Route::get('/profile', [AdminController::class, 'profile'])->name('profile');
     Route::put('/profile', [AdminController::class, 'updateProfile'])->name('profile.update');
     Route::put('/profile/password', [AdminController::class, 'updatePassword'])->name('profile.password');
+    Route::delete('/profile', [AdminController::class, 'destroy'])->name('profile.destroy');
 
     // Paramètres du site
     Route::get('/settings', [AdminController::class, 'settings'])->name('settings');

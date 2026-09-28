@@ -48,6 +48,13 @@ class Produits extends Component
     /** Nombre de produits affichés (chargement progressif au scroll). */
     public int $perPage = 12;
 
+    /** Tri du catalogue : populaire | prix-asc | prix-desc | note. */
+    public string $sort = 'populaire';
+
+    /** Filtres rapides du nouveau template. */
+    public bool $promoOnly = false;
+    public bool $favOnly = false;
+
     /** Charge la tranche suivante de produits (déclenché au scroll). */
     public function loadMore(): void
     {
@@ -58,10 +65,10 @@ class Produits extends Component
 
     public function mount($category = null, $search = null, $tag = null)
     {
-        // ✅ 1. Catégorie depuis URL
-        if (request()->filled('category')) {
-            $categorySlug = request('category');
+        // ✅ 1. Catégorie depuis param Livewire OU query string (?category=slug)
+        $categorySlug = $category ?? request('category');
 
+        if ($categorySlug) {
             $categoryModel = Categories::where('slug', $categorySlug)
                 ->where('is_active', true)
                 ->first();
@@ -94,18 +101,19 @@ class Produits extends Component
         // ✅ Recherche depuis navbar
         $this->search = $search ?? request('q', '');
 
-        // Applique recherche dans filtres si pas de category
-        if ($this->search && !$category) {
+        // Applique recherche dans filtres (même combinée à une catégorie)
+        if ($this->search) {
             $this->filters['search'] = $this->search;
-        }
-        // ✅ Recherche
-        if ($search) {
-            $this->filters['search'] = $search;
         }
 
         // 🔥 Tag
         if ($tag) {
             $this->filters['tag'] = $tag;
+        }
+
+        // ✅ Promos depuis ?promo=1
+        if (request()->filled('promo')) {
+            $this->promoOnly = true;
         }
 
         $this->loadWishlist();
@@ -123,6 +131,10 @@ class Produits extends Component
 
     public function toggleWishlist($produitId)
     {
+        if (!auth()->check()) {
+            return redirect()->route('login');
+        }
+
         $product = Products::findOrFail($produitId); // ✅ Par ID
         // Logique toggle (comme avant)
         if (in_array($produitId, $this->wishlistItems)) {
@@ -143,15 +155,35 @@ class Produits extends Component
     // ✅ SUPPRIMEZ COMPLETEMENT CETTE LIGNE
     // protected $queryString = ['filters'];
 
-    public function updatedFilters()
+    public function updatedFilters($value = null, $key = null)
     {
         $this->perPage = 12;          // on repart du début à chaque changement de filtre
-        $this->cleanEmptyFilters();  // ← NOUVEAU
+    }
+
+    public function updatedSort()
+    {
+        $this->perPage = 12;
+    }
+
+    public function updatedPromoOnly()
+    {
+        $this->perPage = 12;
+    }
+
+    public function updatedFavOnly()
+    {
+        $this->perPage = 12;
     }
 
     public function clearFilters()
     {
         // Reset TOUS les filtres à leurs valeurs par défaut
+        $this->reset(['search', 'sort', 'promoOnly', 'favOnly', 'perPage']);
+        $this->search = '';
+        $this->sort = 'populaire';
+        $this->promoOnly = false;
+        $this->favOnly = false;
+        $this->perPage = 12;
         $this->filters = [
             'category_ids' => [],
             'availability' => ['in_stock' => false, 'pre_book' => false, 'out_of_stock' => false],
@@ -167,43 +199,12 @@ class Produits extends Component
             'warranty' => [],
             'warrantyType' => [],
             'certification' => [],
+            'search' => '',
+            'tag' => '',
         ];
 
         // Émettre un événement pour feedback visuel (optionnel)
         $this->dispatch('filters-cleared');
-        return redirect()->route('products');
-    }
-
-
-    /** 🚀 MAGIC : Nettoie TOUS les filtres vides */
-    private function cleanEmptyFilters()
-    {
-        // Reset les valeurs par défaut
-        $defaultFilters = [
-            'category_ids' => [],
-            'availability' => ['in_stock' => false, 'pre_book' => false, 'out_of_stock' => false],
-            'couleur' => [],
-            'brands' => [],
-            'displayType' => [],
-            'condition' => [],
-            'delivery' => [],
-            'campaign' => [],
-            'warranty' => [],
-            'warrantyType' => [],
-            'certification' => [],
-            'min_price' => '',
-            'max_price' => '',
-            'rating' => '',
-            'search' => '',
-            'tag' => [],
-        ];
-
-        // Seulement garder les valeurs MODIFIÉES (non par défaut)
-        foreach ($this->filters as $key => $value) {
-            if ($value === $defaultFilters[$key]) {
-                $this->filters[$key] = $defaultFilters[$key];
-            }
-        }
     }
 
     public function render()
@@ -213,6 +214,23 @@ class Produits extends Component
             ->where('is_active', true);
 
         $this->applyFilters($query);
+
+        // Filtres rapides du template : promotion + favoris.
+        if ($this->promoOnly) {
+            $query->whereNotNull('sale_price')->whereColumn('sale_price', '<', 'price');
+        }
+        if ($this->favOnly && auth()->check()) {
+            $ids = auth()->user()->wishlistProducts()->pluck('produits_id')->toArray();
+            $query->whereIn('id', $ids ?: [0]);
+        }
+
+        // Tri du catalogue.
+        match ($this->sort) {
+            'prix-asc' => $query->orderByRaw('COALESCE(sale_price, price) ASC'),
+            'prix-desc' => $query->orderByRaw('COALESCE(sale_price, price) DESC'),
+            'note' => $query->withAvg('avisClients as avg_note', 'nb_etoiles')->orderByDesc('avg_note'),
+            default => $query->latest('id'),
+        };
 
         // Chargement progressif : on ne charge que `perPage` produits, et on
         // indique s'il en reste (pour déclencher le chargement au scroll).
@@ -232,12 +250,13 @@ class Produits extends Component
         if (isset($this->filters['category_ids']) && !empty($this->filters['category_ids'])) {
             $query->whereIn('category_id', $this->filters['category_ids']);
         }
-        // ✅ CORRECTION 1: Cast en float pour price
-        if ($this->filters['availability']['in_stock']) {
+        // ✅ Dispo : si les 2 cases sont cochées on ne filtre pas (sinon WHERE contradictoire => 0 résultat)
+        $inStock = $this->filters['availability']['in_stock'] ?? false;
+        $outOfStock = $this->filters['availability']['out_of_stock'] ?? false;
+        if ($inStock && !$outOfStock) {
             $query->where('stock', '>', 0);
-        }
-        if ($this->filters['availability']['out_of_stock']) {
-            $query->where('stock', 0);
+        } elseif ($outOfStock && !$inStock) {
+            $query->where('stock', '<=', 0);
         }
 
         if (!empty($this->filters['brands'])) {
@@ -258,10 +277,10 @@ class Produits extends Component
         }
 
         if (!empty($this->filters['min_price']) && is_numeric($this->filters['min_price'])) {
-            $query->where('sale_price', '>=', (float)$this->filters['min_price']);
+            $query->whereRaw('COALESCE(sale_price, price) >= ?', [(float) $this->filters['min_price']]);
         }
         if (!empty($this->filters['max_price']) && is_numeric($this->filters['max_price'])) {
-            $query->where('sale_price', '<=', (float)$this->filters['max_price']);
+            $query->whereRaw('COALESCE(sale_price, price) <= ?', [(float) $this->filters['max_price']]);
         }
         // Rating - Filtrer par note minimum
         if ($this->filters['rating']) {

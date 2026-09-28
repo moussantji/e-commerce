@@ -15,7 +15,14 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::query();
+        $query = User::query()->withCount('orders');
+
+        if ($request->filled('search')) {
+            $s = $request->get('search');
+            $query->where(function ($q) use ($s) {
+                $q->where('name', 'like', "%{$s}%")->orWhere('email', 'like', "%{$s}%");
+            });
+        }
 
         switch ($request->get('filter')) {
             case 'active':
@@ -32,7 +39,11 @@ class UserController extends Controller
                 break;
         }
 
-        $users = $query->paginate(15);
+        $users = $query->latest()->paginate(15)->withQueryString();
+        $users->getCollection()->transform(function ($u) {
+            $u->setAttribute('total_spent', (float) $u->orders()->sum('total'));
+            return $u;
+        });
 
         $counts = [
             'all'    => User::count(),

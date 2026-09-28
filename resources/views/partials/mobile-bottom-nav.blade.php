@@ -1,117 +1,15 @@
-{{-- ==========================================================
-     NAVBAR BASSE MOBILE EN FRANÇAIS (STYLE ULTRA-PREMIUM NEO-LUXE)
-     ========================================================== --}}
-<nav class="mobile-bottom-dock d-flex d-lg-none" aria-label="Navigation Mobile Inférieure">
-    <!-- ACCUEIL -->
-    <a href="{{ route('home') }}" class="dock-tab {{ request()->routeIs('home') ? 'active' : '' }}">
-        <i class="fas fa-home"></i>
-        <span>Accueil</span>
-        @if(request()->routeIs('home'))
-            <div class="dock-active-dot"></div>
-        @endif
-    </a>
-
-    <!-- CATALOGUE -->
-    <a href="{{ route('products') }}" class="dock-tab {{ request()->routeIs('products') || request()->routeIs('categories.*') ? 'active' : '' }}">
-        <i class="fas fa-border-all"></i>
-        <span>Catalogue</span>
-        @if(request()->routeIs('products') || request()->routeIs('categories.*'))
-            <div class="dock-active-dot"></div>
-        @endif
-    </a>
-
-    <!-- PANIER AVEC BADGE -->
-    <a href="{{ route('panier') }}" class="dock-tab {{ request()->routeIs('panier') ? 'active' : '' }}">
-        <i class="fas fa-shopping-cart"></i>
-        @livewire('navbar-cart-count')
-        <span>Panier</span>
-    </a>
-
-    <!-- FAVORIS -->
-    <a href="{{ route('favoris') }}" class="dock-tab {{ request()->routeIs('favoris') ? 'active' : '' }}">
-        <i class="far fa-star"></i>
-        <span>Favoris</span>
-    </a>
-
-    <!-- COMPTE / PROFIL -->
-    @auth
-        <a href="{{ route('dashboard') }}" class="dock-tab {{ request()->routeIs('dashboard') || request()->routeIs('profile.*') ? 'active' : '' }}">
-            <i class="far fa-user"></i>
-            <span>Compte</span>
-        </a>
-    @else
-        <a href="{{ route('login') }}" class="dock-tab {{ request()->routeIs('login') ? 'active' : '' }}">
-            <i class="far fa-user"></i>
-            <span>Connexion</span>
-        </a>
-    @endauth
+@php
+$dockCartCount = auth()->check()
+? (int) \Illuminate\Support\Facades\DB::table('panier_produit')->join('paniers','panier_produit.paniers_id','=','paniers.id')->where('paniers.user_id',auth()->id())->sum('panier_produit.quantite')
+: (int) session('cart_count',0);
+if(!auth()->check()){$dockProfileUrl=route('login');$dockProfileLabel='Connexion';}
+elseif(auth()->user()->isAdmin()){$dockProfileUrl=route('admin.dashboard');$dockProfileLabel='Compte';}
+else{$dockProfileUrl=route('dashboard');$dockProfileLabel='Compte';}
+@endphp
+<nav class="dock" aria-label="Navigation mobile">
+<a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'active' : '' }}"><svg class="ic"><use href="#i-home"/></svg><span>Accueil</span></a>
+<a href="{{ route('products') }}" class="{{ request()->routeIs('products') ? 'active' : '' }}"><svg class="ic"><use href="#i-grid"/></svg><span>Catalogue</span></a>
+<a href="{{ route('panier') }}" class="{{ request()->routeIs('panier') ? 'active' : '' }}"><svg class="ic"><use href="#i-bag"/></svg><span>Panier</span>@if($dockCartCount>0)<span class="dock-badge">{{ $dockCartCount }}</span>@endif</a>
+<a href="{{ auth()->check() ? route('favoris') : route('login') }}" class="{{ request()->routeIs('favoris') ? 'active' : '' }}"><svg class="ic"><use href="#i-heart"/></svg><span>Favoris</span></a>
+<a href="{{ $dockProfileUrl }}" data-account><svg class="ic"><use href="#i-user"/></svg><span>{{ $dockProfileLabel }}</span></a>
 </nav>
-
-<style>
-.mobile-bottom-dock {
-    position: fixed;
-    bottom: 14px;
-    left: 16px;
-    right: 16px;
-    height: 64px;
-    background: rgba(14, 20, 32, 0.94);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(0, 229, 255, 0.35);
-    border-radius: 32px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.85), 0 0 20px rgba(0, 229, 255, 0.2);
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-    padding: 0 8px;
-    z-index: 1040;
-}
-
-@media (min-width: 992px) {
-    .mobile-bottom-dock {
-        display: none !important;
-    }
-}
-
-.mobile-bottom-dock .dock-tab {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    color: #64748B;
-    font-size: 9.5px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    width: 54px;
-    height: 50px;
-    border-radius: 18px;
-    position: relative;
-    transition: all 0.25s ease;
-}
-
-.mobile-bottom-dock .dock-tab i {
-    font-size: 17px;
-    margin-bottom: 3px;
-    transition: transform 0.2s ease;
-}
-
-.mobile-bottom-dock .dock-tab.active {
-    color: #00E5FF !important;
-}
-
-.mobile-bottom-dock .dock-tab.active i {
-    filter: drop-shadow(0 0 10px #00E5FF);
-}
-
-.mobile-bottom-dock .dock-active-dot {
-    position: absolute;
-    bottom: 4px;
-    width: 4px;
-    height: 4px;
-    background: #00F5A0;
-    border-radius: 50%;
-    box-shadow: 0 0 8px #00F5A0;
-}
-</style>

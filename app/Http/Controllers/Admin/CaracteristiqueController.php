@@ -31,14 +31,17 @@ class CaracteristiqueController extends Controller
      */
     public function store(Request $request)
     {
+        // Colonne réelle = `unite` (l'ancien formulaire envoyait `unit`, jamais enregistré).
+        $request->merge(['unite' => $request->input('unite', $request->input('unit'))]);
+
         $request->validate([
             'name' => 'required|string|max:255|unique:caracteristiques,name',
             'type' => 'required|string|max:100',
-            'unit' => 'nullable|string|max:50',
+            'unite' => 'nullable|string|max:50',
             'is_filterable' => 'boolean',
         ]);
 
-        Caracteristiques::create($request->all());
+        Caracteristiques::create($request->only(['name', 'type', 'unite', 'is_filterable']));
 
         return redirect()->route('admin.caracteristiques.index')
             ->with('success', 'Caractéristique créée avec succès !');
@@ -65,14 +68,16 @@ class CaracteristiqueController extends Controller
      */
     public function update(Request $request, Caracteristiques $caracteristique)
     {
+        $request->merge(['unite' => $request->input('unite', $request->input('unit'))]);
+
         $request->validate([
             'name' => 'required|string|max:255|unique:caracteristiques,name,' . $caracteristique->id,
             'type' => 'required|string|max:100',
-            'unit' => 'nullable|string|max:50',
+            'unite' => 'nullable|string|max:50',
             'is_filterable' => 'boolean',
         ]);
 
-        $caracteristique->update($request->all());
+        $caracteristique->update($request->only(['name', 'type', 'unite', 'is_filterable']));
 
         return redirect()->route('admin.caracteristiques.index')
             ->with('success', 'Caractéristique modifiée avec succès !');

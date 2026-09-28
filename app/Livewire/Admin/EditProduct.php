@@ -46,6 +46,8 @@ class EditProduct extends Component
                 Rule::unique('produits', 'sku')->ignore($this->produit_id), // ✅ dynamique
             ],
             'stock_actuel' => 'nullable|integer|min:0',
+            'selected_tags' => 'nullable|array',
+            'selected_tags.*' => 'exists:tags,id',
             'category_id' => 'nullable|exists:categories,id',
             'brand_id' => 'nullable|exists:brands,id',
             'images.*' => 'nullable|image|max:2048',
@@ -201,10 +203,8 @@ class EditProduct extends Component
 
         $this->produit->update($data);
 
-        // $this->tags = [1, 2, 3] → array d'IDs
-        if (!empty($this->tags)) {
-            $this->produit->tags()->sync($this->tags); // ✅ sync() accepte array d'IDs
-        }
+        // Tags (sélection multiple du formulaire) — sync même vide pour retirer.
+        $this->produit->tags()->sync($this->selected_tags ?? []);
 
         // ✅ SUPPRIME anciennes caractéristiques
         $this->produit->caracteristiques()->detach();

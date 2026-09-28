@@ -3,22 +3,28 @@
 @section('title', $produit->name)
 
 @section('content')
-
-    <!-- ============================================-->
-    <!-- <section> begin ============================-->
     @include('section-begin')
-    <!-- <section> close ============================-->
-    <!-- ============================================-->
 
-    @include('partials.nav')
+    <nav class="crumb" aria-label="Fil d'Ariane">
+        <div class="wrap">
+            <a href="{{ route('home') }}">Accueil</a>
+            <svg class="ic">
+                <use href="#i-chevron" />
+            </svg>
+            <a id="crumCat"
+                href="{{ route('products') }}">{{ optional($produit->category)->name ?? 'Produits' }}</a>
+            <svg class="ic">
+                <use href="#i-chevron" />
+            </svg>
+            <span class="here" id="crumNom">{{ $produit->name }}</span>
+        </div>
+    </nav>
 
-
-    @livewire('produit-detail', ['product' => $produit, 'slug' => $slug])
+    <section>
+        <div class="wrap">
+            @livewire('produit-detail', ['product' => $produit, 'slug' => $slug])
+        </div>
+    </section>
 
     @include('partials.footer')
-
-    </main><!-- ===============================================-->
-    <!--    End of Main Content-->
-    <!-- ===============================================-->
-
 @endsection

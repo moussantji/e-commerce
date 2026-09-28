@@ -119,7 +119,7 @@ class Produits extends Model
 
     public function variants()
     {
-        return $this->hasMany(ProductVariant::class);
+        return $this->hasMany(ProductVariant::class, 'produit_id');
     }
 
     public function getSlug()
@@ -166,5 +166,35 @@ class Produits extends Model
     public function getFormattedPriceAttribute()
     {
         return number_format((float) $this->price, 0, ',', ' ') . ' FCFA';
+    }
+
+    /**
+     * Prix effectif (soldé si promo, sinon prix normal).
+     */
+    public function getEffectivePriceAttribute(): float
+    {
+        if ($this->sale_price && (float) $this->sale_price < (float) $this->price) {
+            return (float) $this->sale_price;
+        }
+
+        return (float) $this->price;
+    }
+
+    /**
+     * Lien WhatsApp "acheter directement" pour les cartes produits.
+     * Le numéro vient de WHATSAPP_NUMBER dans .env (config app.whatsapp_number).
+     */
+    public function getWhatsappUrl(?string $productUrl = null): string
+    {
+        return \App\Support\WhatsApp::productUrl($this, $productUrl ?? $this->getPublicUrl());
+    }
+
+    public function getPublicUrl(): string
+    {
+        try {
+            return route('produits.show', ['slug' => $this->getSlug(), 'id' => $this->id]);
+        } catch (\Throwable $e) {
+            return (string) config('app.url', '');
+        }
     }
 }

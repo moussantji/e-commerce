@@ -1,528 +1,110 @@
 @extends('base')
-
-@section('title', 'AETHERA - E-Commerce Ultra Premium')
-
+@section('title', 'Boutique en ligne — Accueil')
 @section('content')
-    <!-- LOADING SCREEN -->
-    <div class="page-loader" id="pageLoader">
-        <div class="loader-circle"></div>
-        <div class="loader-glow"></div>
-    </div>
-
-    <div class="cyber-grid-bg"></div>
-
-    <main class="main" id="top">
-
-        <!-- Top Navigation Bar -->
-        @include('section-begin')
-
-        <!-- Container Content -->
-        <div class="container pt-3 pb-8">
-
-            <!-- ============================================-->
-            <!-- 1. HERO SHOWCASE SECTION (En Français) -->
-            <!-- ============================================-->
-            <section class="hero-section">
-                <div class="hero-layout">
-                    <!-- Left Headline & Action Buttons -->
-                    <div class="hero-left">
-                        <h1 class="hero-headline">
-                            AETHERA <span class="highlight">NOVA</span>.<br>
-                            UN SON<br>
-                            D'EXCEPTION.
-                        </h1>
-                        <div class="hero-buttons-group">
-                            <a href="{{ route('products') }}" class="btn-pill-explore">Explorer</a>
-                            <a href="{{ route('products') }}" class="btn-pill-preorder">Commander</a>
-                        </div>
-                    </div>
-
-                    <!-- Right Holographic Product Stage -->
-                    <div class="hero-showcase-stage">
-                        <div class="hologram-stage-glow"></div>
-                        <img src="{{ asset('mockups/prop1_mobile.png') }}" alt="Casque Aethera Nova" class="hero-headphone-img" style="border-radius: 14px;">
-                        
-                        <!-- Vertical Slide Dots -->
-                        <div class="slider-vertical-dots">
-                            <span class="v-dot active"></span>
-                            <span class="v-dot"></span>
-                            <span class="v-dot"></span>
-                            <span class="v-dot"></span>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ============================================-->
-            <!-- 2. SÉLECTION EXCLUSIVE (4 Cartes Produits) -->
-            <!-- ============================================-->
-            <section class="featured-products-section mb-6" id="tech">
-                <div class="section-heading-row">
-                    <span class="section-label">Sélection Exclusive</span>
-                    <a href="{{ route('products') }}" class="text-decoration-none fs-9 fw-bold" style="color: #00E5FF;">
-                        Voir tout <i class="fas fa-chevron-right ms-1 fs-10"></i>
-                    </a>
-                </div>
-
-                <div class="products-grid-container">
-
-                    <!-- CARTE 1: ÉCOUTEURS QUANTUM -->
-                    <article class="neo-card">
-                        <div class="circular-neon-badge">TECH</div>
-                        <div class="card-img-wrapper">
-                            <img src="{{ asset('mockups/prop3_tablet.png') }}" alt="Écouteurs Quantum" class="card-thumb-img" style="border-radius: 8px;">
-                        </div>
-                        <div class="card-body-info">
-                            <div class="card-title-row">
-                                <span class="card-product-title">ÉCOUTEURS QUANTUM</span>
-                                <span class="rating-pill">★ 4.3</span>
-                            </div>
-                            <div class="card-meta-row">
-                                <span class="card-price">225 000 FCFA</span>
-                                <div class="color-swatches">
-                                    <span class="c-dot cyan"></span>
-                                    <span class="c-dot blue"></span>
-                                    <span class="c-dot dark"></span>
-                                </div>
-                            </div>
-                            <a href="{{ route('products') }}" class="btn-quick-buy">Achat Rapide</a>
-                        </div>
-                    </article>
-
-                    <!-- CARTE 2: SMARTPHONE TITAN AI -->
-                    <article class="neo-card">
-                        <div class="circular-neon-badge">IA</div>
-                        <div class="card-img-wrapper">
-                            <img src="{{ asset('mockups/prop2_mobile.png') }}" alt="Smartphone Titan AI" class="card-thumb-img" style="border-radius: 8px;">
-                        </div>
-                        <div class="card-body-info">
-                            <div class="card-title-row">
-                                <span class="card-product-title">SMARTPHONE TITAN IA</span>
-                                <span class="rating-pill">★ 4.8</span>
-                            </div>
-                            <div class="card-meta-row">
-                                <span class="card-price">850 000 FCFA</span>
-                                <div class="color-swatches">
-                                    <span class="c-dot cyan"></span>
-                                    <span class="c-dot dark"></span>
-                                </div>
-                            </div>
-                            <a href="{{ route('products') }}" class="btn-quick-buy">Achat Rapide</a>
-                        </div>
-                    </article>
-
-                    <!-- CARTE 3: ENCEINTE AETHERA ARC -->
-                    <article class="neo-card">
-                        <div class="circular-neon-badge">PRO</div>
-                        <div class="card-img-wrapper">
-                            <img src="{{ asset('mockups/prop3_desktop.png') }}" alt="Enceinte Aethera Arc" class="card-thumb-img" style="border-radius: 8px;">
-                        </div>
-                        <div class="card-body-info">
-                            <div class="card-title-row">
-                                <span class="card-product-title">ENCEINTE AETHERA ARC</span>
-                                <span class="rating-pill">★ 5.0</span>
-                            </div>
-                            <div class="card-meta-row">
-                                <span class="card-price">490 000 FCFA</span>
-                                <div class="color-swatches">
-                                    <span class="c-dot cyan"></span>
-                                    <span class="c-dot dark"></span>
-                                </div>
-                            </div>
-                            <a href="{{ route('products') }}" class="btn-quick-buy">Achat Rapide</a>
-                        </div>
-                    </article>
-
-                    <!-- CARTE 4: MONTRE NEBULA OLED -->
-                    <article class="neo-card">
-                        <div class="circular-neon-badge">OLED</div>
-                        <div class="card-img-wrapper">
-                            <img src="{{ asset('mockups/prop1_tablet.png') }}" alt="Montre Nebula OLED" class="card-thumb-img" style="border-radius: 8px;">
-                        </div>
-                        <div class="card-body-info">
-                            <div class="card-title-row">
-                                <span class="card-product-title">MONTRE NEBULA OLED</span>
-                                <span class="rating-pill">★ 4.7</span>
-                            </div>
-                            <div class="card-meta-row">
-                                <span class="card-price">340 000 FCFA</span>
-                                <div class="color-swatches">
-                                    <span class="c-dot cyan"></span>
-                                    <span class="c-dot blue"></span>
-                                </div>
-                            </div>
-                            <a href="{{ route('products') }}" class="btn-quick-buy">Achat Rapide</a>
-                        </div>
-                    </article>
-
-                </div>
-            </section>
-
-            <!-- ============================================-->
-            <!-- 3. FLUX DYNAMIQUE LIVEWIRE DU CATALOGUE -->
-            <!-- ============================================-->
-            <section class="mb-6">
-                <div class="section-heading-row">
-                    <span class="section-label">Toutes les offres & Nouveautés</span>
-                </div>
-                <div class="swiper-theme-container products-slider mb-5">
-                    <div class="swiper swiper theme-slider"
-                        data-swiper='{
-                            "slidesPerView":2,
-                            "spaceBetween":16,
-                            "autoplay": {"delay": 5000, "disableOnInteraction": false},
-                            "breakpoints":{
-                                "576":{"slidesPerView":2,"spaceBetween":16},
-                                "768":{"slidesPerView":3,"spaceBetween":18},
-                                "1200":{"slidesPerView":4,"spaceBetween":20}
-                            }
-                        }'>
-                        <livewire:client.top-deals />
-                    </div>
-                </div>
-            </section>
-
-        </div>
-
-        @include('partials.footer')
-
-    </main>
-
-    <style>
-        /* Ambient Grid */
-        .cyber-grid-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-image: 
-                radial-gradient(circle at 50% 20%, rgba(56, 189, 248, 0.12) 0%, transparent 60%),
-                linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-            background-size: 100% 100%, 60px 60px, 60px 60px;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        /* Hero */
-        .hero-section {
-            padding: 30px 0 40px;
-        }
-
-        .hero-layout {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 24px;
-            align-items: center;
-        }
-
-        @media (min-width: 992px) {
-            .hero-layout {
-                grid-template-columns: 1.1fr 1fr;
-                gap: 40px;
-            }
-        }
-
-        .hero-headline {
-            font-size: clamp(2rem, 4.5vw, 3.6rem);
-            font-weight: 800;
-            line-height: 1.1;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            margin-bottom: 24px;
-            color: #FFF;
-        }
-
-        .hero-headline .highlight {
-            color: #00E5FF;
-            text-shadow: 0 0 20px rgba(0, 229, 255, 0.6);
-        }
-
-        .hero-buttons-group {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-
-        .btn-pill-explore {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 12px 28px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 999px;
-            color: #FFF;
-            font-size: 13px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            text-decoration: none;
-            transition: all 0.25s ease;
-        }
-
-        .btn-pill-explore:hover {
-            background: rgba(255, 255, 255, 0.12);
-            border-color: #FFF;
-            color: #FFF;
-        }
-
-        .btn-pill-preorder {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 12px 28px;
-            background: rgba(0, 229, 255, 0.1);
-            border: 1.5px solid #00E5FF;
-            border-radius: 999px;
-            color: #00E5FF;
-            font-size: 13px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            text-decoration: none;
-            box-shadow: 0 0 20px rgba(0, 229, 255, 0.35);
-            transition: all 0.3s ease;
-        }
-
-        .btn-pill-preorder:hover {
-            background: #00E5FF;
-            color: #0A0E17;
-            box-shadow: 0 0 30px rgba(0, 229, 255, 0.7);
-        }
-
-        .hero-showcase-stage {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 280px;
-        }
-
-        .hologram-stage-glow {
-            position: absolute;
-            bottom: 20px;
-            width: 240px;
-            height: 50px;
-            border-radius: 50%;
-            background: radial-gradient(ellipse, rgba(0, 229, 255, 0.35) 0%, transparent 70%);
-            box-shadow: 0 0 35px rgba(0, 229, 255, 0.4);
-            border: 1px solid rgba(0, 229, 255, 0.3);
-            pointer-events: none;
-        }
-
-        .hero-headphone-img {
-            max-width: 80%;
-            max-height: 260px;
-            object-fit: contain;
-            filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.8));
-            position: relative;
-            z-index: 2;
-            animation: floatingHover 4s ease-in-out infinite alternate;
-        }
-
-        @keyframes floatingHover {
-            from { transform: translateY(0); }
-            to { transform: translateY(-10px); }
-        }
-
-        .slider-vertical-dots {
-            position: absolute;
-            right: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            display: none;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        @media (min-width: 1200px) {
-            .slider-vertical-dots {
-                display: flex;
-            }
-        }
-
-        .v-dot {
-            width: 4px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-        }
-
-        .v-dot.active {
-            height: 16px;
-            border-radius: 4px;
-            background: #00E5FF;
-            box-shadow: 0 0 8px #00E5FF;
-        }
-
-        /* Product Cards */
-        .section-heading-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-
-        .section-label {
-            font-size: 13px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: #94A3B8;
-        }
-
-        .products-grid-container {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
-            margin-bottom: 30px;
-        }
-
-        @media (min-width: 992px) {
-            .products-grid-container {
-                grid-template-columns: repeat(4, 1fr);
-                gap: 20px;
-            }
-        }
-
-        .neo-card {
-            background: rgba(18, 26, 43, 0.75);
-            backdrop-filter: blur(14px);
-            border: 1px solid rgba(56, 189, 248, 0.22);
-            border-radius: 20px;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            position: relative;
-            transition: all 0.3s ease;
-        }
-
-        .neo-card:hover {
-            transform: translateY(-5px);
-            border-color: #00E5FF;
-            box-shadow: 0 12px 30px rgba(0, 229, 255, 0.2);
-            background: rgba(24, 34, 56, 0.9);
-        }
-
-        .circular-neon-badge {
-            position: absolute;
-            top: 14px;
-            right: 14px;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            border: 1.5px solid #00F5A0;
-            box-shadow: 0 0 10px rgba(0, 245, 160, 0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 8px;
-            font-weight: 800;
-            color: #00F5A0;
-            text-transform: uppercase;
-            z-index: 3;
-        }
-
-        .card-img-wrapper {
-            height: 140px;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 12px;
-        }
-
-        .card-thumb-img {
-            max-width: 75%;
-            max-height: 75%;
-            object-fit: contain;
-            filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.7));
-            transition: transform 0.3s ease;
-        }
-
-        .neo-card:hover .card-thumb-img {
-            transform: scale(1.08);
-        }
-
-        .card-title-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 6px;
-        }
-
-        .card-product-title {
-            font-size: 12.5px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            color: #FFF;
-        }
-
-        .rating-pill {
-            font-size: 11px;
-            font-weight: 700;
-            color: #FBBF24;
-        }
-
-        .card-meta-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
-        }
-
-        .card-price {
-            font-size: 15px;
-            font-weight: 800;
-            color: #00F5A0;
-            text-shadow: 0 0 8px rgba(0, 245, 160, 0.4);
-        }
-
-        .color-swatches {
-            display: flex;
-            gap: 4px;
-            align-items: center;
-        }
-
-        .c-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-        }
-
-        .c-dot.cyan { background: #38BDF8; box-shadow: 0 0 4px #38BDF8; }
-        .c-dot.blue { background: #3B82F6; }
-        .c-dot.dark { background: #1E293B; border: 1px solid #475569; }
-
-        .btn-quick-buy {
-            width: 100%;
-            padding: 8px 0;
-            background: transparent;
-            border: 1.5px solid #00E5FF;
-            border-radius: 999px;
-            color: #00E5FF;
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            cursor: pointer;
-            box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
-            transition: all 0.25s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-        }
-
-        .btn-quick-buy:hover {
-            background: #00E5FF;
-            color: #0A0E17;
-            box-shadow: 0 0 18px rgba(0, 229, 255, 0.6);
-        }
-    </style>
+<div class="page-loader" id="pageLoader"><div class="loader-circle"></div></div>
+@include('section-begin')
+<main>
+<section class="hero">
+<div class="shop-wrap hero-grid">
+<div class="banner">
+<span class="pill rise" style="animation-delay:.05s">#MégaSoldes</span>
+<h1 class="rise" style="animation-delay:.12s">ÉCONOMISEZ<br>GROS</h1>
+<p class="sub rise" style="animation-delay:.2s">Jusqu'à -50% sur la sélection</p>
+<a class="btn-buy rise" style="animation-delay:.28s" href="{{ route('products') }}">ACHETEZ MAINTENANT <svg class="ic ic-sm"><use href="#i-chevron"/></svg></a>
+</div>
+<div class="promos">
+<a href="#promos" class="promo light rise" style="animation-delay:.16s"><h2>SOLDES</h2><p>Jusqu'à -50% sur la sélection</p></a>
+@php
+$spot = $promoSpotlight ?? null;
+$spotOff = $spot && $spot->sale_price && $spot->sale_price < $spot->price ? round((($spot->price - $spot->sale_price) / $spot->price) * 100) : 0;
+$spotFb = [1,2,3,4,5,6,7,8,10,12,16,17,18,19,20,21,23,24,25,26,27];
+$spotImg = $spot ? ($spot->getPhoto() ? $spot->getPhoto()->getImageUrl(530,530) : asset('assets/img/products/' . $spotFb[$spot->id % count($spotFb)] . '.png')) : null;
+@endphp
+@if($spot)
+<a href="{{ route('produits.show', ['slug' => $spot->getSlug(), 'id' => $spot->id]) }}" class="promo spot rise" style="animation-delay:.22s">
+<span class="tile" style="background-image:url('{{ $spotImg }}');background-size:cover;background-position:center"></span>
+@if($spotOff)<span class="spot-tag">-{{ $spotOff }}%</span>@endif
+<span class="spot-info"><span class="spot-nm">{{ Str::limit($spot->name, 26) }}</span><span class="spot-pr">{{ number_format($spot->sale_price && $spot->sale_price < $spot->price ? $spot->sale_price : $spot->price, 0, ',', ' ') }} FCFA</span></span>
+</a>
+@else
+<a href="{{ route('products') }}" class="promo img rise" style="animation-delay:.22s"><span class="tile" style="background-image:url('{{ asset('img/shop/tile-1.jpg') }}');background-size:cover;background-position:center"></span></a>
+@endif
+<a href="{{ route('products') }}" class="promo solid rise" style="animation-delay:.28s"><h2>NOUVEAUTÉS</h2><p>Les derniers arrivages</p></a>
+@php
+$nw = $newSpotlight ?? null;
+$nwImg = $nw ? ($nw->getPhoto() ? $nw->getPhoto()->getImageUrl(530,530) : asset('assets/img/products/' . $spotFb[$nw->id % count($spotFb)] . '.png')) : null;
+@endphp
+@if($nw)
+<a href="{{ route('produits.show', ['slug' => $nw->getSlug(), 'id' => $nw->id]) }}" class="promo spot rise" style="animation-delay:.34s">
+<span class="tile" style="background-image:url('{{ $nwImg }}');background-size:cover;background-position:center"></span>
+<span class="spot-tag new">NEW</span>
+<span class="spot-info"><span class="spot-nm">{{ Str::limit($nw->name, 26) }}</span><span class="spot-pr">{{ number_format($nw->sale_price && $nw->sale_price < $nw->price ? $nw->sale_price : $nw->price, 0, ',', ' ') }} FCFA</span></span>
+</a>
+@else
+<a href="{{ route('products') }}" class="promo img rise" style="animation-delay:.34s"><span class="tile" style="background-image:url('{{ asset('img/shop/tile-washer.jpg') }}');background-size:cover;background-position:center"></span></a>
+@endif
+</div>
+</div>
+</section>
+<div class="trust">
+<div class="shop-wrap trust-row">
+<div class="item rv"><svg class="ic"><use href="#i-truck"/></svg><div><b>Livraison offerte</b><span>Dès 25 000 FCFA</span></div></div>
+<div class="item rv"><svg class="ic"><use href="#i-bolt"/></svg><div><b>Vente Flash</b><span>Voir plus</span></div></div>
+<div class="item rv"><svg class="ic"><use href="#i-card"/></svg><div><b>Paiement Mobile Money</b><span>Orange · Moov · Wave</span></div></div>
+<div class="item rv"><svg class="ic"><use href="#i-headset"/></svg><div><b>Support 7j/7</b><span>+223 82 01 95 83</span></div></div>
+</div>
+</div>
+<section class="sec" id="promos">
+<div class="shop-wrap">
+<div class="sec-head rv">
+<h2><span>🔥</span> Offres flash</h2>
+@if(!empty($flashCode))<span class="off" style="position:static">-{{ $flashCode->type === 'percentage' ? $flashCode->value . '%' : number_format($flashCode->value, 0, ',', ' ') . ' FCFA' }} avec {{ $flashCode->code }}</span>@endif
+<div class="count" role="timer" aria-label="Fin de l'offre" @if(!empty($flashEndsAt)) data-ends-at="{{ $flashEndsAt->timestamp }}" @endif>@if(!empty($flashEndsAt))<b id="d" class="idle">00</b><i>J</i><b id="h" class="idle">00</b><i>H</i><b id="m" class="idle">00</b><i>M</i><b id="s" class="idle">00</b><i>S</i>@else<b id="h" class="idle">02</b><i>:</i><b id="m" class="idle">14</b><i>:</i><b id="s" class="idle">36</b>@endif</div>
+<a class="more" href="{{ route('products') }}">Tout voir <svg class="ic ic-sm"><use href="#i-chevron"/></svg></a>
+</div>
+<div class="grid">
+@forelse($selection ?? [] as $item)
+@php
+$promo = $item->sale_price && $item->sale_price < $item->price;
+$discount = $promo && $item->price > 0 ? round((($item->price - $item->sale_price) / $item->price) * 100) : 0;
+$fallbacks = [1,2,3,4,5,6,7,8,10,12,16,17,18,19,20,21,23,24,25,26,27];
+$photo = $item->getPhoto() ? $item->getPhoto()->getImageUrl(530,530) : asset('assets/img/products/' . $fallbacks[$item->id % count($fallbacks)] . '.png');
+$itemUrl = route('produits.show', ['slug' => $item->getSlug(), 'id' => $item->id]);
+@endphp
+<article class="card rv">
+<div class="thumb" style="background-image:url('{{ $photo }}')">
+@if($promo)<span class="off">-{{ $discount }}%</span>@endif
+<a class="fav" href="{{ auth()->check() ? route('favoris') : route('login') }}" aria-label="Voir mes favoris" title="Favori"><svg class="ic"><use href="#i-heart"/></svg><span class="tip">Mes favoris</span></a>
+</div>
+<div class="body">
+<div class="name">{{ Str::limit($item->name, 32) }}</div>
+@if($promo)<div class="was">{{ number_format($item->price, 0, ',', ' ') }} FCFA</div>@endif
+<div class="price">{{ number_format($promo ? $item->sale_price : $item->price, 0, ',', ' ') }} FCFA</div>
+<a href="{{ $itemUrl }}" class="add">Voir le produit</a>
+</div>
+</article>
+@empty
+<p class="empty">Aucun produit en sélection pour le moment.</p>
+@endforelse
+</div>
+</div>
+</section>
+<section class="sec">
+<div class="shop-wrap">
+<div class="sec-head rv"><h2>Tous les produits</h2></div>
+<livewire:client.top-deals />
+</div>
+</section>
+</main>
+@include('partials.footer')
+<script>
+(function(){var h=document.getElementById('h'),m=document.getElementById('m'),s=document.getElementById('s'),d=document.getElementById('d');if(!h)return;function pad(n){return String(n).padStart(2,'0');}function set(el,val){if(!el||el.textContent===val)return;el.textContent=val;el.classList.remove('idle');void el.offsetWidth;el.style.animation='none';void el.offsetWidth;el.style.animation='';}
+var box=h.closest('.count'),fin=box&&box.getAttribute('data-ends-at')?parseInt(box.getAttribute('data-ends-at'),10):0;
+if(fin>0){
+function tick(){var r=Math.max(0,fin-Math.floor(Date.now()/1000));set(d,pad(Math.floor(r/86400)));set(h,pad(Math.floor(r%86400/3600)));set(m,pad(Math.floor(r%3600/60)));set(s,pad(r%60));if(r<=0){clearInterval(iv);var head=box.closest('.sec-head');if(head&&!head.querySelector('.flash-done')){var x=document.createElement('span');x.className='off flash-done';x.style.position='static';x.textContent='Offre terminée';head.appendChild(x);}}}
+tick();var iv=setInterval(tick,1000);
+}else{
+var TOTAL=2*3600+14*60+36,reste=TOTAL;function loop(){if(reste<0)reste=TOTAL;set(h,pad(Math.floor(reste/3600)));set(m,pad(Math.floor(reste%3600/60)));set(s,pad(reste%60));reste--;}loop();setInterval(loop,1000);
+}})();
+</script>
 @endsection

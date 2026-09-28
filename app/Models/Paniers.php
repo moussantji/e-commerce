@@ -50,7 +50,7 @@ class Paniers extends Model
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Produits::class, 'panier_produit', 'paniers_id', 'produits_id')
-            ->withPivot(['quantite', 'prix_unitaire','total_ligne']);
+            ->withPivot(['quantite', 'prix_unitaire', 'total_ligne', 'options']);
     }
 
     public function getTotalAttribute()

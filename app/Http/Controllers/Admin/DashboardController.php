@@ -53,11 +53,11 @@ class DashboardController extends Controller
     {
         // Compter les commandes par statut
         $pendingOrdersCount = Commandes::where('statut', 'en_attente')->count();
-        $processingOrdersCount = Commandes::where('statut', 'traitement')->count();
+        $paidOrdersCount = Commandes::where('statut', 'payee')->count();
         $shippedOrdersCount = Commandes::where('statut', 'expedie')->count();
         $deliveredOrdersCount = Commandes::where('statut', 'livre')->count();
         $cancelledOrdersCount = Commandes::where('statut', 'annule')->count();
-        $totalOrders = $pendingOrdersCount + $processingOrdersCount + $shippedOrdersCount + $deliveredOrdersCount + $cancelledOrdersCount;
+        $totalOrders = $pendingOrdersCount + $paidOrdersCount + $shippedOrdersCount + $deliveredOrdersCount + $cancelledOrdersCount;
 
         // Récupérer toutes les commandes avec leurs relations pour le tableau
         $allOrders = Commandes::with(['user', 'paiement', 'livraison'])
@@ -156,7 +156,7 @@ class DashboardController extends Controller
             'previousMonthSales' => $previousMonthSales,
             'mapUsers' => $mapUsers,
             'pendingOrders' => $pendingOrdersCount,
-            'processingOrders' => $processingOrdersCount,
+            'processingOrders' => $paidOrdersCount,
             'shippedOrders' => $shippedOrdersCount,
             'deliveredOrders' => $deliveredOrdersCount,
             'cancelledOrders' => $cancelledOrdersCount,

@@ -1,74 +1,19 @@
-<div class="search-box ecommerce-search-box w-100 ">
-
-    {{-- INPUT --}}
-    <form class="position-relative" wire:submit.prevent="search">
-        <input class="form-control search-input fuzzy-search rounded-pill form-control-sm pe-5" type="search"
-            wire:model.live.debounce.150ms="search" placeholder="produits, catégories, marques, tags..." />
-        <span class="fas fa-search search-box-icon"></span>
-    </form>
-
-    {{-- CLOSE --}}
-    @if($search)
-        <div class="btn-close position-absolute end-0 top-50 translate-middle cursor-pointer shadow-none p-1 me-2"
-            wire:click="clear">
-            <button class="btn btn-link p-0"></button>
-        </div>
-    @endif
-
-    {{-- DROPDOWN --}}
-    @if(!empty($suggestions))
-        <div class="suggestions-dropdown position-absolute top-100 start-0 w-100 mt-1 shadow-lg rounded-3 overflow-hidden"
-            style="max-height: 1 8rem; z-index: 1060; border: 1px solid #e9ecef;">
-
-            <div class="dropdown-scroll p-0">
-                @foreach($suggestions as $suggestion)
-                    <a href="{{ $suggestion['url'] }}"
-                        class="suggestion-item p-3 border-bottom hover-link d-flex align-items-center text-decoration-none">
-
-                        <div class="flex-grow-1 pe-3">
-                            <div class="title fw-semibold text-dark mb-1">{{ $suggestion['title'] }}</div>
-                            <div class="type text-muted small">{{ $suggestion['type'] }}</div>
-                        </div>
-
-                        @if(isset($suggestion['count']) && $suggestion['count'] > 0)
-                            <span class="badge bg-primary fs-10">{{ $suggestion['count'] }} produits</span>
-                        @endif
-
-                        <i class="fas fa-chevron-right text-muted ms-2"></i>
-                    </a>
-                @endforeach
-            </div>
-        </div>
-    @endif
-
-    <style>
-        .suggestions-dropdown {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-        }
-
-        .suggestion-item {
-            transition: all 0.2s ease;
-        }
-
-        .hover-link:hover {
-            background: #f8f9fa !important;
-            color: #0d6efd !important;
-        }
-
-        .hover-link:hover .title {
-            color: #0d6efd !important;
-        }
-
-        .dropdown-scroll::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .dropdown-scroll::-webkit-scrollbar-thumb {
-            background: #dee2e6;
-            border-radius: 3px;
-        }
-    </style>
-
+<div class="s-box">
+<form wire:submit.prevent="search" style="position:relative">
+<svg class="ic s-ic"><use href="#i-search"/></svg>
+<input class="s-input" type="search" wire:model.live.debounce.150ms="search" placeholder="produits, catégories, marques..." aria-label="Rechercher">
+@if($search)
+<button type="button" class="s-clear" wire:click="clear" aria-label="Effacer">×</button>
+@endif
+</form>
+@if(!empty($suggestions))
+<div class="s-list">
+@foreach($suggestions as $suggestion)
+<a href="{{ $suggestion['url'] }}" class="s-row">
+<span class="t"><span class="n">{{ $suggestion['title'] }}</span><span class="k">{{ $suggestion['type'] }}{{ isset($suggestion['count']) && $suggestion['count'] > 0 ? ' · ' . $suggestion['count'] . ' produits' : '' }}</span></span>
+<svg class="ic ic-sm" style="color:#8b5cf6"><use href="#i-chevron"/></svg>
+</a>
+@endforeach
+</div>
+@endif
 </div>

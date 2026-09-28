@@ -39,13 +39,8 @@ class TopDeals extends Component
     public function render()
     {
         $topDeals = Produits::where('is_active', true)
-            ->where('stock', '>', 0)
-            ->where(function ($q) {
-                $q->whereNotNull('sale_price')
-                    ->orWhere('is_featured', true);
-            })
-            ->with(['reviews'])
-            ->limit(6)
+            ->with(['reviews', 'photos'])
+            ->latest()
             ->get();
 
         return view('livewire.client.top-deals', compact('topDeals'));

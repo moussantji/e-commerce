@@ -7,16 +7,19 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
     /**
      * Display the login view.
+     *
+     * La connexion se fait en modale depuis l'en-tête (template) : un invité
+     * qui arrive sur /login est renvoyé vers l'accueil avec ouverture auto.
+     * La vue auth.login reste en secours (sans JS).
      */
-    public function create(): View
+    public function create(): RedirectResponse
     {
-        return view('auth.login');
+        return redirect()->route('home', ['connexion' => 1]);
     }
 
     /**

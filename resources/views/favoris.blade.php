@@ -1,29 +1,32 @@
 @extends('base')
 
+@section('title', 'Mes favoris')
+
 @section('content')
-    <!-- ============================================-->
-    <!-- <section> begin ============================-->
     @include('section-begin')
-    <!-- <section> close ============================-->
-    <!-- ============================================-->
 
-    @include('partials.nav')
+    <nav class="crumb" aria-label="Fil d'Ariane">
+        <div class="wrap">
+            <a href="{{ route('home') }}">Accueil</a>
+            <svg class="ic">
+                <use href="#i-chevron" />
+            </svg>
+            <span class="here">Favoris</span>
+        </div>
+    </nav>
 
+    <section class="phead">
+        <div class="wrap">
+            <h1>Mes favoris</h1>
+            <p>Vos coups de cœur, prêts à passer au panier.</p>
+        </div>
+    </section>
 
-    <!-- ============================================-->
-    <!-- <section> begin ============================-->
-    <section class="pt-5 pb-9">
-        <div class="container-small cart">
-            <nav class="mb-3" aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}"><i class="fas fa-home me-1"></i>Acceuil</a></li>
-                    <li class="breadcrumb-item active" aria-current="page"><i class="fas fa-heart me-1"></i>Wishlist</li>
-                </ol>
-            </nav>
+    <section>
+        <div class="wrap">
             @livewire('whishlist')
-        </div><!-- end of .container-->
-    </section><!-- <section> close ============================-->
-    <!-- ============================================-->
+        </div>
+    </section>
 
     @include('partials.footer')
 @endsection

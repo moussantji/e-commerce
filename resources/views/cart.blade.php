@@ -1,38 +1,36 @@
 @extends('base')
 
+@section('title', 'Panier')
+
 @section('content')
-    <!-- ===============================================-->
-    <!--    Main Content-->
-    <!-- ===============================================-->
-    <main class="main" id="top">
+    @include('section-begin')
 
-        <!-- ============================================-->
-        <!-- <section> begin ============================-->
-        @include('section-begin')
-        <!-- <section> close ============================-->
-        <!-- ============================================-->
+    <nav class="crumb" aria-label="Fil d'Ariane">
+        <div class="wrap">
+            <a href="{{ route('home') }}">Accueil</a>
+            <svg class="ic">
+                <use href="#i-chevron" />
+            </svg>
+            <a href="{{ route('products') }}">Produits</a>
+            <svg class="ic">
+                <use href="#i-chevron" />
+            </svg>
+            <span class="here">Panier</span>
+        </div>
+    </nav>
 
-        @include('partials.nav')
+    <section class="phead">
+        <div class="wrap">
+            <h1>Mon panier</h1>
+            <p>Vérifiez vos articles, appliquez un code promo puis validez votre commande.</p>
+        </div>
+    </section>
 
-        <!-- ============================================-->
-        <!-- <section> begin ============================-->
-        <section class="pt-5 pb-9">
-            <div class="container-small cart">
-                <nav class="mb-3" aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a href="{{ route('home') }}"><i class="fas fa-home me-1"></i>Acceuil</a>
-                        </li>
-                        <li class="breadcrumb-item active" aria-current="page"><i
-                                class="fas fa-shopping-cart me-1"></i>Panier</li>
-                    </ol>
-                </nav>
-                <h2 class="mb-6"><i class="fas fa-shopping-cart me-1"></i>Panier</h2>
-                <livewire:cart />
-            </div><!-- end of .container-->
-        </section><!-- <section> close ============================-->
-        <!-- ============================================-->
+    <section>
+        <div class="wrap">
+            <livewire:cart />
+        </div>
+    </section>
 
-
-
-        @include('partials.footer')
-    @endsection
+    @include('partials.footer')
+@endsection
