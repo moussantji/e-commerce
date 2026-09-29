@@ -92,9 +92,16 @@
                 <div class="dash-grid">
                     <div class="field" style="margin-bottom:0">
                         <label for="pf-email">Email *</label>
-                        <input id="pf-email" class="ctrl" name="email" type="email" required
-                            value="{{ old('email', $pfUser->email) }}">
-                        @error('email') <span class="avis-err">{{ $message }}</span> @enderror
+                        @if (!empty($emailLocked))
+                            <input id="pf-email" class="ctrl" type="email" value="{{ $pfUser->email }}" readonly
+                                style="background:var(--lav-1);color:var(--grey);cursor:not-allowed">
+                            <span class="muted-sm">Identifiant du compte — pour le modifier, contactez le support au
+                                <a class="lien" href="tel:+22382019583">+223 82 01 95 83</a>.</span>
+                        @else
+                            <input id="pf-email" class="ctrl" name="email" type="email" required
+                                value="{{ old('email', $pfUser->email) }}">
+                            @error('email') <span class="avis-err">{{ $message }}</span> @enderror
+                        @endif
                     </div>
                     <div class="field" style="margin-bottom:0">
                         <label for="pf-tel">Téléphone</label>

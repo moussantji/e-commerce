@@ -44,7 +44,6 @@ class CustomerComtroller extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'prenom' => 'nullable|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'avatar' => 'nullable|image|max:2048',
             'tel' => 'nullable|string|max:20',
             'date_naiss' => 'nullable|date',
@@ -59,11 +58,11 @@ class CustomerComtroller extends Controller
         ]);
 
         try {
-            // Préparation des données pour la mise à jour
+            // L'email est l'identifiant du compte : non modifiable par le client
+            // (même en cas de formulaire trafiqué, on force la valeur actuelle).
             $userData = [
                 'name' => $validated['name'],
                 'prenom' => $validated['prenom'] ?? $user->prenom,
-                'email' => $validated['email'],
                 'tel' => $validated['tel'] ?? $user->tel,
                 'date_naiss' => $validated['date_naiss'] ?? $user->date_naiss,
                 'lieu_naiss' => $validated['lieu_naiss'] ?? $user->lieu_naiss,
@@ -71,11 +70,6 @@ class CustomerComtroller extends Controller
                 'region' => $validated['region'] ?? $user->region,
                 'last_activity' => now()
             ];
-
-            // Changement d'email -> revérification requise.
-            if (($validated['email'] ?? null) !== $user->email) {
-                $userData['email_verified_at'] = null;
-            }
 
             // Gestion de l'adresse
             if (isset($validated['adresse'])) {

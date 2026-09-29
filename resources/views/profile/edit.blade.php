@@ -32,6 +32,7 @@
                 'backRoute' => 'dashboard',
                 'backLabel' => 'Mes commandes',
                 'roleLabel' => 'client',
+                'emailLocked' => true,
             ])
         </div>
     </section>
