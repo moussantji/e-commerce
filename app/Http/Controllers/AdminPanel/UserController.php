@@ -34,6 +34,9 @@ class UserController extends Controller
             case 'admins':
                 $query->where('role', 'admin');
                 break;
+            case 'vendeurs':
+                $query->where('role', 'vendeur');
+                break;
             case 'new':
                 $query->where('created_at', '>', now()->subDays(7));
                 break;
@@ -50,6 +53,7 @@ class UserController extends Controller
             'active' => User::where('status', 'active')->count(),
             'banned' => User::where('status', 'inactive')->count(),
             'admins' => User::where('role', 'admin')->count(),
+            'vendeurs' => User::where('role', 'vendeur')->count(),
             'new'    => User::where('created_at', '>', now()->subDays(7))->count(),
         ];
 
@@ -77,7 +81,7 @@ class UserController extends Controller
             'email'         => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'tel'           => ['nullable', 'string', 'max:50', 'unique:users,tel'],
             'password'      => ['required', 'string', 'min:8', 'confirmed'],
-            'role'          => ['required', 'in:admin,customer'],
+            'role'          => ['required', 'in:admin,customer,vendeur'],
             'status'        => ['required', 'in:active,inactive'],
             'pays'          => ['nullable', 'string', 'max:100'],
             'adresse'       => ['nullable', 'array'],
@@ -139,7 +143,7 @@ class UserController extends Controller
                 Rule::unique('users')->ignore($user->id),
             ],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
-            'role' => ['required', 'in:admin,customer'],
+            'role' => ['required', 'in:admin,customer,vendeur'],
         ]);
 
         $updateData = [
@@ -174,7 +178,7 @@ class UserController extends Controller
     public function updateRole(Request $request, User $user)
     {
         $data = $request->validate([
-            'role' => ['required', 'in:admin,customer'],
+            'role' => ['required', 'in:admin,customer,vendeur'],
         ]);
 
         if (auth()->id() === $user->id && $data['role'] !== 'admin') {

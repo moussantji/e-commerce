@@ -9,6 +9,7 @@
             'active' => 'Actifs',
             'banned' => 'Bannis',
             'admins' => 'Admins',
+            'vendeurs' => 'Vendeurs',
             'new' => 'Nouveaux',
         ];
     @endphp
@@ -112,6 +113,8 @@
                                                 aria-label="Rôle">
                                                 <option value="customer"
                                                     {{ $user->role === 'customer' ? 'selected' : '' }}>Client</option>
+                                                <option value="vendeur"
+                                                    {{ $user->role === 'vendeur' ? 'selected' : '' }}>Vendeur</option>
                                                 <option value="admin"
                                                     {{ $user->role === 'admin' ? 'selected' : '' }}>Admin</option>
                                             </select>

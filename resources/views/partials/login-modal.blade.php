@@ -22,6 +22,11 @@
                     <button class="btn-line" type="submit">Se déconnecter</button>
                 </form>
             </div>
+            @if (($mUser->role ?? '') === 'vendeur')
+                <div class="foot">
+                    <a class="btn-line" style="flex:1" href="{{ route('vendeur.dashboard') }}">Espace vendeur</a>
+                </div>
+            @endif
             <div class="foot">
                 <a class="btn-line" style="flex:1" href="{{ route('favoris') }}">Mes favoris</a>
                 <button class="btn-line" style="flex:1" type="button" data-close-modal>Fermer</button>

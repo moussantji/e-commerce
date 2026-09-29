@@ -101,8 +101,8 @@ Route::delete('avis/{avis}', [AvisController::class, 'destroy'])->name('avis.des
 
 
 
-// Routes authentifiées utilisateur
-Route::middleware(['auth', 'role:customer'])->group(function () {
+// Routes authentifiées client + vendeur (le vendeur achète comme un client)
+Route::middleware(['auth', 'role:customer,vendeur'])->group(function () {
     // Tableau de bord client
     Route::get('/dashboard', [CustomerComtroller::class, 'dashboard'])->name('dashboard');
     Route::delete('wishlist/{id}', [WishlistController::class, 'destroy'])->name('wishlist.destroy');
@@ -119,6 +119,18 @@ Route::middleware(['auth', 'role:customer'])->group(function () {
 
     // Paiement mobile : envoi preuve (Orange / Malitel / Wave)
     Route::post('/paiement/mobile', [PaymentController::class, 'storeManual'])->name('paiement.mobile');
+});
+
+// Espace vendeur : tableau de bord, ses produits, ses commandes.
+Route::prefix('vendeur')->name('vendeur.')->middleware(['auth', 'role:vendeur'])->group(function () {
+    Route::get('/dashboard', [\App\Http\Controllers\VendeurController::class, 'dashboard'])->name('dashboard');
+    Route::get('/produits', [\App\Http\Controllers\VendeurController::class, 'products'])->name('products.index');
+    Route::get('/produits/creer', [\App\Http\Controllers\VendeurController::class, 'createProduct'])->name('products.create');
+    Route::post('/produits', [\App\Http\Controllers\VendeurController::class, 'storeProduct'])->name('products.store');
+    Route::get('/produits/{product}/modifier', [\App\Http\Controllers\VendeurController::class, 'editProduct'])->name('products.edit');
+    Route::put('/produits/{product}', [\App\Http\Controllers\VendeurController::class, 'updateProduct'])->name('products.update');
+    Route::delete('/produits/{product}', [\App\Http\Controllers\VendeurController::class, 'destroyProduct'])->name('products.destroy');
+    Route::get('/commandes', [\App\Http\Controllers\VendeurController::class, 'orders'])->name('orders.index');
 });
 
 // Routes d'administration

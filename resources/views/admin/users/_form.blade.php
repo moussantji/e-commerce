@@ -97,6 +97,8 @@
         <select class="ctrl" id="u-role" name="role" required>
             <option value="customer" {{ old('role', $user->role ?? 'customer') === 'customer' ? 'selected' : '' }}>
                 Client</option>
+            <option value="vendeur" {{ old('role', $user->role ?? '') === 'vendeur' ? 'selected' : '' }}>Vendeur
+            </option>
             <option value="admin" {{ old('role', $user->role ?? '') === 'admin' ? 'selected' : '' }}>Admin</option>
         </select>
         @error('role') <span class="avis-err">{{ $message }}</span> @enderror

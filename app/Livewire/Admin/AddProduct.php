@@ -17,7 +17,7 @@ class AddProduct extends Component
     use WithFileUploads;
 
     // Champs principaux
-    public $name, $description, $sku, $category_id, $brand_id;
+    public $name, $description, $sku, $category_id, $brand_id, $vendeur_id;
     public $images = [];
     public $selected_tags = [];
     public $is_active = true, $is_featured = false;
@@ -48,6 +48,7 @@ class AddProduct extends Component
         'sku' => 'nullable|string|max:100|unique:produits,sku',
         'category_id' => 'nullable|exists:categories,id',
         'brand_id' => 'nullable|exists:brands,id',
+        'vendeur_id' => 'nullable|exists:users,id',
         'regular_price' => 'required|numeric|min:0',
         'sale_price' => 'nullable|numeric|min:0',
         'stock_quantity' => 'nullable|integer|min:0',
@@ -128,6 +129,7 @@ class AddProduct extends Component
             'is_featured' => $this->is_featured,
             'category_id' => $this->category_id,
             'brand_id' => $this->brand_id,
+            'vendeur_id' => $this->vendeur_id ?: null,
         ]);
 
         // Tags (sélection multiple du formulaire)
@@ -167,6 +169,7 @@ class AddProduct extends Component
         return view('livewire.admin.add-product', [
             'categories' => Category::all(),
             'brands' => Brand::all(),
+            'vendeurs' => \App\Models\User::where('role', 'vendeur')->orderBy('name')->get(),
             'all_tags' => Tag::orderBy('name')->get(),  // ✅ Objets pour vue
             // ✅ Passe les caractéristiques pour le select
             'caracteristiques_list' => Caracteristiques::orderBy('name')->get(),

@@ -14,7 +14,7 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Product::with('category');
+        $query = Product::with(['category', 'vendeur', 'tags']);
 
         // Gestion de la recherche
         if ($request->has('search')) {

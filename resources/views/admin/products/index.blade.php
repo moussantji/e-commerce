@@ -85,6 +85,10 @@
                                             aria-label="{{ $product->name }}"></a></td>
                                     <td><b><a
                                                 href="{{ route('admin.products.edit', $product) }}">{{ Str::limit($product->name, 45) }}</a></b>
+                                        @if ($product->vendeur_id)
+                                            <br><small class="muted-sm">Vendeur :
+                                                {{ optional($product->vendeur)->name ?? '#' . $product->vendeur_id }}</small>
+                                        @endif
                                     </td>
                                     <td><b>{{ number_format($product->price, 0, ',', ' ') }} FCFA</b>
                                         @if ($product->sale_price)

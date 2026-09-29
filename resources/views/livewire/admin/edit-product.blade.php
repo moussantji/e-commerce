@@ -258,6 +258,23 @@
 
                 <div class="panel">
                     <h2><svg class="ic">
+                            <use href="#i-user" />
+                        </svg> Vendeur (optionnel)</h2>
+                    <div class="field" style="margin-bottom:6px">
+                        <select class="ctrl" wire:model.defer="vendeur_id" aria-label="Vendeur">
+                            <option value="">Boutique (aucun vendeur)</option>
+                            @foreach ($vendeurs as $vendeur)
+                                <option value="{{ $vendeur->id }}">{{ $vendeur->name }} ({{ $vendeur->email }})
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('vendeur_id') <span class="avis-err">{{ $message }}</span> @enderror
+                    </div>
+                    <p class="muted-sm">Attribuer ce produit à un vendeur.</p>
+                </div>
+
+                <div class="panel">
+                    <h2><svg class="ic">
                             <use href="#i-bolt" />
                         </svg> Tags</h2>
                     <div class="field" style="margin-bottom:6px">

@@ -52,6 +52,12 @@
                     <a class="btn-line" href="{{ route('profile.edit') }}"><svg class="ic">
                             <use href="#i-user" />
                         </svg> Mon profil</a>
+                    @if (($user->role ?? '') === 'vendeur')
+                        <a class="btn-solid" style="font-size:13.5px;padding:11px 22px"
+                            href="{{ route('vendeur.dashboard') }}"><svg class="ic" style="width:16px;height:16px">
+                                <use href="#i-store" />
+                            </svg> Espace vendeur</a>
+                    @endif
                     <form method="POST" action="{{ route('logout') }}" style="display:inline">
                         @csrf
                         <button class="btn-line" type="submit"><svg class="ic">

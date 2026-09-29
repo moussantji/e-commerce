@@ -72,6 +72,7 @@
                         <label class="muted-sm" for="role">Rôle :</label>
                         <select class="ctrl ctrl-sm" id="role" name="role" onchange="this.form.submit()">
                             <option value="customer" {{ $user->role === 'customer' ? 'selected' : '' }}>Client</option>
+                            <option value="vendeur" {{ $user->role === 'vendeur' ? 'selected' : '' }}>Vendeur</option>
                             <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>Admin</option>
                         </select>
                     </form>

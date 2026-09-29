@@ -28,7 +28,7 @@ class EditProduct extends Component
     public $last_restock, $produit_created = true;
     public $shipping_type = 'phoenix';
     public $fragile = false, $biodegradable = false, $frozen = false, $frozen_temp = '';
-    public $category_id, $brand_id, $is_active = true, $is_featured = false;
+    public $category_id, $brand_id, $vendeur_id, $is_active = true, $is_featured = false;
     public $selected_tags = [];
     public $variant_options = [];
 
@@ -50,6 +50,7 @@ class EditProduct extends Component
             'selected_tags.*' => 'exists:tags,id',
             'category_id' => 'nullable|exists:categories,id',
             'brand_id' => 'nullable|exists:brands,id',
+        'vendeur_id' => 'nullable|exists:users,id',
             'images.*' => 'nullable|image|max:2048',
             'variant_options.*.type' => 'nullable|string',
             'variant_options.*.values_input' => 'nullable|string',
@@ -80,6 +81,7 @@ class EditProduct extends Component
         $this->stock_actuel = $this->produit->stock;
         $this->category_id = $this->produit->category_id;
         $this->brand_id = $this->produit->brand_id;
+        $this->vendeur_id = $this->produit->vendeur_id;
         $this->is_active = $this->produit->is_active;
         $this->is_featured = $this->produit->is_featured;
 
@@ -188,6 +190,7 @@ class EditProduct extends Component
             'is_featured' => $this->is_featured,
             'category_id' => $this->category_id,
             'brand_id' => $this->brand_id,
+            'vendeur_id' => $this->vendeur_id ?: null,
         ];
 
         // ✅ ATTACHE les images + ANTI-DOUBLONS
@@ -234,6 +237,7 @@ class EditProduct extends Component
         return view('livewire.admin.edit-product', [
             'categories' => Category::all(),
             'brands' => Brand::all(),
+            'vendeurs' => \App\Models\User::where('role', 'vendeur')->orderBy('name')->get(),
             'all_tags' => Tag::orderBy('name')->get(),  // ✅ Objets pour vue
             'caracteristiques_list' => Caracteristiques::orderBy('name')->get(),
         ]);

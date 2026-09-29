@@ -21,6 +21,7 @@ class Produits extends Model
         'stock',
         'category_id',
         'brand_id',
+        'vendeur_id',
         'image',
         'images',
         'is_active'
@@ -51,6 +52,14 @@ class Produits extends Model
     public function brand(): BelongsTo
     {
         return $this->belongsTo(Brand::class);
+    }
+
+    /**
+     * Vendeur propriétaire du produit (null = boutique).
+     */
+    public function vendeur(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'vendeur_id');
     }
 
     public function category(): BelongsTo

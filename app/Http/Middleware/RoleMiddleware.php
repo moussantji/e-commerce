@@ -16,7 +16,10 @@ class RoleMiddleware
     public function handle(Request $request, Closure $next, $role): Response
     {
 
-        if($request->user()->role !== $role)
+        // Accepte plusieurs rôles séparés par des virgules : role:customer,vendeur
+        $allowed = array_map('trim', explode(',', (string) $role));
+
+        if(!in_array($request->user()->role, $allowed, true))
         {
             abort(404);
         }
