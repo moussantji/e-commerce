@@ -27,6 +27,55 @@
                 <div class="panel">
                     <h2><svg class="ic">
                             <use href="#i-b2-tag" />
+                        </svg> Aperçu sur la boutique</h2>
+                    @php
+                        $pvFirst = !empty($old_images) && count($old_images) ? $old_images->first() : null;
+                        $pvImg = $pvFirst ? $pvFirst->getImageUrl(530, 530) : asset('assets/img/products/1.png');
+                        $pvReg = (float) ($regular_price ?? 0);
+                        $pvSale = $sale_price !== null && $sale_price !== '' ? (float) $sale_price : null;
+                        $pvPromo = $pvSale !== null && $pvSale < $pvReg && $pvReg > 0;
+                        $pvCat = collect($categories ?? [])->firstWhere('id', $category_id);
+                        $pvOff = $pvPromo ? round(($pvReg - $pvSale) / $pvReg * 100) : 0;
+                        $pvUrl = $produit ? route('produits.show', ['slug' => $produit->getSlug(), 'id' => $produit->id]) : route('products');
+                        $pvStock = (int) ($stock_actuel ?? 0);
+                        $pvCls = $pvStock <= 0 ? 'out' : ($pvStock <= 8 ? 'low' : 'ok');
+                        $pvTxt = $pvStock <= 0 ? 'Rupture de stock' : ($pvStock <= 8 ? 'Plus que ' . $pvStock . ' en stock' : 'En stock');
+                    @endphp
+                    <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">
+                        <a href="{{ $pvUrl }}" target="_blank" rel="noopener"
+                            style="width:130px;height:130px;border-radius:14px;border:1px solid var(--line);background:#f5f3ff center/cover no-repeat;background-image:url('{{ $pvImg }}');flex:none"
+                            aria-label="Voir la fiche publique"></a>
+                        <div style="flex:1;min-width:200px">
+                            <div class="name" style="font-size:15px;font-weight:700">{{ $name ?: 'Sans titre' }}</div>
+                            <div class="muted-sm">{{ $pvCat->name ?? '' }}
+                                @if ($pvPromo)
+                                    <span class="off" style="position:static">-{{ $pvOff }}%</span>
+                                @endif
+                            </div>
+                            <div style="margin:6px 0">
+                                <span class="price"
+                                    style="font-size:19px;font-weight:800;color:var(--pink)">{{ number_format($pvPromo ? $pvSale : $pvReg, 0, ',', ' ') }}
+                                    FCFA</span>
+                                @if ($pvPromo)
+                                    <span class="was">{{ number_format($pvReg, 0, ',', ' ') }} FCFA</span>
+                                @endif
+                            </div>
+                            <span class="stock {{ $pvCls }}">{{ $pvTxt }}</span>
+                            <div class="pdp-actions" style="margin-top:12px">
+                                <a class="btn-line" href="{{ $pvUrl }}" target="_blank" rel="noopener"><svg
+                                        class="ic">
+                                        <use href="#i-search" />
+                                    </svg> Voir la fiche publique</a>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="muted-sm" style="margin-top:10px">L'aperçu se met à jour à chaque modification
+                        enregistrée.</p>
+                </div>
+
+                <div class="panel">
+                    <h2><svg class="ic">
+                            <use href="#i-b2-tag" />
                         </svg> Titre & description</h2>
                     <div class="field">
                         <label for="ep-name">Titre du produit *</label>
