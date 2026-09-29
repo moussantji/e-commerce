@@ -125,7 +125,7 @@
                                     @endphp
                                     <tr>
                                         <td><b>{{ $produit->name }}</b><br><small class="muted-sm">Réf :
-                                                {{ $produit->sku ?? 'N/A' }}</small>
+                                                {{ $produit->sku ?? ('REF-' . $produit->id) }}</small>
                                             @if (!empty($pOpts) && is_array($pOpts))
                                                 <br>
                                                 @foreach ($pOpts as $ok => $ov)

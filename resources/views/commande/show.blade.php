@@ -214,10 +214,13 @@
                                         @error('phone') <span class="avis-err">{{ $message }}</span> @enderror
                                     </div>
                                     <div class="field" style="margin-bottom:0">
-                                        <label for="payPhotos">Capture du paiement (photo)</label>
+                                        <label for="payPhotos">Capture du paiement (photo) *</label>
                                         <input id="payPhotos" class="ctrl" name="photos[]" type="file"
-                                            accept="image/*" multiple style="border-radius:12px">
+                                            accept="image/*" multiple required style="border-radius:12px">
+                                        @error('photos') <span class="avis-err">{{ $message }}</span> @enderror
                                         @error('photos.*') <span class="avis-err">{{ $message }}</span> @enderror
+                                        <span class="muted-sm">Obligatoire : sans capture, la commande ne peut pas
+                                            être confirmée.</span>
                                     </div>
                                 </div>
                                 <div class="pdp-actions" style="margin-top:16px">

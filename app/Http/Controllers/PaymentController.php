@@ -20,8 +20,9 @@ class PaymentController extends Controller
     }
 
     /**
-     * Store manual mobile-money payment proof from customer
-     * Expected inputs: order_id, provider (orange|mtn|moov|malitel|wave), phone (optional), photos[]
+     * Store manual mobile-money payment proof from customer.
+     * La capture du paiement est OBLIGATOIRE : pas de confirmation sans preuve.
+     * Expected inputs: order_id, provider (orange|mtn|moov|malitel|wave), phone (optional), photos[] (required)
      */
     public function storeManual(Request $request)
     {
@@ -29,7 +30,12 @@ class PaymentController extends Controller
             'order_id' => 'required|exists:commandes,id',
             'provider' => 'required|in:orange,mtn,moov,malitel,wave',
             'phone' => 'nullable|string',
-            'photos.*' => 'nullable|image|max:5120'
+            'photos' => 'required|array|min:1',
+            'photos.*' => 'required|image|max:5120',
+        ], [
+            'photos.required' => 'La capture du paiement est obligatoire.',
+            'photos.min' => 'Ajoutez au moins une capture du paiement.',
+            'photos.*.image' => 'Chaque preuve doit être une image.',
         ]);
 
         $order = Commandes::findOrFail($data['order_id']);

@@ -35,6 +35,16 @@ class Produits extends Model
         'images' => 'array'
     ];
 
+    protected static function booted(): void
+    {
+        // Référence auto (jamais de N/A) : PRD-00001, PRD-00002...
+        static::created(function (Produits $produit) {
+            if (empty($produit->sku)) {
+                $produit->updateQuietly(['sku' => 'PRD-' . str_pad($produit->id, 5, '0', STR_PAD_LEFT)]);
+            }
+        });
+    }
+
     /**
      * Récupère la marque associée au produit
      */
