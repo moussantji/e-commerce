@@ -12,7 +12,7 @@ use League\Glide\Signatures\SignatureFactory;
 
 class photos extends Model
 {
-    protected $fillable = ['filename', 'user_id', 'produit_id', 'payment_id', 'livraison_id', 'brand_id', 'banner_id','categories_id'];
+    protected $fillable = ['filename', 'user_id', 'produits_id', 'paiements_id', 'livraison_id', 'brand_id', 'banner_id', 'categories_id', 'avis_client_id'];
 
     // Photos.php
     protected static function booted(): void
@@ -56,6 +56,13 @@ class photos extends Model
         if ($width === null) {
             return Storage::disk('public')->url($this->filename);
         }
+
+        // Sans moteur d'image (GD/Imagick absent, ex: petit serveur) : Glide
+        // ne peut pas redimensionner (erreur 500). On sert le fichier d'origine.
+        if (!extension_loaded('gd') && !extension_loaded('imagick')) {
+            return Storage::disk('public')->url($this->filename);
+        }
+
         $urlBuilder = UrlBuilderFactory::create('/images/', config('glide.key'));
         return $urlBuilder->getUrl($this->filename, ['w' => $width, 'h' => $height, 'fit' => 'crop']);
     }

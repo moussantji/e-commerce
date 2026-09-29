@@ -23,15 +23,23 @@ class ImageController extends Controller
             'cache_path_prefix' => '.cache',
             'base_url' => 'images'
         ]);
-        // Glide 3 : génère ET renvoie directement les octets de l'image
-        $imageData = $server->outputImage($path, $request->all());
+        try {
+            // Glide 3 : génère ET renvoie directement les octets de l'image
+            $imageData = $server->outputImage($path, $request->all());
 
-        // MIME type automatique
-        $mime = $server->getSource()->mimeType($path) ?: 'image/png';
+            // MIME type automatique
+            $mime = $server->getSource()->mimeType($path) ?: 'image/png';
 
-        return response($imageData, 200, [
-            'Content-Type' => $mime,
-            'Cache-Control' => 'public, max-age=31536000, immutable',
-        ]);
+            return response($imageData, 200, [
+                'Content-Type' => $mime,
+                'Cache-Control' => 'public, max-age=31536000, immutable',
+            ]);
+        } catch (\Throwable $e) {
+            // Secours (ex: GD/Imagick absent) : fichier d'origine.
+            \Illuminate\Support\Facades\Log::warning('Glide indisponible, original servi : ' . $e->getMessage());
+            $diskPath = Storage::disk('public')->path($path);
+            abort_unless(is_file($diskPath), 404);
+            return response()->file($diskPath);
+        }
     }
 }
