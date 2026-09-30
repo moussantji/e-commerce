@@ -566,6 +566,11 @@ class Cart extends Component
 
     public function render()
     {
+        // Recharge systématique : les pivots attachés à la main
+        // ($product->pivot) ne survivent pas à l'hydratation Livewire.
+        // Sans ça, la modale affiche ×1 / 0 FCFA après chaque interaction.
+        $this->loadCart();
+
         return view('livewire.cart');
     }
 }
