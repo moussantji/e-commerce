@@ -197,11 +197,28 @@
                             </svg> Preuve de paiement</h2>
                         @php $preuves = \App\Models\PaymentProof::where('order_id', $order->id)->latest()->get(); @endphp
                         @forelse($preuves as $pv)
+                            @php
+                                $pvPhs = $pv->photos ?? [];
+                                if (is_string($pvPhs)) {
+                                    $pvPhs = json_decode($pvPhs, true) ?: [];
+                                }
+                            @endphp
                             <div class="dligne">
                                 <div><b>{{ ucfirst($pv->provider) }}</b>
                                     <small>{{ $pv->phone ?? '' }} ·
                                         {{ number_format($pv->amount, 0, ',', ' ') }} FCFA ·
                                         {{ $pv->created_at?->format('d/m/Y H:i') }}</small>
+                                    @if (!empty($pvPhs))
+                                        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+                                            @foreach ($pvPhs as $ph)
+                                                <a href="{{ asset('storage/' . $ph) }}" target="_blank">
+                                                    <img src="{{ asset('storage/' . $ph) }}" alt="Capture de paiement"
+                                                        loading="lazy"
+                                                        style="width:72px;height:72px;object-fit:cover;border-radius:10px;border:1px solid var(--line)">
+                                                </a>
+                                            @endforeach
+                                        </div>
+                                    @endif
                                 </div>
                                 <span class="st {{ $pv->status === 'confirme' ? 'ok' : ($pv->status === 'rejete' ? 'ko' : 'conf') }}">{{ $pv->status }}</span>
                             </div>

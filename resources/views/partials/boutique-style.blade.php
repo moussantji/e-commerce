@@ -633,4 +633,25 @@ select.ctrl{cursor:pointer;padding-right:34px;appearance:none;background-image:l
 .lux-head h3{font-size:16px}
 .lux-ico{width:44px;height:44px}
 }
+/* ===== Correctifs responsive mobile global (même famille que panier) ===== */
+.spec td{overflow-wrap:anywhere}
+.tbl td{overflow-wrap:anywhere}
+.ocmd-foot{flex-wrap:wrap}
+@media(max-width:560px){
+.dligne{grid-template-columns:48px 1fr;gap:10px}
+.dligne .th{width:48px;height:48px}
+.dligne>div:last-child,.dligne>span:last-child{grid-column:2;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.modal .box{padding:20px}
+.phead h1{overflow-wrap:break-word}
+.pricebox .now{font-size:28px}
+.opt-grp .opt-pills .opt-pill{font-size:12.5px;padding:9px 13px}
+.pay-pills .opt-pill{font-size:12.5px}
+.tabs-head{overflow-x:auto;flex-wrap:nowrap}
+.tab-btn{white-space:nowrap;font-size:13px;padding:11px 14px}
+}
+/* ===== Modale : boutons en colonne sur petit écran ===== */
+@media(max-width:560px){
+.modal .box .foot{flex-wrap:wrap}
+.modal .box .foot>*{flex:1 1 100%}
+}
 </style>
