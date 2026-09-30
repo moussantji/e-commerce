@@ -17,17 +17,13 @@
                 {{ $mFavs }} favori{{ $mFavs > 1 ? 's' : '' }}</p>
             <div class="foot">
                 <a class="btn-solid" style="flex:1"
-                    href="{{ $mUser->isAdmin() ? route('admin.dashboard') : route('dashboard') }}">Mon espace</a>
+                    href="{{ $mUser->isAdmin() ? route('admin.dashboard') : ($mUser->role === 'vendeur' ? route('vendeur.dashboard') : route('dashboard')) }}">Mon
+                    espace</a>
                 <form method="POST" action="{{ route('logout') }}" style="display:inline">
                     @csrf
                     <button class="btn-line" type="submit">Se déconnecter</button>
                 </form>
             </div>
-            @if (($mUser->role ?? '') === 'vendeur')
-                <div class="foot">
-                    <a class="btn-line" style="flex:1" href="{{ route('vendeur.dashboard') }}">Espace vendeur</a>
-                </div>
-            @endif
             <div class="foot">
                 <a class="btn-line" style="flex:1" href="{{ route('favoris') }}">Mes favoris</a>
                 <button class="btn-line" style="flex:1" type="button" data-close-modal>Fermer</button>
