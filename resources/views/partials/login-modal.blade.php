@@ -1,9 +1,10 @@
 {{-- Modale connexion / compte du template : ouverte depuis l'icône compte de l'en-tête. --}}
 @php
     $mUser = auth()->user();
+    $lmErrors = $errors ?? new \Illuminate\Support\ViewErrorBag();
     // Réoverture auto après un échec de CE formulaire (pas register/reset).
     $authFormRoutes = ['register', 'password.request', 'password.email', 'password.reset', 'password.store'];
-    $loginFailed = !$mUser && !$errors->isEmpty() && ($errors->has('email') || $errors->has('password'))
+    $loginFailed = !$mUser && !$lmErrors->isEmpty() && ($lmErrors->has('email') || $lmErrors->has('password'))
         && old('email') !== null && !in_array(Route::currentRouteName(), $authFormRoutes, true);
     $mOrders = $mUser ? $mUser->orders()->count() : 0;
     $mFavs = $mUser ? $mUser->wishlistProducts()->count() : 0;
@@ -36,17 +37,21 @@
             <p class="sub">Accédez à vos favoris et au suivi de vos commandes.</p>
             <form method="POST" action="{{ route('login') }}" style="margin-top:18px" id="loginModalForm" novalidate>
                 @csrf
-                <div class="field @error('email') bad @enderror">
+                <div class="field {{ $lmErrors->has('email') ? 'bad' : '' }}">
                     <label for="lmMail">Email</label>
                     <input class="ctrl" id="lmMail" type="email" name="email" value="{{ old('email') }}"
                         placeholder="vous@email.com" autocomplete="username">
-                    @error('email') <span class="avis-err">{{ $message }}</span> @enderror
+                    @if ($lmErrors->has('email'))
+                        <span class="avis-err">{{ $lmErrors->first('email') }}</span>
+                    @endif
                 </div>
-                <div class="field @error('password') bad @enderror">
+                <div class="field {{ $lmErrors->has('password') ? 'bad' : '' }}">
                     <label for="lmMdp">Mot de passe</label>
                     <input class="ctrl" id="lmMdp" type="password" name="password" placeholder="••••••••"
                         autocomplete="current-password">
-                    @error('password') <span class="avis-err">{{ $message }}</span> @enderror
+                    @if ($lmErrors->has('password'))
+                        <span class="avis-err">{{ $lmErrors->first('password') }}</span>
+                    @endif
                 </div>
                 <div class="field" id="lmErr" style="display:none">
                     <div class="err" id="lmErrTxt"></div>
