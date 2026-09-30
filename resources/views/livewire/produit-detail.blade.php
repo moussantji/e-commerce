@@ -593,19 +593,35 @@
                 }
                 el.innerHTML = '<b>' + p2(h) + '</b><i>:</i><b>' + p2(m) + '</b><i>:</i><b>' + p2(sec) + '</b>';
             }
-            if (document.getElementById('flash')) {
-                tic();
-                if (window._pdTimer) clearInterval(window._pdTimer);
-                window._pdTimer = setInterval(tic, 1000);
+            function startFlash() {
+                if (window._pdTimer) {
+                    try {
+                        clearInterval(window._pdTimer);
+                    } catch (err) {}
+                    window._pdTimer = null;
+                }
+                if (document.getElementById('flash')) {
+                    tic();
+                    window._pdTimer = setInterval(tic, 1000);
+                }
             }
-            if (window.Livewire) {
-                try {
-                    Livewire.hook('morph.updated', function() {
-                        montrer(window._pdImg || 0);
-                        tic();
-                    });
-                } catch (err) {}
-            }
+            startFlash();
+            /* Rafraîchit la galerie après navigation SPA (le script inline ne se ré-exécute pas). */
+            window.refreshPDP = function() {
+                window._pdImg = 0;
+                montrer(0);
+                startFlash();
+            };
+            document.addEventListener('livewire:init', function() {
+                if (window.Livewire) {
+                    try {
+                        Livewire.hook('morph.updated', function() {
+                            montrer(window._pdImg || 0);
+                            tic();
+                        });
+                    } catch (err) {}
+                }
+            });
         })();
     </script>
 </div>

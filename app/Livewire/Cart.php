@@ -467,6 +467,15 @@ class Cart extends Component
                 'total' => $sousTotal + $this->shippingCost - $this->discount
             ]);
 
+            // 6. Notifie les admins (sinon personne ne voit la commande).
+            $order->load('user');
+            \App\Support\AdminNotifier::notifyPayment(
+                'Nouvelle commande ' . ($order->numero_commande ?? ('#' . $order->id)),
+                (optional($order->user)->name ?? 'Client') . ' a passé une commande de '
+                    . number_format((float) $order->total, 0, ',', ' ') . ' FCFA.',
+                ['type' => 'admin_order', 'id' => $order->id],
+            );
+
             $this->loadCart();
             return $order;
         });

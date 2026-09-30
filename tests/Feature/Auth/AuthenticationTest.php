@@ -12,14 +12,15 @@ class AuthenticationTest extends TestCase
 
     public function test_login_screen_can_be_rendered(): void
     {
+        // La connexion se fait en modale : /login redirige vers l'accueil.
         $response = $this->get('/login');
 
-        $response->assertStatus(200);
+        $response->assertRedirect('/?connexion=1');
     }
 
     public function test_users_can_authenticate_using_the_login_screen(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['role' => 'customer']);
 
         $response = $this->post('/login', [
             'email' => $user->email,

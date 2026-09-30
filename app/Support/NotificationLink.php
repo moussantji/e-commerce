@@ -46,6 +46,12 @@ class NotificationLink
                 case 'admin_wallet':
                     // Notification admin : page de modération des paiements
                     return route('admin.payments.moderation');
+                case 'admin_order':
+                    // Notification admin : détail de la commande
+                    if ($id) {
+                        return route('admin.orders.show', $id);
+                    }
+                    break;
             }
         }
 

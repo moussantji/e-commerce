@@ -12,7 +12,7 @@ class ProfileTest extends TestCase
 
     public function test_profile_page_is_displayed(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['role' => 'customer']);
 
         $response = $this
             ->actingAs($user)
@@ -23,13 +23,14 @@ class ProfileTest extends TestCase
 
     public function test_profile_information_can_be_updated(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['role' => 'customer']);
 
         $response = $this
             ->actingAs($user)
-            ->patch('/profile', [
+            ->put('/profile', [
                 'name' => 'Test User',
-                'email' => 'test@example.com',
+                'prenom' => 'Test',
+                'tel' => '70000000',
             ]);
 
         $response
@@ -39,31 +40,32 @@ class ProfileTest extends TestCase
         $user->refresh();
 
         $this->assertSame('Test User', $user->name);
-        $this->assertSame('test@example.com', $user->email);
-        $this->assertNull($user->email_verified_at);
+        $this->assertSame('Test', $user->prenom);
+        // Numéro normalisé au format international
+        $this->assertSame('22370000000', $user->tel);
     }
 
-    public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
+    public function test_email_is_locked_for_customers(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['role' => 'customer']);
 
         $response = $this
             ->actingAs($user)
-            ->patch('/profile', [
+            ->put('/profile', [
                 'name' => 'Test User',
-                'email' => $user->email,
+                'email' => 'pirate@example.com',
             ]);
 
-        $response
-            ->assertSessionHasNoErrors()
-            ->assertRedirect('/profile');
+        $response->assertSessionHasNoErrors();
 
-        $this->assertNotNull($user->refresh()->email_verified_at);
+        // L'email ne bouge pas (identifiant verrouillé) et reste vérifié.
+        $this->assertNotSame('pirate@example.com', $user->refresh()->email);
+        $this->assertNotNull($user->email_verified_at);
     }
 
     public function test_user_can_delete_their_account(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['role' => 'customer']);
 
         $response = $this
             ->actingAs($user)
@@ -81,7 +83,7 @@ class ProfileTest extends TestCase
 
     public function test_correct_password_must_be_provided_to_delete_account(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['role' => 'customer']);
 
         $response = $this
             ->actingAs($user)

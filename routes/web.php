@@ -32,6 +32,8 @@ $slugRegex = '[0-9a-z\-]+';
 
 // Page d'accueil
 Route::get('/', [HomeController::class, 'index'])->name('home');
+// SEO
+Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
 // Pages légales
 Route::view('/conditions', 'legal.conditions')->name('conditions');
 Route::view('/confidentialite', 'legal.confidentialite')->name('confidentialite');

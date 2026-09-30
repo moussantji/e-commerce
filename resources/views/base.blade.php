@@ -18,6 +18,7 @@
 @include('partials.boutique-sprite')
 
 <div id="progress" aria-hidden="true"></div>
+<div id="navprogress" aria-hidden="true"></div>
 
 @yield('content')
 
@@ -26,8 +27,10 @@
 @endif
 
 @livewireScripts
+@include('partials.spa-nav')
 @include('partials.search-modal')
 @include('partials.login-modal')
+@include('partials.cookies')
 
 <script>
 /* JS nouveau uniquement — vanilla, aucun ancien script */
@@ -52,9 +55,16 @@ setTimeout(function(){document.querySelectorAll('.rv:not(.in)').forEach(function
 // Après chaque mise à jour Livewire (filtres, pagination...), les nouvelles cartes
 // .rv doivent redevenir visibles : on ré-observe + filet de sécurité immédiat.
 function revealAfterLivewire(){cascadeCards();observeRv();setTimeout(function(){document.querySelectorAll('.rv:not(.in)').forEach(function(el){var r=el.getBoundingClientRect();if(r.top<window.innerHeight+200)el.classList.add('in');});},50);}
-document.addEventListener('livewire:update',revealAfterLivewire);
-document.addEventListener('livewire:morph-updated',revealAfterLivewire);
-document.addEventListener('livewire:load',function(){if(window.Livewire&&Livewire.hook){Livewire.hook('morph.updated',function(){revealAfterLivewire();});}});
+window.revealAfterLivewire=revealAfterLivewire;
+document.addEventListener('livewire:init',function(){if(window.Livewire&&Livewire.hook){try{Livewire.hook('morph.updated',function(){revealAfterLivewire();});}catch(e){}}});
+/* Ré-initialise les contenus dynamiques après navigation SPA (wire:navigate). */
+window.initDynamic=function(){
+if(window.__rebuildSearchIndex){try{window.__rebuildSearchIndex();}catch(e){}}
+document.body.classList.toggle('has-buybar',!!document.getElementById('buybar'));
+if(document.getElementById('pdp')){window._pdImg=0;if(window.refreshPDP){try{window.refreshPDP();}catch(e){}}}
+if(window.initHomeCountdown){try{window.initHomeCountdown();}catch(e){}}
+if(window.checkLoginModal){try{window.checkLoginModal();}catch(e){}}
+};
 var barre=document.getElementById('progress'),planifie=false;
 function maj(){var y=window.scrollY||document.documentElement.scrollTop;var h=document.documentElement.scrollHeight-window.innerHeight;var p=h>0?Math.min(1,y/h):0;if(barre)barre.style.transform='scaleX('+p+')';document.documentElement.classList.toggle('scrolled',y>8);planifie=false;}
 window.addEventListener('scroll',function(){if(!planifie){planifie=true;requestAnimationFrame(maj);}},{passive:true});maj();
@@ -102,6 +112,7 @@ if(!sm.hidden&&champ&&champ.value)filtrer(champ.value,true);
 else if(champ&&!champ.value&&!sm.hidden)filtrer('',true);
 }
 buildIndex._sig=null;
+window.__rebuildSearchIndex=function(){buildIndex(true);};
 function ligne(p,q,delai){
 return '<button class="row" type="button" data-i="'+p.id+'"'+(delai?' style="animation-delay:'+delai+'ms"':'')+'>'+
 '<span class="th"'+(p.bg?' style="'+ech(p.bg)+'"':'')+'></span>'+
@@ -207,12 +218,13 @@ var premier=modal.querySelector('input[name="email"]');
 window.setTimeout(function(){if(premier)premier.focus();},60);
 }
 function fermer(){modal.classList.remove('on');modal.setAttribute('aria-hidden','true');}
+window.closeLoginModal=fermer;
+window.checkLoginModal=function(){try{if(new URLSearchParams(window.location.search).has('connexion'))ouvrir();}catch(e){}};
+window.checkLoginModal();
 document.querySelectorAll('[data-account]').forEach(function(a){
 a.addEventListener('click',function(e){e.preventDefault();ouvrir();});
 });
-try{
-if(new URLSearchParams(window.location.search).has('connexion'))ouvrir();
-}catch(err){}
+
 modal.addEventListener('click',function(e){
 if(e.target===modal||(e.target.closest&&e.target.closest('[data-close-modal]')))fermer();
 });

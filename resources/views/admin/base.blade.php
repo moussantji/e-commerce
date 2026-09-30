@@ -36,6 +36,7 @@
 </div>
 </header>
 @include('admin.partials.nav-boutique')
+<div id="navprogress" aria-hidden="true"></div>
 
 @yield('content')
 
@@ -46,6 +47,7 @@
 @endif
 
 @livewireScripts
+@include('partials.spa-nav')
 <script>
 /* Coquille admin boutique : loader + toast + reveal (comme l'accueil). */
 (function(){
@@ -66,9 +68,15 @@ els.forEach(function(el){el.setAttribute('data-rv-obs','1');io.observe(el);});
 observeRv();
 setTimeout(function(){document.querySelectorAll('.rv:not(.in)').forEach(function(el){el.classList.add('in');});},4000);
 function revealAfterLivewire(){cascadeCards();observeRv();setTimeout(function(){document.querySelectorAll('.rv:not(.in)').forEach(function(el){var r=el.getBoundingClientRect();if(r.top<window.innerHeight+200)el.classList.add('in');});},50);}
-document.addEventListener('livewire:update',revealAfterLivewire);
-document.addEventListener('livewire:morph-updated',revealAfterLivewire);
-document.addEventListener('livewire:load',function(){if(window.Livewire&&Livewire.hook){Livewire.hook('morph.updated',function(){revealAfterLivewire();});}});
+window.revealAfterLivewire=revealAfterLivewire;
+document.addEventListener('livewire:init',function(){if(window.Livewire&&Livewire.hook){try{Livewire.hook('morph.updated',function(){revealAfterLivewire();});}catch(e){}}});
+/* Ré-initialise les contenus dynamiques après navigation SPA (wire:navigate). */
+window.initDynamic=function(){
+if(window.__rebuildSearchIndex){try{window.__rebuildSearchIndex();}catch(e){}}
+if(document.getElementById('pdp')){window._pdImg=0;if(window.refreshPDP){try{window.refreshPDP();}catch(e){}}}
+if(window.initHomeCountdown){try{window.initHomeCountdown();}catch(e){}}
+if(window.checkLoginModal){try{window.checkLoginModal();}catch(e){}}
+};
 var barre=document.getElementById('progress'),planifie=false;
 function maj(){var y=window.scrollY||document.documentElement.scrollTop;var h=document.documentElement.scrollHeight-window.innerHeight;var p=h>0?Math.min(1,y/h):0;if(barre)barre.style.transform='scaleX('+p+')';document.documentElement.classList.toggle('scrolled',y>8);planifie=false;}
 window.addEventListener('scroll',function(){if(!planifie){planifie=true;requestAnimationFrame(maj);}},{passive:true});maj();

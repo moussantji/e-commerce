@@ -111,13 +111,16 @@ $itemUrl = route('produits.show', ['slug' => $item->getSlug(), 'id' => $item->id
 </main>
 @include('partials.footer')
 <script>
-(function(){var h=document.getElementById('h'),m=document.getElementById('m'),s=document.getElementById('s'),d=document.getElementById('d');if(!h)return;function pad(n){return String(n).padStart(2,'0');}function set(el,val){if(!el||el.textContent===val)return;el.textContent=val;el.classList.remove('idle');void el.offsetWidth;el.style.animation='none';void el.offsetWidth;el.style.animation='';}
+/* Compte à rebours accueil — rejouable après navigation SPA. */
+window.initHomeCountdown=function(){var h=document.getElementById('h'),m=document.getElementById('m'),s=document.getElementById('s'),d=document.getElementById('d');if(window._homeIv){window._homeIv.forEach(function(id){try{clearInterval(id);}catch(e){}});window._homeIv=[];}if(!h)return;function pad(n){return String(n).padStart(2,'0');}function set(el,val){if(!el||el.textContent===val)return;el.textContent=val;el.classList.remove('idle');void el.offsetWidth;el.style.animation='none';void el.offsetWidth;el.style.animation='';}
+window._homeIv=window._homeIv||[];
 var box=h.closest('.count'),fin=box&&box.getAttribute('data-ends-at')?parseInt(box.getAttribute('data-ends-at'),10):0;
 if(fin>0){
 function tick(){var r=Math.max(0,fin-Math.floor(Date.now()/1000));set(d,pad(Math.floor(r/86400)));set(h,pad(Math.floor(r%86400/3600)));set(m,pad(Math.floor(r%3600/60)));set(s,pad(r%60));if(r<=0){clearInterval(iv);var head=box.closest('.sec-head');if(head&&!head.querySelector('.flash-done')){var x=document.createElement('span');x.className='off flash-done';x.style.position='static';x.textContent='Offre terminée';head.appendChild(x);}}}
-tick();var iv=setInterval(tick,1000);
+tick();var iv=setInterval(tick,1000);window._homeIv.push(iv);
 }else{
-var TOTAL=2*3600+14*60+36,reste=TOTAL;function loop(){if(reste<0)reste=TOTAL;set(h,pad(Math.floor(reste/3600)));set(m,pad(Math.floor(reste%3600/60)));set(s,pad(reste%60));reste--;}loop();setInterval(loop,1000);
-}})();
+var TOTAL=2*3600+14*60+36,reste=TOTAL;function loop(){if(reste<0)reste=TOTAL;set(h,pad(Math.floor(reste/3600)));set(m,pad(Math.floor(reste%3600/60)));set(s,pad(reste%60));reste--;}loop();window._homeIv.push(setInterval(loop,1000));
+}};
+window.initHomeCountdown();
 </script>
 @endsection

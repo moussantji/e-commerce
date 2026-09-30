@@ -665,4 +665,8 @@ select.ctrl{cursor:pointer;padding-right:34px;appearance:none;background-image:l
 .tbl-stacked td:empty{display:none}
 .tbl-stacked td[data-label]::before{content:attr(data-label);display:block;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--grey);margin-bottom:2px}
 }
+/* ===== Progression navigation SPA (wire:navigate) ===== */
+#navprogress{position:fixed;top:0;left:0;height:3px;width:0;z-index:200;opacity:0;background:linear-gradient(90deg,var(--violet-700),var(--violet-400),var(--pink));box-shadow:0 0 12px rgba(139,92,246,.7);transition:width .45s ease,opacity .3s}
+#navprogress.on{opacity:1;width:72%}
+#navprogress.done{opacity:0;width:100%;transition:width .25s ease,opacity .35s .1s}
 </style>
