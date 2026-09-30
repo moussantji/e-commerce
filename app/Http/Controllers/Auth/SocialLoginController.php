@@ -59,6 +59,14 @@ class SocialLoginController extends Controller
 
         Auth::login($user, true);
 
+        if ($user->role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        }
+
+        if ($user->role === 'vendeur') {
+            return redirect()->route('vendeur.dashboard');
+        }
+
         return redirect('/dashboard');
     }
 }
