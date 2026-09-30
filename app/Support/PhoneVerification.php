@@ -56,10 +56,64 @@ class PhoneVerification
     }
 
     /**
-     *Brancher ici la passerelle SMS réelle (API Orange, Moov...).
+     * Passerelle SMS réelle (API Orange : OAuth client_credentials + envoi).
+     * Config : SMS_ORANGE_CLIENT_ID / SECRET / SENDER (tel:+223...) / BASE_URL.
      */
     protected static function sendViaGateway(string $phone, string $code): void
     {
-        Log::warning("SMS non configuré : code {$code} pour {$phone} (driver=" . config('services.sms.driver') . ')');
+        $driver = config('services.sms.driver');
+
+        if ($driver === 'orange') {
+            static::sendViaOrange($phone, $code);
+            return;
+        }
+
+        Log::warning("SMS non configuré : code {$code} pour {$phone} (driver={$driver})");
+    }
+
+    protected static function sendViaOrange(string $phone, string $code): void
+    {
+        $base = rtrim((string) config('services.sms.orange.base_url', 'https://api.orange.com'), '/');
+        $clientId = (string) config('services.sms.orange.client_id');
+        $clientSecret = (string) config('services.sms.orange.client_secret');
+        $sender = (string) config('services.sms.orange.sender');
+
+        if ($clientId === '' || $clientSecret === '' || $sender === '') {
+            throw new \RuntimeException('Passerelle Orange non configurée (SMS_ORANGE_CLIENT_ID/SECRET/SENDER).');
+        }
+
+        $message = "Boutique : votre code de vérification est {$code}. Il expire dans 10 minutes.";
+
+        $token = \Illuminate\Support\Facades\Cache::remember('orange_sms_token', 3500, function () use ($base, $clientId, $clientSecret) {
+            $res = \Illuminate\Support\Facades\Http::asForm()->post($base . '/oauth/v3/oauth', [
+                'grant_type' => 'client_credentials',
+            ])->withBasicAuth($clientId, $clientSecret);
+
+            if (!$res->successful()) {
+                throw new \RuntimeException('Orange OAuth refusé (HTTP ' . $res->status() . ').');
+            }
+
+            return $res->json('access_token');
+        });
+
+        if (!$token) {
+            throw new \RuntimeException('Jeton Orange introuvable.');
+        }
+
+        $res = \Illuminate\Support\Facades\Http::withToken($token)
+            ->post($base . '/smsmessaging/v1/outbound/tel:' . urlencode($sender) . '/requests', [
+                'outboundSMSMessageRequest' => [
+                    'address' => 'tel:+' . $phone,
+                    'senderAddress' => 'tel:' . ltrim($sender, '+'),
+                    'outboundSMSTextMessage' => ['message' => $message],
+                ],
+            ]);
+
+        if (!$res->successful()) {
+            \Illuminate\Support\Facades\Cache::forget('orange_sms_token');
+            throw new \RuntimeException('Envoi SMS refusé (HTTP ' . $res->status() . ').');
+        }
+
+        Log::info("SMS Orange envoyé au +{$phone}.");
     }
 }

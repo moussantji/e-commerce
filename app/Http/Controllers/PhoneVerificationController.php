@@ -20,9 +20,15 @@ class PhoneVerificationController extends Controller
             return back()->with('error', 'Enregistrez d\'abord un numéro malien valide dans votre profil.');
         }
 
-        PhoneVerification::send($phone);
+        try {
+            PhoneVerification::send($phone);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Envoi OTP échoué : ' . $e->getMessage());
 
-        return back()->with('success', 'Code envoyé par SMS au ' . PhoneNumber::pretty($phone) . ' (vérifiez aussi vos messages).');
+            return back()->with('error', 'Envoi du SMS impossible pour le moment. Réessayez plus tard.');
+        }
+
+        return back()->with('success', 'Code envoyé par SMS au ' . PhoneNumber::pretty($phone) . '.');
     }
 
     /** Vérifie le code saisi et marque le numéro comme vérifié. */

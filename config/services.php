@@ -70,6 +70,13 @@ return [
 
     'sms' => [
         'driver' => env('SMS_DRIVER', 'log'),
+        // Passerelle Orange (Mali) : identifiants https://developer.orange.com
+        'orange' => [
+            'client_id' => env('SMS_ORANGE_CLIENT_ID'),
+            'client_secret' => env('SMS_ORANGE_CLIENT_SECRET'),
+            'sender' => env('SMS_ORANGE_SENDER'), // ex : tel:+22370000000 (numéro Orange alloué)
+            'base_url' => env('SMS_ORANGE_BASE_URL', 'https://api.orange.com'),
+        ],
     ],
 
 ];
