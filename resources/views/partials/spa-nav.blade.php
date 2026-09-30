@@ -43,10 +43,15 @@ if(window.revealAfterLivewire){try{window.revealAfterLivewire();}catch(e){}}
 if(window.Livewire||true){
 document.addEventListener('livewire:navigate',function(){
 navBar(true);
+document.body.classList.add('spa-leave');
+document.body.classList.remove('spa-enter');
 if(window.closeLoginModal){try{window.closeLoginModal();}catch(e){}}
 });
 document.addEventListener('livewire:navigated',function(){
 navBar(false);
+document.body.classList.remove('spa-leave');
+document.body.classList.add('spa-enter');
+window.setTimeout(function(){document.body.classList.remove('spa-enter');},400);
 if(window.initDynamic){try{window.initDynamic();}catch(e){}}
 });
 }

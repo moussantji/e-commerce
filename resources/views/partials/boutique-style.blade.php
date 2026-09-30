@@ -669,4 +669,30 @@ select.ctrl{cursor:pointer;padding-right:34px;appearance:none;background-image:l
 #navprogress{position:fixed;top:0;left:0;height:3px;width:0;z-index:200;opacity:0;background:linear-gradient(90deg,var(--violet-700),var(--violet-400),var(--pink));box-shadow:0 0 12px rgba(139,92,246,.7);transition:width .45s ease,opacity .3s}
 #navprogress.on{opacity:1;width:72%}
 #navprogress.done{opacity:0;width:100%;transition:width .25s ease,opacity .35s .1s}
+/* ===== Animations d'entrée globales (rejouées à chaque insertion DOM : SPA + Livewire) ===== */
+@keyframes riseIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.panel{animation:riseIn .5s var(--ease-out) both}
+.kpi{animation:riseIn .5s var(--ease-out) both}
+.kpi:nth-child(2){animation-delay:.06s}
+.kpi:nth-child(3){animation-delay:.12s}
+.kpi:nth-child(4){animation-delay:.18s}
+.ocmd,.dligne,.lux-item{animation:riseIn .45s var(--ease-out) both}
+.tbl tbody tr{animation:riseIn .4s var(--ease-out) both}
+.tbl tbody tr:nth-child(2){animation-delay:.04s}
+.tbl tbody tr:nth-child(3){animation-delay:.08s}
+.tbl tbody tr:nth-child(4){animation-delay:.12s}
+.tbl tbody tr:nth-child(5){animation-delay:.16s}
+.tbl tbody tr:nth-child(n+6){animation-delay:.2s}
+.phead h1{animation:riseIn .55s var(--ease-out) both}
+.phead p{animation:riseIn .55s var(--ease-out) .08s both}
+.crumb{animation:riseIn .4s var(--ease-out) both}
+/* Transition de page SPA : sortie discrète, entrée fluide */
+body.spa-leave main,body.spa-leave .wrap{opacity:.35;transition:opacity .18s ease}
+main{transition:opacity .25s ease}
+body.spa-enter main{animation:pageIn .32s var(--ease-out)}
+@keyframes pageIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+/* Micro-interactions boutons */
+.btn-solid:active,.btn-line:active,.btn-ghost-sm:active,.lux-btn-ok:active,.lux-btn-cancel:active{transform:scale(.97)}
+.card-cta .add:active{transform:scale(.97)}
+.opt-pill:active,.pop:active{transform:scale(.96)}
 </style>
