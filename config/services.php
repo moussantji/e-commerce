@@ -57,4 +57,19 @@ return [
         ))),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | SMS (vérification du numéro de téléphone)
+    |--------------------------------------------------------------------------
+    |
+    | driver=log : le code OTP est écrit dans les logs (développement).
+    | En production, brancher la passerelle (Orange/Moov API) dans
+    | App\Support\PhoneVerification@sendViaGateway.
+    |
+    */
+
+    'sms' => [
+        'driver' => env('SMS_DRIVER', 'log'),
+    ],
+
 ];

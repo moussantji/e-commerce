@@ -117,6 +117,12 @@ Route::middleware(['auth', 'role:customer,vendeur'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // Vérification du numéro de téléphone (code OTP par SMS).
+    Route::post('/profile/telephone/code', [\App\Http\Controllers\PhoneVerificationController::class, 'send'])
+        ->name('profile.phone.send')->middleware('throttle:6,1');
+    Route::post('/profile/telephone/verifier', [\App\Http\Controllers\PhoneVerificationController::class, 'verify'])
+        ->name('profile.phone.verify')->middleware('throttle:10,1');
+
     // Paiement mobile : envoi preuve (Orange / Malitel / Wave)
     Route::post('/paiement/mobile', [PaymentController::class, 'storeManual'])->name('paiement.mobile')->middleware('throttle:10,1');
 });

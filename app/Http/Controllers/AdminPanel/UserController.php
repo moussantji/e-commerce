@@ -79,7 +79,7 @@ class UserController extends Controller
             'date_naiss'    => ['nullable', 'date'],
             'lieu_naiss'    => ['nullable', 'string', 'max:255'],
             'email'         => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'tel'           => ['nullable', 'string', 'max:50', 'unique:users,tel'],
+            'tel'           => ['nullable', 'string', 'max:50', 'unique:users,tel', new \App\Rules\MalianPhone()],
             'password'      => ['required', 'string', 'min:8', 'confirmed'],
             'role'          => ['required', 'in:admin,customer,vendeur'],
             'status'        => ['required', 'in:active,inactive'],
@@ -94,6 +94,10 @@ class UserController extends Controller
         $data['social_links']  = $data['social_links'] ?? null;
         $data['password']      = Hash::make($data['password']);
         $data['email_verified_at'] = !empty($data['email_verified']) ? now() : null;
+        // Normalise le numéro malien (223XXXXXXXX) pour unicité réelle.
+        if (!empty($data['tel'])) {
+            $data['tel'] = \App\Support\PhoneNumber::normalize($data['tel']);
+        }
 
         // Champs non envoyés mais existants dans la table
         unset($data['email_verified']);

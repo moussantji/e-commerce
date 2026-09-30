@@ -45,7 +45,7 @@ class CustomerComtroller extends Controller
             'name' => 'required|string|max:255',
             'prenom' => 'nullable|string|max:255',
             'avatar' => 'nullable|image|max:2048',
-            'tel' => 'nullable|string|max:20',
+            'tel' => ['nullable', 'string', 'max:20', new \App\Rules\MalianPhone()],
             'date_naiss' => 'nullable|date',
             'lieu_naiss' => 'nullable|string|max:255',
             'pays' => 'nullable|string|max:100',
@@ -63,7 +63,7 @@ class CustomerComtroller extends Controller
             $userData = [
                 'name' => $validated['name'],
                 'prenom' => $validated['prenom'] ?? $user->prenom,
-                'tel' => $validated['tel'] ?? $user->tel,
+                'tel' => isset($validated['tel']) && $validated['tel'] !== null && $validated['tel'] !== '' ? \App\Support\PhoneNumber::normalize($validated['tel']) : ($user->tel ?? null),
                 'date_naiss' => $validated['date_naiss'] ?? $user->date_naiss,
                 'lieu_naiss' => $validated['lieu_naiss'] ?? $user->lieu_naiss,
                 'pays' => $validated['pays'] ?? $user->pays,

@@ -108,6 +108,16 @@
                         <input id="pf-tel" class="ctrl" name="tel" type="tel"
                             value="{{ old('tel', $pfUser->tel) }}" placeholder="Ex : 70 00 00 00">
                         @error('tel') <span class="avis-err">{{ $message }}</span> @enderror
+                        @if (!empty($phoneVerify))
+                            <div style="margin-top:8px">
+                                @if ($pfUser->tel_verified_at)
+                                    <span class="st ok">Numéro vérifié le
+                                        {{ $pfUser->tel_verified_at->format('d/m/Y') }}</span>
+                                @else
+                                    <span class="st conf">Numéro non vérifié</span>
+                                @endif
+                            </div>
+                        @endif
                     </div>
                 </div>
                 <div class="dash-grid">
@@ -182,6 +192,32 @@
                 </div>
             </form>
         </div>
+        @if (!empty($phoneVerify) && empty($pfUser->tel_verified_at))
+            <div data-pfbody="info" @if ($defaultTab !== 'info') style="display:none" @endif>
+                <div class="tagline-band" style="margin-top:16px">
+                    <svg class="ic">
+                        <use href="#i-card" />
+                    </svg>
+                    <span><b>Vérifiez votre numéro</b> pour sécuriser vos commandes et paiements Mobile Money.</span>
+                </div>
+                <div class="dash-grid" style="margin-bottom:0">
+                    <form method="POST" action="{{ route('profile.phone.send') }}">
+                        @csrf
+                        <button class="btn-line" type="submit" style="width:100%">Recevoir le code par SMS</button>
+                    </form>
+                    <form method="POST" action="{{ route('profile.phone.verify') }}">
+                        @csrf
+                        <div style="display:flex;gap:8px">
+                            <input class="ctrl" name="code" inputmode="numeric" maxlength="6" placeholder="Code à 6 chiffres"
+                                required style="border-radius:12px;flex:1">
+                            <button class="btn-solid" type="submit"
+                                style="font-size:13.5px;padding:11px 20px">Vérifier</button>
+                        </div>
+                        @error('code') <span class="avis-err">{{ $message }}</span> @enderror
+                    </form>
+                </div>
+            </div>
+        @endif
         <div data-pfbody="password" @if ($defaultTab !== 'password') style="display:none" @endif>
             <form method="POST" action="{{ route($passwordRoute) }}">
                 @csrf

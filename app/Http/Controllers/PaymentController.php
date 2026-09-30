@@ -29,7 +29,7 @@ class PaymentController extends Controller
         $data = $request->validate([
             'order_id' => 'required|exists:commandes,id',
             'provider' => 'required|in:orange,mtn,moov,malitel,wave',
-            'phone' => 'nullable|string',
+            'phone' => ['nullable', 'string', new \App\Rules\MalianPhone()],
             'photos' => 'required|array|min:1',
             'photos.*' => 'required|image|max:5120',
         ], [
@@ -55,7 +55,7 @@ class PaymentController extends Controller
             'user_id' => auth()->id(),
             'order_id' => $order->id,
             'provider' => $data['provider'],
-            'phone' => $data['phone'] ?? null,
+            'phone' => !empty($data['phone']) ? \App\Support\PhoneNumber::normalize($data['phone']) : null,
             'amount' => $order->total ?? 0,
             'status' => 'pending',
         ];

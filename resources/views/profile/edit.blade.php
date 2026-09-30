@@ -33,6 +33,7 @@
                 'backLabel' => 'Mes commandes',
                 'roleLabel' => 'client',
                 'emailLocked' => true,
+                'phoneVerify' => true,
             ])
         </div>
     </section>
