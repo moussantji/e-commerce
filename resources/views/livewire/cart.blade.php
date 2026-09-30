@@ -298,6 +298,17 @@
                         <span wire:loading wire:target="confirmCheckout">Traitement…</span>
                     </button>
                 </div>
+                @if (!empty($checkoutError))
+                    <div style="padding:0 22px 22px">
+                        <div class="tagline-band"
+                            style="background:#ffe4e6;border-color:#fecdd3;color:#be123c;margin:0">
+                            <svg class="ic">
+                                <use href="#i-b2-alert" />
+                            </svg>
+                            <span>{{ $checkoutError }}</span>
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
 

@@ -610,4 +610,27 @@ select.ctrl{cursor:pointer;padding-right:34px;appearance:none;background-image:l
 .boutique-texte p{font-size:14px;color:#374151;line-height:1.75;margin-bottom:10px}
 .boutique-texte ul{margin:6px 0 12px 20px;font-size:14px;color:#374151;line-height:1.75}
 .boutique-texte a{color:var(--violet-700);font-weight:600;text-decoration:underline}
+/* ===== Correctifs responsive mobile (panier + modales) ===== */
+@media(max-width:560px){
+.steps{gap:6px;padding:4px}
+.steps div{font-size:11px;padding:8px 4px;min-width:0}
+.lux-foot{flex-direction:column}
+.lux-foot>*{width:100%}
+.lux-item{flex-wrap:wrap}
+.lux-item .pr{margin-left:auto}
+.stotal{flex-wrap:wrap;gap:6px}
+.stotal b{font-size:21px}
+.srow{flex-wrap:wrap;gap:6px}
+.cline{gap:12px}
+.pdp-actions .btn-solid{font-size:14px}
+}
+@media(max-width:380px){
+.cline{grid-template-columns:64px 1fr;gap:10px}
+.cline .th{width:64px;height:64px}
+.cline .stepper button{width:32px;height:36px}
+.cline .stepper input{width:40px;height:36px;font-size:13px}
+.cline .lt{font-size:14px}
+.lux-head h3{font-size:16px}
+.lux-ico{width:44px;height:44px}
+}
 </style>

@@ -33,6 +33,9 @@ class Cart extends Component
     public $commandeId; // ← NOUVEAU
     public $isProcessing = false; // ← NOUVEAU
 
+    /** Erreur visible DANS la modale (validation, stock...). */
+    public string $checkoutError = '';
+
     // ── Modals ultra-premium ──
     public bool $showConfirmModal = false;
     public bool $showRemoveModal = false;
@@ -312,6 +315,7 @@ class Cart extends Component
         if (!$this->paymentMethodId && $this->paymentMethods && count($this->paymentMethods)) {
             $this->paymentMethodId = $this->paymentMethods->first()->id;
         }
+        $this->checkoutError = '';
         $this->showConfirmModal = true;
     }
 
@@ -323,7 +327,11 @@ class Cart extends Component
     /** Confirmation finale depuis le modal premium. */
     public function confirmCheckout()
     {
-        $this->showConfirmModal = false;
+        // La modale RESTE ouverte pendant le traitement : en cas d'erreur
+        // (validation, stock...), le client voit le problème au lieu d'un
+        // écran vide. Seule une commande créée redirige (la modale disparaît
+        // avec le changement de page).
+        $this->checkoutError = '';
         return $this->checkout();
     }
 
@@ -359,12 +367,17 @@ class Cart extends Component
     public function checkout()
     {
         if (!$this->panier || $this->itemsCount === 0) {
-            $this->dispatch('error', ['message' => 'Panier vide']);
+            $this->checkoutError = 'Votre panier est vide.';
             return;
         }
 
-        // ✅ VALIDATION VOS SELECTS
-        $this->validate();
+        // ✅ VALIDATION VOS SELECTS (erreurs affichées dans la modale)
+        try {
+            $this->validate();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->checkoutError = 'Choisissez un mode de livraison et un moyen de paiement.';
+            throw $e;
+        }
 
         // ✅ VÉRIFIE LA DISPONIBILITÉ DU STOCK AVANT DE CRÉER LA COMMANDE
         $rupture = [];
@@ -376,7 +389,7 @@ class Cart extends Component
             }
         }
         if (!empty($rupture)) {
-            $this->dispatch('error', ['message' => 'Stock insuffisant pour : ' . implode(', ', $rupture)]);
+            $this->checkoutError = 'Stock insuffisant pour : ' . implode(', ', $rupture);
             return;
         }
 
