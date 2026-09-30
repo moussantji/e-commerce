@@ -118,7 +118,7 @@ Route::middleware(['auth', 'role:customer,vendeur'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Paiement mobile : envoi preuve (Orange / Malitel / Wave)
-    Route::post('/paiement/mobile', [PaymentController::class, 'storeManual'])->name('paiement.mobile');
+    Route::post('/paiement/mobile', [PaymentController::class, 'storeManual'])->name('paiement.mobile')->middleware('throttle:10,1');
 });
 
 // Espace vendeur : tableau de bord, ses produits, ses commandes.

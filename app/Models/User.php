@@ -172,6 +172,12 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
 
+    /** Email de réinitialisation en français (thème boutique). */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new \App\Notifications\ResetPasswordFrench($token));
+    }
+
     /**
      * The attributes that should be mutated to dates.
      *

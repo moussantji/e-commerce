@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -22,6 +24,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Email de vérification en français, thème boutique.
+        VerifyEmail::toMailUsing(function ($notifiable, $url) {
+            return (new \Illuminate\Notifications\Messages\MailMessage())
+                ->subject('Vérifiez votre adresse email')
+                ->greeting('Bienvenue ' . ($notifiable->name ?? '') . ' !')
+                ->line('Merci pour votre inscription sur la Boutique. Cliquez ci-dessous pour activer votre compte.')
+                ->action('Vérifier mon email', $url)
+                ->line('Si vous n\'avez pas créé de compte, ignorez cet email.');
+        });
+
         // ✅ $user SEULEMENT pour admin/ et client/
         View::composer(['*'], function ($view) {
             if (Auth::check()) {
