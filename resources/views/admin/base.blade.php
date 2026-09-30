@@ -72,6 +72,8 @@ window.revealAfterLivewire=revealAfterLivewire;
 document.addEventListener('livewire:init',function(){if(window.Livewire&&Livewire.hook){try{Livewire.hook('morph.updated',function(){revealAfterLivewire();});}catch(e){}}});
 /* Ré-initialise les contenus dynamiques après navigation SPA (wire:navigate). */
 window.initDynamic=function(){
+/* La coquille arrive fraîche via SPA : le loader plein écran serait resté visible. */
+var pl=document.getElementById('pageLoader');if(pl)pl.classList.add('fade-out');
 if(window.__rebuildSearchIndex){try{window.__rebuildSearchIndex();}catch(e){}}
 if(document.getElementById('pdp')){window._pdImg=0;if(window.refreshPDP){try{window.refreshPDP();}catch(e){}}}
 if(window.initHomeCountdown){try{window.initHomeCountdown();}catch(e){}}
