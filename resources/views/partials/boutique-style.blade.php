@@ -654,4 +654,15 @@ select.ctrl{cursor:pointer;padding-right:34px;appearance:none;background-image:l
 .modal .box .foot{flex-wrap:wrap}
 .modal .box .foot>*{flex:1 1 100%}
 }
+/* ===== Tableaux -> cartes sur mobile (admin commandes) ===== */
+@media(max-width:640px){
+.tbl-stacked{min-width:0}
+.tbl-stacked thead{display:none}
+.tbl-stacked,.tbl-stacked tbody,.tbl-stacked tr,.tbl-stacked td{display:block;width:100%}
+.tbl-stacked tr{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;padding:4px 2px;background:#fff}
+.tbl-stacked tr:hover td{background:transparent}
+.tbl-stacked td{border-bottom:0;padding:6px 12px}
+.tbl-stacked td:empty{display:none}
+.tbl-stacked td[data-label]::before{content:attr(data-label);display:block;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--grey);margin-bottom:2px}
+}
 </style>

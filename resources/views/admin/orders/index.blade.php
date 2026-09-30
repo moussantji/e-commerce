@@ -55,7 +55,7 @@
                         <use href="#i-bag" />
                     </svg> Liste des commandes</h2>
                 <div class="table-scroll">
-                    <table class="tbl">
+                    <table class="tbl tbl-stacked">
                         <thead>
                             <tr>
                                 <th>N°</th>
@@ -72,11 +72,11 @@
                                 @php $norm = OrderStatus::normalize($c->statut); @endphp
                                 <tr>
                                     <td><b>{{ $c->numero_commande ?? 'CMD-' . $c->id }}</b></td>
-                                    <td>{{ $c->created_at?->format('d/m/Y H:i') }}</td>
-                                    <td>{{ optional($c->user)->name ?? '—' }}<br><small
+                                    <td data-label="Date">{{ $c->created_at?->format('d/m/Y H:i') }}</td>
+                                    <td data-label="Client">{{ optional($c->user)->name ?? '—' }}<br><small
                                             class="muted-sm">{{ optional($c->user)->email ?? '' }}</small></td>
-                                    <td>{{ optional($c->paiement)->method_name ?? '—' }}</td>
-                                    <td><b>{{ number_format($c->total, 0, ',', ' ') }} FCFA</b></td>
+                                    <td data-label="Paiement">{{ optional($c->paiement)->method_name ?? '—' }}</td>
+                                    <td data-label="Total"><b>{{ number_format($c->total, 0, ',', ' ') }} FCFA</b></td>
                                     <td>
                                         <form action="{{ route('admin.orders.update-status', $c->id) }}" method="POST">
                                             @csrf @method('PATCH')

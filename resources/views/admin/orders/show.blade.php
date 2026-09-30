@@ -106,7 +106,7 @@
                             <use href="#i-grid" />
                         </svg> Produits commandés</h2>
                     <div class="table-scroll">
-                        <table class="tbl">
+                        <table class="tbl tbl-stacked">
                             <thead>
                                 <tr>
                                     <th>Produit</th>
@@ -135,9 +135,9 @@
                                                 @endforeach
                                             @endif
                                         </td>
-                                        <td>{{ number_format($produit->pivot->prix_unitaire, 0, ',', ' ') }} FCFA</td>
-                                        <td>×{{ $produit->pivot->quantite }}</td>
-                                        <td><b>{{ number_format($produit->pivot->total, 0, ',', ' ') }} FCFA</b></td>
+                                        <td data-label="Prix unitaire">{{ number_format($produit->pivot->prix_unitaire, 0, ',', ' ') }} FCFA</td>
+                                        <td data-label="Quantité">×{{ $produit->pivot->quantite }}</td>
+                                        <td data-label="Total"><b>{{ number_format($produit->pivot->total, 0, ',', ' ') }} FCFA</b></td>
                                     </tr>
                                 @endforeach
                             </tbody>
