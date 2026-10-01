@@ -271,6 +271,19 @@
                                     </button>
                                 @endforeach
                             </div>
+                            @php $pmSel = $paymentMethods->firstWhere('id', (int) $paymentMethodId); @endphp
+                            @if ($pmSel && ($pmSel->instructions || $pmSel->account_number))
+                                <div class="lux-addr" style="margin-top:12px"><svg class="ic"><use href="#i-b2-info" /></svg>
+                                    <span><b>{{ $pmSel->method_name ?? $pmSel->name }}</b>
+                                        @if ($pmSel->account_number)
+                                            <br>Compte : <b>{{ $pmSel->account_number }}</b>
+                                        @endif
+                                        @if ($pmSel->instructions)
+                                            <br>{{ $pmSel->instructions }}
+                                        @endif
+                                    </span>
+                                </div>
+                            @endif
                         </div>
                     @endif
 
