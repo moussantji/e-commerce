@@ -148,12 +148,14 @@ class UserController extends Controller
             ],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
             'role' => ['required', 'in:admin,customer,vendeur'],
+            'status' => ['required', 'in:active,inactive'],
         ]);
 
         $updateData = [
             'name' => $validated['name'],
             'email' => $validated['email'],
             'role' => $validated['role'],
+            'status' => $validated['status'],
         ];
 
         // Mise à jour du mot de passe si fourni
@@ -161,7 +163,18 @@ class UserController extends Controller
             $updateData['password'] = Hash::make($validated['password']);
         }
 
+        $wasInactiveVendeur = ($user->status ?? '') !== 'active' && ($updateData['role'] ?? $user->role) === 'vendeur';
+
         $user->update($updateData);
+
+        // Activation d'un vendeur en attente -> on le notifie (email + in-app).
+        if ($wasInactiveVendeur && ($user->fresh()->status ?? '') === 'active') {
+            try {
+                $user->notify(new \App\Notifications\CompteVendeurValide());
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Email activation vendeur échoué : ' . $e->getMessage());
+            }
+        }
 
         // Compatibilité Spatie si présent
         if (method_exists($user, 'syncRoles')) {

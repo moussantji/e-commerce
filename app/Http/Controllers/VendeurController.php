@@ -9,6 +9,7 @@ use App\Models\Brand;
 use App\Models\Tag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
@@ -201,6 +202,56 @@ class VendeurController extends Controller
                 ->whereIn('id', $commandeIds)
                 ->latest()
                 ->paginate(15),
+        ]);
+    }
+
+    /**
+     * Demande publique de compte vendeur (depuis la modale).
+     * Compte créé INACTIF, en attente de validation par l'admin.
+     */
+    public function demande(Request $request)
+    {
+        $validated = $request->validateWithBag('vendeur', [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email',
+            'tel' => ['required', 'string', 'max:20', new \App\Rules\MalianPhone()],
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $tel = \App\Support\PhoneNumber::normalize($validated['tel']);
+
+        $vendeur = \App\Models\User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'tel' => $tel,
+            'password' => Hash::make($validated['password']),
+            'role' => 'vendeur',
+            'status' => 'inactive',
+        ]);
+
+        // Notifie les admins (avec lien vers la fiche).
+        \App\Support\AdminNotifier::notifyPayment(
+            'Nouveau vendeur à valider',
+            "{$vendeur->name} ({$vendeur->email} · " . \App\Support\PhoneNumber::pretty($tel) . ') demande un compte vendeur.',
+            ['type' => 'admin_user', 'id' => $vendeur->id],
+        );
+
+        // Email de confirmation au vendeur.
+        try {
+            $vendeur->notify(new \App\Notifications\CompteVendeurCree());
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Email vendeur échoué : ' . $e->getMessage());
+        }
+
+        // Redirection WhatsApp avec ses informations.
+        $msg = "Bonjour, je viens de créer mon compte vendeur : {$vendeur->name} ({$vendeur->email} · " . \App\Support\PhoneNumber::pretty($tel) . '). Merci de le valider.';
+        $wa = \App\Support\WhatsApp::link($msg);
+
+        return back()->with('vendeur_created', [
+            'nom' => $vendeur->name,
+            'email' => $vendeur->email,
+            'tel' => \App\Support\PhoneNumber::pretty($tel),
+            'wa' => $wa,
         ]);
     }
 }

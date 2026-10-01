@@ -233,6 +233,36 @@ if(e.target===modal||(e.target.closest&&e.target.closest('[data-close-modal]')))
 document.addEventListener('keydown',function(e){
 if(e.key==='Escape'&&modal.classList.contains('on'))fermer();
 });
+/* Modale demande vendeur : ouverte depuis la modale login. */
+(function(){
+var vm=document.getElementById('vendeurModal');
+if(!vm)return;
+function vmOuvrir(){if(modal)modal.classList.remove('on');vm.classList.add('on');vm.setAttribute('aria-hidden','false');}
+function vmFermer(){vm.classList.remove('on');vm.setAttribute('aria-hidden','true');}
+document.querySelectorAll('[data-open-vendeur]').forEach(function(b){
+b.addEventListener('click',function(e){e.preventDefault();vmOuvrir();});
+});
+vm.addEventListener('click',function(e){
+if(e.target===vm||(e.target.closest&&e.target.closest('[data-close-vendeur]')))vmFermer();
+});
+document.addEventListener('keydown',function(e){
+if(e.key==='Escape'&&vm.classList.contains('on'))vmFermer();
+});
+var vf=document.getElementById('vendeurModalForm');
+if(vf){
+vf.addEventListener('submit',function(e){
+var ok=true;
+vf.querySelectorAll('input[required]').forEach(function(i){
+var bad=!i.value||!i.value.trim()||(i.type==='email'&&!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(i.value.trim()))||(i.name==='password'&&i.value.length<8);
+i.closest('.field').classList.toggle('bad',bad);
+if(bad)ok=false;
+});
+var p1=vf.querySelector('input[name="password"]'),p2=vf.querySelector('input[name="password_confirmation"]');
+if(p1&&p2&&p1.value!==p2.value){p2.closest('.field').classList.add('bad');ok=false;}
+if(!ok)e.preventDefault();
+});
+}
+})();
 var form=document.getElementById('loginModalForm');
 if(form){
 form.addEventListener('submit',function(e){

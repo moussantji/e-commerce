@@ -129,6 +129,10 @@ Route::middleware(['auth', 'role:customer,vendeur'])->group(function () {
     Route::post('/paiement/mobile', [PaymentController::class, 'storeManual'])->name('paiement.mobile')->middleware('throttle:10,1');
 });
 
+// Demande publique de compte vendeur (modale) : compte inactif en attente admin.
+Route::post('/vendeur/demande', [\App\Http\Controllers\VendeurController::class, 'demande'])
+    ->name('vendeur.demande')->middleware('throttle:6,1');
+
 // Espace vendeur : tableau de bord, ses produits, ses commandes.
 Route::prefix('vendeur')->name('vendeur.')->middleware(['auth', 'role:vendeur'])->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\VendeurController::class, 'dashboard'])->name('dashboard');

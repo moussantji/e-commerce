@@ -52,6 +52,12 @@ class NotificationLink
                         return route('admin.orders.show', $id);
                     }
                     break;
+                case 'admin_user':
+                    // Notification admin : fiche utilisateur (ex : vendeur à valider)
+                    if ($id) {
+                        return route('admin.users.show', $id);
+                    }
+                    break;
             }
         }
 
