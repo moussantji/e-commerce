@@ -173,21 +173,6 @@
                                 </tbody>
                             </table>
                             @php $payMethod = $commande->paiement; @endphp
-                            @if ($payMethod && ($payMethod->instructions || $payMethod->account_number))
-                                <h3 class="h3-mini" style="margin-top:16px">Paiement :
-                                    {{ $payMethod->method_name ?? $payMethod->name }}</h3>
-                                <div class="tagline-band" style="margin:8px 0 0">
-                                    <svg class="ic">
-                                        <use href="#i-b2-info" />
-                                    </svg>
-                                    <span>
-                                        @if ($payMethod->account_number)
-                                            Compte : <b>{{ $payMethod->account_number }}</b><br>
-                                        @endif
-                                        {{ $payMethod->instructions ?? $payMethod->description }}
-                                    </span>
-                                </div>
-                            @endif
                             <div class="pdp-actions" style="margin-top:14px">
                                 <a class="btn-line" href="{{ route('commande.pdf', $commande->id) }}">Facture PDF</a>
                                 <a class="btn-ghost-sm" href="{{ route('dashboard') }}">Mes commandes</a>
