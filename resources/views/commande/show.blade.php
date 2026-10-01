@@ -225,6 +225,61 @@
                                     </div>
                                     @error('provider') <span class="avis-err">{{ $message }}</span> @enderror
                                 </div>
+                                @php
+                                    $payInfos = [];
+                                    foreach (['orange', 'moov', 'wave', 'mtn'] as $pk) {
+                                        $pm = \App\Models\Paiements::where('is_active', true)
+                                            ->where(function ($q) use ($pk) {
+                                                $q->where('method_name', 'like', '%' . $pk . '%')->orWhere('provider_name', 'like', '%' . $pk . '%');
+                                            })->orderBy('id')->first();
+                                        if ($pm) {
+                                            $payInfos[$pk] = [
+                                                'nom' => $pm->method_name,
+                                                'compte' => $pm->account_number,
+                                                'texte' => $pm->instructions ?: $pm->description,
+                                            ];
+                                        }
+                                    }
+                                @endphp
+                                <div class="tagline-band" id="payInfos" style="margin:0 0 14px">
+                                    <svg class="ic">
+                                        <use href="#i-b2-info" />
+                                    </svg>
+                                    <span id="payInfosTxt"></span>
+                                </div>
+                                <script>
+                                    (function() {
+                                        var infos = @json($payInfos);
+                                        var box = document.getElementById('payInfos');
+                                        var txt = document.getElementById('payInfosTxt');
+
+                                        function ech(s) {
+                                            return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g,
+                                                '&lt;').replace(/>/g, '&gt;');
+                                        }
+
+                                        function maj() {
+                                            var sel = document.querySelector(
+                                                'input[name="provider"]:checked');
+                                            var key = sel ? sel.value : null;
+                                            var info = key && infos[key] ? infos[key] : null;
+                                            if (!info || (!info.compte && !info.texte)) {
+                                                box.style.display = 'none';
+                                                return;
+                                            }
+                                            box.style.display = '';
+                                            var html = '<b>' + ech(info.nom) + '</b>';
+                                            if (info.compte) html += '<br>Compte : <b>' + ech(info
+                                                .compte) + '</b>';
+                                            if (info.texte) html += '<br>' + ech(info.texte);
+                                            txt.innerHTML = html;
+                                        }
+                                        document.querySelectorAll('input[name="provider"]').forEach(function(r) {
+                                            r.addEventListener('change', maj);
+                                        });
+                                        maj();
+                                    })();
+                                </script>
                                 <div class="dash-grid" style="margin-bottom:0">
                                     <div class="field" style="margin-bottom:0">
                                         <label for="payPhone">Numéro ayant payé (optionnel)</label>
