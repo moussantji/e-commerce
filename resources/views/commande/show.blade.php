@@ -210,11 +210,15 @@
                                 <input type="hidden" name="order_id" value="{{ $commande->id }}">
                                 <div class="field">
                                     <label>Opérateur</label>
+                                    @php
+                                        $payName = strtolower(($commande->paiement->method_name ?? '') . ' ' . ($commande->paiement->provider_name ?? ''));
+                                        $payCurrent = str_contains($payName, 'orange') ? 'orange' : (str_contains($payName, 'moov') ? 'moov' : (str_contains($payName, 'wave') ? 'wave' : (str_contains($payName, 'mtn') ? 'mtn' : old('provider'))));
+                                    @endphp
                                     <div class="pay-pills">
                                         @foreach (['orange' => '🟧 Orange Money', 'moov' => '🟦 Moov Money', 'wave' => '🌊 Wave', 'mtn' => '🟨 MTN MoMo'] as $pv => $pl)
                                             <label class="opt-pill" style="cursor:pointer">
                                                 <input type="radio" name="provider" value="{{ $pv }}"
-                                                    {{ old('provider') === $pv ? 'checked' : '' }} required
+                                                    {{ $payCurrent === $pv ? 'checked' : '' }} required
                                                     style="accent-color:var(--violet-600)"> {{ $pl }}
                                             </label>
                                         @endforeach

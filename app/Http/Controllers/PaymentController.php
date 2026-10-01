@@ -75,6 +75,19 @@ class PaymentController extends Controller
 
         $proof = PaymentProof::create($proofData);
 
+        // Le choix de l'opérateur MET À JOUR le moyen de paiement de la commande :
+        // le suivi affiche toujours la méthode réellement utilisée.
+        $method = Paiements::where('is_active', true)
+            ->where(function ($q) use ($data) {
+                $q->where('method_name', 'like', '%' . $data['provider'] . '%')
+                    ->orWhere('provider_name', 'like', '%' . $data['provider'] . '%');
+            })
+            ->orderBy('id')
+            ->first();
+        if ($method) {
+            $order->paiement_id = $method->id;
+        }
+
         // Preuve envoyée -> en vérification par l'admin (plus "en attente").
         $order->statut = 'paiement_declare';
         $order->notes = trim(($order->notes ? $order->notes . "\n" : '')
