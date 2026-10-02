@@ -233,20 +233,42 @@ if(e.target===modal||(e.target.closest&&e.target.closest('[data-close-modal]')))
 document.addEventListener('keydown',function(e){
 if(e.key==='Escape'&&modal.classList.contains('on'))fermer();
 });
-/* Modale demande vendeur : ouverte depuis la modale login. */
-(function(){
-var vm=document.getElementById('vendeurModal');
-if(!vm)return;
-function vmOuvrir(){if(modal)modal.classList.remove('on');vm.classList.add('on');vm.setAttribute('aria-hidden','false');}
-function vmFermer(){vm.classList.remove('on');vm.setAttribute('aria-hidden','true');}
-document.querySelectorAll('[data-open-vendeur]').forEach(function(b){
-b.addEventListener('click',function(e){e.preventDefault();vmOuvrir();});
+/* Modale demande vendeur : ouverte depuis la modale login (délégué : survit au DOM morphé). */
+document.addEventListener('click', function(e) {
+    if (!e.target.closest) return;
+    var openBtn = e.target.closest('[data-open-vendeur]');
+    if (openBtn) {
+        e.preventDefault();
+        var lm = document.getElementById('loginModal');
+        var vm = document.getElementById('vendeurModal');
+        if (lm) {
+            lm.classList.remove('on');
+            lm.setAttribute('aria-hidden', 'true');
+        }
+        if (vm) {
+            vm.classList.add('on');
+            vm.setAttribute('aria-hidden', 'false');
+            var first = vm.querySelector('input[name="name"]');
+            if (first) window.setTimeout(function() {
+                first.focus();
+            }, 60);
+        }
+        return;
+    }
+    var closeBtn = e.target.closest('[data-close-vendeur]');
+    var vm2 = document.getElementById('vendeurModal');
+    if (!vm2) return;
+    if (e.target === vm2 || closeBtn) {
+        vm2.classList.remove('on');
+        vm2.setAttribute('aria-hidden', 'true');
+    }
 });
-vm.addEventListener('click',function(e){
-if(e.target===vm||(e.target.closest&&e.target.closest('[data-close-vendeur]')))vmFermer();
-});
-document.addEventListener('keydown',function(e){
-if(e.key==='Escape'&&vm.classList.contains('on'))vmFermer();
+document.addEventListener('keydown', function(e) {
+    var vm3 = document.getElementById('vendeurModal');
+    if (e.key === 'Escape' && vm3 && vm3.classList.contains('on')) {
+        vm3.classList.remove('on');
+        vm3.setAttribute('aria-hidden', 'true');
+    }
 });
 var vf=document.getElementById('vendeurModalForm');
 if(vf){
@@ -267,7 +289,6 @@ if(firstBad)firstBad.focus();
 }
 });
 }
-})();
 var form=document.getElementById('loginModalForm');
 if(form){
 form.addEventListener('submit',function(e){
