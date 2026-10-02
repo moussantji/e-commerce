@@ -1,29 +1,24 @@
 ---
-# Déploiement automatique cPanel (LWS) — Laravel Boutique.
-# cPanel > Git Version Control > Manage > "Update from Remote" puis "Deploy HEAD Commit".
-# Les tâches tournent dans le dossier du dépôt (ex: ~/repositories/sugu).
+# Déploiement LWS : synchronise le dépôt vers public_html/sugu.
+# cPanel > Git Version Control > "Update from Remote" puis "Deploy HEAD Commit".
+# Le dépôt est cloné dans ~/repositories/sugu ; le site tourne dans
+# ~/public_html/sugu (racine du sous-domaine -> public_html/sugu/public).
 #
-# PRÉREQUIS (à faire une fois, manuels) :
-#   1. PHP 8.5 sélectionné pour le compte (cPanel > Sélectionner une version PHP).
-#   2. Base MySQL créée (cPanel > Bases MySQL) + infos mises dans .env.
-#   3. Racine du domaine pointée sur <depot>/public (cPanel > Domaines).
-#   4. Fichier .env présent (créé auto depuis .env.example au 1er déploiement).
+# Protégés à chaque synchro (jamais écrasés) : .env, storage (uploads),
+# vendor, node_modules.
 deployment:
   tasks:
-    - export APP_DIR="$PWD"
-    - /bin/echo "== Déploiement Boutique dans $APP_DIR =="
-    # PHP 8.5 minimum, sinon stop net avec message clair.
+    - export SRC="$PWD" DST="$(dirname $PWD)/public_html/sugu"
+    - /bin/echo "== Synchro $SRC vers $DST =="
     - "php -r \"exit(version_compare(PHP_VERSION, '8.5.0', '<') ? 1 : 0);\" || (/bin/echo 'ERREUR : PHP 8.5 requis. Change la version dans cPanel.' && exit 1)"
-    # Dépendances PHP (rien à builder en Node : le thème est en CSS inline).
-    - php composer.phar install --no-dev --optimize-autoloader --no-interaction || composer install --no-dev --optimize-autoloader --no-interaction
-    # Premier déploiement : crée .env + clé applicative (une seule fois).
-    - /bin/test -f .env || /bin/cp .env.example .env
-    - grep -q "^APP_KEY=.\+" .env || php artisan key:generate --force --no-interaction
-    - php artisan storage:link || /bin/true
-    # Base de données (tables vides, jamais de seed en prod).
-    - php artisan migrate --force
-    # Caches Laravel pour la vitesse.
-    - php artisan config:cache
-    - php artisan route:cache
-    - php artisan view:cache
+    - /bin/mkdir -p "$DST"
+    - rsync -a --delete --exclude=.git --exclude=.env --exclude=storage --exclude=vendor --exclude=node_modules --exclude=mobile/node_modules --exclude=.expo --exclude=.opencode "$SRC/" "$DST/"
+    - cd "$DST" && php composer.phar install --no-dev --optimize-autoloader --no-interaction || composer install --no-dev --optimize-autoloader --no-interaction
+    - cd "$DST" && (/bin/test -f .env || /bin/cp .env.example .env)
+    - cd "$DST" && (grep -q "^APP_KEY=.\+" .env || php artisan key:generate --force --no-interaction)
+    - cd "$DST" && php artisan storage:link || /bin/true
+    - cd "$DST" && php artisan migrate --force
+    - cd "$DST" && php artisan config:cache
+    - cd "$DST" && php artisan route:cache
+    - cd "$DST" && php artisan view:cache
     - /bin/echo "== Déploiement terminé =="
