@@ -251,15 +251,20 @@ if(e.key==='Escape'&&vm.classList.contains('on'))vmFermer();
 var vf=document.getElementById('vendeurModalForm');
 if(vf){
 vf.addEventListener('submit',function(e){
-var ok=true;
+var ok=true,firstBad=null;
 vf.querySelectorAll('input[required]').forEach(function(i){
 var bad=!i.value||!i.value.trim()||(i.type==='email'&&!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(i.value.trim()))||(i.name==='password'&&i.value.length<8);
 i.closest('.field').classList.toggle('bad',bad);
-if(bad)ok=false;
+if(bad){ok=false;if(!firstBad)firstBad=i;}
 });
 var p1=vf.querySelector('input[name="password"]'),p2=vf.querySelector('input[name="password_confirmation"]');
-if(p1&&p2&&p1.value!==p2.value){p2.closest('.field').classList.add('bad');ok=false;}
-if(!ok)e.preventDefault();
+if(p1&&p2&&p1.value!==p2.value){p2.closest('.field').classList.add('bad');ok=false;if(!firstBad)firstBad=p2;}
+var zone=document.getElementById('vmErr'),txt=document.getElementById('vmErrTxt');
+if(!ok){
+e.preventDefault();
+if(zone&&txt){zone.style.display='block';txt.textContent='Vérifiez les champs en rouge (email valide, 8 caractères min, mots de passe identiques).';}
+if(firstBad)firstBad.focus();
+}
 });
 }
 })();

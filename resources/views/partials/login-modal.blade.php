@@ -136,11 +136,13 @@
                     <input class="ctrl" id="vmMdp2" type="password" name="password_confirmation"
                         placeholder="••••••••" required autocomplete="new-password">
                 </div>
+                <div class="field" id="vmErr" style="display:none">
+                    <div class="err" id="vmErrTxt"></div>
+                </div>
                 <div class="pdp-actions">
                     <button class="btn-solid" style="flex:1" type="submit"><svg class="ic">
                             <use href="#i-store" />
                         </svg> Envoyer ma demande</button>
-                    <button class="btn-line" type="button" data-close-vendeur>Fermer</button>
                 </div>
             </form>
         </div>
