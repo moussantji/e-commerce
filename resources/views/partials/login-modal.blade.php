@@ -58,7 +58,6 @@
                     <button class="btn-solid" style="flex:1" type="submit"><svg class="ic">
                             <use href="#i-user" />
                         </svg> Se connecter</button>
-                    <button class="btn-line" type="button" data-close-modal>Fermer</button>
                 </div>
             </form>
             <div
