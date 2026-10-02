@@ -1,20 +1,28 @@
 ---
-# Déploiement automatique cPanel (LWS) pour Laravel.
-# Ces tâches s'exécutent quand tu cliques "Deploy HEAD Commit" dans
-# cPanel > Git Version Control (elles tournent dans le dossier du dépôt cloné).
+# Déploiement automatique cPanel (LWS) — Laravel Boutique.
+# cPanel > Git Version Control > Manage > "Update from Remote" puis "Deploy HEAD Commit".
+# Les tâches tournent dans le dossier du dépôt (ex: ~/repositories/sugu).
 #
-# ⚠️ À adapter :
-#   - Si "composer" n'est pas dans le PATH, remplace par le chemin complet
-#     (ex: /opt/cpanel/composer/bin/composer  ou  php composer.phar).
-#   - Les assets front (Vite) doivent être buildés EN LOCAL puis commités
-#     (dossier public/build), car npm n'est généralement pas dispo en mutualisé.
+# PRÉREQUIS (à faire une fois, manuels) :
+#   1. PHP 8.5 sélectionné pour le compte (cPanel > Sélectionner une version PHP).
+#   2. Base MySQL créée (cPanel > Bases MySQL) + infos mises dans .env.
+#   3. Racine du domaine pointée sur <depot>/public (cPanel > Domaines).
+#   4. Fichier .env présent (créé auto depuis .env.example au 1er déploiement).
 deployment:
   tasks:
     - export APP_DIR="$PWD"
-    - /bin/echo "== Déploiement Laravel dans $APP_DIR =="
-    - composer install --no-dev --optimize-autoloader --no-interaction
+    - /bin/echo "== Déploiement Boutique dans $APP_DIR =="
+    # PHP 8.5 minimum, sinon stop net avec message clair.
+    - php -r "exit(version_compare(PHP_VERSION, '8.5.0', '<') ? 1 : 0);" || (/bin/echo "ERREUR : PHP 8.5 requis (version active : $(php -r 'echo PHP_VERSION;')). Change-la dans cPanel." && exit 1)
+    # Dépendances PHP (rien à builder en Node : le thème est en CSS inline).
+    - php composer.phar install --no-dev --optimize-autoloader --no-interaction || composer install --no-dev --optimize-autoloader --no-interaction
+    # Premier déploiement : crée .env + clé applicative (une seule fois).
+    - /bin/test -f .env || /bin/cp .env.example .env
+    - grep -q "^APP_KEY=.\+" .env || php artisan key:generate --force --no-interaction
     - php artisan storage:link || /bin/true
+    # Base de données (tables vides, jamais de seed en prod).
     - php artisan migrate --force
+    # Caches Laravel pour la vitesse.
     - php artisan config:cache
     - php artisan route:cache
     - php artisan view:cache
