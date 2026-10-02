@@ -13,7 +13,7 @@ deployment:
     - export APP_DIR="$PWD"
     - /bin/echo "== Déploiement Boutique dans $APP_DIR =="
     # PHP 8.5 minimum, sinon stop net avec message clair.
-    - php -r "exit(version_compare(PHP_VERSION, '8.5.0', '<') ? 1 : 0);" || (/bin/echo "ERREUR : PHP 8.5 requis (version active : $(php -r 'echo PHP_VERSION;')). Change-la dans cPanel." && exit 1)
+    - "php -r \"exit(version_compare(PHP_VERSION, '8.5.0', '<') ? 1 : 0);\" || (/bin/echo 'ERREUR : PHP 8.5 requis. Change la version dans cPanel.' && exit 1)"
     # Dépendances PHP (rien à builder en Node : le thème est en CSS inline).
     - php composer.phar install --no-dev --optimize-autoloader --no-interaction || composer install --no-dev --optimize-autoloader --no-interaction
     # Premier déploiement : crée .env + clé applicative (une seule fois).
