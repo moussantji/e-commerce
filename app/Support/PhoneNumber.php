@@ -3,7 +3,8 @@
 namespace App\Support;
 
 /**
- * Numéros maliens : 8 chiffres (fixes/opérateurs 6x, 7x, 9x...).
+ * Numéros maliens : 8 chiffres (2x fixes, 4x/5x/6x/7x/8x/9x mobiles : tous les
+ * opérateurs, ex 70 00 00 00, 82 01 95 83, 64 35 60 60).
  * Normalise vers le format international 223XXXXXXXX.
  */
 class PhoneNumber
@@ -29,7 +30,7 @@ class PhoneNumber
             $digits = '223' . $digits;
         }
 
-        if (!preg_match('/^223[679]\d{7}$/', $digits)) {
+        if (!preg_match('/^223[2-9]\d{7}$/', $digits)) {
             return null;
         }
 

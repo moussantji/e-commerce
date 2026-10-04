@@ -134,4 +134,30 @@ class WhatsAppVerificationTest extends TestCase
 
         WhatsAppVerification::send('22370000009');
     }
+
+    public function test_malian_prefixes_82_and_64_are_accepted(): void
+    {
+        // Plages réelles : 82... (business), 64... (opérateurs), 20... (fixes).
+        $this->assertSame('22382019583', \App\Support\PhoneNumber::normalize('82019583'));
+        $this->assertSame('22364356060', \App\Support\PhoneNumber::normalize('64356060'));
+        $this->assertSame('22320000000', \App\Support\PhoneNumber::normalize('20000000'));
+        $this->assertNull(\App\Support\PhoneNumber::normalize('1234567'));
+
+        // Parcours vendeur complet avec un numéro en 82.
+        $this->post(route('vendeur.demande.code'), [
+            'name' => 'Fanta Diarra',
+            'email' => 'fanta@example.com',
+            'tel' => '82019583',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ])->assertSessionHas('vendeur_code_sent');
+
+        $code = Cache::get('wa_otp:22382019583');
+        $this->assertMatchesRegularExpression('/^\d{6}$/', (string) $code);
+
+        $this->post(route('vendeur.demande'), ['tel' => '82019583', 'code' => $code])
+            ->assertSessionHas('vendeur_created');
+
+        $this->assertSame('22382019583', User::where('email', 'fanta@example.com')->firstOrFail()->tel);
+    }
 }
