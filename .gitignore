@@ -16,6 +16,12 @@ Homestead.yaml
 auth.json
 npm-debug.log
 yarn-error.log
+/wa-gateway/node_modules
+/wa-gateway/auth
+/wa-gateway/.env
+/wa-gateway/cloudflared
+/wa-gateway/cloudflared.exe
+/wa-gateway/*.log
 /.fleet
 /.idea
 /.vscode

@@ -394,11 +394,12 @@ class Cart extends Component
         }
 
         // ✅ CRÉER COMMANDE AVANT redirection
-        $this->commandeId = $this->createOrder();
+        $order = $this->createOrder();
+        $this->commandeId = $order->id;
 
 
 
-        return redirect()->route('commande.show', $this->commandeId)->with('success', 'Commande #' . $this->commandeId . ' créée — envoyez la preuve de paiement.');
+        return redirect()->route('commande.show', $order->id)->with('success', 'Commande #' . $order->id . ' créée — envoyez la preuve de paiement.');
     }
 
     private function createOrder()

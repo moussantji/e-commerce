@@ -104,9 +104,10 @@
                         @endif
                     </div>
                     <div class="field" style="margin-bottom:0">
-                        <label for="pf-tel">Téléphone</label>
+                        <label for="pf-tel">Téléphone (WhatsApp)</label>
                         <input id="pf-tel" class="ctrl" name="tel" type="tel"
                             value="{{ old('tel', $pfUser->tel) }}" placeholder="Ex : 70 00 00 00">
+                        <small style="color:var(--grey)">Numéro WhatsApp : le code de vérification y sera envoyé.</small>
                         @error('tel') <span class="avis-err">{{ $message }}</span> @enderror
                         @if (!empty($phoneVerify))
                             <div style="margin-top:8px">
@@ -198,12 +199,12 @@
                     <svg class="ic">
                         <use href="#i-card" />
                     </svg>
-                    <span><b>Vérifiez votre numéro</b> pour sécuriser vos commandes et paiements Mobile Money.</span>
+                    <span><b>Vérifiez votre numéro WhatsApp</b> pour sécuriser vos commandes et paiements Mobile Money.</span>
                 </div>
                 <div class="dash-grid" style="margin-bottom:0">
                     <form method="POST" action="{{ route('profile.phone.send') }}">
                         @csrf
-                        <button class="btn-line" type="submit" style="width:100%">Recevoir le code par SMS</button>
+                        <button class="btn-line" type="submit" style="width:100%">Recevoir le code sur WhatsApp</button>
                     </form>
                     <form method="POST" action="{{ route('profile.phone.verify') }}">
                         @csrf

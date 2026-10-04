@@ -119,7 +119,7 @@ Route::middleware(['auth', 'role:customer,vendeur'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Vérification du numéro de téléphone (code OTP par SMS).
+    // Vérification du numéro WhatsApp (code OTP envoyé sur WhatsApp).
     Route::post('/profile/telephone/code', [\App\Http\Controllers\PhoneVerificationController::class, 'send'])
         ->name('profile.phone.send')->middleware('throttle:6,1');
     Route::post('/profile/telephone/verifier', [\App\Http\Controllers\PhoneVerificationController::class, 'verify'])
@@ -129,7 +129,10 @@ Route::middleware(['auth', 'role:customer,vendeur'])->group(function () {
     Route::post('/paiement/mobile', [PaymentController::class, 'storeManual'])->name('paiement.mobile')->middleware('throttle:10,1');
 });
 
-// Demande publique de compte vendeur (modale) : compte inactif en attente admin.
+// Demande publique de compte vendeur (modale en 2 étapes) :
+// 1) infos + envoi du code sur WhatsApp, 2) code vérifié => compte inactif en attente admin.
+Route::post('/vendeur/demande/code', [\App\Http\Controllers\VendeurController::class, 'demandeCode'])
+    ->name('vendeur.demande.code')->middleware('throttle:6,1');
 Route::post('/vendeur/demande', [\App\Http\Controllers\VendeurController::class, 'demande'])
     ->name('vendeur.demande')->middleware('throttle:6,1');
 

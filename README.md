@@ -340,6 +340,96 @@ bien dans `GOOGLE_ALLOWED_CLIENT_IDS`.
 
 ---
 
+# 📲 Vérification WhatsApp (codes OTP)
+
+Tous les numéros du site sont des numéros **WhatsApp** (Mali, format `223XXXXXXXX`),
+vérifiés par un **code à 6 chiffres envoyé sur WhatsApp** (valable 10 minutes,
+5 essais max) :
+
+- **Profil client** : bouton « Recevoir le code sur WhatsApp », puis saisie du code.
+  Changer de numéro réinitialise la vérification.
+- **Compte vendeur** (modale « Créer un compte vendeur ») : étape 1 (infos) →
+  code WhatsApp → étape 2 (code) → compte créé **inactif + numéro vérifié**,
+  en attente de validation admin.
+
+## 1. Mode développement (gratuit)
+
+Par défaut (`WHATSAPP_OTP_DRIVER=log`), aucun envoi réel : le code est écrit
+dans les logs :
+
+```bash
+tail -f storage/logs/laravel.log   # « Code WhatsApp pour 2237XXXXXXX : 123456 »
+```
+
+## 2. Production 100 % gratuite : passerelle auto-hébergée (ton numéro)
+
+Le dossier **`wa-gateway/`** envoie les codes **depuis ton numéro**, sans
+payer Meta ni aucun fournisseur (voir `wa-gateway/README.md`). Deux options
+gratuites : **Google Colab** (`wa-gateway/Boutique_OTP_Colab.ipynb`, tout
+automatisé, ~12 h par session) ou machine à toi :
+
+```bash
+cd wa-gateway && npm install && npm start   # puis scan du QR avec ton numéro
+```
+
+```dotenv
+WHATSAPP_OTP_DRIVER=gateway
+WHATSAPP_GATEWAY_URL=http://127.0.0.1:3001/send
+WHATSAPP_GATEWAY_TOKEN=le-meme-jeton-que-GATEWAY_TOKEN
+```
+
+> ⚠️ Conditions : machine **allumée 24h/24** à toi (PC, Raspberry... —
+> impossible sur le mutualisé LWS) ; protocole non officiel (risque de
+> bannissement faible pour des OTP sollicités, numéro dédié conseillé) ;
+> site sur LWS ⇒ expose la passerelle via tunnel gratuit (ex : Cloudflare).
+
+## 3. Alternative : passerelle externe sur ton numéro
+
+Le site génère le code, et une passerelle l'envoie **depuis ton numéro
+WhatsApp** (numéro connecté via QR code chez le fournisseur) :
+
+1. Crée un compte chez une passerelle (ex : **Ultramsg** ou **Green-API**),
+   crée une instance et **scanne le QR avec ton numéro** (ex : 22382019583).
+2. Renseigne le `.env` (exemple Ultramsg) :
+   ```dotenv
+   WHATSAPP_OTP_DRIVER=gateway
+   WHATSAPP_GATEWAY_URL=https://api.ultramsg.com/instanceXXXX/messages/chat
+   WHATSAPP_GATEWAY_FORMAT=form
+   WHATSAPP_GATEWAY_TO=to
+   WHATSAPP_GATEWAY_TEXT=body
+   WHATSAPP_GATEWAY_TOKEN=ton-token
+   WHATSAPP_GATEWAY_SUCCESS_KEY=sent
+   ```
+   (Voir `.env.example` pour l'exemple Green-API.)
+3. Recharge la configuration : `php artisan config:cache`.
+
+## 4. Alternative officielle : Meta WhatsApp Cloud API
+
+L'accès à l'API est **gratuit**, mais chaque code livré est facturé par Meta
+au tarif template du pays (quelques FCFA par OTP au Mali). Étapes :
+
+1. Créer une app sur [developers.facebook.com](https://developers.facebook.com),
+   ajouter le produit **WhatsApp** et noter le `WHATSAPP_TOKEN`
+   (jeton permanent d'un utilisateur système) et le `WHATSAPP_PHONE_NUMBER_ID`.
+2. Dans le dashboard WhatsApp → **Templates**, créer un template de catégorie
+   **UTILITY** (langue `fr`), par exemple nommé `otp_boutique`, avec le corps :
+   « Boutique : votre code de vérification est {{1}}. Il expire dans 10 minutes. »
+   puis le faire **approuver** par Meta.
+3. Renseigner le `.env` :
+   ```dotenv
+   WHATSAPP_OTP_DRIVER=meta
+   WHATSAPP_TOKEN=...
+   WHATSAPP_PHONE_NUMBER_ID=...
+   WHATSAPP_OTP_TEMPLATE=otp_boutique
+   WHATSAPP_OTP_LANG=fr
+   ```
+   puis `php artisan config:cache`.
+
+> ⚠️ Le numéro WhatsApp Business relié à l'API Cloud ne peut plus être utilisé
+> dans l'application WhatsApp classique en parallèle.
+
+---
+
 # ✅ Récapitulatif post-déploiement
 
 - [ ] `.env` renseigné (DB, `APP_URL`, `APP_KEY`, SMTP)
@@ -351,4 +441,5 @@ bien dans `GOOGLE_ALLOWED_CLIENT_IDS`.
 - [ ] Cron `schedule:run` (+ `queue:work` si file d'attente)
 - [ ] `mobile/src/config.js` → `API_BASE_URL` en HTTPS
 - [ ] Connexion Google : `GOOGLE_ALLOWED_CLIENT_IDS` renseigné (client IDs de l'app mobile)
+- [ ] WhatsApp OTP : template `otp_boutique` approuvé + `WHATSAPP_*` renseigné (`log` en dev)
 - [ ] Un compte administrateur (`role = admin`) pour valider les paiements

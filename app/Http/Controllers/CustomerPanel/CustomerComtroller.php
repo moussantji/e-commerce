@@ -71,6 +71,11 @@ class CustomerComtroller extends Controller
                 'last_activity' => now()
             ];
 
+            // Numéro modifié => vérification WhatsApp à refaire.
+            if (($userData['tel'] ?? null) !== ($user->tel ?? null)) {
+                $userData['tel_verified_at'] = null;
+            }
+
             // Gestion de l'adresse
             if (isset($validated['adresse'])) {
                 $adresseData = [

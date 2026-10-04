@@ -289,6 +289,31 @@ if(firstBad)firstBad.focus();
 }
 });
 }
+/* Étape 2 vendeur : code WhatsApp à 6 chiffres + retour aux infos. */
+var vcf=document.getElementById('vendeurModalCodeForm');
+if(vcf){
+vcf.addEventListener('submit',function(e){
+var c=document.getElementById('vmCode');
+var zone=document.getElementById('vmCodeErr'),txt=document.getElementById('vmCodeErrTxt');
+var ok=c&&/^\d{6}$/.test((c.value||'').trim());
+if(c)c.closest('.field').classList.toggle('bad',!ok);
+if(!ok){
+e.preventDefault();
+if(zone&&txt){zone.style.display='block';txt.textContent='Saisissez le code à 6 chiffres reçu sur WhatsApp.';}
+if(c)c.focus();
+}
+});
+}
+document.addEventListener('click',function(e){
+if(!e.target.closest)return;
+if(e.target.closest('[data-vendeur-edit]')){
+var s1=document.getElementById('vmStep1'),s2=document.getElementById('vmStep2');
+if(s1)s1.style.display='';
+if(s2)s2.style.display='none';
+var first=s1?s1.querySelector('input[name="name"]'):null;
+if(first)first.focus();
+}
+});
 var form=document.getElementById('loginModalForm');
 if(form){
 form.addEventListener('submit',function(e){

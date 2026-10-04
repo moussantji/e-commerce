@@ -71,7 +71,7 @@
                     Continuer avec Google</a>
             </div>
             <div class="pdp-actions" style="margin-top:10px">
-                <button class="btn-line" style="flex:1" type="button" data-open-vendeur"><svg class="ic">
+                <button class="btn-line" style="flex:1" type="button" data-open-vendeur><svg class="ic">
                         <use href="#i-store" />
                     </svg> Créer un compte vendeur</button>
             </div>
@@ -85,17 +85,21 @@
 
 @guest
     @php
-        $vOpen = $lmErrors->hasBag('vendeur') && $lmErrors->vendeur->any();
+        $vCodeSent = session('vendeur_code_sent');
+        $vOpen = ($lmErrors->hasBag('vendeur') && $lmErrors->vendeur->any()) || !empty($vCodeSent);
         $vCreated = session('vendeur_created');
     @endphp
-    {{-- Modale demande de compte vendeur --}}
+    {{-- Modale demande de compte vendeur (2 étapes : infos + code WhatsApp) --}}
     <div class="modal{{ $vOpen ? ' on' : '' }}" id="vendeurModal"
         aria-hidden="{{ $vOpen ? 'false' : 'true' }}">
         <div class="box" role="dialog" aria-modal="true" aria-label="Créer un compte vendeur">
             <h2>Devenir vendeur</h2>
-            <p class="sub">Remplissez vos informations. Compte créé <b>en attente de validation</b> par notre équipe.
+            <p class="sub">Remplissez vos informations, puis saisissez le code reçu sur <b>WhatsApp</b>.
+                Compte créé <b>en attente de validation</b> par notre équipe.
             </p>
-            <form method="POST" action="{{ route('vendeur.demande') }}" style="margin-top:18px" id="vendeurModalForm"
+            {{-- Étape 1 : informations --}}
+            <div id="vmStep1" @if (!empty($vCodeSent)) style="display:none" @endif>
+            <form method="POST" action="{{ route('vendeur.demande.code') }}" style="margin-top:18px" id="vendeurModalForm"
                 novalidate>
                 @csrf
                 <div class="field">
@@ -115,9 +119,10 @@
                     @endif
                 </div>
                 <div class="field">
-                    <label for="vmTel">Téléphone (Mobile Money) *</label>
+                    <label for="vmTel">Téléphone (WhatsApp) *</label>
                     <input class="ctrl" id="vmTel" type="tel" name="tel" value="{{ old('tel') }}"
                         placeholder="Ex : 70 00 00 00" required autocomplete="tel">
+                    <small style="color:var(--grey)">Le code de vérification sera envoyé sur ce WhatsApp.</small>
                     @if ($lmErrors->hasBag('vendeur') && $lmErrors->vendeur->has('tel'))
                         <span class="avis-err">{{ $lmErrors->vendeur->first('tel') }}</span>
                     @endif
@@ -140,10 +145,51 @@
                 </div>
                 <div class="pdp-actions">
                     <button class="btn-solid" style="flex:1" type="submit"><svg class="ic">
-                            <use href="#i-store" />
-                        </svg> Envoyer ma demande</button>
+                            <use href="#i-whatsapp" />
+                        </svg> Recevoir le code WhatsApp</button>
                 </div>
             </form>
+            </div>
+            {{-- Étape 2 : code reçu sur WhatsApp --}}
+            <div id="vmStep2" @if (empty($vCodeSent)) style="display:none" @endif>
+                <div class="tagline-band" style="margin:14px 0 0">
+                    <svg class="ic" style="fill:currentColor;stroke:none">
+                        <use href="#i-whatsapp" />
+                    </svg>
+                    <span>Code envoyé sur WhatsApp au <b>{{ $vCodeSent['pretty'] ?? '' }}</b> (valable 10 min).</span>
+                </div>
+                <form method="POST" action="{{ route('vendeur.demande') }}" style="margin-top:14px" id="vendeurModalCodeForm"
+                    novalidate>
+                    @csrf
+                    <input type="hidden" name="tel" value="{{ $vCodeSent['tel'] ?? '' }}">
+                    <div class="field">
+                        <label for="vmCode">Code reçu sur WhatsApp *</label>
+                        <input class="ctrl" id="vmCode" type="text" name="code" inputmode="numeric" maxlength="6"
+                            placeholder="Code à 6 chiffres" required autocomplete="one-time-code">
+                        @if ($lmErrors->hasBag('vendeur') && $lmErrors->vendeur->has('code'))
+                            <span class="avis-err">{{ $lmErrors->vendeur->first('code') }}</span>
+                        @endif
+                    </div>
+                    <div class="field" id="vmCodeErr" style="display:none">
+                        <div class="err" id="vmCodeErrTxt"></div>
+                    </div>
+                    <div class="pdp-actions">
+                        <button class="btn-solid" style="flex:1" type="submit"><svg class="ic">
+                                <use href="#i-store" />
+                            </svg> Créer mon compte vendeur</button>
+                    </div>
+                </form>
+                <div class="pdp-actions" style="margin-top:10px">
+                    <form method="POST" action="{{ route('vendeur.demande.code') }}"
+                        style="flex:1;display:flex;margin:0">
+                        @csrf
+                        <input type="hidden" name="tel" value="{{ $vCodeSent['tel'] ?? '' }}">
+                        <button class="btn-line" style="flex:1" type="submit">Renvoyer le code</button>
+                    </form>
+                    <button class="btn-line" style="flex:1" type="button" data-vendeur-edit>Corriger mes
+                        infos</button>
+                </div>
+            </div>
         </div>
     </div>
 

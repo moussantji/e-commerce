@@ -206,11 +206,39 @@ class VendeurController extends Controller
     }
 
     /**
-     * Demande publique de compte vendeur (depuis la modale).
-     * Compte créé INACTIF, en attente de validation par l'admin.
+     * Demande publique de compte vendeur (depuis la modale) — ÉTAPE 1.
+     * Valide les infos, les met de côté (mot de passe déjà haché) et envoie
+     * un code de vérification sur le WhatsApp du numéro saisi.
+     * Si seules les infos minimales (tel) sont renvoyées et qu'une demande
+     * est déjà en attente pour ce numéro, on se contente de renvoyer le code.
      */
-    public function demande(Request $request)
+    public function demandeCode(Request $request)
     {
+        $tel = \App\Support\PhoneNumber::normalize($request->input('tel'));
+
+        if (!$tel) {
+            return back()
+                ->withErrors(['tel' => 'Numéro WhatsApp invalide : 8 chiffres maliens attendus (ex : 70 00 00 00).'], 'vendeur')
+                ->withInput($request->except('password', 'password_confirmation'));
+        }
+
+        $flag = ['tel' => $tel, 'pretty' => \App\Support\PhoneNumber::pretty($tel)];
+
+        // Renvoi du code (demande déjà en attente pour ce numéro).
+        if (!$request->filled('name') && \App\Support\WhatsAppVerification::peekPending($tel)) {
+            try {
+                \App\Support\WhatsAppVerification::send($tel);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Envoi OTP WhatsApp échoué : ' . $e->getMessage());
+
+                return back()->with('vendeur_code_sent', $flag)
+                    ->withErrors(['code' => 'Envoi WhatsApp impossible pour le moment. Réessayez.'], 'vendeur');
+            }
+
+            return back()->with('vendeur_code_sent', $flag)
+                ->with('success', 'Nouveau code envoyé sur WhatsApp au ' . $flag['pretty'] . '.');
+        }
+
         $validated = $request->validateWithBag('vendeur', [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email',
@@ -218,13 +246,67 @@ class VendeurController extends Controller
             'password' => 'required|string|min:8|confirmed',
         ]);
 
-        $tel = \App\Support\PhoneNumber::normalize($validated['tel']);
-
-        $vendeur = \App\Models\User::create([
+        \App\Support\WhatsAppVerification::stashPending($tel, [
+            'tel' => $tel,
             'name' => $validated['name'],
             'email' => $validated['email'],
+            'password_hash' => Hash::make($validated['password']),
+        ]);
+
+        try {
+            \App\Support\WhatsAppVerification::send($tel);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Envoi OTP WhatsApp échoué : ' . $e->getMessage());
+
+            return back()->with('vendeur_code_sent', $flag)
+                ->withErrors(['code' => 'Envoi WhatsApp impossible pour le moment. Touchez « Renvoyer le code ».'], 'vendeur');
+        }
+
+        return back()->with('vendeur_code_sent', $flag)
+            ->with('success', 'Code envoyé sur WhatsApp au ' . $flag['pretty'] . '.');
+    }
+
+    /**
+     * Demande publique de compte vendeur (depuis la modale) — ÉTAPE 2.
+     * Vérifie le code WhatsApp puis crée le compte INACTIF,
+     * en attente de validation par l'admin (numéro déjà vérifié).
+     */
+    public function demande(Request $request)
+    {
+        $request->validateWithBag('vendeur', [
+            'tel' => ['required', 'string', new \App\Rules\MalianPhone()],
+            'code' => 'required|digits:6',
+        ]);
+
+        $tel = \App\Support\PhoneNumber::normalize($request->input('tel'));
+        $flag = ['tel' => $tel, 'pretty' => \App\Support\PhoneNumber::pretty($tel)];
+        $pending = $tel ? \App\Support\WhatsAppVerification::peekPending($tel) : null;
+
+        if (!$pending || ($pending['tel'] ?? null) !== $tel) {
+            return back()
+                ->withErrors(['code' => 'Demande expirée. Recommencez depuis l\'étape 1.'], 'vendeur');
+        }
+
+        if (\App\Models\User::where('email', $pending['email'])->exists()) {
+            \App\Support\WhatsAppVerification::clearPending($tel);
+
+            return back()
+                ->withErrors(['email' => 'Ce compte a déjà été créé. Connectez-vous.'], 'vendeur');
+        }
+
+        if (!\App\Support\WhatsAppVerification::check($tel, $request->input('code'))) {
+            return back()->with('vendeur_code_sent', $flag)
+                ->withErrors(['code' => 'Code incorrect ou expiré. Demandez un nouveau code.'], 'vendeur');
+        }
+
+        \App\Support\WhatsAppVerification::clearPending($tel);
+
+        $vendeur = \App\Models\User::create([
+            'name' => $pending['name'],
+            'email' => $pending['email'],
             'tel' => $tel,
-            'password' => Hash::make($validated['password']),
+            'tel_verified_at' => now(),
+            'password' => $pending['password_hash'],
             'role' => 'vendeur',
             'status' => 'inactive',
         ]);

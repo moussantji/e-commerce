@@ -79,4 +79,46 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | WhatsApp (vérification des numéros par code OTP)
+    |--------------------------------------------------------------------------
+    |
+    | otp_driver=log  : code écrit dans les logs (dev/test, gratuit).
+    | otp_driver=gateway : passerelle HTTP sur TON numéro (Ultramsg, Green-API...).
+    | otp_driver=meta : Meta WhatsApp Cloud API (production). Accès API
+    |   gratuit ; chaque OTP livré est facturé par Meta au tarif template
+    |   du pays destinataire (template utilitaire avec {{1}} = le code).
+    |
+    */
+
+    'whatsapp' => [
+        'otp_driver' => env('WHATSAPP_OTP_DRIVER', 'log'),
+        // Passerelle HTTP sur TON numéro WhatsApp (recommandé : le site génère
+        // le code, la passerelle l'envoie depuis ton numéro connecté en QR).
+        // - Ultramsg : URL=https://api.ultramsg.com/{instance}/messages/chat
+        //   METHOD=POST FORMAT=form TO=to TEXT=body TOKEN={token} (+ SUCCESS_KEY=sent)
+        // - Green-API : URL=https://api.green-api.com/waInstance{id}/sendMessage/{token}
+        //   METHOD=POST FORMAT=json TO=chatId TEXT=message SUFFIX=@c.us (token dans l'URL)
+        'gateway' => [
+            'url' => env('WHATSAPP_GATEWAY_URL'),
+            'method' => env('WHATSAPP_GATEWAY_METHOD', 'POST'),
+            'format' => env('WHATSAPP_GATEWAY_FORMAT', 'json'), // json|form
+            'to_param' => env('WHATSAPP_GATEWAY_TO', 'to'),
+            'text_param' => env('WHATSAPP_GATEWAY_TEXT', 'body'),
+            'to_suffix' => env('WHATSAPP_GATEWAY_SUFFIX', ''),
+            'token' => env('WHATSAPP_GATEWAY_TOKEN'),
+            'token_param' => env('WHATSAPP_GATEWAY_TOKEN_PARAM', 'token'),
+            'success_key' => env('WHATSAPP_GATEWAY_SUCCESS_KEY', ''),
+        ],
+        // Meta Cloud API : https://developers.facebook.com (app + n° WhatsApp Business)
+        'token' => env('WHATSAPP_TOKEN'),
+        'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
+        // Template UTILITY à créer/approuver dans le dashboard Meta, ex FR :
+        // « Boutique : votre code de vérification est {{1}}. Il expire dans 10 minutes. »
+        'template' => env('WHATSAPP_OTP_TEMPLATE', 'otp_boutique'),
+        'lang' => env('WHATSAPP_OTP_LANG', 'fr'),
+        'base_url' => env('WHATSAPP_BASE_URL', 'https://graph.facebook.com/v21.0'),
+    ],
+
 ];
