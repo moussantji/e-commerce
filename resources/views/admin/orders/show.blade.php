@@ -210,9 +210,9 @@
                                         {{ $pv->created_at?->format('d/m/Y H:i') }}</small>
                                     @if (!empty($pvPhs))
                                         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-                                            @foreach ($pvPhs as $ph)
-                                                <a href="{{ asset('storage/' . $ph) }}" target="_blank">
-                                                    <img src="{{ asset('storage/' . $ph) }}" alt="Capture de paiement"
+                                            @foreach ($pvPhs as $i => $ph)
+                                                <a href="{{ $pv->photoFullUrl($i) }}" target="_blank">
+                                                    <img src="{{ $pv->photoThumbUrl($i) }}" alt="Capture de paiement"
                                                         loading="lazy"
                                                         style="width:72px;height:72px;object-fit:cover;border-radius:10px;border:1px solid var(--line)">
                                                 </a>

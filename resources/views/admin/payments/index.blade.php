@@ -55,9 +55,9 @@
                         </div>
                         @if (!empty($phs))
                             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-                                @foreach ($phs as $ph)
-                                    <a href="{{ asset('storage/' . $ph) }}" target="_blank">
-                                        <img src="{{ asset('storage/' . $ph) }}" alt="Preuve de paiement"
+                                @foreach ($phs as $i => $ph)
+                                    <a href="{{ $p->photoFullUrl($i) }}" target="_blank">
+                                        <img src="{{ $p->photoThumbUrl($i) }}" alt="Preuve de paiement"
                                             loading="lazy"
                                             style="width:72px;height:72px;object-fit:cover;border-radius:10px;border:1px solid var(--line)">
                                     </a>

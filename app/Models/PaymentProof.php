@@ -27,4 +27,40 @@ class PaymentProof extends Model
     {
         return $this->belongsTo(Commandes::class, 'order_id');
     }
+
+    /** Chemins des captures (colonne JSON). */
+    public function photoPaths(): array
+    {
+        $phs = $this->photos ?? [];
+        if (is_string($phs)) {
+            $phs = json_decode($phs, true) ?: [];
+        }
+
+        return is_array($phs) ? array_values($phs) : [];
+    }
+
+    /**
+     * URLs via getImageUrl (Glide, servi par Laravel comme les images
+     * produits) : pas d'accès direct /storage, donc pas de 403 sur mutualisé.
+     */
+    public function photoThumbUrl(int $index): string
+    {
+        $paths = $this->photoPaths();
+        if (!isset($paths[$index]) || !is_string($paths[$index])) {
+            return '';
+        }
+
+        return (new photos(['filename' => $paths[$index]]))->getImageUrl(72, 72);
+    }
+
+    /** Image en grand (largeur 1200, ratio conservé ou original en secours). */
+    public function photoFullUrl(int $index): string
+    {
+        $paths = $this->photoPaths();
+        if (!isset($paths[$index]) || !is_string($paths[$index])) {
+            return '';
+        }
+
+        return (new photos(['filename' => $paths[$index]]))->getImageUrl(1200);
+    }
 }

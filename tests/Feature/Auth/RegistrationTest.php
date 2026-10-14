@@ -26,6 +26,7 @@ class RegistrationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        // Le client est redirigé vers l'accueil après inscription.
+        $response->assertRedirect(route('home', absolute: false));
     }
 }

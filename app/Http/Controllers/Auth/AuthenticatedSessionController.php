@@ -43,7 +43,9 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('vendeur.dashboard');
         }
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        // Le client est renvoyé vers l'accueil après connexion
+        // (intended conserve le retour vers une page protégée demandée avant).
+        return redirect()->intended(route('home', absolute: false));
     }
 
     /**

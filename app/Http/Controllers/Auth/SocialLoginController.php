@@ -67,6 +67,7 @@ class SocialLoginController extends Controller
             return redirect()->route('vendeur.dashboard');
         }
 
-        return redirect('/dashboard');
+        // Client : accueil après connexion (le dashboard reste accessible via « Mon espace »).
+        return redirect('/');
     }
 }

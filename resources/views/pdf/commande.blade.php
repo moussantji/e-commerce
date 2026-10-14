@@ -227,7 +227,7 @@
     <table class="hero" style="border-radius:10px;">
         <tr>
             <td>
-                <h1>Boutique</h1>
+                <h1>Mandenbaoubab</h1>
                 <p class="sub">Bamako, Mali · contact@boutique.ml · +223 82 01 95 83</p>
             </td>
             <td class="meta">

@@ -51,6 +51,7 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        // Client : accueil après inscription (le dashboard reste accessible via « Mon espace »).
+        return redirect(route('home', absolute: false));
     }
 }
