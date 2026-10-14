@@ -2,8 +2,11 @@
 /* ============ NOUVEAU DESIGN UNIQUEMENT (violet clair) — aucun ancien CSS ============ */
 :root{--violet:var(--violet-600);--lav:var(--lav-1);--mut:var(--grey);--violet-900:#2e1065;--violet-800:#4c1d95;--violet-700:#6d28d9;--violet-600:#7c3aed;--violet-500:#8b5cf6;--violet-400:#a855f7;--lav-1:#f5f3ff;--lav-2:#ede9fe;--pink:#e11d48;--ink:#111827;--grey:#6b7280;--line:#e5e7eb;--white:#fff;--radius:14px;--shadow:0 1px 2px rgba(16,24,40,.05),0 2px 8px rgba(16,24,40,.05);--shadow-md:0 2px 4px rgba(16,24,40,.05),0 8px 20px rgba(46,16,101,.09);--shadow-lg:0 4px 10px rgba(16,24,40,.06),0 18px 44px rgba(76,29,149,.18);--ring:0 0 0 4px rgba(139,92,246,.18);--ease:cubic-bezier(.22,.61,.36,1);--ease-out:cubic-bezier(.16,1,.3,1);--t:.28s var(--ease);--t-slow:.5s var(--ease-out)}
 *{margin:0;padding:0;box-sizing:border-box}
-html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
-body{font-family:'Poppins',system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--ink);background:#fff;line-height:1.45;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;overflow-x:clip}
+body{font-family:'Poppins',system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--ink);background:#fff;line-height:1.45;-webkit-font-smoothing:antialiased;overflow-x:hidden;overflow-x:clip}
+/* Anti-débordement horizontal (mobile : la page ne doit jamais glisser vers la gauche) */
+.kpi,.dash-grid>*,.panel{min-width:0}
+.table-scroll{max-width:100%}
 img{max-width:100%;display:block}
 a{color:inherit;text-decoration:none}
 button{font:inherit;cursor:pointer;border:0;background:none}
