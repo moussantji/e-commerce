@@ -9,6 +9,12 @@ use Illuminate\Http\Request;
 class DashboardController extends Controller
 {
     /**
+     * Statuts comptant dans le chiffre d'affaires : l'argent est encaissé
+     * dès le paiement (payee), pas seulement à l'expédition/livraison.
+     * Exclus : en_attente, paiement_declare (non confirmé), annule.
+     */
+    public const STATUTS_VENTES = ['payee', 'expedie', 'livre'];
+    /**
      * Récupère les données de vente mensuelles
      * 
      * @param int $monthsBack Nombre de mois en arrière (0 pour le mois en cours)
@@ -23,7 +29,7 @@ class DashboardController extends Controller
         // ⚠️ On alias la somme en "ventes" (et NON "total") car le modèle Commandes
         // possède un accesseur getTotalAttribute() qui recalcule total à partir de
         // sous_total/frais/remise — absents ici — et renverrait 0.
-        $sales = Commandes::whereIn('statut', ['livre', 'expedie'])
+        $sales = Commandes::whereIn('statut', self::STATUTS_VENTES)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->selectRaw('DATE(created_at) as date, COALESCE(SUM(total), 0) as ventes')
             ->groupBy('date')
@@ -73,7 +79,7 @@ class DashboardController extends Controller
         }
 
         // Récupérer le chiffre d'affaires total
-        $totalSales = Commandes::whereIn('statut', ['livre', 'expedie'])
+        $totalSales = Commandes::whereIn('statut', self::STATUTS_VENTES)
             ->sum('total');
 
         // Formater le chiffre d'affaires
@@ -96,7 +102,7 @@ class DashboardController extends Controller
             $endDate = now()->subMonths($i)->endOfMonth();
             $monthKey = $startDate->format('Y-m');
             
-            $total = Commandes::whereIn('statut', ['livre', 'expedie'])
+            $total = Commandes::whereIn('statut', self::STATUTS_VENTES)
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->sum('total');
                 
@@ -161,7 +167,7 @@ class DashboardController extends Controller
             'deliveredOrders' => $deliveredOrdersCount,
             'cancelledOrders' => $cancelledOrdersCount,
             'recentOrders' => Commandes::with('user')
-                ->whereIn('statut', ['livre', 'expedie'])
+                ->whereIn('statut', self::STATUTS_VENTES)
                 ->orderBy('created_at', 'desc')
                 ->take(5)
                 ->get()
@@ -175,7 +181,7 @@ class DashboardController extends Controller
                     ];
                 })->toArray(),
             'popularProducts' => \App\Models\Produits::withCount(['commandes as sales_count' => function($query) {
-                    $query->whereIn('statut', ['livre', 'expedie']);
+                    $query->whereIn('statut', self::STATUTS_VENTES);
                 }])
                 ->orderBy('sales_count', 'desc')
                 ->take(5)
@@ -249,7 +255,7 @@ class DashboardController extends Controller
         
         // Récupérer les ventes du mois (alias "ventes" pour éviter l'accesseur
         // getTotalAttribute(), et DATE() qui est portable MySQL/SQLite)
-        $sales = Commandes::whereIn('statut', ['livre', 'expedie'])
+        $sales = Commandes::whereIn('statut', self::STATUTS_VENTES)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->selectRaw('DATE(created_at) as date, COALESCE(SUM(total), 0) as ventes')
             ->groupBy('date')
