@@ -42,25 +42,26 @@ class PaymentProof extends Model
     /**
      * URLs via getImageUrl (Glide, servi par Laravel comme les images
      * produits) : pas d'accès direct /storage, donc pas de 403 sur mutualisé.
+     * Retourne '' si la capture n'existe plus sur disque (ligne orpheline).
      */
     public function photoThumbUrl(int $index): string
     {
-        $paths = $this->photoPaths();
-        if (!isset($paths[$index]) || !is_string($paths[$index])) {
+        $path = $this->photoPaths()[$index] ?? null;
+        if (!is_string($path) || !\Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
             return '';
         }
 
-        return (new photos(['filename' => $paths[$index]]))->getImageUrl(72, 72);
+        return (new photos(['filename' => $path]))->getImageUrl(72, 72);
     }
 
     /** Image en grand (largeur 1200, ratio conservé ou original en secours). */
     public function photoFullUrl(int $index): string
     {
-        $paths = $this->photoPaths();
-        if (!isset($paths[$index]) || !is_string($paths[$index])) {
+        $path = $this->photoPaths()[$index] ?? null;
+        if (!is_string($path) || !\Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
             return '';
         }
 
-        return (new photos(['filename' => $paths[$index]]))->getImageUrl(1200);
+        return (new photos(['filename' => $path]))->getImageUrl(1200);
     }
 }
