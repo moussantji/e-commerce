@@ -28,7 +28,8 @@ class Produits extends Model
         'vendeur_id',
         'image',
         'images',
-        'is_active'
+        'is_active',
+        'is_featured',
     ];
 
     protected $casts = [

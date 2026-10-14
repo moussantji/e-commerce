@@ -177,6 +177,13 @@ class EditProduct extends Component
 
     public function update()
     {
+        // Normalise les selects vides ("", 0) en null AVANT validation + update.
+        $this->category_id = $this->category_id ?: null;
+        $this->brand_id = $this->brand_id ?: null;
+        $this->vendeur_id = $this->vendeur_id ?: null;
+        $this->sale_price = ($this->sale_price === '' || $this->sale_price === 0 || $this->sale_price === '0') ? null : $this->sale_price;
+        $this->sku = $this->sku ?: null;
+
         $this->validate();
 
         $data = [
@@ -188,8 +195,8 @@ class EditProduct extends Component
             'sku' => $this->sku,
             'is_active' => $this->is_active,
             'is_featured' => $this->is_featured,
-            'category_id' => $this->category_id,
-            'brand_id' => $this->brand_id,
+            'category_id' => $this->category_id ?: null,
+            'brand_id' => $this->brand_id ?: null,
             'vendeur_id' => $this->vendeur_id ?: null,
         ];
 

@@ -47,57 +47,51 @@ class WhatsAppVerificationTest extends TestCase
         $this->assertNull($user->fresh()->tel_verified_at);
     }
 
-    public function test_vendeur_two_steps_creates_verified_inactive_account(): void
+    public function test_vendeur_is_created_directly_without_code(): void
     {
-        // Étape 1 : infos => code envoyé, compte NON créé.
-        $this->post(route('vendeur.demande.code'), [
+        // Création directe : infos => compte vendeur inactif, sans code.
+        $this->post(route('vendeur.demande'), [
             'name' => 'Awa Diallo',
             'email' => 'awa@example.com',
             'tel' => '70000002',
             'password' => 'password123',
             'password_confirmation' => 'password123',
-        ])->assertSessionHas('vendeur_code_sent');
+        ])->assertSessionHas('vendeur_created');
 
-        $this->assertDatabaseMissing('users', ['email' => 'awa@example.com']);
-
-        $code = Cache::get('wa_otp:22370000002');
-        $this->assertMatchesRegularExpression('/^\d{6}$/', (string) $code);
-
-        // Mauvais code => pas de compte.
-        $this->post(route('vendeur.demande'), ['tel' => '70000002', 'code' => '000000'])
-            ->assertSessionHasErrors('code', null, 'vendeur');
-        $this->assertDatabaseMissing('users', ['email' => 'awa@example.com']);
-
-        // Bon code => compte vendeur inactif, numéro vérifié.
-        $this->post(route('vendeur.demande'), ['tel' => '70000002', 'code' => $code])
-            ->assertSessionHas('vendeur_created');
+        // Aucun code OTP n'a été envoyé pour ce numéro.
+        $this->assertNull(Cache::get('wa_otp:22370000002'));
 
         $vendeur = User::where('email', 'awa@example.com')->firstOrFail();
         $this->assertSame('vendeur', $vendeur->role);
         $this->assertSame('inactive', $vendeur->status);
         $this->assertSame('22370000002', $vendeur->tel);
-        $this->assertNotNull($vendeur->tel_verified_at);
+        $this->assertNull($vendeur->tel_verified_at);
     }
 
-    public function test_vendeur_code_can_be_resent(): void
+    public function test_vendeur_code_route_is_an_alias_without_code(): void
     {
+        // L'ancienne route /code crée aussi le compte directement, sans OTP.
         $this->post(route('vendeur.demande.code'), [
             'name' => 'Bakary Traoré',
             'email' => 'bakary@example.com',
             'tel' => '76000003',
             'password' => 'password123',
             'password_confirmation' => 'password123',
-        ])->assertSessionHas('vendeur_code_sent');
+        ])->assertSessionHas('vendeur_created');
 
-        $first = Cache::get('wa_otp:22376000003');
+        $this->assertNull(Cache::get('wa_otp:22376000003'));
+        $this->assertNotNull(User::where('email', 'bakary@example.com')->first());
 
-        $this->post(route('vendeur.demande.code'), ['tel' => '76000003'])
-            ->assertSessionHas('vendeur_code_sent');
+        // Email déjà utilisé => erreur, pas de doublon.
+        $this->post(route('vendeur.demande'), [
+            'name' => 'Autre Nom',
+            'email' => 'bakary@example.com',
+            'tel' => '70000004',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ])->assertSessionHasErrors('email', null, 'vendeur');
 
-        // La demande en attente est conservée (création toujours possible).
-        $this->assertNotNull(WhatsAppVerification::peekPending('22376000003'));
-        $this->assertNotEmpty(Cache::get('wa_otp:22376000003'));
-        $this->assertNotSame($first, null);
+        $this->assertSame(1, User::where('email', 'bakary@example.com')->count());
     }
 
     public function test_gateway_driver_sends_code_from_own_number(): void
@@ -143,20 +137,14 @@ class WhatsAppVerificationTest extends TestCase
         $this->assertSame('22320000000', \App\Support\PhoneNumber::normalize('20000000'));
         $this->assertNull(\App\Support\PhoneNumber::normalize('1234567'));
 
-        // Parcours vendeur complet avec un numéro en 82.
-        $this->post(route('vendeur.demande.code'), [
+        // Parcours vendeur direct avec un numéro en 82 (sans code).
+        $this->post(route('vendeur.demande'), [
             'name' => 'Fanta Diarra',
             'email' => 'fanta@example.com',
             'tel' => '82019583',
             'password' => 'password123',
             'password_confirmation' => 'password123',
-        ])->assertSessionHas('vendeur_code_sent');
-
-        $code = Cache::get('wa_otp:22382019583');
-        $this->assertMatchesRegularExpression('/^\d{6}$/', (string) $code);
-
-        $this->post(route('vendeur.demande'), ['tel' => '82019583', 'code' => $code])
-            ->assertSessionHas('vendeur_created');
+        ])->assertSessionHas('vendeur_created');
 
         $this->assertSame('22382019583', User::where('email', 'fanta@example.com')->firstOrFail()->tel);
     }

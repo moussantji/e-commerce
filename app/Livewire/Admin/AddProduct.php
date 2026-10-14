@@ -116,6 +116,15 @@ class AddProduct extends Component
 
     public function submit()
     {
+        // Normalise les selects vides ("") en null AVANT validation + insert.
+        // Sans ça MySQL reçoit '' pour category_id/brand_id => erreur
+        // "Incorrect integer value: ''" et vendeur_id invalide ("unknown").
+        $this->category_id = $this->category_id ?: null;
+        $this->brand_id = $this->brand_id ?: null;
+        $this->vendeur_id = $this->vendeur_id ?: null;
+        $this->sale_price = ($this->sale_price === '' || $this->sale_price === 0 || $this->sale_price === '0') ? null : $this->sale_price;
+        $this->sku = $this->sku ?: null;
+
         $this->validate();
 
         $produit = Produits::create([
@@ -127,8 +136,8 @@ class AddProduct extends Component
             'sku' => $this->sku,
             'is_active' => $this->is_active,
             'is_featured' => $this->is_featured,
-            'category_id' => $this->category_id,
-            'brand_id' => $this->brand_id,
+            'category_id' => $this->category_id ?: null,
+            'brand_id' => $this->brand_id ?: null,
             'vendeur_id' => $this->vendeur_id ?: null,
         ]);
 

@@ -348,9 +348,9 @@ vérifiés par un **code à 6 chiffres envoyé sur WhatsApp** (valable 10 minute
 
 - **Profil client** : bouton « Recevoir le code sur WhatsApp », puis saisie du code.
   Changer de numéro réinitialise la vérification.
-- **Compte vendeur** (modale « Créer un compte vendeur ») : étape 1 (infos) →
-  code WhatsApp → étape 2 (code) → compte créé **inactif + numéro vérifié**,
-  en attente de validation admin.
+- **Compte vendeur** (modale « Créer un compte vendeur ») : formulaire unique
+  (infos) → compte créé **inactif**, en attente de validation admin.
+  Aucun code WhatsApp demandé à la création.
 
 ## 1. Mode développement (gratuit)
 

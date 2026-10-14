@@ -129,8 +129,9 @@ Route::middleware(['auth', 'role:customer,vendeur'])->group(function () {
     Route::post('/paiement/mobile', [PaymentController::class, 'storeManual'])->name('paiement.mobile')->middleware('throttle:10,1');
 });
 
-// Demande publique de compte vendeur (modale en 2 étapes) :
-// 1) infos + envoi du code sur WhatsApp, 2) code vérifié => compte inactif en attente admin.
+// Demande publique de compte vendeur (modale, création directe sans code) :
+// infos => compte inactif en attente admin. L'ancienne route /code est
+// conservée en alias (même traitement, sans envoi de code).
 Route::post('/vendeur/demande/code', [\App\Http\Controllers\VendeurController::class, 'demandeCode'])
     ->name('vendeur.demande.code')->middleware('throttle:6,1');
 Route::post('/vendeur/demande', [\App\Http\Controllers\VendeurController::class, 'demande'])
