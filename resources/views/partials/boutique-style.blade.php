@@ -698,4 +698,31 @@ body.spa-enter main{animation:pageIn .32s var(--ease-out)}
 .btn-solid:active,.btn-line:active,.btn-ghost-sm:active,.lux-btn-ok:active,.lux-btn-cancel:active{transform:scale(.97)}
 .card-cta .add:active{transform:scale(.97)}
 .opt-pill:active,.pop:active{transform:scale(.96)}
+/* ===== Fix blanc lateral mobile — fiche produit (anti-debordement horizontal) ===== */
+.pdp,.pdp-gal,.pdp-info,#tabs,.tabs,.tabs-body,.sec.mini,.pdp-actions,.qty-row,.pricebox,.rating-row,.siblings,.assurances{min-width:0;max-width:100%}
+.pdp-info h1,.lead,.crumb .here,.review p,.opt-grp>label,.sib-n,.pricebox .now{overflow-wrap:anywhere;word-break:break-word}
+.crumb .wrap{min-width:0}
+.crumb .here{min-width:0;max-width:100%}
+.pdp-info{min-width:0;overflow-x:clip}
+.tabs{overflow:hidden}
+.tabs-body{min-width:0;overflow-x:auto}
+.tabs-body img,.tabs-body video,.tabs-body iframe{max-width:100%!important;height:auto}
+.tabs-body table{max-width:100%}
+.tabs-body table table{max-width:100%}
+.spec{table-layout:fixed}
+.spec td{overflow-wrap:anywhere;word-break:break-word}
+.tabs-body pre{white-space:pre-wrap;overflow-x:auto;max-width:100%}
+.tabs-body div,.tabs-body figure{max-width:100%}
+.review>div{flex:1;min-width:0}
+.review .stars{flex:none}
+.spec-chip,.opt-pill{max-width:100%;overflow-wrap:anywhere}
+.pdp-actions .btn-solid,.pdp-actions .btn-line,.buybar .btn-solid{min-width:0;max-width:100%}
+.buybar .now{flex:none;white-space:nowrap}
+.grid.plist>.card{min-width:0}
+.flash-line{flex-wrap:wrap}
+.assurances div span{min-width:0;overflow-wrap:anywhere}
+@media(max-width:900px){
+.pdp{overflow-x:clip}
+.g-main,.g-thumbs{max-width:100%}
+}
 </style>
