@@ -120,12 +120,20 @@ class DashboardController extends Controller
         $previousMonthSales = $this->getMonthlySalesData(1); // Mois précédent
 
         // ----- Carte des utilisateurs (position + statut en ligne) -----
+        // Source 1 : table sessions (driver database). Source 2 (secours) :
+        // users.last_activity, maintenu par UpdateLastActivity à chaque page
+        // visitée — sinon un connecté retombe "inactif" après 5 min.
         $onlineThreshold = now()->subMinutes(5)->timestamp;
-        $onlineIds = \Illuminate\Support\Facades\DB::table('sessions')
-            ->whereNotNull('user_id')
-            ->where('last_activity', '>=', $onlineThreshold)
-            ->pluck('user_id')
-            ->unique();
+        try {
+            $onlineIds = \Illuminate\Support\Facades\DB::table('sessions')
+                ->whereNotNull('user_id')
+                ->where('last_activity', '>=', $onlineThreshold)
+                ->pluck('user_id');
+        } catch (\Throwable $e) {
+            $onlineIds = collect();
+        }
+        $activeIds = \App\Models\User::where('last_activity', '>=', now()->subMinutes(5))->pluck('id');
+        $onlineIds = $onlineIds->merge($activeIds)->unique();
 
         $mapUsers = \App\Models\User::whereNotNull('latitude')
             ->whereNotNull('longitude')

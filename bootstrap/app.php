@@ -17,6 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => RoleMiddleware::class,
         ]);
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+        $middleware->web(append: [
+            \App\Http\Middleware\UpdateLastActivity::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
