@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Models\Commandes;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -11,7 +12,7 @@ use Illuminate\Notifications\Notification;
  * Notification (base + email) envoyée au client à chaque changement de
  * statut de sa commande.
  */
-class OrderStatusNotification extends Notification
+class OrderStatusNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 

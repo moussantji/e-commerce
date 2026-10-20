@@ -4,13 +4,14 @@ namespace App\Notifications;
 
 use App\Notifications\Channels\ExpoChannel;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
  * Notification (base + email + push) de bienvenue à l'inscription.
  */
-class WelcomeNotification extends Notification
+class WelcomeNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 

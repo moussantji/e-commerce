@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Notifications\Channels\ExpoChannel;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -11,7 +12,7 @@ use Illuminate\Notifications\Notification;
  * Notification de sécurité (connexion, changement de mot de passe...).
  * base + email + push.
  */
-class SecurityNotification extends Notification
+class SecurityNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 

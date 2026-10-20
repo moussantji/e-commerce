@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -10,7 +11,7 @@ use Illuminate\Notifications\Notification;
  * Notification (base + email) envoyée au CLIENT quand l'admin confirme ou
  * rejette son paiement / rechargement.
  */
-class PaymentStatusNotification extends Notification
+class PaymentStatusNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 

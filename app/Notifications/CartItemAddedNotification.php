@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Models\Produits;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -11,7 +12,7 @@ use Illuminate\Notifications\Notification;
  * Notification (base de données + email) envoyée à l'utilisateur
  * lorsqu'il ajoute un produit à son panier.
  */
-class CartItemAddedNotification extends Notification
+class CartItemAddedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
