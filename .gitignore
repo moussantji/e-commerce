@@ -22,6 +22,8 @@ yarn-error.log
 /wa-gateway/cloudflared
 /wa-gateway/cloudflared.exe
 /wa-gateway/*.log
+/.expo
+/.opencode
 /.fleet
 /.idea
 /.vscode
