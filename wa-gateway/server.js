@@ -10,14 +10,23 @@
 //    (+ WHATSAPP_GATEWAY_TOKEN=change-moi)
 //
 // La session est conservée dans ./auth : un seul scan suffit (sauf déconnexion).
+// Lit aussi ./.env s'il existe (mutualisé : plus fiable que les variables
+// d'interface, qui ne sont pas toujours transmises au processus).
+import 'dotenv/config';
 import express from 'express';
 import makeWASocket, {
-    DisconnectReason,
+    Browsers,
     fetchLatestBaileysVersion,
     useMultiFileAuthState,
 } from '@whiskeysockets/baileys';
 import QRCode from 'qrcode';
 import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+// Dossier de session en chemin ABSOLU (le répertoire courant est imprévisible
+// sous Passenger/mutualisé : relatif planterait ou écrirait ailleurs).
+const AUTH_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'auth');
 
 const PORT = Number(process.env.PORT || 3001);
 const TOKEN = process.env.GATEWAY_TOKEN || '';
@@ -35,12 +44,31 @@ process.on('uncaughtException', (e) => {
 const app = express();
 app.use(express.json({ limit: '256kb' }));
 
+// Compatibilité hébergement mutualisé (ex : app servie en sous-URI /wa) :
+// les routes existent à la racine ET sous BASE_PATH (ex BASE_PATH=/wa).
+// Laisse vide partout ailleurs (Colab, Actions, VPS, sous-domaine).
+const BASE_PATH = (process.env.BASE_PATH || '').replace(/\/+$/, '');
+const api = express.Router();
+
 let sock = null;
 let connected = false;
 let lastQr = null;
 let lastQrAt = 0;
 let lastPairing = null;
 let pairingTimer = null;
+let pairingTimeout = null;
+let closeStreak = 0;
+
+function clearPairingTimers() {
+    if (pairingTimeout) {
+        clearTimeout(pairingTimeout);
+        pairingTimeout = null;
+    }
+    if (pairingTimer) {
+        clearInterval(pairingTimer);
+        pairingTimer = null;
+    }
+}
 
 function checkToken(req, res, next) {
     if (!TOKEN) return next(); // dev local sans token
@@ -55,18 +83,21 @@ function checkToken(req, res, next) {
 async function start() {
     // Au tout premier lancement le dossier n'existe pas encore (ex : CI
     // avec cache vide) : Baileys planterait en écrivant auth/creds.json.
-    fs.mkdirSync('./auth', { recursive: true });
+    fs.mkdirSync(AUTH_DIR, { recursive: true });
+    console.log(`Session WhatsApp : ${AUTH_DIR} (cwd=${process.cwd()})`);
+    // Jamais deux jeux de timers en parallèle (sinon spam de codes).
+    clearPairingTimers();
     let state;
     let saveCreds;
     try {
-        ({ state, saveCreds } = await useMultiFileAuthState('./auth'));
+        ({ state, saveCreds } = await useMultiFileAuthState(AUTH_DIR));
     } catch (e) {
         console.log('Session illisible, on repart de zéro :', e?.message || e);
         try {
-            fs.rmSync('./auth', { recursive: true, force: true });
+            fs.rmSync(AUTH_DIR, { recursive: true, force: true });
         } catch {}
-        fs.mkdirSync('./auth', { recursive: true });
-        ({ state, saveCreds } = await useMultiFileAuthState('./auth'));
+        fs.mkdirSync(AUTH_DIR, { recursive: true });
+        ({ state, saveCreds } = await useMultiFileAuthState(AUTH_DIR));
     }
     let version;
     try {
@@ -77,11 +108,14 @@ async function start() {
 
     try {
         sock = makeWASocket({
-        auth: state,
-        version,
-        printQRInTerminal: false,
-        browser: ['Boutique OTP', 'Chrome', '1.0'],
-    });
+            auth: state,
+            version,
+            printQRInTerminal: false,
+            // Empreinte d'un vrai WhatsApp Web + pas de signalement « en ligne »
+            // agressif : réduit les révocations de session côté serveur.
+            browser: Browsers.macOS('Chrome'),
+            markOnlineOnConnect: false,
+        });
     sock.ev.on('creds.update', saveCreds);
 
     sock.ev.on('connection.update', (u) => {
@@ -96,27 +130,25 @@ async function start() {
         if (connection === 'open') {
             connected = true;
             lastQr = null;
-            if (pairingTimer) {
-                clearInterval(pairingTimer);
-                pairingTimer = null;
-            }
+            closeStreak = 0;
+            clearPairingTimers();
             console.log('WhatsApp connecté, prêt à envoyer les codes OTP.');
         }
         if (connection === 'close') {
             connected = false;
             const code = lastDisconnect?.error?.output?.statusCode;
-            const loggedOut = code === DisconnectReason.loggedOut;
+            // On ne supprime JAMAIS la session locale : une déconnexion peut être
+            // transitoire, et un re-jumelage écrase les identifiants tout seul.
+            // Supprimer ici + sauvegarder ensuite détruirait définitivement une
+            // session encore valable côté WhatsApp.
+            // Reconnexion en backoff (5 s → 2 min max) : évite de spammer le
+            // serveur en cas de rejet répété (quarantaine anti-abus).
+            closeStreak += 1;
+            const delay = Math.min(5000 * closeStreak, 120000);
             console.log(
-                loggedOut
-                    ? 'Session supprimée côté WhatsApp : supprime ./auth et rescanner le QR.'
-                    : 'Connexion perdue, reconnexion...',
+                `Connexion WhatsApp fermée (code ${code}). Nouvel essai dans ${Math.round(delay / 1000)} s... (re-jumelage seulement si WhatsApp l'exige)`,
             );
-            if (loggedOut) {
-                try {
-                    fs.rmSync('./auth', { recursive: true, force: true });
-                } catch {}
-            }
-            setTimeout(start, loggedOut ? 3000 : 5000);
+            setTimeout(start, delay);
         }
     });
 
@@ -137,10 +169,11 @@ async function start() {
         }
     }
     if (PAIR_NUMBER && !state.creds.registered) {
-        setTimeout(requestPairing, 8000);
+        clearPairingTimers();
+        pairingTimeout = setTimeout(requestPairing, 8000);
         pairingTimer = setInterval(async () => {
             if (connected || sock?.authState?.creds?.registered) {
-                if (pairingTimer) clearInterval(pairingTimer);
+                clearPairingTimers();
                 return;
             }
             await requestPairing();
@@ -159,13 +192,13 @@ function toJid(to) {
     return d + '@s.whatsapp.net';
 }
 
-app.get('/status', (req, res) => {
+api.get('/status', (req, res) => {
     res.json({ connected, qrAvailable: !!lastQr });
 });
 
 // Dernier code de jumelage (protégé par token si configuré) : pratique pour
 // le saisir vite depuis le navigateur, sans fouiller les logs.
-app.get('/pairing', (req, res) => {
+api.get('/pairing', (req, res) => {
     if (TOKEN) {
         const given = req.query?.token ?? req.headers['x-gateway-token'] ?? '';
         if (given !== TOKEN) {
@@ -180,7 +213,7 @@ app.get('/pairing', (req, res) => {
     res.json({ code: lastPairing.code, at: lastPairing.at, number: PAIR_NUMBER });
 });
 
-app.get('/qr', async (req, res) => {
+api.get('/qr', async (req, res) => {
     // Le QR permet de lier TON numéro : protégé par token si configuré
     // (utile quand la passerelle est exposée via tunnel, ex Colab).
     if (TOKEN) {
@@ -208,7 +241,7 @@ app.get('/qr', async (req, res) => {
     }
 });
 
-app.post('/send', checkToken, async (req, res) => {
+api.post('/send', checkToken, async (req, res) => {
     const { to, body } = req.body || {};
     if (!to || !body) {
         return res.status(422).json({ sent: false, error: 'to/body requis' });
@@ -223,6 +256,9 @@ app.post('/send', checkToken, async (req, res) => {
         res.status(502).json({ sent: false, error: String(e?.message || e) });
     }
 });
+
+app.use(api);
+if (BASE_PATH) app.use(BASE_PATH, api);
 
 app.listen(PORT, () => {
     console.log(`Passerelle OTP : http://localhost:${PORT}  (/status, /qr, POST /send)`);
