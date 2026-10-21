@@ -9,13 +9,13 @@ import {
     ActivityIndicator,
     Alert,
     Dimensions,
-    TextInput,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api, { apiError } from "../api/client";
 import ErrorState from "../components/ErrorState";
+import FocusTextInput from "../components/FocusTextInput";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { useWishlist } from "../context/WishlistContext";
@@ -113,7 +113,7 @@ function ReplyComposer({ author, value, onChange, onSubmit, onCancel, sending })
             <Text style={styles.replyComposerTitle}>
                 Répondre à <Text style={{ fontWeight: "800" }}>{author || "cet avis"}</Text>
             </Text>
-            <TextInput
+            <FocusTextInput
                 style={styles.replyInput}
                 placeholder="Écrivez votre réponse…"
                 placeholderTextColor="#9ca3af"

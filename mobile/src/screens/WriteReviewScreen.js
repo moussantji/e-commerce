@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import {
     View,
     Text,
-    TextInput,
     TouchableOpacity,
     StyleSheet,
     ScrollView,
@@ -15,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import api, { apiError } from "../api/client";
+import FocusTextInput from "../components/FocusTextInput";
 import { COLORS, RADIUS } from "../theme";
 
 const MAX_PHOTOS = 5;
@@ -139,7 +139,7 @@ export default function WriteReviewScreen({ route, navigation }) {
 
                 {/* Commentaire */}
                 <Text style={styles.label}>Votre commentaire</Text>
-                <TextInput
+                <FocusTextInput
                     style={styles.input}
                     placeholder="Partagez votre expérience (optionnel)"
                     placeholderTextColor="#9ca3af"

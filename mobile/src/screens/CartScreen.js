@@ -24,6 +24,7 @@ import useRequireAuth from "../hooks/useRequireAuth";
 import { useAuth } from "../context/AuthContext";
 import { useWishlist } from "../context/WishlistContext";
 import api, { apiError } from "../api/client";
+import { useFocusBorder, webInputStyle } from "../components/FocusTextInput";
 import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
 
@@ -120,6 +121,7 @@ export default function CartScreen({ navigation }) {
     const [couponInput, setCouponInput] = useState("");
     const [placing, setPlacing] = useState(false);
     const [sticky, setSticky] = useState(false);
+    const couponFocus = useFocusBorder();
 
     // Le serveur applique automatiquement le coupon dès que la commande
     // atteint les seuils (≥ 10 articles ou > 100 000 FCFA).
@@ -697,7 +699,12 @@ export default function CartScreen({ navigation }) {
                         )}
 
                         {/* Code promo */}
-                        <View style={styles.couponCard}>
+                        <Animated.View
+                            style={[
+                                styles.couponCard,
+                                { borderColor: couponFocus.borderColor },
+                            ]}
+                        >
                             <Ionicons
                                 name="pricetag-outline"
                                 size={20}
@@ -721,12 +728,14 @@ export default function CartScreen({ navigation }) {
                             ) : (
                                 <>
                                     <TextInput
-                                        style={styles.couponInput}
+                                        style={[styles.couponInput, webInputStyle]}
                                         placeholder="Code promo"
                                         placeholderTextColor="#9ca3af"
                                         autoCapitalize="characters"
                                         value={couponInput}
                                         onChangeText={setCouponInput}
+                                        onFocus={couponFocus.onFocus}
+                                        onBlur={couponFocus.onBlur}
                                     />
                                     <TouchableOpacity
                                         style={styles.couponBtn}
@@ -738,7 +747,7 @@ export default function CartScreen({ navigation }) {
                                     </TouchableOpacity>
                                 </>
                             )}
-                        </View>
+                        </Animated.View>
                     </View>
                 )}
             </Animated.ScrollView>
@@ -1371,6 +1380,8 @@ const styles = StyleSheet.create({
         backgroundColor: "#fff",
         borderRadius: 14,
         padding: 12,
+        borderWidth: 1,
+        borderColor: "#e5e7eb",
         elevation: 1,
     },
     couponInput: {

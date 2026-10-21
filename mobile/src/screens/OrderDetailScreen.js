@@ -11,7 +11,6 @@ import {
     Linking,
     Modal,
     Pressable,
-    TextInput,
     Platform,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
@@ -21,6 +20,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import api, { apiError } from "../api/client";
 import ErrorState from "../components/ErrorState";
+import FocusTextInput from "../components/FocusTextInput";
 import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
 
@@ -610,7 +610,7 @@ export default function OrderDetailScreen({ route, navigation }) {
                                 <Text style={styles.payLabel}>
                                     Numéro ayant payé (optionnel)
                                 </Text>
-                                <TextInput
+                                <FocusTextInput
                                     style={styles.payInput}
                                     value={payPhone}
                                     onChangeText={setPayPhone}
@@ -622,7 +622,7 @@ export default function OrderDetailScreen({ route, navigation }) {
                                 <Text style={styles.payLabel}>
                                     Référence de transaction (optionnel)
                                 </Text>
-                                <TextInput
+                                <FocusTextInput
                                     style={styles.payInput}
                                     value={payRef}
                                     onChangeText={setPayRef}

@@ -20,7 +20,9 @@ use Illuminate\Validation\Rule;
 /*
  * NB : les ressources « imageables » (produits, catégories, méthodes de
  * livraison et de paiement) acceptent l'envoi d'un fichier `image` en
- * multipart/form-data. L'image est stockée sur le disque public et reliée au
+ * multipart/form-data. Les produits acceptent en plus plusieurs fichiers
+ * `images[]` ainsi qu'un tableau `remove_images[]` (identifiants de photos à
+ * retirer). Les fichiers sont stockés sur le disque public et reliés au
  * modèle via la table `photos` (comme le panneau admin web).
  */
 
@@ -94,9 +96,13 @@ class AdminCatalogController extends Controller
         $rules = $cfg['rules']($request, null);
         if (!empty($cfg['image_folder'])) {
             $rules['image'] = 'nullable|image|max:4096';
+            if (!empty($cfg['multiple_images'])) {
+                $rules['images'] = 'nullable|array|max:10';
+                $rules['images.*'] = 'image|max:4096';
+            }
         }
         $data = $request->validate($rules);
-        unset($data['image']); // fichier géré séparément (voir handleImageUpload)
+        unset($data['image'], $data['images']); // fichiers gérés séparément (voir handleImageUpload)
         $data = isset($cfg['prepare']) ? $cfg['prepare']($data, null) : $data;
 
         $model = $cfg['model'];
@@ -121,9 +127,16 @@ class AdminCatalogController extends Controller
         $rules = $cfg['rules']($request, $item);
         if (!empty($cfg['image_folder'])) {
             $rules['image'] = 'nullable|image|max:4096';
+            $rules['remove_image'] = 'nullable|boolean';
+            if (!empty($cfg['multiple_images'])) {
+                $rules['images'] = 'nullable|array|max:10';
+                $rules['images.*'] = 'image|max:4096';
+                $rules['remove_images'] = 'nullable|array';
+                $rules['remove_images.*'] = 'integer';
+            }
         }
         $data = $request->validate($rules);
-        unset($data['image']); // fichier géré séparément (voir handleImageUpload)
+        unset($data['image'], $data['images'], $data['remove_image'], $data['remove_images']);
         $data = isset($cfg['prepare']) ? $cfg['prepare']($data, $item) : $data;
 
         $item->update($data);
@@ -149,6 +162,12 @@ class AdminCatalogController extends Controller
             return response()->json(['message' => 'Vous ne pouvez pas supprimer votre propre compte.'], 422);
         }
 
+        // Les photos référencent le produit sans cascade : on les supprime
+        // d'abord (le fichier est retiré par l'événement du modèle photos).
+        if (!empty($cfg['image_folder']) && method_exists($item, 'photos')) {
+            $this->deletePhotos($item->photos()->get());
+        }
+
         $item->delete();
 
         return response()->json(['message' => 'Supprimé avec succès.']);
@@ -171,12 +190,34 @@ class AdminCatalogController extends Controller
     }
 
     /**
-     * Stocke l'image envoyée (le cas échéant) et la relie au modèle via la
-     * table `photos`. L'ancienne image est remplacée.
+     * Stocke les images envoyées (le cas échéant) et les relie au modèle via
+     * la table `photos`. Pour les ressources à image unique, l'ancienne image
+     * est remplacée. Pour les produits, les nouvelles images sont ajoutées et
+     * `remove_images[]` permet de retirer des photos existantes.
      */
     private function handleImageUpload(Request $request, $item, array $cfg): void
     {
-        if (empty($cfg['image_folder']) || ! $request->hasFile('image')) {
+        if (empty($cfg['image_folder'])) {
+            return;
+        }
+
+        if (!empty($cfg['multiple_images'])) {
+            $this->handleMultipleImages($request, $item, $cfg);
+            return;
+        }
+
+        $column = $cfg['image_column'] ?? 'image';
+        $remove = $request->boolean('remove_image');
+        $hasFile = $request->hasFile('image');
+
+        // Retrait explicite de l'image existante (sans nouvel upload).
+        if ($remove && ! $hasFile) {
+            $this->deletePhotos($item->photos()->get());
+            $item->forceFill([$column => null])->save();
+            return;
+        }
+
+        if (! $hasFile) {
             return;
         }
 
@@ -186,16 +227,95 @@ class AdminCatalogController extends Controller
         }
 
         // Supprime les anciennes photos (fichier + enregistrement).
-        foreach ($item->photos()->get() as $old) {
-            $old->delete();
-        }
+        $this->deletePhotos($item->photos()->get());
 
         $filename = $file->store($cfg['image_folder'] . '/' . $item->id, 'public');
         $item->photos()->create(['filename' => $filename]);
 
         // Conserve aussi le chemin dans la colonne dédiée (compatibilité web).
-        $column = $cfg['image_column'] ?? 'image';
         $item->forceFill([$column => $filename])->save();
+    }
+
+    /**
+     * Gère la galerie d'un produit : retrait ciblé de photos existantes,
+     * ajout de plusieurs fichiers et synchronisation de l'image principale.
+     */
+    private function handleMultipleImages(Request $request, $item, array $cfg): void
+    {
+        $column = $cfg['image_column'] ?? 'image';
+
+        // `remove_image` reste accepté pour les anciennes versions de l'app
+        // (elles ne connaissaient qu'une seule image par produit).
+        if ($request->boolean('remove_image')) {
+            $this->deletePhotos($item->photos()->get());
+        } else {
+            $removeIds = array_filter(array_map(
+                'intval',
+                (array) $request->input('remove_images', [])
+            ));
+            if (!empty($removeIds)) {
+                $this->deletePhotos(
+                    $item->photos()->whereIn('id', $removeIds)->get()
+                );
+            }
+        }
+
+        $files = [];
+        if ($request->hasFile('images')) {
+            $files = array_filter(
+                (array) $request->file('images'),
+                fn ($file) => $file && ! $file->getError()
+            );
+        }
+
+        // Compatibilité avec l'ancien champ unique `image` : il remplace la
+        // galerie existante, comme dans l'ancienne version de l'app.
+        $legacyFile = $request->file('image');
+        if ($legacyFile && ! $legacyFile->getError()) {
+            $this->deletePhotos($item->photos()->get());
+            $files = [$legacyFile];
+        }
+
+        // Ne jamais dépasser 10 images par produit.
+        $remaining = max(0, 10 - $item->photos()->count());
+        foreach (array_slice(array_values($files), 0, $remaining) as $file) {
+            $filename = $file->store($cfg['image_folder'] . '/' . $item->id, 'public');
+            $item->photos()->create(['filename' => $filename]);
+        }
+
+        $this->syncPrimaryImage($item, $column);
+    }
+
+    /** Supprime des photos (le modèle supprime aussi le fichier associé). */
+    private function deletePhotos($photos): void
+    {
+        foreach ($photos as $photo) {
+            $photo->delete();
+        }
+    }
+
+    /** Aligne la colonne image principale sur la première photo de la galerie. */
+    private function syncPrimaryImage($item, string $column): void
+    {
+        $first = $item->photos()->orderBy('id')->first();
+        $item->forceFill([$column => $first?->filename])->save();
+    }
+
+    /** Liste des photos d'un modèle avec leur identifiant et leur URL absolue. */
+    private function photoList($model): array
+    {
+        if (! method_exists($model, 'photos')) {
+            return [];
+        }
+
+        $photos = $model->relationLoaded('photos')
+            ? $model->photos
+            : $model->photos()->orderBy('id')->get();
+
+        return $photos->sortBy('id')->map(fn ($photo) => [
+            'id' => $photo->id,
+            'url' => $this->abs($photo->getImageUrl(400, 400)),
+        ])->values()->all();
     }
 
     /** URL absolue de l'image principale d'un modèle (via getPhoto()), ou null. */
@@ -204,7 +324,12 @@ class AdminCatalogController extends Controller
         if (! method_exists($model, 'getPhoto')) {
             return null;
         }
-        $photo = $model->getPhoto();
+
+        if ($model->relationLoaded('photos') && $model->photos->isNotEmpty()) {
+            $photo = $model->photos->sortBy('id')->first();
+        } else {
+            $photo = $model->getPhoto();
+        }
 
         return $photo ? $this->abs($photo->getImageUrl(400, 400)) : null;
     }
@@ -444,11 +569,12 @@ class AdminCatalogController extends Controller
             // -------------------- Produits --------------------
             'products' => [
                 'model' => Produits::class,
-                'with' => ['category', 'brand'],
+                'with' => ['category', 'brand', 'photos'],
                 'searchable' => ['name', 'sku'],
                 'order' => ['id', 'desc'],
                 'image_folder' => 'Produits',
                 'image_column' => 'image',
+                'multiple_images' => true,
                 'rules' => fn (Request $r, $item) => [
                     'name' => 'required|string|max:255',
                     'description' => 'nullable|string',
@@ -463,11 +589,15 @@ class AdminCatalogController extends Controller
                     $data['is_active'] = $data['is_active'] ?? true;
                     $data['stock'] = $data['stock'] ?? 0;
                     // La colonne `description` est NOT NULL sans valeur par défaut.
+                    // Le middleware Laravel transforme une chaîne vide en null :
+                    // on la remet à '' pour permettre de vider le champ en édition.
                     if (empty($item)) {
                         $data['description'] = $data['description'] ?? '';
                         if (empty($data['sku'] ?? null)) {
                             $data['sku'] = 'SKU-' . Str::upper(Str::random(8));
                         }
+                    } elseif (array_key_exists('description', $data) && $data['description'] === null) {
+                        $data['description'] = '';
                     }
                     return $data;
                 },
@@ -484,6 +614,7 @@ class AdminCatalogController extends Controller
                     'brand' => optional($m->brand)->name,
                     'is_active' => (bool) $m->is_active,
                     'image' => $this->photoUrl($m),
+                    'images' => $this->photoList($m),
                 ],
             ],
 
@@ -496,7 +627,7 @@ class AdminCatalogController extends Controller
                     'name' => 'required|string|max:255',
                     'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($item?->id)],
                     'tel' => 'nullable|string|max:30',
-                    'role' => 'required|in:admin,customer',
+                    'role' => 'required|in:admin,customer,vendeur',
                     'status' => 'nullable|string|max:30',
                     'password' => $item ? 'nullable|string|min:6' : 'required|string|min:6',
                 ],

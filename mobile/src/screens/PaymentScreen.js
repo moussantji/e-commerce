@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
     View,
     Text,
-    TextInput,
     TouchableOpacity,
     StyleSheet,
     ScrollView,
@@ -16,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api, { apiError } from "../api/client";
+import { FocusField } from "../components/FocusTextInput";
 import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
 
@@ -244,27 +244,27 @@ export default function PaymentScreen({ route, navigation }) {
                             {selected && !selected.cod && !selected.wallet ? (
                                 <>
                                     <Text style={styles.sectionTitle}>Confirmez votre paiement</Text>
-                                    <View style={styles.field}>
-                                        <Ionicons name="call-outline" size={18} color={COLORS.textLight} />
-                                        <TextInput
-                                            style={styles.input}
-                                            placeholder="Numéro utilisé (obligatoire)"
-                                            placeholderTextColor="#9ca3af"
-                                            keyboardType="phone-pad"
-                                            value={phone}
-                                            onChangeText={setPhone}
-                                        />
-                                    </View>
-                                    <View style={styles.field}>
-                                        <Ionicons name="receipt-outline" size={18} color={COLORS.textLight} />
-                                        <TextInput
-                                            style={styles.input}
-                                            placeholder="Référence de transaction (optionnel)"
-                                            placeholderTextColor="#9ca3af"
-                                            value={reference}
-                                            onChangeText={setReference}
-                                        />
-                                    </View>
+                                    <FocusField
+                                        icon="call-outline"
+                                        iconColor={COLORS.textLight}
+                                        containerStyle={styles.field}
+                                        inputStyle={styles.input}
+                                        placeholder="Numéro utilisé (obligatoire)"
+                                        placeholderTextColor="#9ca3af"
+                                        keyboardType="phone-pad"
+                                        value={phone}
+                                        onChangeText={setPhone}
+                                    />
+                                    <FocusField
+                                        icon="receipt-outline"
+                                        iconColor={COLORS.textLight}
+                                        containerStyle={styles.field}
+                                        inputStyle={styles.input}
+                                        placeholder="Référence de transaction (optionnel)"
+                                        placeholderTextColor="#9ca3af"
+                                        value={reference}
+                                        onChangeText={setReference}
+                                    />
                                 </>
                             ) : null}
                         </>

@@ -3,7 +3,6 @@ import {
     View,
     Text,
     ScrollView,
-    TextInput,
     TouchableOpacity,
     StyleSheet,
     ActivityIndicator,
@@ -18,6 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api, { apiError } from "../api/client";
 import ErrorState from "../components/ErrorState";
+import FocusTextInput from "../components/FocusTextInput";
 import { COLORS, RADIUS } from "../theme";
 
 const EMPTY = {
@@ -247,7 +247,7 @@ export default function AddressesScreen() {
                             {FIELDS.map((f) => (
                                 <View key={f.k} style={styles.field}>
                                     <Text style={styles.fieldLabel}>{f.label}</Text>
-                                    <TextInput
+                                    <FocusTextInput
                                         style={styles.input}
                                         value={String(form[f.k] ?? "")}
                                         onChangeText={(v) => setField(f.k, v)}
@@ -354,6 +354,8 @@ const styles = StyleSheet.create({
     input: {
         backgroundColor: "#f3f4f6",
         borderRadius: RADIUS.sm,
+        borderWidth: 1,
+        borderColor: "#e5e7eb",
         paddingHorizontal: 14,
         paddingVertical: 12,
         fontSize: 15,

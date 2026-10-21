@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
     View,
     Text,
-    TextInput,
     TouchableOpacity,
     StyleSheet,
     Alert,
@@ -13,6 +12,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
 import { apiError } from "../api/client";
+import AuthInput from "../components/AuthInput";
 import SocialButtons from "../components/SocialButtons";
 import AuthBackground from "../components/AuthBackground";
 import { COLORS } from "../theme";
@@ -74,49 +74,43 @@ export default function LoginScreen({ navigation }) {
                     </View>
 
                     <View style={styles.card}>
-                        <View style={styles.inputWrap}>
-                            <Ionicons
-                                name="mail-outline"
-                                size={18}
-                                color="#9ca3af"
-                            />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Email"
-                                autoCapitalize="none"
-                                keyboardType="email-address"
-                                value={email}
-                                onChangeText={setEmail}
-                            />
-                        </View>
+                        <AuthInput
+                            icon="mail-outline"
+                            placeholder="Email"
+                            autoCapitalize="none"
+                            keyboardType="email-address"
+                            value={email}
+                            onChangeText={setEmail}
+                        />
 
-                        <View style={styles.inputWrap}>
-                            <Ionicons
-                                name="lock-closed-outline"
-                                size={18}
-                                color="#9ca3af"
-                            />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Mot de passe"
-                                secureTextEntry={!showPass}
-                                value={password}
-                                onChangeText={setPassword}
-                            />
-                            <TouchableOpacity
-                                onPress={() => setShowPass((s) => !s)}
-                            >
-                                <Ionicons
-                                    name={
+                        <AuthInput
+                            icon="lock-closed-outline"
+                            placeholder="Mot de passe"
+                            secureTextEntry={!showPass}
+                            value={password}
+                            onChangeText={setPassword}
+                            rightElement={
+                                <TouchableOpacity
+                                    onPress={() => setShowPass((s) => !s)}
+                                    hitSlop={8}
+                                    accessibilityLabel={
                                         showPass
-                                            ? "eye-off-outline"
-                                            : "eye-outline"
+                                            ? "Masquer le mot de passe"
+                                            : "Afficher le mot de passe"
                                     }
-                                    size={18}
-                                    color="#9ca3af"
-                                />
-                            </TouchableOpacity>
-                        </View>
+                                >
+                                    <Ionicons
+                                        name={
+                                            showPass
+                                                ? "eye-off-outline"
+                                                : "eye-outline"
+                                        }
+                                        size={18}
+                                        color="#9ca3af"
+                                    />
+                                </TouchableOpacity>
+                            }
+                        />
 
                         <TouchableOpacity
                             style={[styles.button, loading && styles.disabled]}
@@ -185,18 +179,6 @@ const styles = StyleSheet.create({
         shadowRadius: 12,
         shadowOffset: { width: 0, height: 4 },
     },
-    inputWrap: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
-        borderWidth: 1,
-        borderColor: "#e5e7eb",
-        borderRadius: 12,
-        paddingHorizontal: 14,
-        marginBottom: 14,
-        backgroundColor: "#f9fafb",
-    },
-    input: { flex: 1, paddingVertical: 14, fontSize: 15 },
     button: {
         backgroundColor: COLORS.primaryDark,
         borderRadius: 12,

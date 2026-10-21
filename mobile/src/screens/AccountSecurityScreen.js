@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import {
     View,
     Text,
-    TextInput,
     TouchableOpacity,
     StyleSheet,
     ScrollView,
@@ -15,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api, { apiError } from "../api/client";
+import { FocusField } from "../components/FocusTextInput";
 import { COLORS, RADIUS } from "../theme";
 
 function PasswordField({ label, value, onChangeText, placeholder }) {
@@ -22,21 +22,27 @@ function PasswordField({ label, value, onChangeText, placeholder }) {
     return (
         <View style={styles.field}>
             <Text style={styles.label}>{label}</Text>
-            <View style={styles.inputRow}>
-                <Ionicons name="lock-closed-outline" size={18} color={COLORS.textLight} />
-                <TextInput
-                    style={styles.input}
-                    placeholder={placeholder}
-                    placeholderTextColor="#9ca3af"
-                    secureTextEntry={!show}
-                    value={value}
-                    onChangeText={onChangeText}
-                    autoCapitalize="none"
-                />
-                <TouchableOpacity onPress={() => setShow((s) => !s)} hitSlop={8}>
-                    <Ionicons name={show ? "eye-off-outline" : "eye-outline"} size={18} color="#9ca3af" />
-                </TouchableOpacity>
-            </View>
+            <FocusField
+                icon="lock-closed-outline"
+                iconColor={COLORS.textLight}
+                containerStyle={styles.inputRow}
+                inputStyle={styles.input}
+                placeholder={placeholder}
+                placeholderTextColor="#9ca3af"
+                secureTextEntry={!show}
+                value={value}
+                onChangeText={onChangeText}
+                autoCapitalize="none"
+                rightElement={
+                    <TouchableOpacity onPress={() => setShow((s) => !s)} hitSlop={8}>
+                        <Ionicons
+                            name={show ? "eye-off-outline" : "eye-outline"}
+                            size={18}
+                            color="#9ca3af"
+                        />
+                    </TouchableOpacity>
+                }
+            />
         </View>
     );
 }
@@ -165,7 +171,17 @@ const styles = StyleSheet.create({
     field: { paddingVertical: 12 },
     sep: { height: 1, backgroundColor: "#f3f4f6" },
     label: { fontSize: 12, color: COLORS.textLight, fontWeight: "600", marginBottom: 4 },
-    inputRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+    inputRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 10,
+        borderWidth: 1,
+        borderColor: "#e5e7eb",
+        borderRadius: 12,
+        backgroundColor: "#f9fafb",
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+    },
     input: { flex: 1, fontSize: 15, color: COLORS.text, paddingVertical: 4 },
     hint: { color: COLORS.textLight, fontSize: 12, marginHorizontal: 16, marginTop: 12, lineHeight: 17 },
     saveBtn: {

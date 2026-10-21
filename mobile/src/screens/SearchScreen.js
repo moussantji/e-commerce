@@ -8,11 +8,13 @@ import {
     ScrollView,
     Image,
     Keyboard,
+    Animated,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
 import api from "../api/client";
+import { useFocusBorder, webInputStyle } from "../components/FocusTextInput";
 import { COLORS, RADIUS } from "../theme";
 
 const RECENT_KEY = "recent_searches";
@@ -44,6 +46,7 @@ export default function SearchScreen({ navigation, route }) {
     const [popular, setPopular] = useState([]);
     const [suggestions, setSuggestions] = useState([]);
     const debounceRef = useRef(null);
+    const searchFocus = useFocusBorder();
 
     // Charge les recherches récentes (stockées localement)
     const loadRecent = useCallback(async () => {
@@ -153,9 +156,11 @@ export default function SearchScreen({ navigation, route }) {
                     <Ionicons name="chevron-back" size={26} color={COLORS.text} />
                 </TouchableOpacity>
 
-                <View style={styles.inputWrap}>
+                <Animated.View
+                    style={[styles.inputWrap, { borderColor: searchFocus.borderColor }]}
+                >
                     <TextInput
-                        style={styles.input}
+                        style={[styles.input, webInputStyle]}
                         placeholder="Rechercher un produit..."
                         placeholderTextColor="#9ca3af"
                         value={query}
@@ -163,6 +168,8 @@ export default function SearchScreen({ navigation, route }) {
                         autoFocus={route.params?.focusSearch !== false}
                         returnKeyType="search"
                         onSubmitEditing={() => runSearch()}
+                        onFocus={searchFocus.onFocus}
+                        onBlur={searchFocus.onBlur}
                     />
                     {query.length > 0 ? (
                         <TouchableOpacity onPress={() => setQuery("")}>
@@ -171,7 +178,7 @@ export default function SearchScreen({ navigation, route }) {
                     ) : (
                         <Ionicons name="camera-outline" size={20} color="#9ca3af" />
                     )}
-                </View>
+                </Animated.View>
 
                 <TouchableOpacity style={styles.searchBtn} onPress={() => runSearch()}>
                     <Ionicons name="search" size={20} color="#fff" />
@@ -293,7 +300,7 @@ const styles = StyleSheet.create({
         backgroundColor: "#fff",
         borderRadius: RADIUS.pill,
         borderWidth: 1.5,
-        borderColor: COLORS.primaryDark,
+        borderColor: "#e5e7eb",
         paddingHorizontal: 16,
         height: 42,
     },

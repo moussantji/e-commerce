@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import {
     View,
     Text,
-    TextInput,
     TouchableOpacity,
     StyleSheet,
     ScrollView,
@@ -18,6 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "../context/AuthContext";
 import api, { apiError } from "../api/client";
+import { FocusField } from "../components/FocusTextInput";
 import { COLORS, RADIUS } from "../theme";
 
 const FIELDS = [
@@ -167,18 +167,18 @@ export default function EditProfileScreen({ navigation }) {
                         {FIELDS.map((f, i) => (
                             <View key={f.key} style={[styles.field, i < FIELDS.length - 1 && styles.fieldBorder]}>
                                 <Text style={styles.label}>{f.label}</Text>
-                                <View style={styles.inputRow}>
-                                    <Ionicons name={f.icon} size={18} color={COLORS.textLight} />
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder={f.placeholder}
-                                        placeholderTextColor="#9ca3af"
-                                        value={form[f.key]}
-                                        onChangeText={(v) => set(f.key, v)}
-                                        keyboardType={f.keyboard || "default"}
-                                        autoCapitalize={f.key === "email" ? "none" : "sentences"}
-                                    />
-                                </View>
+                                <FocusField
+                                    icon={f.icon}
+                                    iconColor={COLORS.textLight}
+                                    containerStyle={styles.inputRow}
+                                    inputStyle={styles.input}
+                                    placeholder={f.placeholder}
+                                    placeholderTextColor="#9ca3af"
+                                    value={form[f.key]}
+                                    onChangeText={(v) => set(f.key, v)}
+                                    keyboardType={f.keyboard || "default"}
+                                    autoCapitalize={f.key === "email" ? "none" : "sentences"}
+                                />
                             </View>
                         ))}
                     </View>
@@ -254,7 +254,17 @@ const styles = StyleSheet.create({
     field: { paddingVertical: 12 },
     fieldBorder: { borderBottomWidth: 1, borderBottomColor: "#f3f4f6" },
     label: { fontSize: 12, color: COLORS.textLight, fontWeight: "600", marginBottom: 4 },
-    inputRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+    inputRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 10,
+        borderWidth: 1,
+        borderColor: "#e5e7eb",
+        borderRadius: 12,
+        backgroundColor: "#f9fafb",
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+    },
     input: { flex: 1, fontSize: 15, color: COLORS.text, paddingVertical: 4 },
     readonly: { flex: 1, fontSize: 15, color: COLORS.textLight, paddingVertical: 4 },
     footer: {

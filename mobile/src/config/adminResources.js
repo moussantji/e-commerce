@@ -4,7 +4,7 @@
  * (liste + formulaire générique de création/édition).
  *
  * Types de champs supportés : text, textarea, number, email, password,
- * switch, select, date.
+ * switch, select, date, image (une seule image) et images (galerie, produits).
  *   - select.options : tableau statique [{ value, label }] OU une clé
  *     dynamique ("categories" | "brands") chargée via /admin/manage/options.
  *   - createRequired : champ requis uniquement à la création (ex : mot de passe).
@@ -21,7 +21,12 @@ export const ADMIN_RESOURCES = [
                 it.stock != null ? ` · stock ${it.stock}` : ""
             }${it.category ? ` · ${it.category}` : ""}`,
         fields: [
-            { key: "image", label: "Image du produit", type: "image" },
+            {
+                key: "images",
+                label: "Images du produit",
+                type: "images",
+                hint: "Jusqu'à 10 images. La première est l'image principale.",
+            },
             { key: "name", label: "Nom", type: "text", required: true },
             { key: "description", label: "Description", type: "textarea" },
             { key: "price", label: "Prix (FCFA)", type: "number", required: true },
@@ -137,6 +142,7 @@ export const ADMIN_RESOURCES = [
                 key: "type",
                 label: "Type de remise",
                 type: "select",
+                required: true,
                 default: "percentage",
                 options: [
                     { value: "percentage", label: "Pourcentage (%)" },
@@ -171,9 +177,11 @@ export const ADMIN_RESOURCES = [
                 key: "role",
                 label: "Rôle",
                 type: "select",
+                required: true,
                 default: "customer",
                 options: [
                     { value: "customer", label: "Client" },
+                    { value: "vendeur", label: "Vendeur" },
                     { value: "admin", label: "Administrateur" },
                 ],
             },

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
     View,
     Text,
-    TextInput,
     TouchableOpacity,
     StyleSheet,
     Alert,
@@ -13,6 +12,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
 import { apiError } from "../api/client";
+import AuthInput from "../components/AuthInput";
 import SocialButtons from "../components/SocialButtons";
 import AuthBackground from "../components/AuthBackground";
 import { COLORS } from "../theme";
@@ -60,16 +60,13 @@ export default function RegisterScreen({ navigation }) {
     };
 
     const field = (key, placeholder, icon, opts = {}) => (
-        <View style={styles.inputWrap}>
-            <Ionicons name={icon} size={18} color="#9ca3af" />
-            <TextInput
-                style={styles.input}
-                placeholder={placeholder}
-                value={form[key]}
-                onChangeText={set(key)}
-                {...opts}
-            />
-        </View>
+        <AuthInput
+            icon={icon}
+            placeholder={placeholder}
+            value={form[key]}
+            onChangeText={set(key)}
+            {...opts}
+        />
     );
 
     return (
@@ -172,18 +169,6 @@ const styles = StyleSheet.create({
         shadowRadius: 12,
         shadowOffset: { width: 0, height: 4 },
     },
-    inputWrap: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
-        borderWidth: 1,
-        borderColor: "#e5e7eb",
-        borderRadius: 12,
-        paddingHorizontal: 14,
-        marginBottom: 14,
-        backgroundColor: "#f9fafb",
-    },
-    input: { flex: 1, paddingVertical: 14, fontSize: 15 },
     button: {
         backgroundColor: COLORS.primaryDark,
         borderRadius: 12,

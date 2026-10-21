@@ -3,7 +3,6 @@ import {
     View,
     Text,
     ScrollView,
-    TextInput,
     TouchableOpacity,
     StyleSheet,
     ActivityIndicator,
@@ -19,6 +18,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api, { apiError } from "../api/client";
 import ErrorState from "../components/ErrorState";
+import FocusTextInput from "../components/FocusTextInput";
 import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
 
@@ -274,7 +274,7 @@ export default function WalletScreen({ navigation }) {
                                 showsVerticalScrollIndicator={false}
                             >
                                 <Text style={styles.fieldLabel}>Montant (FCFA)</Text>
-                                <TextInput
+                                <FocusTextInput
                                     style={styles.input}
                                     placeholder="Ex : 5000"
                                     placeholderTextColor="#9ca3af"
@@ -313,7 +313,7 @@ export default function WalletScreen({ navigation }) {
                                 ) : null}
 
                                 <Text style={styles.fieldLabel}>Numéro utilisé (optionnel)</Text>
-                                <TextInput
+                                <FocusTextInput
                                     style={styles.input}
                                     placeholder="Votre numéro"
                                     placeholderTextColor="#9ca3af"
@@ -322,7 +322,7 @@ export default function WalletScreen({ navigation }) {
                                     onChangeText={setPhone}
                                 />
                                 <Text style={styles.fieldLabel}>Référence de transaction (optionnel)</Text>
-                                <TextInput
+                                <FocusTextInput
                                     style={styles.input}
                                     placeholder="Référence reçue par SMS"
                                     placeholderTextColor="#9ca3af"
@@ -386,7 +386,7 @@ export default function WalletScreen({ navigation }) {
                                 )}
 
                                 <Text style={styles.fieldLabel}>Montant (FCFA)</Text>
-                                <TextInput
+                                <FocusTextInput
                                     style={styles.input}
                                     placeholder="Ex : 2000"
                                     placeholderTextColor="#9ca3af"
@@ -395,7 +395,7 @@ export default function WalletScreen({ navigation }) {
                                     onChangeText={setTAmount}
                                 />
                                 <Text style={styles.fieldLabel}>Numéro de téléphone (obligatoire)</Text>
-                                <TextInput
+                                <FocusTextInput
                                     style={styles.input}
                                     placeholder="Ex : 07 00 00 00 00"
                                     placeholderTextColor="#9ca3af"
@@ -404,7 +404,7 @@ export default function WalletScreen({ navigation }) {
                                     onChangeText={setTPhone}
                                 />
                                 <Text style={styles.fieldLabel}>Note (optionnel)</Text>
-                                <TextInput
+                                <FocusTextInput
                                     style={styles.input}
                                     placeholder="Message"
                                     placeholderTextColor="#9ca3af"
