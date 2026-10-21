@@ -145,10 +145,19 @@ export default function AccountScreen({ navigation }) {
         },
     ];
 
+    if (user?.role === "vendeur") {
+        menu.unshift({
+            icon: "storefront-outline",
+            label: "Espace vendeur",
+            right: <Text style={styles.rightInfo}>Vendeur</Text>,
+            onPress: () => navigation.navigate("SellerHub"),
+        });
+    }
+
     if (user?.role === "admin") {
         menu.push({
             icon: "shield-checkmark-outline",
-            label: "Espace vendeur (paiements)",
+            label: "Paiements & rechargements",
             right: <Text style={styles.rightInfo}>Admin</Text>,
             onPress: () => navigation.navigate("AdminPayments"),
         });
@@ -224,7 +233,13 @@ export default function AccountScreen({ navigation }) {
                                         </TouchableOpacity>
                                     </View>
                                     <View style={styles.vip}>
-                                        <Text style={styles.vipText}>VIP 0</Text>
+                                        <Text style={styles.vipText}>
+                                            {user?.role === "vendeur"
+                                                ? "Vendeur"
+                                                : user?.role === "admin"
+                                                  ? "Admin"
+                                                  : "VIP 0"}
+                                        </Text>
                                     </View>
                                 </>
                             ) : (

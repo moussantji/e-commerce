@@ -23,7 +23,10 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api, { apiError } from "../api/client";
 import { COLORS, RADIUS } from "../theme";
-import { getAdminResource } from "../config/adminResources";
+import {
+    getAdminResource,
+    getSellerProductResource,
+} from "../config/adminResources";
 import FocusTextInput, {
     useFocusBorder,
     webInputStyle,
@@ -64,8 +67,18 @@ function appendImagePart(fd, key, img) {
 export default function AdminManageScreen({ route, navigation }) {
     const insets = useSafeAreaInsets();
     const resourceKey = route.params?.resource;
-    const config = getAdminResource(resourceKey);
+    const config =
+        resourceKey === "seller-products"
+            ? getSellerProductResource()
+            : getAdminResource(resourceKey);
     const title = route.params?.title || config?.title || "Gestion";
+    const sellerMode = resourceKey === "seller-products";
+    const base =
+        route.params?.basePath ||
+        (sellerMode ? "/seller/products" : `/admin/manage/${resourceKey}`);
+    const optionsPath =
+        route.params?.optionsPath ||
+        (sellerMode ? "/seller/options" : "/admin/manage/options");
 
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -73,7 +86,11 @@ export default function AdminManageScreen({ route, navigation }) {
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(false);
     const [search, setSearch] = useState("");
-    const [optionsMap, setOptionsMap] = useState({ categories: [], brands: [] });
+    const [optionsMap, setOptionsMap] = useState({
+        categories: [],
+        brands: [],
+        tags: [],
+    });
 
     // Formulaire (création / édition)
     const [formOpen, setFormOpen] = useState(false);
@@ -81,8 +98,6 @@ export default function AdminManageScreen({ route, navigation }) {
     const [form, setForm] = useState({});
     const [saving, setSaving] = useState(false);
     const searchFocus = useFocusBorder();
-
-    const base = `/admin/manage/${resourceKey}`;
 
     const needsOptions = useMemo(
         () => (config?.fields || []).some((f) => typeof f.options === "string"),
@@ -118,7 +133,12 @@ export default function AdminManageScreen({ route, navigation }) {
             } catch (e) {
                 if (requestRef.current !== requestId) return;
                 if (e?.response?.status === 403) {
-                    Alert.alert("Accès refusé", "Réservé aux administrateurs.");
+                    Alert.alert(
+                        "Accès refusé",
+                        sellerMode
+                            ? "Réservé aux vendeurs."
+                            : "Réservé aux administrateurs.",
+                    );
                     navigation.goBack();
                 } else {
                     Alert.alert("Erreur", apiError(e));
@@ -134,21 +154,22 @@ export default function AdminManageScreen({ route, navigation }) {
                 }
             }
         },
-        [base, search, navigation],
+        [base, search, navigation, sellerMode],
     );
 
     const loadOptions = useCallback(async () => {
         if (!needsOptions) return;
         try {
-            const { data } = await api.get("/admin/manage/options");
+            const { data } = await api.get(optionsPath);
             setOptionsMap({
                 categories: data.categories ?? [],
                 brands: data.brands ?? [],
+                tags: data.tags ?? [],
             });
         } catch (e) {
             /* ignore */
         }
-    }, [needsOptions]);
+    }, [needsOptions, optionsPath]);
 
     const firstLoadRef = useRef(true);
 
@@ -188,7 +209,8 @@ export default function AdminManageScreen({ route, navigation }) {
         config.fields.forEach((f) => {
             if (f.type === "switch") initial[f.key] = f.default ?? false;
             else if (f.type === "image") initial[f.key] = null;
-            else if (f.type === "images") initial[f.key] = [];
+            else if (f.type === "images" || f.type === "multiselect")
+                initial[f.key] = [];
             else if (f.default !== undefined) initial[f.key] = f.default;
             else initial[f.key] = "";
         });
@@ -202,6 +224,10 @@ export default function AdminManageScreen({ route, navigation }) {
         config.fields.forEach((f) => {
             if (f.type === "switch") initial[f.key] = !!item[f.key];
             else if (f.type === "password") initial[f.key] = "";
+            else if (f.type === "multiselect")
+                initial[f.key] = Array.isArray(item[f.key])
+                    ? item[f.key].map(String)
+                    : [];
             else if (f.type === "image")
                 // Image existante : on conserve son URL pour l'aperçu, sans la ré-uploader.
                 initial[f.key] = item[f.key] ? { url: item[f.key], existing: true } : null;
@@ -228,6 +254,16 @@ export default function AdminManageScreen({ route, navigation }) {
     };
 
     const setField = (key, value) => setForm((f) => ({ ...f, [key]: value }));
+
+    // Ouvre directement le formulaire de création depuis le tableau de bord
+    // vendeur (« Ajouter un produit »), sans attendre un appui sur le +.
+    const autoCreateRef = useRef(null);
+    useEffect(() => {
+        const token = route.params?.openCreate;
+        if (!token || autoCreateRef.current === token) return;
+        autoCreateRef.current = token;
+        openCreate();
+    }, [route.params?.openCreate]);
 
     const pickImage = async (key) => {
         const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -294,6 +330,8 @@ export default function AdminManageScreen({ route, navigation }) {
             const v = form[f.key];
             if (f.type === "switch") {
                 payload[f.key] = !!v;
+            } else if (f.type === "multiselect") {
+                payload[f.key] = (Array.isArray(v) ? v : []).map(String);
             } else if (f.type === "number") {
                 if (v !== "" && v != null) payload[f.key] = Number(v);
                 else if (editing && !f.required) payload[f.key] = null;
@@ -370,6 +408,14 @@ export default function AdminManageScreen({ route, navigation }) {
             const v = form[f.key];
             if (f.type === "switch") {
                 fd.append(f.key, v ? "1" : "0");
+            } else if (f.type === "multiselect") {
+                // Laravel attend tags[] pour reconstruire un tableau.
+                // Le drapeau `_present` distingue « aucun tag » d'un champ
+                // absent, sinon un tableau vide ne peut pas vider la sélection.
+                fd.append(`${f.key}_present`, "1");
+                (Array.isArray(v) ? v : []).forEach((item) =>
+                    fd.append(`${f.key}[]`, String(item)),
+                );
             } else if (f.type === "number") {
                 if (v !== "" && v != null) fd.append(f.key, String(v));
                 else if (editing && !f.required) fd.append(f.key, "");
@@ -571,6 +617,47 @@ export default function AdminManageScreen({ route, navigation }) {
                         onValueChange={(v) => setField(f.key, v)}
                         trackColor={{ true: COLORS.primaryDark }}
                     />
+                </View>
+            );
+        }
+
+        if (f.type === "multiselect") {
+            const selected = new Set(
+                (Array.isArray(value) ? value : []).map(String),
+            );
+            const toggle = (optionValue) => {
+                const next = new Set(selected);
+                const key = String(optionValue);
+                if (next.has(key)) next.delete(key);
+                else next.add(key);
+                setField(f.key, Array.from(next));
+            };
+            return (
+                <View key={f.key} style={{ marginTop: 12 }}>
+                    <Text style={styles.fieldLabel}>{f.label}</Text>
+                    {f.hint ? <Text style={styles.hint}>{f.hint}</Text> : null}
+                    <View style={styles.multiSelect}>
+                        {optionsFor(f).map((opt) => {
+                            const on = selected.has(String(opt.value));
+                            return (
+                                <TouchableOpacity
+                                    key={String(opt.value)}
+                                    style={[styles.chip, on && styles.chipOn]}
+                                    onPress={() => toggle(opt.value)}
+                                    activeOpacity={0.8}
+                                >
+                                    <Text
+                                        style={[
+                                            styles.chipText,
+                                            on && styles.chipTextOn,
+                                        ]}
+                                    >
+                                        {opt.label}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </View>
                 </View>
             );
         }
@@ -1068,6 +1155,12 @@ const styles = StyleSheet.create({
         borderColor: "#eee",
     },
     chipOn: { backgroundColor: COLORS.primaryDark, borderColor: COLORS.primaryDark },
+    multiSelect: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        gap: 8,
+        paddingVertical: 4,
+    },
     chipText: { fontSize: 13, fontWeight: "600", color: COLORS.text },
     chipTextOn: { color: "#fff" },
     submitBtn: {

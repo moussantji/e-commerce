@@ -206,6 +206,58 @@ export const ADMIN_RESOURCES = [
     },
 ];
 
+/**
+ * Formulaire produit de l'espace vendeur mobile.
+ * Même logique que le formulaire vendeur du site : photos, SKU, catégorie,
+ * marque, tags et visibilité. Le backend force `vendeur_id` à l'utilisateur
+ * connecté : le mobile ne peut donc jamais choisir un autre vendeur.
+ */
+export const SELLER_PRODUCT_RESOURCE = {
+    key: "seller-products",
+    title: "Mes produits",
+    icon: "cube-outline",
+    primary: (it) => it.name,
+    subtitle: (it) =>
+        `${it.price != null ? it.price + " FCFA" : ""}${
+            it.stock != null ? ` · stock ${it.stock}` : ""
+        }${it.category ? ` · ${it.category}` : ""}${
+            it.is_active === false ? " · inactif" : ""
+        }`,
+    fields: [
+        {
+            key: "images",
+            label: "Images du produit",
+            type: "images",
+            hint: "Jusqu'à 10 images. La première est l'image principale.",
+        },
+        { key: "name", label: "Nom", type: "text", required: true },
+        { key: "description", label: "Description", type: "textarea" },
+        {
+            key: "sku",
+            label: "Référence (SKU)",
+            type: "text",
+            hint: "Laissez vide pour une référence automatique.",
+        },
+        { key: "price", label: "Prix (FCFA)", type: "number", required: true },
+        { key: "sale_price", label: "Prix promo (FCFA)", type: "number" },
+        { key: "stock", label: "Stock", type: "number", required: true },
+        { key: "category_id", label: "Catégorie", type: "select", options: "categories" },
+        { key: "brand_id", label: "Marque", type: "select", options: "brands" },
+        {
+            key: "tags",
+            label: "Tags",
+            type: "multiselect",
+            options: "tags",
+            hint: "Sélectionnez un ou plusieurs tags.",
+        },
+        { key: "is_active", label: "Produit visible dans la boutique", type: "switch", default: true },
+    ],
+};
+
+export function getSellerProductResource() {
+    return SELLER_PRODUCT_RESOURCE;
+}
+
 export function getAdminResource(key) {
     return ADMIN_RESOURCES.find((r) => r.key === key);
 }

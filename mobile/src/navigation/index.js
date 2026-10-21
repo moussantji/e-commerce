@@ -38,6 +38,8 @@ import CouponsScreen from "../screens/CouponsScreen";
 import WalletScreen from "../screens/WalletScreen";
 import AdminHubScreen from "../screens/AdminHubScreen";
 import AdminManageScreen from "../screens/AdminManageScreen";
+import SellerHubScreen from "../screens/SellerHubScreen";
+import SellerOrdersScreen from "../screens/SellerOrdersScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -208,6 +210,21 @@ function AppStack() {
             <Stack.Screen
                 name="AdminManage"
                 component={AdminManageScreen}
+                options={{ headerShown: false }}
+            />
+            <Stack.Screen
+                name="SellerHub"
+                component={SellerHubScreen}
+                options={{ headerShown: false }}
+            />
+            <Stack.Screen
+                name="SellerProducts"
+                component={AdminManageScreen}
+                options={{ headerShown: false }}
+            />
+            <Stack.Screen
+                name="SellerOrders"
+                component={SellerOrdersScreen}
                 options={{ headerShown: false }}
             />
             <Stack.Screen

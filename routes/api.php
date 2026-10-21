@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\AdminCatalogController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\SearchController;
+use App\Http\Controllers\Api\SellerController;
 use App\Http\Controllers\Api\ShippingMethodController;
 use App\Http\Controllers\Api\SocialAuthController;
 use App\Http\Controllers\Api\WalletController;
@@ -108,6 +109,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/manage/{resource}', [AdminCatalogController::class, 'store']);
         Route::put('/manage/{resource}/{id}', [AdminCatalogController::class, 'update']);
         Route::delete('/manage/{resource}/{id}', [AdminCatalogController::class, 'destroy']);
+    });
+
+    // Espace vendeur (mobile) : tableau de bord, produits et commandes reçues.
+    // Chaque vendeur ne voit et ne modifie que ses propres données.
+    Route::prefix('seller')->group(function () {
+        Route::get('/dashboard', [SellerController::class, 'dashboard']);
+        Route::get('/options', [SellerController::class, 'options']);
+        Route::get('/products', [SellerController::class, 'products']);
+        Route::post('/products', [SellerController::class, 'storeProduct']);
+        Route::put('/products/{id}', [SellerController::class, 'updateProduct']);
+        Route::delete('/products/{id}', [SellerController::class, 'destroyProduct']);
+        Route::get('/orders', [SellerController::class, 'orders']);
     });
 
     // Adresses de livraison
