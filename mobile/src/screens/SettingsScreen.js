@@ -12,6 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
+import { clearApiCache } from "../api/cache";
 import { COLORS, RADIUS } from "../theme";
 import { API_BASE_URL } from "../config";
 
@@ -104,8 +105,14 @@ export default function SettingsScreen({ navigation }) {
                 {
                     icon: "trash-bin-outline",
                     label: "Vider le cache",
-                    value: "0 Mo",
-                    onPress: () => Alert.alert("Cache vidé", "Le cache a été nettoyé."),
+                    value: "Hors ligne",
+                    onPress: async () => {
+                        await clearApiCache();
+                        Alert.alert(
+                            "Cache vidé",
+                            "Les produits enregistrés pour la consultation hors ligne ont été supprimés.",
+                        );
+                    },
                 },
             ],
         },

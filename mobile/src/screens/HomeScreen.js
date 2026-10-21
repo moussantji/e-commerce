@@ -100,6 +100,7 @@ function MasonryCard({ item, onPress, favorited, onToggleFav }) {
 export default function HomeScreen({ navigation }) {
     const insets = useSafeAreaInsets();
     const { isFav, toggle: toggleFavId } = useWishlist();
+    const { token } = useAuth();
     const ensureAuth = useRequireAuth();
 
     const onToggleFav = async (productId) => {
@@ -175,6 +176,10 @@ export default function HomeScreen({ navigation }) {
             setLoading(false);
             setRefreshing(false);
         }
+        if (!token) {
+            setNotifCount(0);
+            return;
+        }
         try {
             const [{ data }, readIds] = await Promise.all([
                 api.get("/notifications"),
@@ -188,7 +193,7 @@ export default function HomeScreen({ navigation }) {
         } catch (e) {
             /* endpoint indisponible : badge masqué */
         }
-    }, [activeCat, activeFilter, fetchProducts]);
+    }, [activeCat, activeFilter, fetchProducts, token]);
 
     useEffect(() => {
         loadAll();
@@ -199,6 +204,10 @@ export default function HomeScreen({ navigation }) {
     // (ex : après avoir lu des notifications) pour que le badge diminue.
     useEffect(() => {
         const unsub = navigation.addListener("focus", async () => {
+            if (!token) {
+                setNotifCount(0);
+                return;
+            }
             try {
                 const [{ data }, readIds] = await Promise.all([
                     api.get("/notifications"),
@@ -213,7 +222,7 @@ export default function HomeScreen({ navigation }) {
             }
         });
         return unsub;
-    }, [navigation]);
+    }, [navigation, token]);
 
     // Sélection d'une catégorie : on filtre la grille SANS quitter l'accueil
     const selectCat = useCallback(

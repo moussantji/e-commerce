@@ -31,7 +31,7 @@ const ORDER_STEPS = [
 
 export default function AccountScreen({ navigation }) {
     const insets = useSafeAreaInsets();
-    const { user, logout } = useAuth();
+    const { user, token, logout, refreshUser } = useAuth();
     const [thumbs, setThumbs] = useState([]);
     const [orders, setOrders] = useState([]);
     const [couponCount, setCouponCount] = useState(0);
@@ -39,15 +39,33 @@ export default function AccountScreen({ navigation }) {
     const [recentThumbs, setRecentThumbs] = useState([]);
 
     const load = useCallback(async () => {
+        // Les produits restent visibles en mode invité.
         try {
-            const [p, o] = await Promise.all([
-                api.get("/products", { params: { per_page: 9 } }),
-                api.get("/orders", { params: { per_page: 30 } }),
-            ]);
-            setThumbs((p.data.data ?? []).map((x) => x.image).filter(Boolean));
-            setOrders(o.data.data ?? []);
+            const { data } = await api.get("/products", { params: { per_page: 9 } });
+            setThumbs((data.data ?? []).map((x) => x.image).filter(Boolean));
         } catch (e) {
             /* silencieux */
+        }
+
+        // Données privées : uniquement si une session est active.
+        if (!token) {
+            setOrders([]);
+            setCouponCount(0);
+            setBalance(0);
+            return;
+        }
+
+        // Session restaurée hors ligne : recharge le profil dès que le réseau
+        // redevient disponible (sans bloquer l'affichage des produits).
+        if (!user) {
+            refreshUser().catch(() => {});
+        }
+
+        try {
+            const { data } = await api.get("/orders", { params: { per_page: 30 } });
+            setOrders(data.data ?? []);
+        } catch (e) {
+            setOrders([]);
         }
         try {
             const { data } = await api.get("/coupons");
@@ -61,7 +79,7 @@ export default function AccountScreen({ navigation }) {
         } catch (e) {
             /* ignore */
         }
-    }, []);
+    }, [token, user, refreshUser]);
 
     useFocusEffect(
         useCallback(() => {

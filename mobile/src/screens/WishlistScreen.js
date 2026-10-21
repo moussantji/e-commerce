@@ -12,6 +12,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import api from "../api/client";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 import { useWishlist } from "../context/WishlistContext";
 import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
@@ -20,11 +21,17 @@ import SmartImage from "../components/SmartImage";
 
 export default function WishlistScreen({ navigation }) {
     const { add } = useCart();
+    const { token } = useAuth();
     const { refresh: refreshWishlist } = useWishlist();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const load = useCallback(async () => {
+        if (!token) {
+            setProducts([]);
+            setLoading(false);
+            return;
+        }
         setLoading(true);
         try {
             const { data } = await api.get("/wishlist");
@@ -34,7 +41,7 @@ export default function WishlistScreen({ navigation }) {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [token]);
 
     useFocusEffect(
         useCallback(() => {

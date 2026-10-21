@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated } from "react-native";
+import { Animated, AppState } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -33,6 +33,7 @@ import NotificationsScreen from "../screens/NotificationsScreen";
 import AddressesScreen from "../screens/AddressesScreen";
 import * as Notifications from "expo-notifications";
 import { registerForPushNotifications } from "../push";
+import { preloadCatalog } from "../api/preload";
 import CouponsScreen from "../screens/CouponsScreen";
 import WalletScreen from "../screens/WalletScreen";
 import AdminHubScreen from "../screens/AdminHubScreen";
@@ -309,6 +310,19 @@ export default function RootNavigator() {
             registerForPushNotifications();
         }
     }, [token]);
+
+    // Préchauffe les pages publiques (accueil, catégories, fiches produits…)
+    // pour qu'elles restent consultables sans connexion internet.
+    useEffect(() => {
+        if (loading) return undefined;
+
+        preloadCatalog();
+        const sub = AppState.addEventListener("change", (state) => {
+            if (state === "active") preloadCatalog();
+        });
+
+        return () => sub.remove();
+    }, [loading, token, hasOnboarded]);
 
     // Ouvre l'écran concerné quand on tape une notification push
     useEffect(() => {

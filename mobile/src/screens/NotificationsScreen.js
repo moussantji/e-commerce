@@ -11,6 +11,7 @@ import {
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import api from "../api/client";
+import { useAuth } from "../context/AuthContext";
 import { COLORS, RADIUS } from "../theme";
 import { getReadIds, addReadIds } from "../notifRead";
 import FadeInView from "../components/FadeInView";
@@ -57,6 +58,7 @@ function normalize(item) {
 }
 
 export default function NotificationsScreen({ navigation }) {
+    const { token } = useAuth();
     const [items, setItems] = useState(FALLBACK);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -107,6 +109,12 @@ export default function NotificationsScreen({ navigation }) {
     };
 
     const load = useCallback(async () => {
+        if (!token) {
+            setItems(FALLBACK);
+            setLoading(false);
+            setRefreshing(false);
+            return;
+        }
         const readIds = await getReadIds();
         try {
             const { data } = await api.get("/notifications");
@@ -127,7 +135,7 @@ export default function NotificationsScreen({ navigation }) {
             setLoading(false);
             setRefreshing(false);
         }
-    }, []);
+    }, [token]);
 
     useFocusEffect(
         useCallback(() => {

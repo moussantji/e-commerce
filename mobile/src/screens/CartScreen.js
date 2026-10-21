@@ -175,6 +175,10 @@ export default function CartScreen({ navigation }) {
     }, []);
 
     const loadAddress = useCallback(async () => {
+        if (!token) {
+            setDefaultAddress(null);
+            return;
+        }
         try {
             const { data } = await api.get("/addresses");
             const list = data.data ?? [];
@@ -182,7 +186,7 @@ export default function CartScreen({ navigation }) {
         } catch (e) {
             /* ignore */
         }
-    }, []);
+    }, [token]);
 
     const loadShipping = useCallback(async () => {
         try {
