@@ -18,6 +18,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api, { apiError } from "../api/client";
+import ErrorState from "../components/ErrorState";
 import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
 
@@ -25,6 +26,7 @@ export default function WalletScreen({ navigation }) {
     const insets = useSafeAreaInsets();
     const [wallet, setWallet] = useState({ balance: 0, currency: "FCFA", transactions: [] });
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [methods, setMethods] = useState([]);
 
     // Modals
@@ -45,6 +47,7 @@ export default function WalletScreen({ navigation }) {
     const [note, setNote] = useState("");
 
     const load = useCallback(async () => {
+        setError(null);
         try {
             const { data } = await api.get("/wallet");
             setWallet({
@@ -53,7 +56,7 @@ export default function WalletScreen({ navigation }) {
                 transactions: data.transactions ?? [],
             });
         } catch (e) {
-            /* garde les valeurs par défaut */
+            setError(apiError(e));
         } finally {
             setLoading(false);
         }
@@ -158,6 +161,21 @@ export default function WalletScreen({ navigation }) {
             <View style={styles.center}>
                 <ActivityIndicator size="large" color={COLORS.primary} />
             </View>
+        );
+    }
+
+    if (error) {
+        return (
+            <ErrorState
+                fullScreen
+                title="Impossible de charger votre portefeuille"
+                message={error}
+                onRetry={() => {
+                    setLoading(true);
+                    load();
+                    loadMethods();
+                }}
+            />
         );
     }
 

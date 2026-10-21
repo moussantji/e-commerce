@@ -13,7 +13,8 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import api from "../api/client";
+import api, { apiError } from "../api/client";
+import ErrorState from "../components/ErrorState";
 import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
 import { useWishlist } from "../context/WishlistContext";
@@ -117,6 +118,7 @@ export default function HomeScreen({ navigation }) {
     const [page, setPage] = useState(1);
     const [lastPage, setLastPage] = useState(1);
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState(null);
     const [gridLoading, setGridLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [activeCat, setActiveCat] = useState("all");
@@ -159,6 +161,7 @@ export default function HomeScreen({ navigation }) {
     }, []);
 
     const loadAll = useCallback(async () => {
+        setLoadError(null);
         try {
             const [cats, deals, grid] = await Promise.all([
                 api.get("/categories"),
@@ -171,7 +174,7 @@ export default function HomeScreen({ navigation }) {
             setPage(grid.meta?.current_page ?? 1);
             setLastPage(grid.meta?.last_page ?? 1);
         } catch (e) {
-            // silencieux : l'UI affiche l'état vide
+            setLoadError(apiError(e));
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -719,11 +722,23 @@ export default function HomeScreen({ navigation }) {
                         <ActivityIndicator size="large" color={COLORS.primary} />
                     </View>
                 ) : products.length === 0 ? (
-                    <View style={styles.gridEmpty}>
-                        <Text style={styles.gridEmptyText}>
-                            Aucun produit dans cette catégorie
-                        </Text>
-                    </View>
+                    loadError ? (
+                        <ErrorState
+                            compact
+                            title="Impossible de charger les produits"
+                            message={loadError}
+                            onRetry={() => {
+                                setLoading(true);
+                                loadAll();
+                            }}
+                        />
+                    ) : (
+                        <View style={styles.gridEmpty}>
+                            <Text style={styles.gridEmptyText}>
+                                Aucun produit dans cette catégorie
+                            </Text>
+                        </View>
+                    )
                 ) : (
                     <View style={styles.masonry}>
                         <View style={styles.col}>

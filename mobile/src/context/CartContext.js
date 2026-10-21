@@ -19,6 +19,9 @@ export function CartProvider({ children }) {
         try {
             const { data } = await api.get("/cart");
             setCart(data);
+        } catch (e) {
+            // Le panier est privé : hors ligne, on conserve l'état déjà chargé
+            // au lieu de faire planter l'écran.
         } finally {
             setLoading(false);
         }

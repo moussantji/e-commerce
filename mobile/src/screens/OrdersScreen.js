@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api, { apiError } from "../api/client";
+import ErrorState from "../components/ErrorState";
 import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
 import AnimatedPressable from "../components/AnimatedPressable";
@@ -262,12 +263,15 @@ export default function OrdersScreen({ navigation, route }) {
                     <ActivityIndicator size="large" color={COLORS.primary} />
                 </View>
             ) : error ? (
-                <View style={styles.center}>
-                    <Text style={styles.errorText}>{error}</Text>
-                    <TouchableOpacity style={styles.retry} onPress={load}>
-                        <Text style={styles.retryText}>Réessayer</Text>
-                    </TouchableOpacity>
-                </View>
+                <ErrorState
+                    style={styles.center}
+                    title="Impossible de charger vos commandes"
+                    message={error}
+                    onRetry={() => {
+                        setLoading(true);
+                        load();
+                    }}
+                />
             ) : (
                 <ScrollView
                     showsVerticalScrollIndicator={false}

@@ -11,6 +11,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import api, { apiError } from "../api/client";
+import ErrorState from "../components/ErrorState";
 import { COLORS, RADIUS } from "../theme";
 
 export default function CouponsScreen() {
@@ -79,14 +80,25 @@ export default function CouponsScreen() {
             data={coupons}
             keyExtractor={(i) => String(i.id)}
             renderItem={renderItem}
-            contentContainerStyle={{ padding: 12, gap: 12 }}
+            contentContainerStyle={{ padding: 12, gap: 12, flexGrow: 1 }}
             ListEmptyComponent={
-                <View style={styles.empty}>
-                    <Ionicons name="ribbon-outline" size={56} color="#d1d5db" />
-                    <Text style={styles.emptyText}>
-                        {error || "Aucun bon disponible pour le moment"}
-                    </Text>
-                </View>
+                error ? (
+                    <ErrorState
+                        title="Impossible de charger vos bons"
+                        message={error}
+                        onRetry={() => {
+                            setLoading(true);
+                            load();
+                        }}
+                    />
+                ) : (
+                    <View style={styles.empty}>
+                        <Ionicons name="ribbon-outline" size={56} color="#d1d5db" />
+                        <Text style={styles.emptyText}>
+                            Aucun bon disponible pour le moment
+                        </Text>
+                    </View>
+                )
             }
         />
     );

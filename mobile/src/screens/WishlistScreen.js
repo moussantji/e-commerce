@@ -10,7 +10,8 @@ import {
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import api from "../api/client";
+import api, { apiError } from "../api/client";
+import ErrorState from "../components/ErrorState";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { useWishlist } from "../context/WishlistContext";
@@ -25,19 +26,23 @@ export default function WishlistScreen({ navigation }) {
     const { refresh: refreshWishlist } = useWishlist();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     const load = useCallback(async () => {
         if (!token) {
             setProducts([]);
+            setError(null);
             setLoading(false);
             return;
         }
         setLoading(true);
+        setError(null);
         try {
             const { data } = await api.get("/wishlist");
             setProducts(data.data ?? []);
         } catch (e) {
             setProducts([]);
+            setError(apiError(e));
         } finally {
             setLoading(false);
         }
@@ -92,6 +97,17 @@ export default function WishlistScreen({ navigation }) {
             <View style={styles.center}>
                 <ActivityIndicator size="large" color={COLORS.primary} />
             </View>
+        );
+    }
+
+    if (error) {
+        return (
+            <ErrorState
+                fullScreen
+                title="Impossible de charger vos favoris"
+                message={error}
+                onRetry={load}
+            />
         );
     }
 

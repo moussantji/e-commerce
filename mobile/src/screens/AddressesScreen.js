@@ -17,6 +17,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api, { apiError } from "../api/client";
+import ErrorState from "../components/ErrorState";
 import { COLORS, RADIUS } from "../theme";
 
 const EMPTY = {
@@ -34,17 +35,19 @@ export default function AddressesScreen() {
     const insets = useSafeAreaInsets();
     const [addresses, setAddresses] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [modal, setModal] = useState(false);
     const [editing, setEditing] = useState(null);
     const [form, setForm] = useState(EMPTY);
     const [saving, setSaving] = useState(false);
 
     const load = useCallback(async () => {
+        setError(null);
         try {
             const { data } = await api.get("/addresses");
             setAddresses(data.data ?? []);
         } catch (e) {
-            /* silencieux */
+            setError(apiError(e));
         } finally {
             setLoading(false);
         }
@@ -125,6 +128,20 @@ export default function AddressesScreen() {
             <View style={styles.center}>
                 <ActivityIndicator size="large" color={COLORS.primary} />
             </View>
+        );
+    }
+
+    if (error) {
+        return (
+            <ErrorState
+                fullScreen
+                title="Impossible de charger vos adresses"
+                message={error}
+                onRetry={() => {
+                    setLoading(true);
+                    load();
+                }}
+            />
         );
     }
 

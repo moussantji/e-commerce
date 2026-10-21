@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api, { apiError } from "../api/client";
+import ErrorState from "../components/ErrorState";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { useWishlist } from "../context/WishlistContext";
@@ -207,6 +208,7 @@ export default function ProductDetailScreen({ route, navigation }) {
 
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [adding, setAdding] = useState(false);
     const [qty, setQty] = useState(1);
     const [tab, setTab] = useState("description");
@@ -228,20 +230,24 @@ export default function ProductDetailScreen({ route, navigation }) {
     const [recoHasMore, setRecoHasMore] = useState(true);
     const recoLoadingRef = useRef(false);
 
-    useEffect(() => {
-        (async () => {
-            setLoading(true);
-            try {
-                const { data } = await api.get(`/products/${id}`);
-                setProduct(data.data);
-                addRecentlyViewed(data.data);
-            } catch (e) {
-                Alert.alert("Erreur", apiError(e));
-            } finally {
-                setLoading(false);
-            }
-        })();
+    const loadProduct = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const { data } = await api.get(`/products/${id}`);
+            setProduct(data.data);
+            addRecentlyViewed(data.data);
+        } catch (e) {
+            setProduct(null);
+            setError(apiError(e));
+        } finally {
+            setLoading(false);
+        }
     }, [id]);
+
+    useEffect(() => {
+        loadProduct();
+    }, [loadProduct]);
 
     // État favori (géré par le contexte partagé)
     const toggleFav = async () => {
@@ -428,10 +434,30 @@ export default function ProductDetailScreen({ route, navigation }) {
             </View>
         );
     }
-    if (!product) {
+    if (error || !product) {
         return (
-            <View style={styles.center}>
-                <Text>Produit introuvable.</Text>
+            <View style={{ flex: 1, backgroundColor: COLORS.bg }}>
+                <View style={[styles.topBar, { paddingTop: insets.top + 6 }]}>
+                    <TouchableOpacity
+                        style={styles.circleBtn}
+                        onPress={() => navigation.goBack()}
+                    >
+                        <Ionicons name="chevron-back" size={22} color="#111" />
+                    </TouchableOpacity>
+                </View>
+                <ErrorState
+                    fullScreen
+                    title={
+                        error
+                            ? "Impossible d'afficher ce produit"
+                            : "Produit introuvable"
+                    }
+                    message={
+                        error ||
+                        "Ce produit n'est plus disponible. Essayez de rafraîchir la page."
+                    }
+                    onRetry={loadProduct}
+                />
             </View>
         );
     }

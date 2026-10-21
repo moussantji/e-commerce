@@ -20,6 +20,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import api, { apiError } from "../api/client";
+import ErrorState from "../components/ErrorState";
 import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
 
@@ -142,14 +143,15 @@ export default function OrderDetailScreen({ route, navigation }) {
         return (
             <View style={styles.container}>
                 {Header}
-                <View style={styles.center}>
-                    <Text style={styles.errorText}>
-                        {error || "Commande introuvable"}
-                    </Text>
-                    <TouchableOpacity style={styles.retry} onPress={load}>
-                        <Text style={styles.retryText}>Réessayer</Text>
-                    </TouchableOpacity>
-                </View>
+                <ErrorState
+                    style={styles.center}
+                    title="Impossible d'afficher la commande"
+                    message={error || "Cette commande est introuvable ou a été supprimée."}
+                    onRetry={() => {
+                        setLoading(true);
+                        load();
+                    }}
+                />
             </View>
         );
     }

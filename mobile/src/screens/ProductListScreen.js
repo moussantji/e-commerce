@@ -16,6 +16,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api, { apiError } from "../api/client";
+import ErrorState from "../components/ErrorState";
 import { useCart } from "../context/CartContext";
 import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
@@ -347,12 +348,12 @@ export default function ProductListScreen({ route, navigation }) {
 
             {/* Grille */}
             {error ? (
-                <View style={styles.center}>
-                    <Text style={styles.errorText}>{error}</Text>
-                    <TouchableOpacity style={styles.retry} onPress={() => load(1)}>
-                        <Text style={styles.retryText}>Réessayer</Text>
-                    </TouchableOpacity>
-                </View>
+                <ErrorState
+                    style={styles.center}
+                    title="Impossible de charger les produits"
+                    message={error}
+                    onRetry={() => load(1)}
+                />
             ) : (
                 <FlatList
                     data={products}

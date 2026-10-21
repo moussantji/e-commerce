@@ -12,6 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api, { apiError } from "../api/client";
+import ErrorState from "../components/ErrorState";
 import { COLORS, RADIUS } from "../theme";
 
 const ALL = { id: "all", name: "Pour vous" };
@@ -105,12 +106,15 @@ export default function CategoriesScreen({ navigation }) {
 
     if (error) {
         return (
-            <View style={styles.center}>
-                <Text style={styles.errorText}>{error}</Text>
-                <TouchableOpacity style={styles.retry} onPress={load}>
-                    <Text style={styles.retryText}>Réessayer</Text>
-                </TouchableOpacity>
-            </View>
+            <ErrorState
+                fullScreen
+                title="Impossible de charger les catégories"
+                message={error}
+                onRetry={() => {
+                    setLoading(true);
+                    load();
+                }}
+            />
         );
     }
 
