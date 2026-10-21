@@ -116,7 +116,8 @@ const styles = StyleSheet.create({
     },
     grid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
     tile: {
-        width: "31.5%",
+        // 3 colonnes : 3 × 30,5 % + 2 × 10 px de gap tient sur les petits écrans.
+        width: "30.5%",
         backgroundColor: "#fff",
         borderRadius: RADIUS.md,
         paddingVertical: 18,
