@@ -264,7 +264,7 @@
             <div class="assurances">
                 <div><svg class="ic">
                         <use href="#i-truck" />
-                    </svg><span><b>Livraison offerte dès 25 000 FCFA</b>Bamako 24 h · Régions 48-72 h · sinon calculée au
+                    </svg><span><b>Livraison offerte dès {{ config('shop.free_shipping_min_items') }} articles et {{ number_format(config('shop.free_shipping_min_total'), 0, ',', ' ') }} FCFA</b>Bamako 24 h · Régions 48-72 h · sinon calculée au
                         panier</span></div>
                 <div><svg class="ic">
                         <use href="#i-card" />
@@ -321,8 +321,17 @@
                         </div>
                     @endif
                 @elseif($tab === 'avis')
+                    @if (session('review_reply_ok'))
+                        <p class="avis-ok"><svg class="ic" style="width:17px;height:17px">
+                                <use href="#i-b2-check" />
+                            </svg>{{ session('review_reply_ok') }}</p>
+                    @endif
                     @forelse($reviews as $review)
-                        @php $rn = optional($review->user)->name ?? 'Client'; @endphp
+                        @php
+                            $rn = optional($review->user)->name ?? 'Client';
+                            $reviewTree = $repliesByReview->get($review->id, collect());
+                            $reviewReplyCount = $reviewTree->flatten(1)->count();
+                        @endphp
                         <div class="review"><span
                                 class="av">{{ mb_strtoupper(mb_substr(trim($rn), 0, 1)) }}</span>
                             <div style="flex:1"><b>{{ $rn }}</b>
@@ -338,6 +347,45 @@
                                 @endif
                                 @if ($review->relationLoaded('response') && $review->response)
                                     <div class="rrep"><b>Réponse de la boutique</b>{{ $review->response->message }}</div>
+                                @endif
+
+                                @if ($reviewTree->isNotEmpty())
+                                    <div class="review-replies">
+                                        @include('livewire.partials.review-reply', [
+                                            'repliesByParent' => $reviewTree,
+                                            'parentId' => 0,
+                                            'reviewId' => $review->id,
+                                        ])
+                                    </div>
+                                @endif
+
+                                <div class="rreply-actions">
+                                    @auth
+                                        <button type="button" class="rreply-btn"
+                                            wire:click="startReply({{ $review->id }})">
+                                            <svg class="ic" style="width:13px;height:13px">
+                                                <use href="#i-reply" />
+                                            </svg>
+                                            Répondre
+                                        </button>
+                                    @else
+                                        <a class="rreply-btn" href="{{ route('login') }}">
+                                            <svg class="ic" style="width:13px;height:13px">
+                                                <use href="#i-reply" />
+                                            </svg>
+                                            Connectez-vous pour répondre
+                                        </a>
+                                    @endauth
+                                    @if ($reviewReplyCount > 0)
+                                        <span class="rreply-count">{{ $reviewReplyCount }}
+                                            réponse{{ $reviewReplyCount > 1 ? 's' : '' }}</span>
+                                    @endif
+                                </div>
+
+                                @if ($replyingToReview === $review->id && !$replyingToReply)
+                                    @include('livewire.partials.review-reply-form', [
+                                        'replyToName' => $replyingToName,
+                                    ])
                                 @endif
                             </div>
                             <span class="stars" aria-hidden="true">@for ($i = 1; $i <= 5; $i++)<svg
@@ -439,7 +487,7 @@
                         <tbody>
                             <tr>
                                 <td>Bamako (24 h)</td>
-                                <td>Offerte dès 25 000 FCFA, sinon calculée au panier</td>
+                                <td>Offerte dès {{ config('shop.free_shipping_min_items') }} articles et {{ number_format(config('shop.free_shipping_min_total'), 0, ',', ' ') }} FCFA, sinon calculée au panier</td>
                             </tr>
                             <tr>
                                 <td>Autres régions (48-72 h)</td>
@@ -482,7 +530,7 @@
                         $pUrl = route('produits.show', ['slug' => $p->getSlug(), 'id' => $p->id]);
                         $pFav = in_array($p->id, $favIds);
                     @endphp
-                    <article class="card{{ $pst <= 0 ? ' sold' : '' }}">
+                    <article class="card{{ $pst <= 0 ? ' sold' : '' }}" data-card-href="{{ $pUrl }}">
                         @if ($pImg)
                             <img class="thumb" src="{{ $pImg }}" alt="{{ $p->name }}" loading="lazy">
                         @else

@@ -38,7 +38,7 @@
                 $inWishlist = in_array($product->id, $wishlistItems ?? []);
                 $pUrl = route('produits.show', ['slug' => $product->getSlug(), 'id' => $product->id]);
             @endphp
-            <article class="card rv in" wire:key="product-{{ $product->id }}">
+            <article class="card rv in" wire:key="product-{{ $product->id }}" data-card-href="{{ $pUrl }}">
                 <div class="thumb" style="background-image:url('{{ $img }}')">
                     @if ($hasPromo)<span class="off">-{{ $discount }}%</span>@endif
                     @auth

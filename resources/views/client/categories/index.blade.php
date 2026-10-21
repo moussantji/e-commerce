@@ -1,6 +1,14 @@
 @extends('base')
 
-@section('title', isset($category) ? $category->name . ' — Boutique' : 'Catégories — Boutique')
+@section('title', isset($category) ? $category->name : 'Toutes les catégories')
+@section('meta_description', isset($category)
+    ? ($category->description ?: 'Découvrez notre sélection ' . $category->name . ' au meilleur prix, livrée partout au Mali.')
+    : 'Parcourez toutes les catégories de produits de ' . config('app.name') . ' : électronique, mode, maison, beauté et plus encore.')
+@if (isset($category))
+    @section('canonical', route('categories.show', $category->slug))
+    @section('og_image_alt', $category->name)
+    @section('robots', $products->isEmpty() ? 'noindex, follow' : 'index, follow, max-image-preview:large')
+@endif
 
 @section('content')
 <div class="page-loader" id="pageLoader"><div class="loader-circle"></div></div>
@@ -21,7 +29,7 @@
 @if(!isset($category))
 <section class="sec">
 <div class="shop-wrap">
-<div class="sec-head rv"><h2>Toutes les catégories</h2></div>
+<div class="sec-head rv"><h1>Toutes les catégories</h1></div>
 <div class="grid">
 @foreach($categories as $cat)
 @php $n = \App\Models\Produits::where('is_active', true)->whereIn('category_id', \App\Models\Categories::where('parent_id', $cat->id)->pluck('id')->push($cat->id))->count(); @endphp
@@ -37,11 +45,11 @@
 @else
 <section class="sec">
 <div class="shop-wrap">
-<div class="sec-head rv"><h2>{{ $category->name }}</h2><a class="more" href="{{ route('products') }}">Tout voir <svg class="ic ic-sm"><use href="#i-chevron"/></svg></a></div>
+<div class="sec-head rv"><h1>{{ $category->name }}</h1><a class="more" href="{{ route('products') }}">Tout voir <svg class="ic ic-sm"><use href="#i-chevron"/></svg></a></div>
 @if($subcategories->count())
 <div class="cats" style="padding-top:0">
 @foreach($subcategories as $sub)
-<a class="cat rv" href="{{ route('products', ['category' => $sub->slug]) }}">{{ $sub->name }}</a>
+<a class="cat rv" href="{{ route('categories.show', $sub->slug) }}">{{ $sub->name }}</a>
 @endforeach
 </div>
 @endif
@@ -52,8 +60,9 @@ $promo = $item->sale_price && $item->sale_price < $item->price;
 $discount = $promo && $item->price > 0 ? round((($item->price - $item->sale_price) / $item->price) * 100) : 0;
 $fallbacks = [1,2,3,4,5,6,7,8,10,12,16,17,18,19,20,21,23,24,25,26,27];
 $photo = $item->getPhoto() ? $item->getPhoto()->getImageUrl(530,530) : asset('assets/img/products/' . $fallbacks[$item->id % count($fallbacks)] . '.png');
+$pUrl = route('produits.show', ['slug' => $item->getSlug(), 'id' => $item->id]);
 @endphp
-<article class="card rv">
+<article class="card rv" data-card-href="{{ $pUrl }}">
 <div class="thumb" style="background-image:url('{{ $photo }}')">
 @if($promo)<span class="off">-{{ $discount }}%</span>@endif
 <a class="fav" href="{{ auth()->check() ? route('favoris') : route('login') }}" aria-label="Favori"><svg class="ic"><use href="#i-heart"/></svg></a>

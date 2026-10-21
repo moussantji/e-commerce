@@ -1,27 +1,28 @@
 /**
  * URL de base de l'API Laravel.
  *
- * ⚠️ À adapter selon votre environnement :
- *  - Émulateur Android  : http://sugu.mandenbaoubab.com/api   (10.0.2.2 = localhost du PC)
- *  - Simulateur iOS     : http://sugu.mandenbaoubab.com/api
- *  - Téléphone réel     : http://<IP-LAN-de-votre-PC>:8000/api  (ex: 192.168.1.20)
- *  - Production         : https://sugu.mandenbaoubab.com/api
- *
- * Démarrez le backend avec :  php artisan serve --host=0.0.0.0 --port=8000
+ * L'application mobile utilise l'API publique de production.
  */
 export const API_BASE_URL = "https://sugu.mandenbaoubab.com/api";
+
+/** Racine du site web (utilisée pour le retour OAuth Google). */
+export const SITE_URL = API_BASE_URL.replace(/\/api\/?$/, "");
 
 export const CURRENCY = "FCFA";
 
 /**
  * Identifiants OAuth pour la connexion Google.
- * Laissez vides tant que non configurés (le bouton affichera un rappel).
+ *
+ * Le flux Expo Go / navigateur passe par le backend (client OAuth web) :
+ * seul le Web client ID est nécessaire ici. Pour un build natif Android/iOS
+ * avec @react-native-google-signin, créez aussi un client OAuth Android
+ * (package + SHA-1) et/ou iOS, puis renseignez-les ci-dessous.
  */
 export const GOOGLE_CLIENT_IDS = {
-    expo: "767565152255-6t15btstu5uej5u3k8vl1bcipfj25c0h.apps.googleusercontent.com", // Web client ID (utilisé dans Expo Go)
-    android: "767565152255-6t15btstu5uej5u3k8vl1bcipfj25c0h.apps.googleusercontent.com", // Android client ID
-    ios: "767565152255-6t15btstu5uej5u3k8vl1bcipfj25c0h.apps.googleusercontent.com", // iOS client ID
-    web: "767565152255-6t15btstu5uej5u3k8vl1bcipfj25c0h.apps.googleusercontent.com", // Web client ID
+    expo: "362195699932-7d4f145lg0jtnqrugf27g7e5h1mgi847.apps.googleusercontent.com", // Web client ID (Expo Go)
+    android: "", // À renseigner pour un build Android natif
+    ios: "", // À renseigner pour un build iOS natif
+    web: "362195699932-7d4f145lg0jtnqrugf27g7e5h1mgi847.apps.googleusercontent.com", // Web client ID
 };
 
 /**

@@ -95,7 +95,7 @@ button{font:inherit;cursor:pointer;border:0;background:none}
 .sec{padding:30px 0 8px}
 #promos{scroll-margin-top:70px}
 .sec-head{display:flex;align-items:center;gap:18px;margin-bottom:18px}
-.sec-head h2{font-size:22px;font-weight:700}
+.sec-head h1,.sec-head h2{font-size:22px;font-weight:700}
 .count{display:flex;gap:7px;align-items:center}
 .count b{background:var(--violet-800);color:#fff;font-size:14.5px;min-width:42px;padding:8px 0;border-radius:9px;display:grid;place-items:center;font-variant-numeric:tabular-nums}
 .count i{color:var(--violet-800);font-style:normal;font-weight:700}
@@ -104,6 +104,9 @@ button{font:inherit;cursor:pointer;border:0;background:none}
 .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:18px}
 .card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow);transition:transform .28s var(--ease),box-shadow .28s var(--ease)}
 .card:hover{transform:translateY(-7px);box-shadow:var(--shadow-lg)}
+/* Carte entière cliquable : le curseur l'annonce, les liens/boutons internes
+   (favori, « Voir le produit »...) restent prioritaires via le script global. */
+.card[data-card-href]{cursor:pointer}
 .thumb{position:relative;width:100%;aspect-ratio:1/.92;display:grid;place-items:center;background:var(--lav-1) center/cover no-repeat;color:#a5b4fc;overflow:hidden}
 .thumb .ic{width:52px;height:52px;stroke-width:1.2}
 .fav{position:absolute;top:9px;right:9px;width:31px;height:31px;border-radius:50%;background:rgba(255,255,255,.94);display:grid;place-items:center;color:var(--grey);z-index:2}
@@ -170,7 +173,7 @@ html.scrolled .shop-nav{box-shadow:0 6px 20px rgba(46,16,101,.07)}
 .promo.img:hover .tile{transform:scale(1.06)}
 .trust .item .ic{transition:transform var(--t)}
 .trust .item:hover .ic{transform:translateY(-3px) scale(1.1)}
-.sec-head h2 span{display:inline-block;animation:flicker 3.4s var(--ease) infinite}
+.sec-head h1 span,.sec-head h2 span{display:inline-block;animation:flicker 3.4s var(--ease) infinite}
 @keyframes flicker{0%,100%{transform:scale(1) rotate(0)}45%{transform:scale(1.14) rotate(-6deg)}60%{transform:scale(1) rotate(0)}}
 .count b{transition:transform .18s var(--ease),background .18s var(--ease)}
 .count b:not(.idle){animation:flip .38s var(--ease)}
@@ -335,6 +338,30 @@ svg.empty{padding:0;margin:0;border:0;background:transparent;border-radius:0;tex
 .review .rphotos img:hover{transform:scale(1.08)}
 .review .rrep{margin-top:10px;background:var(--lav-1);border:1px solid #ddd6fe;border-radius:10px;padding:10px 14px;font-size:12.5px;color:#4c1d95}
 .review .rrep b{display:block;font-size:12px;color:var(--violet-800);margin-bottom:2px}
+/* Réponses imbriquées aux avis */
+.review-replies{margin-top:12px}
+.rreply{border-left:2px solid #ede9fe;padding-left:12px;margin-top:10px}
+.rreply-main{display:flex;gap:10px;align-items:flex-start}
+.rreply .rav{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:11px;color:#fff;background:linear-gradient(135deg,var(--violet-700),var(--violet-400));flex:none}
+.rreply-body{flex:1;min-width:0}
+.rreply-head{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.rreply-head b{font-size:12.5px;color:var(--ink)}
+.rreply-head small{font-size:11px;color:var(--grey)}
+.rreply p{font-size:12.8px;color:#374151;margin-top:3px;line-height:1.55;overflow-wrap:anywhere}
+.rreply .rbadge{font-size:10px;font-weight:700;color:var(--violet-700);background:var(--lav-2);border:1px solid #ddd6fe;border-radius:999px;padding:1px 7px}
+.rreply-btn{display:inline-flex;align-items:center;gap:5px;background:none;border:0;padding:0;margin-top:7px;font:inherit;font-size:12px;font-weight:700;color:var(--violet-700);cursor:pointer}
+.rreply-btn:hover{text-decoration:underline}
+.rreply-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px}
+.rreply-count{font-size:11.5px;color:var(--grey)}
+.rreply-form{margin-top:10px;background:#faf9ff;border:1px solid #ede9fe;border-radius:12px;padding:11px}
+.rreply-form-head{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--violet-800);margin-bottom:7px}
+.rreply-form-head b{font-size:12px}
+.rreply-form textarea{width:100%;font:inherit;font-size:13px;border:1px solid var(--line);border-radius:9px;padding:9px 11px;resize:vertical;min-height:62px;background:#fff;outline:none}
+.rreply-form textarea:focus{border-color:var(--violet-400);box-shadow:var(--ring)}
+.rreply-form .btn-solid{padding:8px 16px!important;font-size:12.5px!important}
+.rreply-cancel{background:none;border:0;color:var(--grey);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.rreply-cancel:hover{color:var(--violet-700)}
+@media(max-width:560px){.rreply{margin-left:0!important;padding-left:9px}.rreply .rav{width:26px;height:26px;font-size:10px}}
 /* Carte avis premium — dégradé, étoiles glow, dropzone */
 .avis-card{margin-top:20px;border:1px solid #ddd6fe;border-radius:16px;background:linear-gradient(180deg,var(--lav-1),#fff 55%);box-shadow:var(--shadow-md);overflow:hidden}
 .avis-card-head{display:flex;align-items:center;gap:10px;padding:13px 18px;background:linear-gradient(135deg,var(--violet-700),var(--violet-500));color:#fff}

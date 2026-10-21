@@ -1,6 +1,7 @@
 @extends('base')
 
 @section('title', "Conditions d'utilisation")
+@section('meta_description', "Conditions d'utilisation de " . config('app.name') . " : commandes, paiements Mobile Money, livraison, retours et remboursements.")
 
 @section('content')
 <div class="container py-5" style="max-width: 900px;">

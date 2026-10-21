@@ -29,11 +29,18 @@ class CustomerComtroller extends Controller
         $wishlist = Auth::user()->wishlistProducts()
             ->with(['photos', 'caracteristiques'])
             ->get();
+        $coupons = Auth::user()->coupons()
+            ->where('promo_codes.is_active', true)
+            ->orderByPivot('sent_at', 'desc')
+            ->get()
+            ->filter(fn ($coupon) => $coupon->isValid())
+            ->values();
         return view('dashboard', [
             'categories' => $categories,
             'commandes' => $commandes,
             'avis' => $avis,
-            'wishlist' => $wishlist
+            'wishlist' => $wishlist,
+            'coupons' => $coupons,
         ]);
     }
 

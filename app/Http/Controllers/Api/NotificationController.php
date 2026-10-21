@@ -92,7 +92,7 @@ class NotificationController extends Controller
         $items[] = [
             'id' => 'welcome',
             'title' => trim("Bienvenue {$firstName}") . ' 🎉',
-            'body' => 'Profitez de la livraison offerte dès 25 000 FCFA sur votre première commande.',
+            'body' => 'Profitez de la livraison offerte dès ' . config('shop.free_shipping_min_items') . ' articles et ' . number_format(config('shop.free_shipping_min_total'), 0, ',', ' ') . ' FCFA sur votre première commande.',
             'time' => optional($user->created_at)->diffForHumans(),
             'unread' => false,
             'icon' => 'gift-outline',

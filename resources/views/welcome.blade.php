@@ -1,5 +1,6 @@
 @extends('base')
-@section('title', 'Boutique en ligne — Accueil')
+@section('title', 'Boutique en ligne au Mali')
+@section('meta_description', config('app.name') . ' — boutique en ligne au Mali : offres flash, livraison rapide à Bamako et dans tout le pays, paiement Mobile Money ou à la livraison.')
 @section('content')
 <div class="page-loader" id="pageLoader"><div class="loader-circle"></div></div>
 @include('section-begin')
@@ -61,7 +62,7 @@ $nwImg = $nw ? ($nw->getPhoto() ? $nw->getPhoto()->getImageUrl(530,530) : asset(
 </section>
 <div class="trust">
 <div class="shop-wrap trust-row">
-<div class="item rv"><svg class="ic"><use href="#i-truck"/></svg><div><b>Livraison offerte</b><span>Dès 25 000 FCFA</span></div></div>
+<div class="item rv"><svg class="ic"><use href="#i-truck"/></svg><div><b>Livraison offerte</b><span>Dès {{ config('shop.free_shipping_min_items') }} articles et {{ number_format(config('shop.free_shipping_min_total'), 0, ',', ' ') }} FCFA</span></div></div>
 <div class="item rv"><svg class="ic"><use href="#i-bolt"/></svg><div><b>Vente Flash</b><span>Voir plus</span></div></div>
 <div class="item rv"><svg class="ic"><use href="#i-card"/></svg><div><b>Paiement Mobile Money</b><span>Orange · Moov · Wave</span></div></div>
 <div class="item rv"><svg class="ic"><use href="#i-headset"/></svg><div><b>Support 7j/7</b><span>+223 82 01 95 83</span></div></div>
@@ -71,7 +72,6 @@ $nwImg = $nw ? ($nw->getPhoto() ? $nw->getPhoto()->getImageUrl(530,530) : asset(
 <div class="shop-wrap">
 <div class="sec-head rv">
 <h2><span>🔥</span> Offres flash</h2>
-@if(!empty($flashCode))<span class="off" style="position:static">-{{ $flashCode->type === 'percentage' ? $flashCode->value . '%' : number_format($flashCode->value, 0, ',', ' ') . ' FCFA' }} avec {{ $flashCode->code }}</span>@endif
 <div class="count" role="timer" aria-label="Fin de l'offre" @if(!empty($flashEndsAt)) data-ends-at="{{ $flashEndsAt->timestamp }}" @endif>@if(!empty($flashEndsAt))<b id="d" class="idle">00</b><i>J</i><b id="h" class="idle">00</b><i>H</i><b id="m" class="idle">00</b><i>M</i><b id="s" class="idle">00</b><i>S</i>@else<b id="h" class="idle">02</b><i>:</i><b id="m" class="idle">14</b><i>:</i><b id="s" class="idle">36</b>@endif</div>
 <a class="more" href="{{ route('products') }}">Tout voir <svg class="ic ic-sm"><use href="#i-chevron"/></svg></a>
 </div>
@@ -84,7 +84,7 @@ $fallbacks = [1,2,3,4,5,6,7,8,10,12,16,17,18,19,20,21,23,24,25,26,27];
 $photo = $item->getPhoto() ? $item->getPhoto()->getImageUrl(530,530) : asset('assets/img/products/' . $fallbacks[$item->id % count($fallbacks)] . '.png');
 $itemUrl = route('produits.show', ['slug' => $item->getSlug(), 'id' => $item->id]);
 @endphp
-<article class="card rv">
+<article class="card rv" data-card-href="{{ $itemUrl }}">
 <div class="thumb" style="background-image:url('{{ $photo }}')">
 @if($promo)<span class="off">-{{ $discount }}%</span>@endif
 <a class="fav" href="{{ auth()->check() ? route('favoris') : route('login') }}" aria-label="Voir mes favoris" title="Favori"><svg class="ic"><use href="#i-heart"/></svg><span class="tip">Mes favoris</span></a>

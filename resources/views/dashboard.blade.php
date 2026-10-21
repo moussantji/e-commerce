@@ -151,6 +151,37 @@
                 </div>
             </div>
 
+            <div class="panel" style="margin-bottom:18px">
+                <h2><svg class="ic">
+                        <use href="#i-b2-tag" />
+                    </svg> Mes coupons <span class="badge-nb">{{ ($coupons ?? collect())->count() }}</span></h2>
+                @forelse($coupons ?? [] as $coupon)
+                    <div class="dligne">
+                        <div style="width:44px;height:44px;border-radius:12px;background:var(--violet-soft,#f3e8ff);display:flex;align-items:center;justify-content:center">
+                            <svg class="ic" style="color:var(--violet,#6d28d9)">
+                                <use href="#i-b2-tag" />
+                            </svg>
+                        </div>
+                        <div>
+                            <b>{{ $coupon->code }}</b>
+                            <small>
+                                @if ($coupon->type === 'percentage')
+                                    −{{ rtrim(rtrim(number_format($coupon->value, 2), '0'), '.') }} %
+                                @else
+                                    −{{ number_format($coupon->value, 0, ',', ' ') }} FCFA
+                                @endif
+                                @if ($coupon->expires_at)
+                                    · valable jusqu’au {{ $coupon->expires_at->format('d/m/Y') }}
+                                @endif
+                            </small>
+                        </div>
+                        <a class="btn-ghost-sm" href="{{ route('panier') }}">Utiliser</a>
+                    </div>
+                @empty
+                    <p class="muted-sm">Aucun coupon pour le moment. Vos coupons fidélité apparaîtront ici.</p>
+                @endforelse
+            </div>
+
             <div class="dash-grid">
                 <div class="panel">
                     <h2><svg class="ic">

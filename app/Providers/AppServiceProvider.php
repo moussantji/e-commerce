@@ -29,7 +29,7 @@ class AppServiceProvider extends ServiceProvider
             return (new \Illuminate\Notifications\Messages\MailMessage())
                 ->subject('Vérifiez votre adresse email')
                 ->greeting('Bienvenue ' . ($notifiable->name ?? '') . ' !')
-                ->line('Merci pour votre inscription sur la Boutique. Cliquez ci-dessous pour activer votre compte.')
+                ->line('Merci pour votre inscription sur ' . config('app.name') . '. Cliquez ci-dessous pour activer votre compte.')
                 ->action('Vérifier mon email', $url)
                 ->line('Si vous n\'avez pas créé de compte, ignorez cet email.');
         });

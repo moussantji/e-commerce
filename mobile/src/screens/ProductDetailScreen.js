@@ -9,6 +9,7 @@ import {
     ActivityIndicator,
     Alert,
     Dimensions,
+    TextInput,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -95,6 +96,109 @@ function RecoCard({ item, navigation }) {
     );
 }
 
+// Insère une nouvelle réponse dans l'arborescence locale des réponses.
+function insertReply(replies, parentId, newReply) {
+    if (parentId == null) return [...(replies ?? []), newReply];
+    return (replies ?? []).map((reply) =>
+        reply.id === parentId
+            ? { ...reply, replies: [...(reply.replies ?? []), newReply] }
+            : { ...reply, replies: insertReply(reply.replies, parentId, newReply) },
+    );
+}
+
+function ReplyComposer({ author, value, onChange, onSubmit, onCancel, sending }) {
+    return (
+        <View style={styles.replyComposer}>
+            <Text style={styles.replyComposerTitle}>
+                Répondre à <Text style={{ fontWeight: "800" }}>{author || "cet avis"}</Text>
+            </Text>
+            <TextInput
+                style={styles.replyInput}
+                placeholder="Écrivez votre réponse…"
+                placeholderTextColor="#9ca3af"
+                value={value}
+                onChangeText={onChange}
+                multiline
+                maxLength={1000}
+            />
+            <View style={styles.replyComposerActions}>
+                <TouchableOpacity
+                    style={[styles.replySendBtn, sending && { opacity: 0.6 }]}
+                    onPress={onSubmit}
+                    disabled={sending}
+                >
+                    <Text style={styles.replySendText}>{sending ? "Publication…" : "Publier"}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={onCancel} disabled={sending}>
+                    <Text style={styles.replyCancelText}>Annuler</Text>
+                </TouchableOpacity>
+            </View>
+        </View>
+    );
+}
+
+function ReviewReplyItem({
+    reply,
+    reviewId,
+    onReply,
+    replyTarget,
+    replyText,
+    setReplyText,
+    sendReply,
+    cancelReply,
+    sending,
+}) {
+    const isTarget =
+        replyTarget?.reviewId === reviewId && replyTarget?.parentId === reply.id;
+
+    return (
+        <>
+            <View style={styles.replyItem}>
+                <View style={styles.replyHead}>
+                    <Text style={styles.replyAuthor}>{reply.author}</Text>
+                    {(reply.role === "admin" || reply.role === "vendeur") && (
+                        <Text style={styles.replyBadge}>
+                            {reply.role === "admin" ? "Admin" : "Vendeur"}
+                        </Text>
+                    )}
+                    <Text style={styles.replyDate}>{reply.date}</Text>
+                </View>
+                <Text style={styles.replyMessage}>{reply.message}</Text>
+                <TouchableOpacity onPress={() => onReply(reviewId, reply.id, reply.author)}>
+                    <Text style={styles.replyBtn}>Répondre</Text>
+                </TouchableOpacity>
+
+                {isTarget && (
+                    <ReplyComposer
+                        author={reply.author}
+                        value={replyText}
+                        onChange={setReplyText}
+                        onSubmit={sendReply}
+                        onCancel={cancelReply}
+                        sending={sending}
+                    />
+                )}
+            </View>
+
+            {/* Les réponses aux réponses restent au même niveau visuel (niveau 1). */}
+            {(reply.replies ?? []).map((child) => (
+                <ReviewReplyItem
+                    key={child.id}
+                    reply={child}
+                    reviewId={reviewId}
+                    onReply={onReply}
+                    replyTarget={replyTarget}
+                    replyText={replyText}
+                    setReplyText={setReplyText}
+                    sendReply={sendReply}
+                    cancelReply={cancelReply}
+                    sending={sending}
+                />
+            ))}
+        </>
+    );
+}
+
 export default function ProductDetailScreen({ route, navigation }) {
     const { id } = route.params;
     const insets = useSafeAreaInsets();
@@ -108,6 +212,9 @@ export default function ProductDetailScreen({ route, navigation }) {
     const [tab, setTab] = useState("description");
     const [activeImg, setActiveImg] = useState(0);
     const [favLoading, setFavLoading] = useState(false);
+    const [replyTarget, setReplyTarget] = useState(null);
+    const [replyText, setReplyText] = useState("");
+    const [replySending, setReplySending] = useState(false);
     const galleryRef = useRef(null);
     const { isFav: isFavId, toggle: toggleFavCtx } = useWishlist();
     const ensureAuth = useRequireAuth();
@@ -238,6 +345,58 @@ export default function ProductDetailScreen({ route, navigation }) {
             productId: id,
             productName: product?.name,
         });
+    };
+
+    const beginReply = (reviewId, parentId = null, author = "") => {
+        if (!ensureAuth("Connectez-vous pour répondre à cet avis.")) return;
+        setReplyTarget({ reviewId, parentId, author });
+        setReplyText("");
+    };
+
+    const cancelReply = () => {
+        setReplyTarget(null);
+        setReplyText("");
+    };
+
+    const sendReply = async () => {
+        if (!replyTarget) return;
+        const message = replyText.trim();
+        if (!message) return;
+
+        setReplySending(true);
+        try {
+            const { data } = await api.post(
+                `/products/${id}/reviews/${replyTarget.reviewId}/replies`,
+                {
+                    message,
+                    parent_id: replyTarget.parentId ?? undefined,
+                },
+            );
+
+            setProduct((prev) => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    reviews: (prev.reviews ?? []).map((review) =>
+                        review.id === replyTarget.reviewId
+                            ? {
+                                  ...review,
+                                  replies: insertReply(
+                                      review.replies,
+                                      replyTarget.parentId,
+                                      data.data,
+                                  ),
+                              }
+                            : review,
+                    ),
+                };
+            });
+            cancelReply();
+        } catch (e) {
+            Alert.alert("Impossible", apiError(e));
+        } finally {
+            setReplySending(false);
+        }
     };
 
     // Réception d'un nouvel avis renvoyé par l'écran WriteReview
@@ -531,6 +690,43 @@ export default function ProductDetailScreen({ route, navigation }) {
                                                 </View>
                                             </View>
                                         )}
+
+                                        {(r.replies ?? []).length > 0 && (
+                                            <View style={styles.repliesWrap}>
+                                                {r.replies.map((reply) => (
+                                                    <ReviewReplyItem
+                                                        key={reply.id}
+                                                        reply={reply}
+                                                        reviewId={r.id}
+                                                        onReply={beginReply}
+                                                        replyTarget={replyTarget}
+                                                        replyText={replyText}
+                                                        setReplyText={setReplyText}
+                                                        sendReply={sendReply}
+                                                        cancelReply={cancelReply}
+                                                        sending={replySending}
+                                                    />
+                                                ))}
+                                            </View>
+                                        )}
+
+                                        <TouchableOpacity
+                                            onPress={() => beginReply(r.id, null, r.author)}
+                                        >
+                                            <Text style={styles.replyBtn}>Répondre</Text>
+                                        </TouchableOpacity>
+
+                                        {replyTarget?.reviewId === r.id &&
+                                            replyTarget?.parentId == null && (
+                                                <ReplyComposer
+                                                    author={r.author}
+                                                    value={replyText}
+                                                    onChange={setReplyText}
+                                                    onSubmit={sendReply}
+                                                    onCancel={cancelReply}
+                                                    sending={replySending}
+                                                />
+                                            )}
                                     </View>
                                 ))
                             )}
@@ -800,6 +996,66 @@ const styles = StyleSheet.create({
     },
     responseTitle: { fontSize: 12.5, fontWeight: "800", color: COLORS.primaryDark },
     responseMsg: { fontSize: 12.5, color: "#374151", marginTop: 2 },
+    repliesWrap: { marginTop: 10 },
+    replyItem: {
+        borderLeftWidth: 2,
+        borderLeftColor: "#ede9fe",
+        paddingLeft: 10,
+        marginTop: 10,
+    },
+    replyHead: { flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" },
+    replyAuthor: { fontSize: 12.5, fontWeight: "800", color: COLORS.text },
+    replyBadge: {
+        fontSize: 10,
+        fontWeight: "800",
+        color: COLORS.primaryDark,
+        backgroundColor: COLORS.soft,
+        borderRadius: RADIUS.pill,
+        paddingHorizontal: 7,
+        paddingVertical: 1,
+    },
+    replyDate: { fontSize: 10.5, color: "#9ca3af" },
+    replyMessage: { fontSize: 12.8, color: "#374151", marginTop: 3, lineHeight: 18 },
+    replyBtn: {
+        fontSize: 12,
+        fontWeight: "800",
+        color: COLORS.primaryDark,
+        marginTop: 6,
+    },
+    replyComposer: {
+        marginTop: 8,
+        backgroundColor: "#faf9ff",
+        borderWidth: 1,
+        borderColor: "#ede9fe",
+        borderRadius: RADIUS.md,
+        padding: 10,
+    },
+    replyComposerTitle: { fontSize: 12, color: COLORS.primaryDark, marginBottom: 6 },
+    replyInput: {
+        borderWidth: 1,
+        borderColor: "#e5e7eb",
+        borderRadius: RADIUS.sm,
+        padding: 10,
+        minHeight: 64,
+        textAlignVertical: "top",
+        fontSize: 13,
+        color: COLORS.text,
+        backgroundColor: "#fff",
+    },
+    replyComposerActions: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        marginTop: 8,
+    },
+    replySendBtn: {
+        backgroundColor: COLORS.primaryDark,
+        borderRadius: RADIUS.pill,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+    },
+    replySendText: { color: "#fff", fontWeight: "800", fontSize: 12.5 },
+    replyCancelText: { color: COLORS.textLight, fontWeight: "700", fontSize: 12.5 },
     similarSection: { marginTop: 26 },
     sectionTitle: { fontSize: 16, fontWeight: "800", color: "#111827", marginBottom: 12 },
     recoChips: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 14 },

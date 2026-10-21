@@ -8,7 +8,7 @@ $img = $product->getPhoto() ? $product->getPhoto()->getImageUrl(530,530) : asset
 $inWishlist = in_array($product->id, $wishlistItems ?? []);
 $pUrl = route('produits.show', ['slug' => $product->getSlug(), 'id' => $product->id]);
 @endphp
-<article class="card rv in">
+<article class="card rv in" data-card-href="{{ $pUrl }}">
 <div class="thumb" style="background-image:url('{{ $img }}')">
 @if($hasPromo)<span class="off">-{{ $discount }}%</span>@endif
 @if(auth()->check())

@@ -26,7 +26,7 @@ class WelcomeNotification extends Notification implements ShouldQueue
             ->subject('Bienvenue 🎉')
             ->greeting('Bonjour ' . ($notifiable->name ?? '') . ' 👋')
             ->line('Votre compte a été créé avec succès. Bienvenue dans notre boutique !')
-            ->line('Profitez de la livraison offerte dès 25 000 FCFA sur votre première commande.')
+            ->line('Profitez de la livraison offerte dès ' . config('shop.free_shipping_min_items') . ' articles et ' . number_format(config('shop.free_shipping_min_total'), 0, ',', ' ') . ' FCFA sur votre première commande.')
             ->action('Découvrir la boutique', url('/'))
             ->line('Bonne découverte !');
     }

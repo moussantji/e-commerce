@@ -37,7 +37,7 @@ const FALLBACK = [
     {
         id: "n3",
         title: "Bienvenue 🎁",
-        body: "Profitez de la livraison offerte dès 25 000 FCFA.",
+        body: "Profitez de la livraison offerte dès 3 articles et 100 000 FCFA d'achat.",
         time: "Hier",
         unread: false,
         icon: "pricetag-outline",
@@ -83,6 +83,9 @@ export default function NotificationsScreen({ navigation }) {
                 break;
             case "wallet":
                 navigation.navigate("Wallet");
+                break;
+            case "coupons":
+                navigation.navigate("Coupons");
                 break;
             case "admin_payment":
             case "admin_wallet":

@@ -75,9 +75,12 @@
         </div>
     @else
         @php
-            $franco = 25000;
-            $restant = max(0, $franco - $total);
-            $pct = min(100, round($total / $franco * 100));
+            $minItems = (int) config('shop.free_shipping_min_items', 3);
+            $minTotal = (float) config('shop.free_shipping_min_total', 100000);
+            $freeShipping = $this->isFreeShipping();
+            $missingItems = max(0, $minItems - $itemsCount);
+            $missingTotal = max(0, $minTotal - $total);
+            $pct = min(100, round(min($itemsCount / max(1, $minItems), $total / max(1, $minTotal)) * 100));
         @endphp
         <div class="steps">
             <div class="on">1. Panier</div>
@@ -157,27 +160,35 @@
                     </svg> Récapitulatif</h2>
                 <div class="bar"><i style="width:{{ $pct }}%"></i></div>
                 <p style="font-size:12.5px;color:var(--mut);margin-bottom:6px">
-                    @if ($restant > 0)
-                        Plus que <b style="color:var(--violet-700)">{{ $this->formatFcfa($restant) }}</b> pour la
-                        livraison offerte
-                    @else
+                    @if ($freeShipping)
                         🎉 Livraison offerte sur cette commande !
+                    @else
+                        Livraison offerte dès {{ $minItems }} articles et
+                        <b style="color:var(--violet-700)">{{ $this->formatFcfa($minTotal) }}</b> d'achat.
+                        @if ($missingItems > 0 && $missingTotal > 0)
+                            Plus que {{ $missingItems }} article{{ $missingItems > 1 ? 's' : '' }} et
+                            {{ $this->formatFcfa($missingTotal) }}.
+                        @elseif ($missingItems > 0)
+                            Plus que {{ $missingItems }} article{{ $missingItems > 1 ? 's' : '' }}.
+                        @else
+                            Plus que {{ $this->formatFcfa($missingTotal) }}.
+                        @endif
                     @endif
                 </p>
                 <div class="srow"><span>Sous-total ({{ $itemsCount }}
                         article{{ $itemsCount > 1 ? 's' : '' }})</span><b>{{ $this->formatFcfa($total) }}</b></div>
                 @if ($discount > 0)
-                    <div class="srow ok"><span>Remise ({{ $voucherCode }})</span><b>−
+                    <div class="srow ok"><span>Remise ({{ $this->appliedCouponCode() }})</span><b>−
                             {{ $this->formatFcfa($discount) }}</b></div>
                 @endif
-                <div class="srow"><span>Livraison</span><b>{{ $this->formatFcfa($shippingCost) }}</b></div>
+                <div class="srow"><span>Livraison</span><b>{{ $this->getShippingCost() > 0 ? $this->formatFcfa($this->getShippingCost()) : 'Offerte' }}</b></div>
                 @if ($deliveryMethods && count($deliveryMethods))
                     <div class="field" style="margin-top:10px">
                         <label for="liv">Mode de livraison</label>
                         <select class="ctrl" id="liv" wire:model.live="deliveryMethodId">
                             @foreach ($deliveryMethods as $method)
                                 <option value="{{ $method->id }}">{{ $method->method_name }} —
-                                    {{ $this->formatFcfa($method->price) }}</option>
+                                    {{ $freeShipping ? 'Offerte' : $this->formatFcfa($method->price) }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -189,7 +200,7 @@
                         wire:loading.attr="disabled">Appliquer</button>
                 </div>
                 <div class="promo-msg {{ $voucherError ? 'ko' : ($discount > 0 ? 'ok' : '') }}">
-                    {{ $voucherError ?: ($discount > 0 ? 'Code ' . $voucherCode . ' appliqué.' : '') }}</div>
+                    {{ $voucherError ?: ($discount > 0 ? 'Code ' . $this->appliedCouponCode() . ' appliqué' . ($autoCouponCode && !$voucherCode ? ' automatiquement' : '') . '.' : '') }}</div>
                 <div class="pdp-actions" style="margin-top:16px">
                     <button class="btn-solid" style="flex:1" type="button" wire:click="openCheckoutModal"
                         wire:loading.attr="disabled"><svg class="ic">
@@ -251,8 +262,8 @@
                                 @foreach ($deliveryMethods as $method)
                                     <button type="button" class="lux-pick {{ (int)$deliveryMethodId === (int)$method->id ? 'on' : '' }}" wire:click="$set('deliveryMethodId', {{ $method->id }})">
                                         <span class="dot"></span>
-                                        <span><b>{{ $method->method_name }}</b><small>{{ $method->delivery_time_min ?? '' }}{{ ($method->delivery_time_min ?? 0) || ($method->delivery_time_max ?? 0) ? ' · ' : '' }}{{ $this->formatFcfa($method->price) }}</small></span>
-                                        <span class="tag">{{ $this->formatFcfa($method->price) }}</span>
+                                        <span><b>{{ $method->method_name }}</b><small>{{ $method->delivery_time_min ?? '' }}{{ ($method->delivery_time_min ?? 0) || ($method->delivery_time_max ?? 0) ? ' · ' : '' }}{{ $freeShipping ? 'Offerte' : $this->formatFcfa($method->price) }}</small></span>
+                                        <span class="tag">{{ $freeShipping ? 'Offerte' : $this->formatFcfa($method->price) }}</span>
                                     </button>
                                 @endforeach
                             </div>
@@ -295,10 +306,22 @@
                     <div class="lux-sec" style="margin-bottom:6px">
                         <div class="lux-tot">
                             <div class="r"><span>Sous-total</span><b>{{ $this->formatFcfa($total) }}</b></div>
-                            @if($discount > 0)<div class="r" style="color:#6ee7b7"><span>Remise {{ $voucherCode }}</span><b>−{{ $this->formatFcfa($discount) }}</b></div>@endif
-                            <div class="r"><span>Livraison</span><b>{{ $shippingCost > 0 ? $this->formatFcfa($shippingCost) : 'Offerte' }}</b></div>
+                            @if($discount > 0)<div class="r" style="color:#6ee7b7"><span>Remise {{ $this->appliedCouponCode() }}</span><b>−{{ $this->formatFcfa($discount) }}</b></div>@endif
+                            <div class="r"><span>Livraison</span><b>{{ $this->getShippingCost() > 0 ? $this->formatFcfa($this->getShippingCost()) : 'Offerte' }}</b></div>
                             <div class="lux-bar"><i style="width:{{ $pct }}%"></i></div>
-                            @if($restant > 0)<div style="font-size:11.5px;opacity:.85">Plus que {{ $this->formatFcfa($restant) }} pour la livraison offerte</div>@else<span class="free">🎉 Livraison offerte débloquée</span>@endif
+                            @if($freeShipping)
+                                <span class="free">🎉 Livraison offerte débloquée</span>
+                            @else
+                                <div style="font-size:11.5px;opacity:.85">
+                                    @if($missingItems > 0 && $missingTotal > 0)
+                                        Plus que {{ $missingItems }} article{{ $missingItems > 1 ? 's' : '' }} et {{ $this->formatFcfa($missingTotal) }} pour la livraison offerte
+                                    @elseif($missingItems > 0)
+                                        Plus que {{ $missingItems }} article{{ $missingItems > 1 ? 's' : '' }} pour la livraison offerte
+                                    @else
+                                        Plus que {{ $this->formatFcfa($missingTotal) }} pour la livraison offerte
+                                    @endif
+                                </div>
+                            @endif
                             <div class="grand"><span style="font-size:12px;letter-spacing:.08em;font-weight:700">TOTAL À PAYER</span><b>{{ $this->formatFcfa($this->getFinalTotal()) }}</b></div>
                         </div>
                     </div>

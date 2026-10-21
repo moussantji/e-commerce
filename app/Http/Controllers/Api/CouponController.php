@@ -8,11 +8,13 @@ use Illuminate\Http\Request;
 
 class CouponController extends Controller
 {
-    /** Bons disponibles (codes promo actifs et valides). */
+    /** Bons attribués au client connecté (jamais la liste publique). */
     public function index(Request $request)
     {
-        $codes = PromoCode::where('is_active', true)
-            ->orderByDesc('value')
+        $codes = $request->user()
+            ->coupons()
+            ->where('promo_codes.is_active', true)
+            ->orderByPivot('sent_at', 'desc')
             ->get()
             ->filter(fn (PromoCode $c) => $c->isValid())
             ->values();
@@ -26,6 +28,8 @@ class CouponController extends Controller
                 ? 'Réduction de ' . rtrim(rtrim(number_format($c->value, 2), '0'), '.') . '%'
                 : 'Bon de ' . number_format($c->value, 0, ',', ' ') . ' FCFA',
             'expires_at' => optional($c->expires_at)->format('d/m/Y'),
+            'assigned_at' => optional($c->pivot->sent_at)->format('d/m/Y'),
+            'source' => $c->pivot->source,
         ]);
 
         return response()->json([
@@ -42,10 +46,17 @@ class CouponController extends Controller
             'subtotal' => 'required|numeric|min:0',
         ]);
 
-        $promo = PromoCode::where('code', $data['code'])->first();
+        $promo = PromoCode::whereCode((string) $data['code'])->first();
         if (!$promo || !$promo->isValid()) {
             return response()->json(
                 ['valid' => false, 'message' => 'Code promo invalide ou expiré.'],
+                422,
+            );
+        }
+
+        if ($promo->is_automatic && !$promo->isAssignedTo($request->user())) {
+            return response()->json(
+                ['valid' => false, 'message' => 'Ce coupon est réservé aux clients éligibles.'],
                 422,
             );
         }

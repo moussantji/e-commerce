@@ -89,6 +89,13 @@ export function AuthProvider({ children }) {
         return data;
     };
 
+    /** Échange le code court du retour OAuth Google contre un token. */
+    const socialExchange = async (code) => {
+        const { data } = await api.post("/auth/social/exchange", { code });
+        await persist(data.token, data.user);
+        return data;
+    };
+
     const logout = async () => {
         try {
             await api.post("/logout");
@@ -127,6 +134,7 @@ export function AuthProvider({ children }) {
                 login,
                 register,
                 socialLogin,
+                socialExchange,
                 logout,
                 continueAsGuest,
                 updateProfile,

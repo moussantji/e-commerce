@@ -34,15 +34,15 @@
                                 </tr>
                                 <tr>
                                     <td>Téléphone</td>
-                                    <td><a class="lien" href="tel:+22382019583">+223 82 01 95 83</a></td>
+                                    <td><a class="lien" href="tel:+22382019583">+223 82 01 95 83</a><br><a class="lien" href="tel:+22378057895">+223 78 05 78 95</a></td>
                                 </tr>
                                 <tr>
                                     <td>Email</td>
-                                    <td><a class="lien" href="mailto:contact@boutique.ml">contact@boutique.ml</a></td>
+                                    <td><a class="lien" href="mailto:contact@mandenbaoubab.com">contact@mandenbaoubab.com</a></td>
                                 </tr>
                                 <tr>
                                     <td>Horaires</td>
-                                    <td>Lun – Sam · 8h – 20h</td>
+                                    <td>Lun – Sam · 9h – 18h</td>
                                 </tr>
                             </tbody>
                         </table>

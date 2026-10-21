@@ -3,8 +3,11 @@ import { API_BASE_URL } from "../config";
 
 const api = axios.create({
     baseURL: API_BASE_URL,
-    headers: { Accept: "application/json", "Content-Type": "application/json" },
-    timeout: 15000,
+    // Pas de Content-Type global : axios choisit application/json pour les
+    // objets et laisse React Native générer le boundary pour les FormData
+    // (envoi des captures de paiement).
+    headers: { Accept: "application/json" },
+    timeout: 30000,
 });
 
 /** Définit (ou retire) le token Bearer pour toutes les requêtes. */

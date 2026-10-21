@@ -82,7 +82,7 @@
                             <use href="#i-bag" />
                         </svg> Vos avantages</h2>
                     <ul class="liste-check">
-                        <li>Livraison offerte dès 25 000 FCFA d'achat</li>
+                        <li>Livraison offerte dès {{ config('shop.free_shipping_min_items') }} articles et {{ number_format(config('shop.free_shipping_min_total'), 0, ',', ' ') }} FCFA d'achat</li>
                         <li>Paiement Mobile Money : Orange, Moov, Wave</li>
                         <li>15 points de fidélité par commande</li>
                     </ul>

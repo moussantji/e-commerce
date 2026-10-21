@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Notifications\OrderStatusNotification;
+use App\Services\CouponDistributionService;
 use App\Support\OrderStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,6 +25,14 @@ class Commandes extends Model
                     );
                 } catch (\Throwable $e) {
                     Log::warning('Notification changement de statut échouée : ' . $e->getMessage());
+                }
+
+                if ($order->isPaid()) {
+                    try {
+                        app(CouponDistributionService::class)->handlePaidOrder($order);
+                    } catch (\Throwable $e) {
+                        Log::warning('Distribution coupon échouée : ' . $e->getMessage());
+                    }
                 }
             }
         });
@@ -131,11 +140,18 @@ class Commandes extends Model
     }
     public function getTotalAttribute()
     {
-        $total = $this->sous_total + $this->frais_livraison;
-        if ($this->promo_code_id && $this->promoCode) {
-            $total -= $this->promoCode->calculateDiscount($this->sous_total);
+        $total = (float) $this->sous_total + (float) $this->frais_livraison;
+
+        // Utiliser la remise réellement enregistrée sur la commande. Le
+        // recalcul via le coupon ne sert que pour les anciennes commandes qui
+        // n'avaient pas encore la colonne promo_discount.
+        $discount = (float) ($this->promo_discount ?? 0);
+
+        if ($discount <= 0 && $this->promo_code_id && $this->promoCode) {
+            $discount = $this->promoCode->calculateDiscount((float) $this->sous_total);
         }
-        return $total - ($this->remise ?? 0);
+
+        return max(0, $total - $discount - (float) ($this->remise ?? 0));
     }
 
     public function items()

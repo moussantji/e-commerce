@@ -174,10 +174,8 @@ export default function OrdersScreen({ navigation, route }) {
                         <TouchableOpacity
                             activeOpacity={0.85}
                             onPress={() =>
-                                navigation.navigate("Payment", {
-                                    orderId: order.id,
-                                    numero: order.numero,
-                                    total: order.total,
+                                navigation.navigate("OrderDetail", {
+                                    id: order.id,
                                 })
                             }
                         >
@@ -188,7 +186,7 @@ export default function OrdersScreen({ navigation, route }) {
                                 style={styles.payBtn}
                             >
                                 <Text style={styles.payText}>
-                                    PAYEZ MAINTENANT
+                                    PAYER MA COMMANDE
                                 </Text>
                             </LinearGradient>
                         </TouchableOpacity>

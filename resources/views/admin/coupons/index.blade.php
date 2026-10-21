@@ -16,7 +16,7 @@
     <section class="phead">
         <div class="wrap">
             <h1>Coupons</h1>
-            <p>Codes promo pour le panier.</p>
+            <p>Codes promo pour le panier. Les coupons automatiques ne sont jamais affichés sur la boutique.</p>
         </div>
     </section>
 
@@ -29,6 +29,15 @@
                         <use href="#i-b2-plus" />
                     </svg> Nouveau coupon</a>
             </div>
+
+            @if (!$hasAutomaticCoupon)
+                <div class="panel" style="margin-bottom:16px;border-left:4px solid var(--pink,#db2777)">
+                    <p class="muted-sm" style="margin:0">
+                        Aucun coupon automatique pour le moment. Les nouveaux coupons le sont par défaut ;
+                        pour un coupon existant, cliquez sur « Modifier » et cochez « Distribution automatique ».
+                    </p>
+                </div>
+            @endif
 
             <div class="panel">
                 <h2><svg class="ic">
@@ -44,6 +53,8 @@
                                 <th>Début</th>
                                 <th>Fin</th>
                                 <th>Utilisations</th>
+                                <th>Envoyés</th>
+                                <th>Distribution</th>
                                 <th>Statut</th>
                                 <th></th>
                             </tr>
@@ -59,8 +70,24 @@
                                     <td>{{ $coupon->expires_at?->format('d/m/Y') ?? '—' }}</td>
                                     <td><span class="badge-nb">{{ $coupon->usage_count }} /
                                             {{ $coupon->usage_limit ?? '∞' }}</span></td>
+                                    <td><span class="badge-nb">{{ $coupon->users_count }}</span></td>
+                                    <td>
+                                        @if ($coupon->is_automatic)
+                                            <span class="st ok">Automatique</span>
+                                        @else
+                                            <span class="st">Manuelle</span>
+                                        @endif
+                                    </td>
                                     <td>{!! $coupon->is_active ? '<span class="st ok">Actif</span>' : '<span class="st ko">Inactif</span>' !!}</td>
                                     <td style="white-space:nowrap">
+                                        @if ($coupon->is_automatic)
+                                            <form action="{{ route('admin.coupons.distribute', $coupon) }}" method="POST"
+                                                style="display:inline"
+                                                onsubmit="return confirm('Envoyer ce coupon aux clients qui atteignent déjà les seuils mensuels ?')">
+                                                @csrf
+                                                <button type="submit" class="btn-ghost-sm">Envoyer aux éligibles</button>
+                                            </form>
+                                        @endif
                                         <a class="btn-ghost-sm"
                                             href="{{ route('admin.coupons.edit', $coupon) }}">Modifier</a>
                                         <form action="{{ route('admin.coupons.destroy', $coupon) }}" method="POST"
@@ -73,7 +100,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="muted-sm">Aucun coupon.</td>
+                                    <td colspan="10" class="muted-sm">Aucun coupon.</td>
                                 </tr>
                             @endforelse
                         </tbody>

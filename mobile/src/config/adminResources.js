@@ -148,6 +148,13 @@ export const ADMIN_RESOURCES = [
             { key: "expires_at", label: "Expiration (AAAA-MM-JJ)", type: "date" },
             { key: "usage_limit", label: "Limite d'utilisation", type: "number" },
             { key: "is_active", label: "Actif", type: "switch", default: true },
+            {
+                key: "is_automatic",
+                label: "Distribution automatique",
+                type: "switch",
+                default: true,
+                hint: "Appliqué ou envoyé selon les seuils de commande et de cumul mensuel.",
+            },
         ],
     },
     {

@@ -40,7 +40,8 @@ class NotificationLink
                 case 'home':
                     return route('home');
                 case 'wallet':
-                    // Pas de page portefeuille web dédiée : on renvoie au tableau de bord
+                case 'coupons':
+                    // Pas de page portefeuille/coupons web dédiée : tableau de bord
                     return route('dashboard');
                 case 'admin_payment':
                 case 'admin_wallet':

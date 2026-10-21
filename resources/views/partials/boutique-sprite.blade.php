@@ -9,6 +9,7 @@
 <symbol id="i-card" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2.2"/><path d="M3 10h18"/><path d="M7 14.5h3"/></symbol>
 <symbol id="i-headset" viewBox="0 0 24 24"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="2.5" y="13" width="4" height="7" rx="1.6"/><rect x="17.5" y="13" width="4" height="7" rx="1.6"/></symbol>
 <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+<symbol id="i-reply" viewBox="0 0 24 24"><path d="M9 7 3 12l6 5v-3.5h4.5A5.5 5.5 0 0 1 19 19v-4a7 7 0 0 0-7-7H9V7Z"/></symbol>
   <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12"/><path d="m18 6-12 12"/></symbol>
   <symbol id="i-b2-star" viewBox="0 0 24 24"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9.5l6.1-.9L12 3Z"/></symbol>
   <symbol id="i-b2-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>

@@ -2,6 +2,8 @@
 @extends('base')
 
 @section('title', $code . ' — ' . $titre)
+@section('meta_description', $code . ' — ' . $titre . ' sur ' . config('app.name') . '. Retrouvez nos produits et catégories depuis l’accueil.')
+@section('robots', 'noindex, follow')
 
 @section('content')
     @include('section-begin')

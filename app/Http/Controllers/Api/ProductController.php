@@ -46,7 +46,7 @@ class ProductController extends Controller
             'brand',
             'caracteristiques',
             'reviews' => fn ($q) => $q
-                ->with(['user', 'response', 'photos'])
+                ->with(['user', 'response', 'photos', 'replies.user'])
                 ->latest()
                 ->limit(10),
         ])

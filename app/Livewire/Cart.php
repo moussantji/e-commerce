@@ -9,6 +9,7 @@ use App\Models\Commandes;
 use App\Models\Livraison;
 use App\Models\Paiements;
 use App\Models\PromoCode;
+use App\Services\CouponDistributionService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -27,6 +28,7 @@ class Cart extends Component
     public $voucherCode = '';
     public $voucherError = '';  // ✅ Property pour erreur
     public $discount = 0;
+    public $autoCouponCode = '';
     public $taxRate = 0.18; // 18% TVA
     public $shippingCost = 0;
 
@@ -69,6 +71,8 @@ class Cart extends Component
             $this->panier = null;
             $this->itemsCount = 0;
             $this->total = 0;
+            $this->autoCouponCode = '';
+            $this->discount = 0;
             return;
         }
 
@@ -81,6 +85,8 @@ class Cart extends Component
             $this->panier = null;
             $this->itemsCount = 0;
             $this->total = 0;
+            $this->autoCouponCode = '';
+            $this->discount = 0;
             return;
         }
 
@@ -93,6 +99,8 @@ class Cart extends Component
             $this->panier = null;
             $this->itemsCount = 0;
             $this->total = 0;
+            $this->autoCouponCode = '';
+            $this->discount = 0;
             return;
         }
 
@@ -138,6 +146,40 @@ class Cart extends Component
         $this->itemsCount = $produits->sum(fn($p) => $p->pivot->quantite ?? 0);
         $this->total = $produits->sum(fn($p) => $p->pivot->total_ligne ?? 0);
         session(['cart_count' => $this->itemsCount]);
+
+        $this->syncAutomaticCoupon();
+    }
+
+    /**
+     * Applique le coupon automatique si la commande atteint les seuils
+     * (≥ 10 articles ou > 100 000 FCFA). Le coupon manuel reste prioritaire.
+     */
+    private function syncAutomaticCoupon(): void
+    {
+        $this->autoCouponCode = '';
+
+        if (!Auth::check() || trim((string) $this->voucherCode) !== '') {
+            return;
+        }
+
+        $coupon = app(CouponDistributionService::class)
+            ->automaticCouponForOrder((float) $this->total, (int) $this->itemsCount);
+
+        if (!$coupon) {
+            $this->discount = 0;
+            return;
+        }
+
+        $this->autoCouponCode = $coupon->code;
+        $this->discount = round($coupon->calculateDiscount((float) $this->total), 2);
+    }
+
+    /** Code affiché dans le panier (manuel ou automatique). */
+    public function appliedCouponCode(): string
+    {
+        return trim((string) $this->voucherCode) !== ''
+            ? $this->voucherCode
+            : $this->autoCouponCode;
     }
 
 
@@ -257,34 +299,58 @@ class Cart extends Component
 
     public function applyVoucher()
     {
+        $this->voucherError = '';
+        $code = trim((string) $this->voucherCode);
+
+        // Champ vidé : on rend la main au coupon automatique éventuel.
+        if ($code === '') {
+            $this->autoCouponCode = '';
+            $this->discount = 0;
+            $this->loadCart();
+            return;
+        }
+
         if (!$this->total) {
             $this->voucherError = 'Panier vide !';
             $this->resetErrorBag();
-            $this->discount = 0;  // 🔥 CLEAR !
-            $this->loadCart();  // ✅ TOUJOURS appeler !
+            $this->discount = 0;
+            $this->autoCouponCode = '';
+            $this->loadCart();
             return;
         }
 
-        $promo = PromoCode::where('code', $this->voucherCode)
+        $promo = PromoCode::whereCode($code)
             ->where('is_active', true)
             ->first();
-        if (!$promo) {  // ← NULL = pas trouvé
+
+        if (!$promo) {
             $this->voucherError = 'Code non trouvé !';
-            $this->discount = 0;  // 🔥 CLEAR !
-            $this->loadCart();  // ✅ TOUJOURS appeler !
+            $this->discount = 0;
+            $this->autoCouponCode = '';
+            $this->loadCart();
             return;
         }
 
-        // ✅ MAINTENANT sûr d'appeler méthode
-        if ($promo->isValid()) {
-            $this->discount = $promo->calculateDiscount($this->total);
-            $this->voucherError = '';
-        } else {
+        if (!$promo->isValid()) {
             $this->voucherError = 'Code expiré !';
-            $this->discount = 0;  // 🔥 CLEAR !
-            $this->loadCart();  // ✅ TOUJOURS appeler !
+            $this->discount = 0;
+            $this->autoCouponCode = '';
+            $this->loadCart();
+            return;
         }
 
+        // Un coupon automatique est réservé aux clients à qui il a été attribué.
+        if ($promo->is_automatic && !$promo->isAssignedTo(Auth::user())) {
+            $this->voucherError = 'Ce coupon est réservé aux clients éligibles.';
+            $this->discount = 0;
+            $this->autoCouponCode = '';
+            $this->loadCart();
+            return;
+        }
+
+        $this->voucherCode = $promo->code;
+        $this->autoCouponCode = '';
+        $this->discount = round($promo->calculateDiscount((float) $this->total), 2);
         $this->loadCart();
     }
 
@@ -407,6 +473,44 @@ class Cart extends Component
         return DB::transaction(function () {
             // ✅ GÉNÉRER NUMÉRO UNIQUE
             $orderNumber = $this->generateOrderNumber();
+            $shippingCost = $this->getShippingCost();
+            $user = Auth::user();
+            $subtotal = (float) $this->total;
+            $quantity = (int) $this->itemsCount;
+
+            // Coupon manuel prioritaire, sinon coupon automatique éligible.
+            $coupon = null;
+            $manualCode = trim((string) $this->voucherCode);
+            if ($manualCode !== '') {
+                $coupon = PromoCode::whereCode($manualCode)
+                    ->where('is_active', true)
+                    ->first();
+
+                if ($coupon && (!$coupon->isValid()
+                    || ($coupon->is_automatic && !$coupon->isAssignedTo($user)))) {
+                    $coupon = null;
+                }
+            }
+
+            if (!$coupon && $this->autoCouponCode !== '') {
+                $coupon = PromoCode::where('code', $this->autoCouponCode)
+                    ->where('is_active', true)
+                    ->first();
+            }
+
+            if (!$coupon) {
+                $coupon = app(CouponDistributionService::class)
+                    ->automaticCouponForOrder($subtotal, $quantity);
+            }
+
+            if ($coupon && !$coupon->isValid()) {
+                $coupon = null;
+            }
+
+            $discount = $coupon
+                ? round($coupon->calculateDiscount($subtotal), 2)
+                : 0.0;
+            $this->discount = $discount;
 
             // 1. Créer la commande
             $order = Commandes::create([
@@ -415,14 +519,14 @@ class Cart extends Component
                 'livraison_id' => $this->deliveryMethodId,
                 'numero_commande' => $orderNumber,
                 'statut' => 'en_attente',
-                'sous_total' => $this->total,  // Sera mis à jour après insertion produits
-                'frais_livraison' => $this->shippingCost,
-                'remise' => $this->discount,
-                'total' => $this->getFinalTotal(),
-                'adresse_facturation' => Auth::user()->adresse ?? '',
-                'adresse_livraison' => Auth::user()->adresse ?? '',
-                'promo_code_id' => null,
-                'promo_discount' => $this->discount,
+                'sous_total' => $subtotal,  // Sera mis à jour après insertion produits
+                'frais_livraison' => $shippingCost,
+                'remise' => 0,
+                'total' => max(0, $subtotal + $shippingCost - $discount),
+                'adresse_facturation' => $user->adresse ?? '',
+                'adresse_livraison' => $user->adresse ?? '',
+                'promo_code_id' => $coupon?->id,
+                'promo_discount' => $discount,
                 'notes' => null,
                 'date_en_attente' => now(),
                 'cinetpay_transaction_id' => null
@@ -465,10 +569,21 @@ class Cart extends Component
             // 5. Mettre à jour totals finaux
             $order->update([
                 'sous_total' => $sousTotal,
-                'total' => $sousTotal + $this->shippingCost - $this->discount
+                'total' => max(0, $sousTotal + $shippingCost - $discount),
             ]);
 
-            // 6. Notifie les admins (sinon personne ne voit la commande).
+            // 6. Comptabiliser l'utilisation et l'attribution du coupon.
+            if ($coupon) {
+                $coupon->increment('usage_count');
+
+                app(CouponDistributionService::class)->recordUsage(
+                    $user,
+                    $coupon,
+                    $coupon->is_automatic ? 'auto_order' : 'manual',
+                );
+            }
+
+            // 7. Notifie les admins (sinon personne ne voit la commande).
             $order->load('user');
             \App\Support\AdminNotifier::notifyPayment(
                 'Nouvelle commande ' . ($order->numero_commande ?? ('#' . $order->id)),
@@ -548,9 +663,27 @@ class Cart extends Component
 
 
 
+    /**
+     * Livraison offerte : plus de 2 articles ET au moins 100 000 FCFA
+     * de sous-total (valeurs dans config/shop.php).
+     */
+    public function isFreeShipping(): bool
+    {
+        $minItems = (int) config('shop.free_shipping_min_items', 3);
+        $minTotal = (float) config('shop.free_shipping_min_total', 100000);
+
+        return $this->itemsCount >= $minItems && $this->total >= $minTotal;
+    }
+
+    /** Frais réellement facturés (0 FCFA si les conditions sont réunies). */
+    public function getShippingCost(): float
+    {
+        return $this->isFreeShipping() ? 0.0 : (float) $this->shippingCost;
+    }
+
     public function getFinalTotal()
     {
-        return $this->total - $this->discount + $this->shippingCost;
+        return $this->total - $this->discount + $this->getShippingCost();
     }
 
     public function formatDeliveryTime($method)

@@ -237,97 +237,42 @@ export default function WalletScreen({ navigation }) {
 
             {/* Modal recharger */}
             <Modal visible={topupOpen} transparent animationType="slide" onRequestClose={() => setTopupOpen(false)}>
-                <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    style={{ flex: 1 }}
+                >
                     <Pressable style={styles.backdrop} onPress={() => setTopupOpen(false)}>
-                        <Pressable style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
+                        <Pressable
+                            style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}
+                            onPress={() => {}}
+                        >
                             <Text style={styles.sheetTitle}>Recharger le portefeuille</Text>
 
-                            <Text style={styles.fieldLabel}>Montant (FCFA)</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Ex : 5000"
-                                placeholderTextColor="#9ca3af"
-                                keyboardType="numeric"
-                                value={amount}
-                                onChangeText={setAmount}
-                            />
-
-                            <Text style={styles.fieldLabel}>Méthode</Text>
-                            <View style={styles.methodRow}>
-                                {methods.map((m) => {
-                                    const on = method?.id === m.id;
-                                    return (
-                                        <TouchableOpacity
-                                            key={m.id}
-                                            style={[styles.methodChip, on && styles.methodChipOn]}
-                                            onPress={() => setMethod(m)}
-                                        >
-                                            <Text style={[styles.methodChipText, on && { color: "#fff" }]}>
-                                                {m.name}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    );
-                                })}
-                            </View>
-
-                            {method?.account_number ? (
-                                <View style={styles.instr}>
-                                    <Text style={styles.instrAccount}>Numéro : {method.account_number}</Text>
-                                    {method.instructions ? (
-                                        <Text style={styles.instrText}>{method.instructions}</Text>
-                                    ) : null}
-                                </View>
-                            ) : null}
-
-                            <Text style={styles.fieldLabel}>Numéro utilisé (optionnel)</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Votre numéro"
-                                placeholderTextColor="#9ca3af"
-                                keyboardType="phone-pad"
-                                value={phone}
-                                onChangeText={setPhone}
-                            />
-                            <Text style={styles.fieldLabel}>Référence de transaction (optionnel)</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Référence reçue par SMS"
-                                placeholderTextColor="#9ca3af"
-                                value={reference}
-                                onChangeText={setReference}
-                            />
-
-                            <TouchableOpacity
-                                style={[styles.submitBtn, busy && { opacity: 0.6 }]}
-                                onPress={submitTopup}
-                                disabled={busy}
+                            <ScrollView
+                                style={styles.sheetScroll}
+                                contentContainerStyle={styles.sheetScrollContent}
+                                keyboardShouldPersistTaps="handled"
+                                showsVerticalScrollIndicator={false}
                             >
-                                {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>J'ai payé</Text>}
-                            </TouchableOpacity>
-                        </Pressable>
-                    </Pressable>
-                </KeyboardAvoidingView>
-            </Modal>
+                                <Text style={styles.fieldLabel}>Montant (FCFA)</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Ex : 5000"
+                                    placeholderTextColor="#9ca3af"
+                                    keyboardType="numeric"
+                                    value={amount}
+                                    onChangeText={setAmount}
+                                />
 
-            {/* Modal transférer */}
-            <Modal visible={transferOpen} transparent animationType="slide" onRequestClose={() => setTransferOpen(false)}>
-                <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
-                    <Pressable style={styles.backdrop} onPress={() => setTransferOpen(false)}>
-                        <Pressable style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
-                            <Text style={styles.sheetTitle}>Transférer de l'argent</Text>
-
-                            <Text style={styles.fieldLabel}>Mode de paiement</Text>
-                            {methods.length === 0 ? (
-                                <Text style={styles.hint}>Aucun mode de paiement disponible.</Text>
-                            ) : (
+                                <Text style={styles.fieldLabel}>Méthode</Text>
                                 <View style={styles.methodRow}>
                                     {methods.map((m) => {
-                                        const on = tMethod?.id === m.id;
+                                        const on = method?.id === m.id;
                                         return (
                                             <TouchableOpacity
                                                 key={m.id}
                                                 style={[styles.methodChip, on && styles.methodChipOn]}
-                                                onPress={() => setTMethod(m)}
+                                                onPress={() => setMethod(m)}
                                             >
                                                 <Text style={[styles.methodChipText, on && { color: "#fff" }]}>
                                                     {m.name}
@@ -336,43 +281,126 @@ export default function WalletScreen({ navigation }) {
                                         );
                                     })}
                                 </View>
-                            )}
 
-                            <Text style={styles.fieldLabel}>Montant (FCFA)</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Ex : 2000"
-                                placeholderTextColor="#9ca3af"
-                                keyboardType="numeric"
-                                value={tAmount}
-                                onChangeText={setTAmount}
-                            />
-                            <Text style={styles.fieldLabel}>Numéro de téléphone (obligatoire)</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Ex : 07 00 00 00 00"
-                                placeholderTextColor="#9ca3af"
-                                keyboardType="phone-pad"
-                                value={tPhone}
-                                onChangeText={setTPhone}
-                            />
-                            <Text style={styles.fieldLabel}>Note (optionnel)</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Message"
-                                placeholderTextColor="#9ca3af"
-                                value={note}
-                                onChangeText={setNote}
-                            />
-                            <Text style={styles.hint}>Solde disponible : {formatPrice(wallet.balance)}</Text>
+                                {method && (method.account_number || method.instructions) ? (
+                                    <View style={styles.instr}>
+                                        {method.account_number ? (
+                                            <Text style={styles.instrAccount}>Numéro : {method.account_number}</Text>
+                                        ) : null}
+                                        {method.instructions ? (
+                                            <Text style={styles.instrText}>{method.instructions}</Text>
+                                        ) : null}
+                                    </View>
+                                ) : null}
 
-                            <TouchableOpacity
-                                style={[styles.submitBtn, busy && { opacity: 0.6 }]}
-                                onPress={submitTransfer}
-                                disabled={busy}
+                                <Text style={styles.fieldLabel}>Numéro utilisé (optionnel)</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Votre numéro"
+                                    placeholderTextColor="#9ca3af"
+                                    keyboardType="phone-pad"
+                                    value={phone}
+                                    onChangeText={setPhone}
+                                />
+                                <Text style={styles.fieldLabel}>Référence de transaction (optionnel)</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Référence reçue par SMS"
+                                    placeholderTextColor="#9ca3af"
+                                    value={reference}
+                                    onChangeText={setReference}
+                                />
+
+                                <TouchableOpacity
+                                    style={[styles.submitBtn, busy && { opacity: 0.6 }]}
+                                    onPress={submitTopup}
+                                    disabled={busy}
+                                >
+                                    {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>J'ai payé</Text>}
+                                </TouchableOpacity>
+                            </ScrollView>
+                        </Pressable>
+                    </Pressable>
+                </KeyboardAvoidingView>
+            </Modal>
+
+            {/* Modal transférer */}
+            <Modal visible={transferOpen} transparent animationType="slide" onRequestClose={() => setTransferOpen(false)}>
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    style={{ flex: 1 }}
+                >
+                    <Pressable style={styles.backdrop} onPress={() => setTransferOpen(false)}>
+                        <Pressable
+                            style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}
+                            onPress={() => {}}
+                        >
+                            <Text style={styles.sheetTitle}>Transférer de l'argent</Text>
+
+                            <ScrollView
+                                style={styles.sheetScroll}
+                                contentContainerStyle={styles.sheetScrollContent}
+                                keyboardShouldPersistTaps="handled"
+                                showsVerticalScrollIndicator={false}
                             >
-                                {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>Envoyer</Text>}
-                            </TouchableOpacity>
+                                <Text style={styles.fieldLabel}>Mode de paiement</Text>
+                                {methods.length === 0 ? (
+                                    <Text style={styles.hint}>Aucun mode de paiement disponible.</Text>
+                                ) : (
+                                    <View style={styles.methodRow}>
+                                        {methods.map((m) => {
+                                            const on = tMethod?.id === m.id;
+                                            return (
+                                                <TouchableOpacity
+                                                    key={m.id}
+                                                    style={[styles.methodChip, on && styles.methodChipOn]}
+                                                    onPress={() => setTMethod(m)}
+                                                >
+                                                    <Text style={[styles.methodChipText, on && { color: "#fff" }]}>
+                                                        {m.name}
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            );
+                                        })}
+                                    </View>
+                                )}
+
+                                <Text style={styles.fieldLabel}>Montant (FCFA)</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Ex : 2000"
+                                    placeholderTextColor="#9ca3af"
+                                    keyboardType="numeric"
+                                    value={tAmount}
+                                    onChangeText={setTAmount}
+                                />
+                                <Text style={styles.fieldLabel}>Numéro de téléphone (obligatoire)</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Ex : 07 00 00 00 00"
+                                    placeholderTextColor="#9ca3af"
+                                    keyboardType="phone-pad"
+                                    value={tPhone}
+                                    onChangeText={setTPhone}
+                                />
+                                <Text style={styles.fieldLabel}>Note (optionnel)</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Message"
+                                    placeholderTextColor="#9ca3af"
+                                    value={note}
+                                    onChangeText={setNote}
+                                />
+                                <Text style={styles.hint}>Solde disponible : {formatPrice(wallet.balance)}</Text>
+
+                                <TouchableOpacity
+                                    style={[styles.submitBtn, busy && { opacity: 0.6 }]}
+                                    onPress={submitTransfer}
+                                    disabled={busy}
+                                >
+                                    {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>Envoyer</Text>}
+                                </TouchableOpacity>
+                            </ScrollView>
                         </Pressable>
                     </Pressable>
                 </KeyboardAvoidingView>
@@ -432,6 +460,8 @@ const styles = StyleSheet.create({
         padding: 18,
         maxHeight: "88%",
     },
+    sheetScroll: { flexGrow: 0, flexShrink: 1 },
+    sheetScrollContent: { paddingBottom: 4 },
     sheetTitle: { fontSize: 17, fontWeight: "800", color: COLORS.text, marginBottom: 12 },
     fieldLabel: { fontSize: 12.5, fontWeight: "700", color: COLORS.textLight, marginTop: 12, marginBottom: 6 },
     input: {

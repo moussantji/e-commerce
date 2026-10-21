@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -89,7 +90,52 @@ class SocialAuthController extends Controller
 
         $token = $user->createToken('mobile')->plainTextToken;
 
-        return response()->json([
+        return response()->json($this->userPayload($user, $token));
+    }
+
+    /**
+     * Échange le code court reçu après le retour OAuth web contre un token
+     * Sanctum. Utilisé par l'app mobile (Expo Go ou build natif), sans exposer
+     * le token dans l'URL du navigateur.
+     */
+    public function exchange(Request $request)
+    {
+        $data = $request->validate([
+            'code' => 'required|string|min:32|max:128',
+        ]);
+
+        $userId = Cache::pull('social-login:' . $data['code']);
+
+        if (! $userId) {
+            return response()->json(
+                ['message' => 'Code de connexion invalide ou expiré.'],
+                422,
+            );
+        }
+
+        $user = User::find($userId);
+
+        if (! $user) {
+            return response()->json(
+                ['message' => 'Compte introuvable.'],
+                422,
+            );
+        }
+
+        $user->forceFill([
+            'last_login' => now(),
+            'last_activity' => now(),
+        ])->save();
+
+        $token = $user->createToken('mobile')->plainTextToken;
+
+        return response()->json($this->userPayload($user, $token));
+    }
+
+    /** @return array{user: array<string, mixed>, token: string} */
+    private function userPayload(User $user, string $token): array
+    {
+        return [
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
@@ -99,7 +145,7 @@ class SocialAuthController extends Controller
                 'pays' => $user->pays,
             ],
             'token' => $token,
-        ]);
+        ];
     }
 
     /**

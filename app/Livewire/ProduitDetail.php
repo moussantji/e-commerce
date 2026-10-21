@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\AvisClient;
 use App\Models\Paniers;
 use App\Models\Produits as Product;
+use App\Models\ReviewReply;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -44,6 +45,17 @@ class ProduitDetail extends Component
     public int $rating = 5;
     public string $commentaire = '';
     public array $avisPhotos = [];
+
+    /** Avis racine auquel on est en train de répondre. */
+    public ?int $replyingToReview = null;
+
+    /** Réponse précise à laquelle on répond (null = réponse directe à l'avis). */
+    public ?int $replyingToReply = null;
+
+    public string $replyMessage = '';
+
+    /** Nom affiché dans le formulaire de réponse. */
+    public string $replyingToName = '';
 
     /** Options choisies sur la fiche (clé = type normalisé, valeur = valeur choisie). */
     public array $selectedOptions = [];
@@ -512,6 +524,101 @@ class ProduitDetail extends Component
         session()->flash('review_ok', 'Merci pour votre avis !');
     }
 
+    /**
+     * Ouvre le formulaire de réponse sous un avis ou sous une réponse existante.
+     */
+    public function startReply(int $reviewId, ?int $replyId = null): void
+    {
+        if (!Auth::check()) {
+            redirect()->route('login');
+            return;
+        }
+
+        $review = $this->product->avisClients()->whereKey($reviewId)->first();
+        if (!$review) {
+            return;
+        }
+
+        if ($replyId !== null) {
+            $parent = ReviewReply::with('user')
+                ->where('avis_client_id', $review->id)
+                ->whereKey($replyId)
+                ->first();
+            if (!$parent) {
+                return;
+            }
+            $this->replyingToName = optional($parent->user)->name ?? 'Client';
+        } else {
+            $this->replyingToName = optional($review->user)->name ?? 'Client';
+        }
+
+        $this->replyingToReview = (int) $review->id;
+        $this->replyingToReply = $replyId !== null ? (int) $replyId : null;
+        $this->replyMessage = '';
+        $this->resetErrorBag('replyMessage');
+    }
+
+    public function cancelReply(): void
+    {
+        $this->replyingToReview = null;
+        $this->replyingToReply = null;
+        $this->replyingToName = '';
+        $this->replyMessage = '';
+        $this->resetErrorBag('replyMessage');
+    }
+
+    /**
+     * Publie une réponse à un avis ou à une autre réponse (imbrication illimitée).
+     */
+    public function submitReply(): void
+    {
+        if (!Auth::check()) {
+            redirect()->route('login');
+            return;
+        }
+
+        $this->validate([
+            'replyMessage' => 'required|string|max:1000',
+        ], [
+            'replyMessage.required' => 'Écrivez votre réponse.',
+            'replyMessage.max' => 'Réponse trop longue (1000 caractères max).',
+        ]);
+
+        if ($this->replyingToReview === null) {
+            $this->addError('replyMessage', 'Choisissez l’avis auquel vous souhaitez répondre.');
+            return;
+        }
+
+        $review = $this->product->avisClients()->whereKey($this->replyingToReview)->first();
+        if (!$review) {
+            $this->addError('replyMessage', 'Cet avis n’existe plus.');
+            return;
+        }
+
+        $parentId = null;
+        if ($this->replyingToReply !== null) {
+            $parent = ReviewReply::where('avis_client_id', $review->id)
+                ->whereKey($this->replyingToReply)
+                ->first();
+            if (!$parent) {
+                $this->addError('replyMessage', 'La réponse à laquelle vous répondez n’existe plus.');
+                return;
+            }
+            $parentId = $parent->id;
+        }
+
+        ReviewReply::create([
+            'avis_client_id' => $review->id,
+            'user_id' => Auth::id(),
+            'parent_id' => $parentId,
+            'message' => trim($this->replyMessage),
+        ]);
+
+        $this->cancelReply();
+        $this->tab = 'avis';
+        session()->flash('review_reply_ok', 'Votre réponse a bien été publiée.');
+    }
+
     public function removeAvisPhoto(int $index): void
     {
         if (isset($this->avisPhotos[$index])) {
@@ -553,11 +660,28 @@ class ProduitDetail extends Component
             ->with(['user', 'response', 'photos'])
             ->orderBy('created_at', 'desc')
             ->paginate(3);
+
+        // Toutes les réponses des avis affichés, en une seule requête.
+        // On les regroupe par avis puis par parent_id pour reconstruire
+        // l'arborescence (réponse -> réponse -> réponse...) dans la vue.
+        $reviewIds = $reviews->getCollection()->pluck('id')->all();
+        $allReplies = empty($reviewIds)
+            ? collect()
+            : ReviewReply::with('user')
+                ->whereIn('avis_client_id', $reviewIds)
+                ->orderBy('created_at')
+                ->get();
+
+        $repliesByReview = $allReplies
+            ->groupBy('avis_client_id')
+            ->map(fn ($group) => $group->groupBy(fn ($reply) => (int) ($reply->parent_id ?? 0)));
+
         return view('livewire.produit-detail', [
             'price' => $price,
             'original' => $original,
             'inStock' => $inStock,
             'reviews' => $reviews,
+            'repliesByReview' => $repliesByReview,
             'couleurs' => $couleurs,
             'autresCaracs' => $autresCaracs,
             'allCaracs' => $allCaracs,

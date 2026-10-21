@@ -17,7 +17,7 @@ class ResetPasswordFrench extends ResetPassword
         return (new MailMessage())
             ->subject('Réinitialiser votre mot de passe')
             ->greeting('Bonjour ' . ($notifiable->name ?? ''))
-            ->line('Vous recevez cet email car une réinitialisation de mot de passe a été demandée pour votre compte Boutique.')
+            ->line('Vous recevez cet email car une réinitialisation de mot de passe a été demandée pour votre compte ' . config('app.name') . '.')
             ->action('Réinitialiser le mot de passe', $url)
             ->line('Ce lien expire dans 60 minutes. Si vous n\'êtes pas à l\'origine de cette demande, ignorez cet email.');
     }

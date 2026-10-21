@@ -30,6 +30,7 @@ Route::middleware('throttle:20,1')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/auth/social', [SocialAuthController::class, 'social']);
+    Route::post('/auth/social/exchange', [SocialAuthController::class, 'exchange']);
 });
 
 // Public — listing routes with moderate rate limiting (60 requests per minute)
@@ -53,8 +54,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/me/push-token', [AuthController::class, 'savePushToken']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // Avis clients
+    // Avis clients + réponses imbriquées
     Route::post('/products/{id}/reviews', [ReviewController::class, 'store']);
+    Route::post('/products/{id}/reviews/{reviewId}/replies', [ReviewController::class, 'storeReply']);
 
     // Favoris (wishlist)
     Route::get('/wishlist', [WishlistController::class, 'index']);
@@ -72,6 +74,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders/{id}', [OrderController::class, 'show']);
     Route::post('/orders/{id}/cancel', [OrderController::class, 'cancel']);
     Route::post('/orders/{id}/pay', [OrderController::class, 'pay']);
+    Route::post('/orders/{id}/payment-proof', [OrderController::class, 'submitPaymentProof']);
 
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);

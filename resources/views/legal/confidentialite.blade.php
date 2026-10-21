@@ -1,6 +1,7 @@
 @extends('base')
 
 @section('title', 'Politique de confidentialité')
+@section('meta_description', 'Politique de confidentialité de ' . config('app.name') . ' : données collectées, utilisation, partage, sécurité et droits des utilisateurs.')
 
 @section('content')
 <div class="container py-5" style="max-width: 900px;">

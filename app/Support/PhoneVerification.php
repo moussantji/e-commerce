@@ -82,7 +82,7 @@ class PhoneVerification
             throw new \RuntimeException('Passerelle Orange non configurée (SMS_ORANGE_CLIENT_ID/SECRET/SENDER).');
         }
 
-        $message = "Boutique : votre code de vérification est {$code}. Il expire dans 10 minutes.";
+        $message = config('app.name') . " : votre code de vérification est {$code}. Il expire dans 10 minutes.";
 
         $token = \Illuminate\Support\Facades\Cache::remember('orange_sms_token', 3500, function () use ($base, $clientId, $clientSecret) {
             $res = \Illuminate\Support\Facades\Http::asForm()->post($base . '/oauth/v3/oauth', [

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Paniers;
 use App\Models\Produits;
 use App\Notifications\CartItemAddedNotification;
+use App\Services\CouponDistributionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -125,10 +126,29 @@ class CartController extends Controller
             ];
         });
 
+        $subtotal = round($items->sum('line_total'), 2);
+        $count = (int) $items->sum('quantity');
+        $autoCoupon = $subtotal > 0
+            ? app(CouponDistributionService::class)->automaticCouponForOrder($subtotal, $count)
+            : null;
+
         return [
             'items' => $items,
-            'count' => $items->sum('quantity'),
-            'total' => round($items->sum('line_total'), 2),
+            'count' => $count,
+            'total' => $subtotal,
+            'auto_coupon' => $autoCoupon ? [
+                'id' => $autoCoupon->id,
+                'code' => $autoCoupon->code,
+                'type' => $autoCoupon->type,
+                'value' => (float) $autoCoupon->value,
+                'description' => $autoCoupon->type === 'percentage'
+                    ? 'Réduction de ' . rtrim(rtrim(number_format($autoCoupon->value, 2), '0'), '.') . '%'
+                    : 'Bon de ' . number_format($autoCoupon->value, 0, ',', ' ') . ' FCFA',
+                'expires_at' => optional($autoCoupon->expires_at)->format('d/m/Y'),
+            ] : null,
+            'auto_discount' => $autoCoupon
+                ? round($autoCoupon->calculateDiscount($subtotal), 2)
+                : 0,
         ];
     }
 }

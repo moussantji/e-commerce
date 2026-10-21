@@ -228,7 +228,7 @@
         <tr>
             <td>
                 <h1>Mandenbaoubab</h1>
-                <p class="sub">Bamako, Mali · contact@boutique.ml · +223 82 01 95 83</p>
+                <p class="sub">Bamako, Mali · contact@mandenbaoubab.com · +223 82 01 95 83 · +223 78 05 78 95</p>
             </td>
             <td class="meta">
                 <div class="num">Facture {{ $commande->numero_commande ?? 'CMD-' . $commande->id }}</div>

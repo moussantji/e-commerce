@@ -270,15 +270,23 @@ Build de production : voir la documentation Expo (EAS Build) dans `mobile/README
 
 # 🔐 Connexion Google (Google Sign-In) : `GOOGLE_ALLOWED_CLIENT_IDS`
 
-La connexion Google de l'app mobile fonctionne ainsi : l'app obtient un `idToken`
-auprès de Google, l'envoie au backend (`POST /api/auth/social`), et le backend
-**vérifie ce jeton auprès de Google**. Lors de cette vérification, le backend
-contrôle l'**audience** (`aud`) du jeton, c'est-à-dire l'**identifiant client
-OAuth** (client ID) pour lequel le jeton a été émis.
+L'app mobile propose deux flux Google :
+
+1. **Flux navigateur via le backend** (par défaut dans Expo Go, et secours si
+   le SDK natif échoue) : l'app ouvre `/auth/google/redirect?mobile=1`, le
+   backend fait l'échange OAuth avec le **client web**, puis renvoie à l'app un
+   code court. L'app échange ce code contre un token Sanctum via
+   `POST /api/auth/social/exchange`. Le secret Google reste uniquement sur le
+   serveur.
+2. **Flux natif** (`@react-native-google-signin`) dans un development build ou
+   un APK : l'app obtient un `idToken`, l'envoie à `POST /api/auth/social`, et
+   le backend vérifie l'audience (`aud`) du jeton.
 
 La variable `GOOGLE_ALLOWED_CLIENT_IDS` liste les client IDs **autorisés** à
 s'authentifier. Elle est nécessaire car l'app mobile peut utiliser plusieurs
-client IDs (Web / Android / iOS) selon la plateforme.
+client IDs (Web / Android / iOS) selon la plateforme. Le flux navigateur utilise
+le **Web client ID** (`GOOGLE_CLIENT_ID`) et ne nécessite donc pas de client
+Android/iOS.
 
 ## 1. Récupérer les client IDs Google
 
@@ -286,31 +294,31 @@ Dans la [Google Cloud Console](https://console.cloud.google.com/) →
 **APIs & Services → Credentials → OAuth 2.0 Client IDs**, créez (ou récupérez)
 les identifiants dont vous avez besoin :
 
-- **Web application** — indispensable : c'est le `webClientId` utilisé par l'app
-  pour obtenir l'`idToken` (même sur Android/iOS avec `@react-native-google-signin`).
-- **Android** — pour un build Android natif (nécessite l'empreinte **SHA-1** de
-  votre clé de signature + le nom de package).
-- **iOS** — pour un build iOS natif.
+- **Web application** — indispensable : c'est le client utilisé par le flux
+  navigateur mobile (Expo Go) et le `webClientId` du SDK natif. Ajoutez
+  `https://sugu.mandenbaoubab.com/auth/google/callback` dans les URI de
+  redirection autorisées.
+- **Android** — uniquement pour un build Android natif (nécessite l'empreinte
+  **SHA-1** de votre clé de signature + le nom de package).
+- **iOS** — uniquement pour un build iOS natif.
 
 Chaque identifiant ressemble à :
 `123456789012-abcdefg....apps.googleusercontent.com`.
 
 ## 2. Renseigner `.env` (backend)
 
-Ajoutez la variable dans le `.env` du backend, avec les client IDs **séparés par
-des virgules** (l'ordre n'a pas d'importance, les espaces sont ignorés) :
+Renseignez le client OAuth **web** (le secret reste côté serveur) :
 
 ```dotenv
-# Un seul client ID
+GOOGLE_CLIENT_ID=123456789012-web.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=GOCSPX-...
+GOOGLE_REDIRECT_URI=https://sugu.mandenbaoubab.com/auth/google/callback
+
+# Audience(s) acceptée(s) pour les idTokens du flux natif.
+# Le GOOGLE_CLIENT_ID est déjà accepté automatiquement, mais on peut aussi
+# ajouter les clients Android/iOS séparés par des virgules.
 GOOGLE_ALLOWED_CLIENT_IDS=123456789012-web.apps.googleusercontent.com
-
-# Plusieurs (web + android + ios), séparés par des virgules
-GOOGLE_ALLOWED_CLIENT_IDS=123456789012-web.apps.googleusercontent.com,123456789012-android.apps.googleusercontent.com,123456789012-ios.apps.googleusercontent.com
 ```
-
-> ℹ️ Le `GOOGLE_CLIENT_ID` éventuellement présent (utilisé pour le login Google
-> côté **site web**) est **aussi** accepté automatiquement : pas besoin de le
-> répéter dans `GOOGLE_ALLOWED_CLIENT_IDS`.
 
 Puis rechargez la configuration :
 ```bash
@@ -319,11 +327,13 @@ php artisan config:cache
 
 ## 3. Faire correspondre l'app mobile
 
-Les client IDs déclarés dans `GOOGLE_ALLOWED_CLIENT_IDS` doivent **correspondre**
-à ceux utilisés par l'app mobile dans `mobile/src/config.js` (objet
-`GOOGLE_CLIENT_IDS` : `web`, `android`, `ios`). En pratique, l'audience du jeton
-correspond au **Web client ID** (`webClientId`) ; assurez-vous donc qu'il figure
-bien dans `GOOGLE_ALLOWED_CLIENT_IDS`.
+Dans `mobile/src/config.js`, renseignez le **Web client ID** dans
+`GOOGLE_CLIENT_IDS.web` (et `.expo` si vous gardez les deux). Les entrées
+`android` / `ios` sont facultatives et ne servent qu'aux builds natifs.
+
+Le flux Expo Go / navigateur ne dépend d'aucun client Android/iOS : il utilise
+`GOOGLE_CLIENT_ID` côté backend et revient à l'app via `exp://…` ou
+`ecommerce://auth`.
 
 ## 4. Comportement et dépannage
 
@@ -335,8 +345,13 @@ bien dans `GOOGLE_ALLOWED_CLIENT_IDS`.
 - **« Configuration Google incomplète » (DEVELOPER_ERROR) côté app** : problème
   de configuration Android (empreinte **SHA-1** non enregistrée, mauvais package
   ou mauvais `webClientId`).
-- **« Indisponible dans Expo Go »** : la connexion Google native ne fonctionne
-  pas dans Expo Go ; utilisez un **development build** ou l'**APK** installé.
+- **Dans Expo Go** : la connexion passe par le navigateur et le backend
+  (`/auth/google/redirect?mobile=1`), donc aucun module natif n'est requis.
+  Vérifiez simplement les clés `GOOGLE_*` et l'URI de redirection autorisée
+  dans Google Cloud.
+- **URI de redirection refusée** : `GOOGLE_REDIRECT_URI` doit être exactement
+  celle déclarée dans Google Cloud, et le domaine doit être en HTTPS en
+  production.
 
 ---
 

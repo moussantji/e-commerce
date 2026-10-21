@@ -49,16 +49,16 @@ class HomeController extends Controller
             ->latest()
             ->first();
 
-        // Compte à rebours flash : expiration du code promo valide le plus urgent.
-        // Sans code daté valide, le compteur reste décoratif côté vue.
-        $flashCode = PromoCode::where('is_active', true)
+        // Compte à rebours flash : expiration de l'offre en cours la plus proche.
+        // Le code promo n'est volontairement jamais exposé sur la page publique.
+        $flashEndsAt = PromoCode::where('is_active', true)
             ->where(function ($q) {
                 $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());
             })
             ->whereNotNull('expires_at')
             ->where('expires_at', '>', now())
             ->orderBy('expires_at')
-            ->first();
+            ->first()?->expires_at;
 
         return view("welcome", [
             'categories' => $categories,
@@ -66,8 +66,7 @@ class HomeController extends Controller
             'selection' => $selection,
             'promoSpotlight' => $selection->first(),
             'newSpotlight' => $newSpotlight,
-            'flashCode' => $flashCode,
-            'flashEndsAt' => $flashCode?->expires_at,
+            'flashEndsAt' => $flashEndsAt,
         ]);
     }
 

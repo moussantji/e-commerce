@@ -406,12 +406,25 @@ class AdminCatalogController extends Controller
                     'expires_at' => 'nullable|date|after_or_equal:starts_at',
                     'usage_limit' => 'nullable|integer|min:1',
                     'is_active' => 'nullable|boolean',
+                    'is_automatic' => 'nullable|boolean',
                 ],
                 'prepare' => function (array $data, $item) {
                     $data['code'] = Str::upper($data['code']);
                     $data['starts_at'] = $data['starts_at'] ?? now();
                     $data['expires_at'] = $data['expires_at'] ?? now()->addMonth();
                     $data['is_active'] = $data['is_active'] ?? true;
+
+                    // Nouveau coupon : distribution automatique par défaut.
+                    if ($item === null) {
+                        $data['is_automatic'] = $data['is_automatic'] ?? true;
+                    }
+
+                    if (!empty($data['is_automatic'])) {
+                        PromoCode::where('id', '!=', $item?->id ?? 0)
+                            ->where('is_automatic', true)
+                            ->update(['is_automatic' => false]);
+                    }
+
                     return $data;
                 },
                 'map' => fn ($m) => [
@@ -424,6 +437,7 @@ class AdminCatalogController extends Controller
                     'usage_limit' => $m->usage_limit,
                     'usage_count' => $m->usage_count,
                     'is_active' => (bool) $m->is_active,
+                    'is_automatic' => (bool) $m->is_automatic,
                 ],
             ],
 

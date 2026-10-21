@@ -113,7 +113,7 @@ class WhatsAppVerification
         $token = (string) config('services.whatsapp.gateway.token', '');
         $tokenParam = (string) config('services.whatsapp.gateway.token_param', 'token');
 
-        $message = "Boutique : votre code de vérification est {$code}. Il expire dans 10 minutes.";
+        $message = config('app.name') . " : votre code de vérification est {$code}. Il expire dans 10 minutes.";
 
         $params = [$toParam => $phone . $suffix, $textParam => $message];
         if ($token !== '') {

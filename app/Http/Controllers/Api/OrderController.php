@@ -12,6 +12,7 @@ use App\Models\Produits;
 use App\Models\PromoCode;
 use App\Models\User;
 use App\Models\WalletTransaction;
+use App\Services\CouponDistributionService;
 use App\Support\AdminNotifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -22,7 +23,7 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         $orders = Commandes::where('user_id', $request->user()->id)
-            ->with('produits.photos')
+            ->with(['produits.photos', 'paiement'])
             ->withCount('produits')
             ->latest()
             ->paginate((int) $request->query('per_page', 15));
@@ -33,7 +34,7 @@ class OrderController extends Controller
     public function show(Request $request, $id)
     {
         $order = Commandes::where('user_id', $request->user()->id)
-            ->with('produits.photos')
+            ->with(['produits.photos', 'paiement'])
             ->withCount('produits')
             ->findOrFail($id);
 
@@ -46,6 +47,7 @@ class OrderController extends Controller
             'address_id' => 'nullable|integer',
             'coupon_code' => 'nullable|string',
             'livraison_id' => 'nullable|integer|exists:livraisons,id',
+            'payment_method_id' => 'nullable|integer|exists:paiements,id',
             'notes' => 'nullable|string',
         ]);
 
@@ -61,10 +63,18 @@ class OrderController extends Controller
         // Coupon validation (before transaction to avoid holding locks during external checks)
         $promo = null;
         $discount = 0;
-        if (!empty($data['coupon_code'])) {
-            $promo = PromoCode::where('code', $data['coupon_code'])->first();
+        $hasManualCoupon = !empty($data['coupon_code']);
+        if ($hasManualCoupon) {
+            $promo = PromoCode::whereCode((string) $data['coupon_code'])->first();
             if (!$promo || !$promo->isValid()) {
                 return response()->json(['message' => 'Code promo invalide ou expiré.'], 422);
+            }
+
+            if ($promo->is_automatic && !$promo->isAssignedTo($user)) {
+                return response()->json(
+                    ['message' => 'Ce coupon est réservé aux clients éligibles.'],
+                    422,
+                );
             }
         }
 
@@ -78,7 +88,7 @@ class OrderController extends Controller
                 ?? $user->addresses()->latest()->first();
         }
 
-        $fraisLivraison = 0;
+        $baseFraisLivraison = 0;
         // Méthode de livraison choisie, sinon la première active
         $livraison = null;
         if (!empty($data['livraison_id'])) {
@@ -89,9 +99,24 @@ class OrderController extends Controller
             $livraison = \App\Models\Livraison::where('is_active', true)->first();
         }
         if ($livraison) {
-            $fraisLivraison = (float) ($livraison->price ?? 0);
+            $baseFraisLivraison = (float) ($livraison->price ?? 0);
         }
-        $paiementId = \App\Models\Paiements::where('is_active', true)->value('id');
+
+        // Moyen de paiement choisi dans l'étape de confirmation (comme sur le site).
+        // S'il n'est pas fourni, on garde l'ancien comportement : première méthode active.
+        $paymentMethod = null;
+        if (!empty($data['payment_method_id'])) {
+            $paymentMethod = Paiements::where('is_active', true)->find($data['payment_method_id']);
+
+            if (!$paymentMethod) {
+                return response()->json(
+                    ['message' => 'Moyen de paiement invalide ou indisponible.'],
+                    422,
+                );
+            }
+        }
+        $paiementId = $paymentMethod?->id
+            ?? Paiements::where('is_active', true)->value('id');
 
         $adr = $address ? [
             'nom' => $address->nom,
@@ -104,7 +129,7 @@ class OrderController extends Controller
         ] : [];
 
         // Wrap the entire order creation in a database transaction with pessimistic locking
-        $order = DB::transaction(function () use ($panier, $user, $promo, $fraisLivraison, $livraison, $paiementId, $adr, $data) {
+        $order = DB::transaction(function () use ($panier, $user, $promo, $baseFraisLivraison, $livraison, $paiementId, $adr, $data, $hasManualCoupon) {
             $sousTotal = 0;
             $lines = [];
 
@@ -133,15 +158,36 @@ class OrderController extends Controller
                 ];
             }
 
+            // Livraison offerte : plus de 2 articles ET au moins 100 000 FCFA.
+            $itemCount = collect($lines)->sum('quantite');
+            $fraisLivraison = ($itemCount >= (int) config('shop.free_shipping_min_items', 3)
+                && $sousTotal >= (float) config('shop.free_shipping_min_total', 100000))
+                ? 0.0
+                : $baseFraisLivraison;
+
             // Calculate coupon discount with the validated sub-total
             $discount = 0;
+
+            // Aucun code saisi : appliquer le coupon automatique si la commande
+            // atteint les seuils (≥ 10 articles ou > 100 000 FCFA).
+            if (!$promo) {
+                $promo = app(CouponDistributionService::class)
+                    ->automaticCouponForOrder($sousTotal, $itemCount);
+            }
+
             if ($promo) {
                 // Re-check coupon validity with lock to prevent over-redemption
                 $promo = PromoCode::where('id', $promo->id)->lockForUpdate()->first();
                 if (!$promo || !$promo->isValid()) {
-                    throw new \App\Exceptions\InvalidCouponException('Code promo invalide ou expiré.');
+                    if ($hasManualCoupon) {
+                        throw new \App\Exceptions\InvalidCouponException('Code promo invalide ou expiré.');
+                    }
+
+                    // Coupon automatique devenu indisponible : on continue sans remise.
+                    $promo = null;
+                } else {
+                    $discount = $promo->calculateDiscount($sousTotal);
                 }
-                $discount = $promo->calculateDiscount($sousTotal);
             }
 
             $total = max(0, $sousTotal + $fraisLivraison - $discount);
@@ -175,6 +221,12 @@ class OrderController extends Controller
             // Atomically increment coupon usage count
             if ($promo) {
                 $promo->increment('usage_count');
+
+                app(CouponDistributionService::class)->recordUsage(
+                    $user,
+                    $promo,
+                    $promo->is_automatic ? 'auto_order' : 'manual',
+                );
             }
 
             // Clear the cart
@@ -183,7 +235,7 @@ class OrderController extends Controller
             return $order;
         });
 
-        $order->loadCount('produits')->load('produits.photos');
+        $order->loadCount('produits')->load(['produits.photos', 'paiement']);
 
         // Confirmation de création de commande (base + email + push)
         try {
@@ -229,14 +281,14 @@ class OrderController extends Controller
             }
         });
 
-        $order->loadCount('produits')->load('produits.photos');
+        $order->loadCount('produits')->load(['produits.photos', 'paiement']);
 
         return new OrderResource($order);
     }
 
     /**
-     * Le client déclare avoir payé sa commande (mobile money manuel).
-     * Crée une preuve de paiement en attente + notifie les admins.
+     * Paiement immédiat : portefeuille ou paiement à la livraison.
+     * Le mobile money passe obligatoirement par submitPaymentProof() avec photo.
      */
     public function pay(Request $request, $id)
     {
@@ -251,6 +303,12 @@ class OrderController extends Controller
         $user = $request->user();
         $order = Commandes::where('user_id', $user->id)->findOrFail($id);
 
+        if ($order->statut !== 'en_attente') {
+            return response()->json([
+                'message' => "Cette commande n'attend pas de paiement.",
+            ], 422);
+        }
+
         // === Paiement direct avec le portefeuille (solde rechargé) ===
         if ($request->boolean('wallet')) {
             return $this->payWithWallet($user, $order);
@@ -258,10 +316,9 @@ class OrderController extends Controller
 
         $method = null;
         if (!empty($data['payment_method_id'])) {
-            $method = Paiements::find($data['payment_method_id']);
+            $method = Paiements::where('is_active', true)->find($data['payment_method_id']);
         }
         $isCod = $method && $method->isCashOnDelivery();
-        $providerLabel = $data['provider'] ?? ($method->method_name ?? 'Mobile Money');
 
         // === Paiement à la livraison : commande confirmée directement ===
         if ($isCod) {
@@ -288,48 +345,131 @@ class OrderController extends Controller
                 ['type' => 'admin_payment', 'id' => $order->id],
             );
 
-            $order->loadCount('produits')->load('produits.photos');
+            $order->loadCount('produits')->load(['produits.photos', 'paiement']);
 
             return (new OrderResource($order))->additional([
                 'message' => 'Commande confirmée. Vous paierez à la livraison.',
             ]);
         }
 
-        // === Paiement mobile money : déclaration à vérifier ===
-        // Enregistre la méthode choisie sur la commande + statut : paiement déclaré
-        $order->paiement_id = $method->id ?? $order->paiement_id;
-        $order->statut = 'paiement_declare';
-        $order->date_en_attente = now();
-        $notePaiement = "Paiement déclaré via {$providerLabel}"
-            . (!empty($data['phone']) ? " — {$data['phone']}" : '')
-            . (!empty($data['transaction_id']) ? " — ref: {$data['transaction_id']}" : '');
-        $order->notes = trim(($order->notes ? $order->notes . "\n" : '') . $notePaiement);
-        $order->save();
+        // === Paiement mobile money : la capture est obligatoire ===
+        // On ne crée plus de preuve vide : le client doit passer par
+        // POST /orders/{id}/payment-proof avec au moins une image.
+        return response()->json([
+            'message' => 'Ajoutez la capture de votre paiement pour déclarer le paiement.',
+            'code' => 'payment_proof_required',
+        ], 422);
+    }
 
-        // Preuve de paiement (à confirmer par l'admin)
+    /**
+     * Déclaration de paiement mobile money avec capture(s) obligatoire(s).
+     * Même logique que le formulaire de la page commande du site.
+     */
+    public function submitPaymentProof(Request $request, $id)
+    {
+        $user = $request->user();
+        $order = Commandes::where('user_id', $user->id)->with('paiement')->findOrFail($id);
+
+        if ($order->statut !== 'en_attente') {
+            return response()->json([
+                'message' => "Cette commande n'attend pas de preuve de paiement.",
+            ], 422);
+        }
+
+        $data = $request->validate([
+            'payment_method_id' => 'nullable|integer|exists:paiements,id',
+            'provider' => 'nullable|string|max:80',
+            'phone' => 'nullable|string|max:30',
+            'transaction_id' => 'nullable|string|max:120',
+            'photos' => 'required|array|min:1|max:5',
+            'photos.*' => 'required|image|max:5120',
+        ], [
+            'photos.required' => 'La capture du paiement est obligatoire.',
+            'photos.min' => 'Ajoutez au moins une capture du paiement.',
+            'photos.max' => 'Vous pouvez joindre au maximum 5 captures.',
+            'photos.*.image' => 'Chaque preuve doit être une image valide.',
+            'photos.*.max' => 'Chaque capture ne doit pas dépasser 5 Mo.',
+        ]);
+
+        $method = null;
+        if (!empty($data['payment_method_id'])) {
+            $method = Paiements::where('is_active', true)->find($data['payment_method_id']);
+            if (!$method) {
+                return response()->json([
+                    'message' => 'Moyen de paiement invalide ou indisponible.',
+                ], 422);
+            }
+        } elseif ($order->paiement) {
+            $method = $order->paiement;
+        }
+
+        if ($method && $method->isCashOnDelivery()) {
+            return response()->json([
+                'message' => 'Le paiement à la livraison ne nécessite pas de capture.',
+            ], 422);
+        }
+
+        $providerLabel = trim((string) (
+            $data['provider']
+            ?? $method?->method_name
+            ?? 'Mobile Money'
+        ));
+        if ($providerLabel === '') {
+            return response()->json([
+                'message' => 'Précisez le moyen de paiement utilisé.',
+            ], 422);
+        }
+
+        $paths = [];
+        foreach ($request->file('photos', []) as $photo) {
+            if (!$photo || !$photo->isValid()) {
+                continue;
+            }
+            $paths[] = $photo->store(
+                'payment_proofs/' . $user->id . '/' . $order->id,
+                'public',
+            );
+        }
+
+        if (count($paths) === 0) {
+            return response()->json([
+                'message' => "Impossible d'enregistrer la capture. Réessayez.",
+            ], 422);
+        }
+
         PaymentProof::create([
             'user_id' => $user->id,
             'order_id' => $order->id,
             'provider' => $providerLabel,
             'phone' => $data['phone'] ?? null,
             'amount' => $order->total,
+            'photos' => $paths,
             'status' => 'pending',
             'notes' => $data['transaction_id'] ?? null,
         ]);
 
-        // Notifie les administrateurs (base + email)
+        $order->paiement_id = $method?->id ?? $order->paiement_id;
+        $order->statut = 'paiement_declare';
+        $order->date_en_attente = now();
+        $notePaiement = "Paiement déclaré via {$providerLabel}"
+            . (!empty($data['phone']) ? " — {$data['phone']}" : '')
+            . (!empty($data['transaction_id']) ? " — ref: {$data['transaction_id']}" : '')
+            . ' — preuve photo jointe.';
+        $order->notes = trim(($order->notes ? $order->notes . "\n" : '') . $notePaiement);
+        $order->save();
+
         $numero = $order->numero_commande ?? ('#' . $order->id);
         AdminNotifier::notifyPayment(
             'Nouveau paiement à vérifier',
             "{$user->name} a déclaré avoir payé la commande {$numero} ({$providerLabel}) — "
-                . number_format((float) $order->total, 0, ',', ' ') . ' FCFA.',
+                . number_format((float) $order->total, 0, ',', ' ') . ' FCFA. Capture(s) jointe(s).',
             ['type' => 'admin_payment', 'id' => $order->id],
         );
 
-        $order->loadCount('produits')->load('produits.photos');
+        $order->loadCount('produits')->load(['produits.photos', 'paiement']);
 
         return (new OrderResource($order))->additional([
-            'message' => 'Paiement déclaré. En attente de confirmation par le vendeur.',
+            'message' => 'Preuve envoyée. Le vendeur va vérifier votre paiement.',
         ]);
     }
 
@@ -392,7 +532,7 @@ class OrderController extends Controller
             ['type' => 'admin_payment', 'id' => $order->id],
         );
 
-        $order->loadCount('produits')->load('produits.photos');
+        $order->loadCount('produits')->load(['produits.photos', 'paiement']);
 
         return (new OrderResource($order))->additional([
             'message' => 'Commande payée avec votre portefeuille.',

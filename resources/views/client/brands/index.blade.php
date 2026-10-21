@@ -1,6 +1,7 @@
 @extends('base')
 
 @section('title', 'Toutes les marques')
+@section('meta_description', 'Découvrez les marques et boutiques disponibles sur ' . config('app.name') . ', votre boutique en ligne au Mali.')
 
 @section('content')
     @include('section-begin')
@@ -30,7 +31,7 @@
                         $img = $brand->getPhoto() ? $brand->getPhoto()->getImageUrl(300, 300) : null;
                         $bUrl = route('products', ['brands' => $brand->id]);
                     @endphp
-                    <article class="card rv in">
+                    <article class="card rv in" data-card-href="{{ $bUrl }}">
                         <div class="thumb"
                             style="@if ($img) background-image:url('{{ $img }}');background-size:contain;background-repeat:no-repeat; @endif">
                             @if (!$img)

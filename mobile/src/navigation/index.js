@@ -26,7 +26,6 @@ import RecentlyViewedScreen from "../screens/RecentlyViewedScreen";
 import EditProfileScreen from "../screens/EditProfileScreen";
 import SettingsScreen from "../screens/SettingsScreen";
 import AccountSecurityScreen from "../screens/AccountSecurityScreen";
-import PaymentScreen from "../screens/PaymentScreen";
 import AdminPaymentsScreen from "../screens/AdminPaymentsScreen";
 import AdminOrdersScreen from "../screens/AdminOrdersScreen";
 import OrderDetailScreen from "../screens/OrderDetailScreen";
@@ -191,11 +190,6 @@ function AppStack() {
                 options={{ headerShown: false }}
             />
             <Stack.Screen
-                name="Payment"
-                component={PaymentScreen}
-                options={{ headerShown: false }}
-            />
-            <Stack.Screen
                 name="AdminPayments"
                 component={AdminPaymentsScreen}
                 options={{ headerShown: false }}
@@ -284,6 +278,9 @@ function routeFromLink(nav, link) {
             break;
         case "wallet":
             nav.navigate("Wallet");
+            break;
+        case "coupons":
+            nav.navigate("Coupons");
             break;
         case "admin_payment":
         case "admin_wallet":

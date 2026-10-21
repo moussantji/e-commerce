@@ -11,6 +11,9 @@ import {
     Animated,
     ImageBackground,
     Platform,
+    Modal,
+    Pressable,
+    ScrollView,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
@@ -110,10 +113,30 @@ export default function CartScreen({ navigation }) {
     const [defaultAddress, setDefaultAddress] = useState(null);
     const [shippingMethods, setShippingMethods] = useState([]);
     const [shipping, setShipping] = useState(null);
+    const [paymentMethods, setPaymentMethods] = useState([]);
+    const [payment, setPayment] = useState(null);
+    const [confirmOpen, setConfirmOpen] = useState(false);
     const [coupon, setCoupon] = useState(null);
     const [couponInput, setCouponInput] = useState("");
     const [placing, setPlacing] = useState(false);
     const [sticky, setSticky] = useState(false);
+
+    // Le serveur applique automatiquement le coupon dès que la commande
+    // atteint les seuils (≥ 10 articles ou > 100 000 FCFA).
+    useEffect(() => {
+        const auto = cart.auto_coupon;
+        setCoupon((prev) => {
+            if (prev && !prev.automatic) return prev;
+            if (auto) {
+                return {
+                    code: auto.code,
+                    discount: cart.auto_discount || 0,
+                    automatic: true,
+                };
+            }
+            return prev?.automatic ? null : prev;
+        });
+    }, [cart.auto_coupon?.code, cart.auto_discount]);
 
     // Responsive: extra padding to keep content below the system status bar
     const STATUS_BAR_PADDING = Platform.OS === "ios" ? insets.top + 12 : insets.top + 16;
@@ -172,13 +195,28 @@ export default function CartScreen({ navigation }) {
         }
     }, []);
 
+    const loadPayments = useCallback(async () => {
+        try {
+            const { data } = await api.get("/payment-methods");
+            const list = data.data ?? [];
+            setPaymentMethods(list);
+            setPayment((prev) => {
+                if (prev && list.some((m) => m.id === prev.id)) return prev;
+                return list.find((m) => !m.cod) || list[0] || null;
+            });
+        } catch (e) {
+            /* ignore */
+        }
+    }, []);
+
     useFocusEffect(
         useCallback(() => {
             refresh();
             loadRecos(recoFilter);
             loadAddress();
             loadShipping();
-        }, [refresh, loadRecos, recoFilter, loadAddress, loadShipping]),
+            loadPayments();
+        }, [refresh, loadRecos, recoFilter, loadAddress, loadShipping, loadPayments]),
     );
 
     const selectReco = (key) => {
@@ -231,36 +269,84 @@ export default function CartScreen({ navigation }) {
             setCoupon({ code: data.code, discount: data.discount });
             Alert.alert("Coupon appliqué", `Réduction : ${formatPrice(data.discount)}`);
         } catch (e) {
-            setCoupon(null);
+            setCoupon(
+                cart.auto_coupon
+                    ? {
+                          code: cart.auto_coupon.code,
+                          discount: cart.auto_discount || 0,
+                          automatic: true,
+                      }
+                    : null,
+            );
             Alert.alert("Code invalide", apiError(e));
         }
     };
 
     const removeCoupon = () => {
-        setCoupon(null);
         setCouponInput("");
+        if (cart.auto_coupon) {
+            setCoupon({
+                code: cart.auto_coupon.code,
+                discount: cart.auto_discount || 0,
+                automatic: true,
+            });
+        } else {
+            setCoupon(null);
+        }
     };
 
-    const checkout = async () => {
-        if (placing) return;
+    const beginCheckout = () => {
+        if (placing || cart.items.length === 0) return;
         if (!ensureAuth("Connectez-vous pour passer votre commande.")) return;
+
+        if (!defaultAddress) {
+            Alert.alert(
+                "Adresse requise",
+                "Ajoutez une adresse de livraison pour continuer.",
+                [
+                    { text: "Plus tard", style: "cancel" },
+                    {
+                        text: "Ajouter une adresse",
+                        onPress: () => navigation.navigate("Addresses"),
+                    },
+                ],
+            );
+            return;
+        }
+        if (!shipping) {
+            Alert.alert("Livraison", "Choisissez un mode de livraison.");
+            return;
+        }
+        if (!payment) {
+            Alert.alert(
+                "Paiement",
+                "Aucun moyen de paiement n'est disponible pour le moment.",
+            );
+            return;
+        }
+
+        setConfirmOpen(true);
+    };
+
+    // Étape finale identique au site : la commande est créée avec le mode de
+    // livraison ET le moyen de paiement choisis, puis le client est redirigé
+    // vers le détail de commande pour envoyer sa preuve de paiement.
+    const confirmCheckout = async () => {
+        if (placing) return;
         setPlacing(true);
         try {
             const { data } = await api.post("/orders", {
                 address_id: defaultAddress?.id,
-                coupon_code: coupon?.code,
+                coupon_code: coupon?.automatic ? undefined : coupon?.code,
                 livraison_id: shipping?.id,
+                payment_method_id: payment?.id,
             });
             const order = data.data ?? data;
+            setConfirmOpen(false);
             setCoupon(null);
             setCouponInput("");
             await refresh();
-            // Redirige vers le paiement (choix méthode + instructions)
-            navigation.navigate("Payment", {
-                orderId: order.id,
-                numero: order.numero_commande,
-                total: order.total,
-            });
+            navigation.navigate("OrderDetail", { id: order.id });
         } catch (e) {
             Alert.alert("Impossible", apiError(e));
         } finally {
@@ -269,6 +355,13 @@ export default function CartScreen({ navigation }) {
     };
 
     const isEmpty = cart.items.length === 0;
+    // Livraison offerte : plus de 2 articles et au moins 100 000 FCFA.
+    const freeShipping = cart.count > 2 && cart.total >= 100000;
+    const shippingPrice = freeShipping ? 0 : shipping?.price || 0;
+    const orderTotal = Math.max(
+        0,
+        cart.total - (coupon?.discount || 0) + shippingPrice,
+    );
     const leftCol = recos.filter((_, i) => i % 2 === 0);
     const rightCol = recos.filter((_, i) => i % 2 === 1);
 
@@ -611,12 +704,15 @@ export default function CartScreen({ navigation }) {
                                     <Text style={styles.couponApplied}>
                                         {coupon.code} · −
                                         {formatPrice(coupon.discount)}
+                                        {coupon.automatic ? " · auto" : ""}
                                     </Text>
-                                    <TouchableOpacity onPress={removeCoupon}>
-                                        <Text style={styles.couponRemove}>
-                                            Retirer
-                                        </Text>
-                                    </TouchableOpacity>
+                                    {!coupon.automatic && (
+                                        <TouchableOpacity onPress={removeCoupon}>
+                                            <Text style={styles.couponRemove}>
+                                                Retirer
+                                            </Text>
+                                        </TouchableOpacity>
+                                    )}
                                 </>
                             ) : (
                                 <>
@@ -667,9 +763,9 @@ export default function CartScreen({ navigation }) {
                     <View style={styles.sumLine}>
                         <Text style={styles.sumLabel}>Livraison</Text>
                         <Text style={styles.sumVal}>
-                            {shipping && shipping.price > 0
-                                ? formatPrice(shipping.price)
-                                : "Gratuite"}
+                            {shippingPrice > 0
+                                ? formatPrice(shippingPrice)
+                                : "Offerte"}
                         </Text>
                     </View>
                     <View style={styles.totalRow}>
@@ -677,22 +773,17 @@ export default function CartScreen({ navigation }) {
                             Total ({cart.count})
                         </Text>
                         <Text style={styles.totalValue}>
-                            {formatPrice(
-                                Math.max(
-                                    0,
-                                    cart.total - (coupon?.discount || 0) + (shipping?.price || 0),
-                                ),
-                            )}
+                            {formatPrice(orderTotal)}
                         </Text>
                     </View>
                     <TouchableOpacity
                         style={styles.checkout}
-                        onPress={checkout}
+                        onPress={beginCheckout}
                         disabled={placing}
                         activeOpacity={0.9}
                     >
                         <Text style={styles.checkoutText}>
-                            {placing ? "Traitement..." : "Passer la commande"}
+                            {placing ? "Traitement..." : "Commander"}
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -706,6 +797,347 @@ export default function CartScreen({ navigation }) {
 
             {/* Barre collante violette : apparaît en descendant */}
             {StickyBar}
+
+            {/* Étape finale : confirmation façon site web */}
+            <Modal
+                visible={confirmOpen}
+                transparent
+                animationType="slide"
+                statusBarTranslucent
+                onRequestClose={() => {
+                    if (!placing) setConfirmOpen(false);
+                }}
+            >
+                <View style={styles.confirmBackdrop}>
+                    <Pressable
+                        style={StyleSheet.absoluteFill}
+                        onPress={() => {
+                            if (!placing) setConfirmOpen(false);
+                        }}
+                    />
+                    <View
+                        style={[
+                            styles.confirmSheet,
+                            { paddingBottom: insets.bottom + 14 },
+                        ]}
+                    >
+                        <View style={styles.confirmHandle} />
+                        <View style={styles.confirmHeader}>
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.confirmKicker}>
+                                    ÉTAPE FINALE
+                                </Text>
+                                <Text style={styles.confirmTitle}>
+                                    Confirmer ma commande
+                                </Text>
+                            </View>
+                            <TouchableOpacity
+                                style={styles.confirmClose}
+                                onPress={() => setConfirmOpen(false)}
+                                disabled={placing}
+                                hitSlop={10}
+                            >
+                                <Ionicons
+                                    name="close"
+                                    size={20}
+                                    color={COLORS.text}
+                                />
+                            </TouchableOpacity>
+                        </View>
+
+                        <ScrollView
+                            showsVerticalScrollIndicator={false}
+                            style={styles.confirmScrollView}
+                            contentContainerStyle={styles.confirmScroll}
+                        >
+                            <Text style={styles.confirmSection}>
+                                Vos articles ({cart.count})
+                            </Text>
+                            <View style={styles.confirmItems}>
+                                {cart.items.map((item, idx) => (
+                                    <View
+                                        key={String(
+                                            item.id ??
+                                                item.product_id ??
+                                                idx,
+                                        )}
+                                        style={styles.confirmItem}
+                                    >
+                                        <Image
+                                            source={{ uri: item.image }}
+                                            style={styles.confirmItemImg}
+                                        />
+                                        <View style={{ flex: 1 }}>
+                                            <Text
+                                                style={styles.confirmItemName}
+                                                numberOfLines={2}
+                                            >
+                                                {item.name}
+                                            </Text>
+                                            <Text
+                                                style={styles.confirmItemQty}
+                                            >
+                                                × {item.quantity}
+                                            </Text>
+                                        </View>
+                                        <Text
+                                            style={styles.confirmItemTotal}
+                                        >
+                                            {formatPrice(item.line_total)}
+                                        </Text>
+                                    </View>
+                                ))}
+                            </View>
+
+                            <Text style={styles.confirmSection}>
+                                Mode de livraison
+                            </Text>
+                            {shippingMethods.length === 0 ? (
+                                <Text style={styles.confirmMuted}>
+                                    Aucun mode de livraison disponible.
+                                </Text>
+                            ) : (
+                                shippingMethods.map((m) => {
+                                    const on = shipping?.id === m.id;
+                                    return (
+                                        <TouchableOpacity
+                                            key={m.id}
+                                            style={[
+                                                styles.confirmChoice,
+                                                on && styles.confirmChoiceOn,
+                                            ]}
+                                            activeOpacity={0.85}
+                                            onPress={() => setShipping(m)}
+                                        >
+                                            <Ionicons
+                                                name={
+                                                    on
+                                                        ? "radio-button-on"
+                                                        : "radio-button-off"
+                                                }
+                                                size={20}
+                                                color={
+                                                    on
+                                                        ? COLORS.primaryDark
+                                                        : "#cbd5e1"
+                                                }
+                                            />
+                                            <View style={{ flex: 1 }}>
+                                                <Text
+                                                    style={styles.confirmChoiceName}
+                                                >
+                                                    {m.name}
+                                                </Text>
+                                                {m.delay ? (
+                                                    <Text
+                                                        style={
+                                                            styles.confirmChoiceSub
+                                                        }
+                                                    >
+                                                        Délai : {m.delay}
+                                                    </Text>
+                                                ) : null}
+                                            </View>
+                                            <Text
+                                                style={styles.confirmChoicePrice}
+                                            >
+                                                {m.price > 0
+                                                    ? formatPrice(m.price)
+                                                    : "Gratuit"}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    );
+                                })
+                            )}
+
+                            <Text style={styles.confirmSection}>
+                                Moyen de paiement
+                            </Text>
+                            {paymentMethods.length === 0 ? (
+                                <Text style={styles.confirmMuted}>
+                                    Aucun moyen de paiement disponible.
+                                </Text>
+                            ) : (
+                                paymentMethods.map((m) => {
+                                    const on = payment?.id === m.id;
+                                    return (
+                                        <TouchableOpacity
+                                            key={m.id}
+                                            style={[
+                                                styles.confirmChoice,
+                                                on && styles.confirmChoiceOn,
+                                            ]}
+                                            activeOpacity={0.85}
+                                            onPress={() => setPayment(m)}
+                                        >
+                                            <Ionicons
+                                                name={
+                                                    on
+                                                        ? "radio-button-on"
+                                                        : "radio-button-off"
+                                                }
+                                                size={20}
+                                                color={
+                                                    on
+                                                        ? COLORS.primaryDark
+                                                        : "#cbd5e1"
+                                                }
+                                            />
+                                            <Ionicons
+                                                name={
+                                                    m.cod
+                                                        ? "cash-outline"
+                                                        : "phone-portrait-outline"
+                                                }
+                                                size={18}
+                                                color={COLORS.primaryDark}
+                                            />
+                                            <View style={{ flex: 1 }}>
+                                                <Text
+                                                    style={styles.confirmChoiceName}
+                                                >
+                                                    {m.name}
+                                                </Text>
+                                                {m.cod ? (
+                                                    <Text
+                                                        style={
+                                                            styles.confirmChoiceSub
+                                                        }
+                                                    >
+                                                        Paiement à la livraison
+                                                    </Text>
+                                                ) : null}
+                                            </View>
+                                        </TouchableOpacity>
+                                    );
+                                })
+                            )}
+
+                            <Text style={styles.confirmSection}>
+                                Adresse de livraison
+                            </Text>
+                            <TouchableOpacity
+                                style={styles.confirmAddress}
+                                onPress={() => {
+                                    setConfirmOpen(false);
+                                    navigation.navigate("Addresses");
+                                }}
+                                activeOpacity={0.8}
+                            >
+                                <Ionicons
+                                    name="location-outline"
+                                    size={20}
+                                    color={COLORS.primaryDark}
+                                />
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.confirmAddressName}>
+                                        {defaultAddress?.nom ||
+                                            "Ajouter une adresse"}
+                                        {defaultAddress?.telephone
+                                            ? ` · ${defaultAddress.telephone}`
+                                            : ""}
+                                    </Text>
+                                    <Text
+                                        style={styles.confirmAddressLine}
+                                        numberOfLines={2}
+                                    >
+                                        {[
+                                            defaultAddress?.adresse,
+                                            defaultAddress?.ville,
+                                            defaultAddress?.pays,
+                                        ]
+                                            .filter(Boolean)
+                                            .join(", ")}
+                                    </Text>
+                                </View>
+                                <Ionicons
+                                    name="chevron-forward"
+                                    size={18}
+                                    color={COLORS.textLight}
+                                />
+                            </TouchableOpacity>
+
+                            <View style={styles.confirmTotals}>
+                                <View style={styles.confirmTotalLine}>
+                                    <Text style={styles.confirmTotalLabel}>
+                                        Sous-total
+                                    </Text>
+                                    <Text style={styles.confirmTotalVal}>
+                                        {formatPrice(cart.total)}
+                                    </Text>
+                                </View>
+                                {coupon ? (
+                                    <View style={styles.confirmTotalLine}>
+                                        <Text style={styles.confirmTotalLabel}>
+                                            Réduction
+                                        </Text>
+                                        <Text
+                                            style={[
+                                                styles.confirmTotalVal,
+                                                { color: COLORS.accent },
+                                            ]}
+                                        >
+                                            −{formatPrice(coupon.discount)}
+                                        </Text>
+                                    </View>
+                                ) : null}
+                                <View style={styles.confirmTotalLine}>
+                                    <Text style={styles.confirmTotalLabel}>
+                                        Livraison
+                                    </Text>
+                                    <Text style={styles.confirmTotalVal}>
+                                        {shippingPrice > 0
+                                            ? formatPrice(shippingPrice)
+                                            : "Offerte"}
+                                    </Text>
+                                </View>
+                                <View style={styles.confirmGrandTotal}>
+                                    <Text style={styles.confirmGrandLabel}>
+                                        Total à payer
+                                    </Text>
+                                    <Text style={styles.confirmGrandValue}>
+                                        {formatPrice(orderTotal)}
+                                    </Text>
+                                </View>
+                            </View>
+                        </ScrollView>
+
+                        <TouchableOpacity
+                            style={[
+                                styles.confirmBtn,
+                                (placing ||
+                                    !payment ||
+                                    !shipping ||
+                                    !defaultAddress) &&
+                                    styles.confirmBtnDisabled,
+                            ]}
+                            onPress={confirmCheckout}
+                            disabled={
+                                placing ||
+                                !payment ||
+                                !shipping ||
+                                !defaultAddress
+                            }
+                            activeOpacity={0.9}
+                        >
+                            {placing ? (
+                                <ActivityIndicator color="#fff" />
+                            ) : (
+                                <>
+                                    <Text style={styles.confirmBtnText}>
+                                        Confirmer la commande
+                                    </Text>
+                                    <Ionicons
+                                        name="arrow-forward"
+                                        size={18}
+                                        color="#fff"
+                                    />
+                                </>
+                            )}
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -983,5 +1415,172 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     checkoutText: { color: "#fff", fontWeight: "800", fontSize: 16 },
+
+    // Confirmation de commande (reprend les étapes du site)
+    confirmBackdrop: {
+        flex: 1,
+        backgroundColor: "rgba(15,23,42,0.55)",
+        justifyContent: "flex-end",
+    },
+    confirmSheet: {
+        maxHeight: "92%",
+        backgroundColor: "#fff",
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        paddingTop: 10,
+        paddingHorizontal: 16,
+    },
+    confirmHandle: {
+        alignSelf: "center",
+        width: 44,
+        height: 5,
+        borderRadius: 3,
+        backgroundColor: "#e5e7eb",
+        marginBottom: 12,
+    },
+    confirmHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 10,
+        paddingBottom: 10,
+    },
+    confirmKicker: {
+        fontSize: 10.5,
+        fontWeight: "800",
+        letterSpacing: 1.2,
+        color: COLORS.primaryDark,
+    },
+    confirmTitle: {
+        fontSize: 20,
+        fontWeight: "900",
+        color: COLORS.text,
+        marginTop: 2,
+    },
+    confirmClose: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: "#f3f4f6",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    confirmScroll: { paddingBottom: 10 },
+    confirmScrollView: { flexShrink: 1 },
+    confirmSection: {
+        fontSize: 13.5,
+        fontWeight: "800",
+        color: COLORS.text,
+        marginTop: 14,
+        marginBottom: 8,
+    },
+    confirmItems: {
+        borderWidth: 1,
+        borderColor: "#f1f5f9",
+        borderRadius: 14,
+        overflow: "hidden",
+    },
+    confirmItem: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 10,
+        padding: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: "#f8fafc",
+    },
+    confirmItemImg: {
+        width: 46,
+        height: 46,
+        borderRadius: 9,
+        backgroundColor: "#e5e7eb",
+    },
+    confirmItemName: {
+        fontSize: 12.5,
+        fontWeight: "600",
+        color: COLORS.text,
+    },
+    confirmItemQty: { fontSize: 11.5, color: COLORS.textLight, marginTop: 2 },
+    confirmItemTotal: { fontSize: 12.5, fontWeight: "800", color: COLORS.text },
+    confirmMuted: { fontSize: 12.5, color: COLORS.textLight },
+    confirmChoice: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 9,
+        paddingVertical: 10,
+        paddingHorizontal: 10,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: "#f1f5f9",
+        marginBottom: 7,
+    },
+    confirmChoiceOn: {
+        borderColor: COLORS.primary,
+        backgroundColor: "rgba(102,126,234,0.06)",
+    },
+    confirmChoiceName: {
+        fontSize: 13.5,
+        fontWeight: "700",
+        color: COLORS.text,
+    },
+    confirmChoiceSub: { fontSize: 11.5, color: COLORS.textLight, marginTop: 2 },
+    confirmChoicePrice: {
+        fontSize: 13,
+        fontWeight: "800",
+        color: COLORS.primaryDark,
+    },
+    confirmAddress: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 10,
+        padding: 12,
+        borderRadius: 12,
+        backgroundColor: "#f8fafc",
+    },
+    confirmAddressName: {
+        fontSize: 13.5,
+        fontWeight: "700",
+        color: COLORS.text,
+    },
+    confirmAddressLine: {
+        fontSize: 12,
+        color: COLORS.textLight,
+        marginTop: 2,
+    },
+    confirmTotals: {
+        marginTop: 16,
+        borderTopWidth: 1,
+        borderTopColor: "#f1f5f9",
+        paddingTop: 12,
+    },
+    confirmTotalLine: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        marginBottom: 7,
+    },
+    confirmTotalLabel: { fontSize: 13, color: COLORS.textLight },
+    confirmTotalVal: { fontSize: 13, fontWeight: "700", color: COLORS.text },
+    confirmGrandTotal: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginTop: 4,
+    },
+    confirmGrandLabel: { fontSize: 15, fontWeight: "800", color: COLORS.text },
+    confirmGrandValue: {
+        fontSize: 21,
+        fontWeight: "900",
+        color: COLORS.text,
+    },
+    confirmBtn: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8,
+        borderRadius: 14,
+        paddingVertical: 15,
+        backgroundColor: COLORS.primaryDark,
+        marginTop: 12,
+    },
+    confirmBtnDisabled: { opacity: 0.5 },
+    confirmBtnText: { color: "#fff", fontWeight: "800", fontSize: 15.5 },
     loaderOverlay: { position: "absolute", top: 120, alignSelf: "center" },
 });

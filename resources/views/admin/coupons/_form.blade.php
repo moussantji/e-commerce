@@ -59,6 +59,20 @@
             {{ old('is_active', $coupon->is_active ?? true) ? 'checked' : '' }}> Coupon actif</label>
 </div>
 
+<div class="field">
+    <label class="switch"><input type="checkbox" name="is_automatic" value="1"
+            {{ old('is_automatic', $coupon->is_automatic ?? true) ? 'checked' : '' }}> Distribution automatique</label>
+    <p class="muted-sm" style="margin:6px 0 0">
+        Le coupon n’est jamais affiché publiquement. Il est appliqué directement à une commande
+        d’au moins {{ config('shop.coupon_order_min_quantity') }} articles ou de plus de
+        {{ number_format(config('shop.coupon_order_min_subtotal'), 0, ',', ' ') }} FCFA.
+        Il est aussi attribué au client lorsque ses commandes payées du mois dépassent
+        {{ config('shop.coupon_month_min_quantity') }} articles ou atteignent
+        {{ number_format(config('shop.coupon_month_min_total'), 0, ',', ' ') }} FCFA.
+        Envoi par notification et email.
+    </p>
+</div>
+
 <div class="pdp-actions" style="margin-top:18px">
     <button class="btn-solid" type="submit"><svg class="ic">
             <use href="#i-b2-check" />

@@ -8,6 +8,8 @@ import {
     ActivityIndicator,
     Alert,
     RefreshControl,
+    Image,
+    Linking,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
@@ -172,6 +174,28 @@ export default function AdminPaymentsScreen({ navigation }) {
                             {item.reference ? (
                                 <Text style={styles.itemRef}>Réf : {item.reference}</Text>
                             ) : null}
+                            {tab === "payments" &&
+                            Array.isArray(item.photos) &&
+                            item.photos.length > 0 ? (
+                                <ScrollView
+                                    horizontal
+                                    showsHorizontalScrollIndicator={false}
+                                    contentContainerStyle={styles.proofsRow}
+                                >
+                                    {item.photos.map((url, index) => (
+                                        <TouchableOpacity
+                                            key={`${item.id}-proof-${index}`}
+                                            activeOpacity={0.8}
+                                            onPress={() => Linking.openURL(url)}
+                                        >
+                                            <Image
+                                                source={{ uri: url }}
+                                                style={styles.proofImg}
+                                            />
+                                        </TouchableOpacity>
+                                    ))}
+                                </ScrollView>
+                            ) : null}
                             <Text style={styles.itemDate}>{item.date}</Text>
 
                             <View style={styles.actions}>
@@ -242,6 +266,13 @@ const styles = StyleSheet.create({
     itemMeta: { fontSize: 13, color: COLORS.textLight, marginTop: 4 },
     itemRef: { fontSize: 12.5, color: "#374151", marginTop: 3 },
     itemDate: { fontSize: 11.5, color: "#9ca3af", marginTop: 3 },
+    proofsRow: { gap: 8, paddingTop: 9, paddingBottom: 2 },
+    proofImg: {
+        width: 68,
+        height: 68,
+        borderRadius: 9,
+        backgroundColor: "#e5e7eb",
+    },
     actions: { flexDirection: "row", gap: 10, marginTop: 12 },
     btn: { flex: 1, paddingVertical: 11, borderRadius: RADIUS.md, alignItems: "center" },
     reject: { borderWidth: 1.5, borderColor: "#dc2626" },

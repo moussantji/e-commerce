@@ -500,7 +500,7 @@ export default function HomeScreen({ navigation }) {
                     />
                     <View>
                         <Text style={styles.infoTitle}>Livraison offerte</Text>
-                        <Text style={styles.infoSub}>Dès 25 000 FCFA</Text>
+                        <Text style={styles.infoSub}>Dès 3 articles et 100 000 FCFA</Text>
                     </View>
                 </TouchableOpacity>
                 <View style={styles.infoDivider} />

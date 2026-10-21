@@ -1,6 +1,6 @@
 <div class="shop-topbar">
 <div class="shop-wrap">
-<div class="top-left"><svg class="ic ic-sm"><use href="#i-truck"/></svg><b>Livraison offerte dès 25 000 FCFA</b></div>
+<div class="top-left"><svg class="ic ic-sm"><use href="#i-truck"/></svg><b>Livraison offerte dès {{ config('shop.free_shipping_min_items') }} articles et {{ number_format(config('shop.free_shipping_min_total'), 0, ',', ' ') }} FCFA</b></div>
 <span class="sep hide-m"></span><span class="hide-m">Paiement à la livraison</span>
 <span class="sep hide-m"></span><span class="hide-m">Orange Money</span>
 <span class="sep hide-m"></span><span class="hide-m">Moov Money</span>
@@ -10,7 +10,7 @@
 </div>
 <header class="shop-header">
 <div class="shop-wrap header-row">
-<a class="brand" href="{{ route('home') }}" aria-label="Accueil"><span class="mark"><svg class="ic"><use href="#i-store"/></svg></span><span class="brand-name">Boutique</span></a>
+<a class="brand" href="{{ route('home') }}" aria-label="Accueil"><span class="mark"><svg class="ic"><use href="#i-store"/></svg></span><span class="brand-name">{{ config('app.name') }}</span></a>
 <form class="shop-search desktop" action="{{ route('products') }}" method="GET" role="search" onsubmit="return true">
 <svg class="ic"><use href="#i-search"/></svg>
 <input id="shopSearchInput" type="search" name="q" value="{{ request('q') }}" placeholder="Rechercher un produit..." aria-label="Rechercher un produit" autocomplete="off" readonly>
@@ -39,8 +39,8 @@
 <a href="{{ route('categories.show', $cat->slug ?? $cat->id) }}">{{ $cat->name ?? $cat->nom }}</a>
 @endforeach
 @else
-<a href="{{ route('products', ['category' => 'electronique']) }}">Électronique</a>
-<a href="{{ route('products', ['category' => 'mode']) }}">Mode</a>
+<a href="{{ route('categories.show', 'electronique') }}">Électronique</a>
+<a href="{{ route('categories.show', 'mode') }}">Mode</a>
 <a href="{{ route('categories.index') }}">Maison &amp; Jardin</a>
 <a href="{{ route('products') }}">Beauté</a>
 <a href="{{ route('products') }}">Sport</a>

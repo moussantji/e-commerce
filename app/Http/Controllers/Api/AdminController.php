@@ -38,6 +38,7 @@ class AdminController extends Controller
     public function payments(Request $request)
     {
         $this->ensureAdmin($request);
+        $baseUrl = rtrim($request->getSchemeAndHttpHost(), '/');
 
         $proofs = PaymentProof::with(['user', 'order'])
             ->where('status', 'pending')
@@ -56,6 +57,21 @@ class AdminController extends Controller
                 'reference' => $p->notes,
                 'status' => $p->status,
                 'date' => optional($p->created_at)->diffForHumans(),
+                // Le vendeur doit pouvoir vérifier la capture depuis le mobile.
+                'photos' => collect($p->photoPaths())
+                    ->keys()
+                    ->map(function ($index) use ($p, $baseUrl) {
+                        $url = $p->photoFullUrl((int) $index);
+                        if (!$url) {
+                            return null;
+                        }
+                        return str_starts_with($url, 'http')
+                            ? $url
+                            : $baseUrl . '/' . ltrim($url, '/');
+                    })
+                    ->filter()
+                    ->values()
+                    ->all(),
             ]),
             'meta' => ['current_page' => $proofs->currentPage(), 'last_page' => $proofs->lastPage(), 'total' => $proofs->total()],
         ]);

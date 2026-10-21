@@ -11,11 +11,14 @@ import {
     Linking,
     Modal,
     Pressable,
+    TextInput,
+    Platform,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as ImagePicker from "expo-image-picker";
 import api, { apiError } from "../api/client";
 import { formatPrice } from "../utils";
 import { COLORS, RADIUS } from "../theme";
@@ -52,6 +55,13 @@ export default function OrderDetailScreen({ route, navigation }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [cancelOpen, setCancelOpen] = useState(false);
+    const [paymentMethods, setPaymentMethods] = useState([]);
+    const [payment, setPayment] = useState(null);
+    const [payPhone, setPayPhone] = useState("");
+    const [payRef, setPayRef] = useState("");
+    const [proofPhotos, setProofPhotos] = useState([]);
+    const [submitting, setSubmitting] = useState(false);
+    const [walletBalance, setWalletBalance] = useState(0);
 
     const cancelOrder = async (reason) => {
         setCancelOpen(false);
@@ -68,7 +78,29 @@ export default function OrderDetailScreen({ route, navigation }) {
         setError(null);
         try {
             const { data } = await api.get(`/orders/${id}`);
-            setOrder(data.data ?? data);
+            const current = data.data ?? data;
+            setOrder(current);
+            setPayPhone((prev) => prev || current?.adresse_livraison?.telephone || "");
+
+            const [methodsRes, walletRes] = await Promise.all([
+                api.get("/payment-methods").catch(() => ({ data: { data: [] } })),
+                api.get("/wallet").catch(() => ({ data: {} })),
+            ]);
+
+            const list = methodsRes.data?.data ?? [];
+            setPaymentMethods(list);
+            setWalletBalance(Number(walletRes.data?.balance || 0));
+            setPayment((prev) => {
+                if (prev && list.some((m) => m.id === prev.id)) return prev;
+                const selected = list.find(
+                    (m) => m.id === current?.payment_method?.id,
+                );
+                if (selected) return selected;
+                if (list.length === 0 && current?.payment_method) {
+                    return current.payment_method;
+                }
+                return list.find((m) => !m.cod) || list[0] || null;
+            });
         } catch (e) {
             setError(apiError(e));
         } finally {
@@ -133,10 +165,147 @@ export default function OrderDetailScreen({ route, navigation }) {
     const isPending = order.statut === "en_attente";
     const isDeclared = order.statut === "paiement_declare";
     const cancelled = order.statut === "annule";
+    const isCodOrder = !!order.payment_method?.cod;
+    const mobileMoneyMethods = paymentMethods.filter((m) => !m.cod);
+    const payMethodName = isCodOrder
+        ? order.payment_method?.name
+        : payment?.name || order.payment_method?.name;
+    const canUseWallet =
+        Number(walletBalance) > 0 &&
+        Number(walletBalance) >= Number(order.total || 0);
 
     const openMap = () => {
         const q = encodeURIComponent(fullAddr || city || "");
         if (q) Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${q}`);
+    };
+
+    const pickProofPhotos = async () => {
+        const remaining = 3 - proofPhotos.length;
+        if (remaining <= 0) {
+            Alert.alert("Captures", "Vous pouvez joindre jusqu'à 3 captures.");
+            return;
+        }
+        const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!perm.granted) {
+            Alert.alert("Permission requise", "Autorisez l'accès à vos photos.");
+            return;
+        }
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsMultipleSelection: true,
+            selectionLimit: remaining,
+            quality: 0.7,
+        });
+        if (result.canceled) return;
+        const assets = result.assets ?? [];
+        setProofPhotos((prev) =>
+            [
+                ...prev,
+                ...assets.map((asset, index) => ({
+                    uri: asset.uri,
+                    name:
+                        asset.fileName ||
+                        `preuve-${Date.now()}-${index}.jpg`,
+                    type: asset.mimeType || "image/jpeg",
+                })),
+            ].slice(0, 3),
+        );
+    };
+
+    const removeProofPhoto = (index) => {
+        setProofPhotos((prev) => prev.filter((_, i) => i !== index));
+    };
+
+    const confirmCod = async () => {
+        const methodId = order.payment_method?.id ?? payment?.id;
+        if (!methodId || submitting) return;
+        setSubmitting(true);
+        try {
+            const { data } = await api.post(`/orders/${id}/pay`, {
+                payment_method_id: methodId,
+            });
+            setOrder(data.data ?? data);
+            Alert.alert(
+                "Commande confirmée",
+                "Vous paierez à la livraison. Merci pour votre confiance.",
+            );
+        } catch (e) {
+            Alert.alert("Impossible", apiError(e));
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const payWithWallet = async () => {
+        if (submitting) return;
+        setSubmitting(true);
+        try {
+            const { data } = await api.post(`/orders/${id}/pay`, {
+                wallet: true,
+            });
+            setOrder(data.data ?? data);
+            setWalletBalance((prev) =>
+                Math.max(0, Number(prev) - Number(order.total || 0)),
+            );
+            Alert.alert(
+                "Paiement effectué",
+                "Votre commande a été payée avec votre portefeuille.",
+            );
+        } catch (e) {
+            Alert.alert("Impossible", apiError(e));
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const submitPaymentProof = async () => {
+        if (submitting) return;
+        if (!payment) {
+            Alert.alert("Paiement", "Choisissez un moyen de paiement.");
+            return;
+        }
+        if (proofPhotos.length === 0) {
+            Alert.alert(
+                "Capture obligatoire",
+                "Ajoutez au moins une capture de votre paiement.",
+            );
+            return;
+        }
+
+        setSubmitting(true);
+        try {
+            const fd = new FormData();
+            fd.append("payment_method_id", String(payment.id));
+            fd.append("provider", payment.name || payment.provider || "Mobile Money");
+            if (payPhone.trim()) fd.append("phone", payPhone.trim());
+            if (payRef.trim()) fd.append("transaction_id", payRef.trim());
+            proofPhotos.forEach((photo) => {
+                fd.append("photos[]", {
+                    uri:
+                        Platform.OS === "ios"
+                            ? photo.uri.replace("file://", "")
+                            : photo.uri,
+                    name: photo.name,
+                    type: photo.type,
+                });
+            });
+
+            const { data } = await api.post(
+                `/orders/${id}/payment-proof`,
+                fd,
+            );
+            setOrder(data.data ?? data);
+            setProofPhotos([]);
+            setPayRef("");
+            Alert.alert(
+                "Preuve envoyée",
+                "Le vendeur va vérifier votre paiement. Vous serez notifié dès sa validation.",
+            );
+        } catch (e) {
+            Alert.alert("Impossible", apiError(e));
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
@@ -274,6 +443,273 @@ export default function OrderDetailScreen({ route, navigation }) {
                     </View>
                 </View>
 
+                {/* Paiement inline, comme sur la page commande du site */}
+                {isPending && (
+                    <View style={styles.card}>
+                        <View style={styles.payHead}>
+                            <Text style={styles.cardTitle}>Payer ma commande</Text>
+                            {payMethodName ? (
+                                <View style={styles.methodPill}>
+                                    <Text style={styles.methodPillText}>
+                                        {payMethodName}
+                                    </Text>
+                                </View>
+                            ) : null}
+                        </View>
+
+                        {isCodOrder ? (
+                            <>
+                                <View style={styles.codBox}>
+                                    <Ionicons
+                                        name="cash-outline"
+                                        size={24}
+                                        color={COLORS.primaryDark}
+                                    />
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={styles.codTitle}>
+                                            Paiement à la livraison
+                                        </Text>
+                                        <Text style={styles.codText}>
+                                            Vous réglerez le livreur à la
+                                            réception de votre colis.
+                                        </Text>
+                                    </View>
+                                </View>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.proofBtn,
+                                        submitting && styles.proofBtnDisabled,
+                                    ]}
+                                    onPress={confirmCod}
+                                    disabled={submitting}
+                                    activeOpacity={0.9}
+                                >
+                                    {submitting ? (
+                                        <ActivityIndicator color="#fff" />
+                                    ) : (
+                                        <Text style={styles.proofBtnText}>
+                                            Confirmer ma commande
+                                        </Text>
+                                    )}
+                                </TouchableOpacity>
+                            </>
+                        ) : (
+                            <>
+                                {canUseWallet ? (
+                                    <TouchableOpacity
+                                        style={styles.walletPayBtn}
+                                        onPress={payWithWallet}
+                                        disabled={submitting}
+                                        activeOpacity={0.85}
+                                    >
+                                        <Ionicons
+                                            name="wallet-outline"
+                                            size={22}
+                                            color={COLORS.primaryDark}
+                                        />
+                                        <View style={{ flex: 1 }}>
+                                            <Text style={styles.walletPayTitle}>
+                                                Payer avec mon portefeuille
+                                            </Text>
+                                            <Text style={styles.walletPaySub}>
+                                                Solde :{" "}
+                                                {formatPrice(walletBalance)}
+                                            </Text>
+                                        </View>
+                                        <Ionicons
+                                            name="chevron-forward"
+                                            size={18}
+                                            color={COLORS.textLight}
+                                        />
+                                    </TouchableOpacity>
+                                ) : null}
+
+                                {mobileMoneyMethods.length > 0 ? (
+                                    <>
+                                        <Text style={styles.payLabel}>
+                                            Choisissez votre opérateur
+                                        </Text>
+                                        {mobileMoneyMethods.map((m) => {
+                                            const on = payment?.id === m.id;
+                                            return (
+                                                <TouchableOpacity
+                                                    key={m.id}
+                                                    style={[
+                                                        styles.methodChoice,
+                                                        on &&
+                                                            styles.methodChoiceOn,
+                                                    ]}
+                                                    activeOpacity={0.85}
+                                                    onPress={() => setPayment(m)}
+                                                >
+                                                    <Ionicons
+                                                        name={
+                                                            on
+                                                                ? "radio-button-on"
+                                                                : "radio-button-off"
+                                                        }
+                                                        size={20}
+                                                        color={
+                                                            on
+                                                                ? COLORS.primaryDark
+                                                                : "#cbd5e1"
+                                                        }
+                                                    />
+                                                    <View style={{ flex: 1 }}>
+                                                        <Text
+                                                            style={
+                                                                styles.methodName
+                                                            }
+                                                        >
+                                                            {m.name}
+                                                        </Text>
+                                                        {m.provider ? (
+                                                            <Text
+                                                                style={
+                                                                    styles.methodProvider
+                                                                }
+                                                            >
+                                                                {m.provider}
+                                                            </Text>
+                                                        ) : null}
+                                                    </View>
+                                                </TouchableOpacity>
+                                            );
+                                        })}
+                                    </>
+                                ) : (
+                                    <Text style={styles.payHint}>
+                                        Aucun opérateur mobile money
+                                        disponible pour le moment.
+                                    </Text>
+                                )}
+
+                                {payment && !payment.cod ? (
+                                    <View style={styles.instructionsBox}>
+                                        {payment.instructions ? (
+                                            <Text style={styles.instructionsText}>
+                                                {payment.instructions}
+                                            </Text>
+                                        ) : (
+                                            <Text style={styles.instructionsText}>
+                                                Effectuez le paiement vers le
+                                                numéro indiqué, puis joignez la
+                                                capture.
+                                            </Text>
+                                        )}
+                                        {payment.account_number ? (
+                                            <Text style={styles.accountNumber}>
+                                                Numéro : {payment.account_number}
+                                            </Text>
+                                        ) : null}
+                                    </View>
+                                ) : null}
+
+                                <Text style={styles.payLabel}>
+                                    Numéro ayant payé (optionnel)
+                                </Text>
+                                <TextInput
+                                    style={styles.payInput}
+                                    value={payPhone}
+                                    onChangeText={setPayPhone}
+                                    placeholder="Ex : 70 00 00 00"
+                                    placeholderTextColor="#9ca3af"
+                                    keyboardType="phone-pad"
+                                />
+
+                                <Text style={styles.payLabel}>
+                                    Référence de transaction (optionnel)
+                                </Text>
+                                <TextInput
+                                    style={styles.payInput}
+                                    value={payRef}
+                                    onChangeText={setPayRef}
+                                    placeholder="ID de la transaction"
+                                    placeholderTextColor="#9ca3af"
+                                    autoCapitalize="characters"
+                                />
+
+                                <Text style={styles.payLabel}>
+                                    Capture du paiement *
+                                </Text>
+                                <TouchableOpacity
+                                    style={styles.uploadBtn}
+                                    onPress={pickProofPhotos}
+                                    activeOpacity={0.85}
+                                    disabled={submitting}
+                                >
+                                    <Ionicons
+                                        name="camera-outline"
+                                        size={20}
+                                        color={COLORS.primaryDark}
+                                    />
+                                    <Text style={styles.uploadText}>
+                                        Ajouter une capture (
+                                        {proofPhotos.length}/3)
+                                    </Text>
+                                </TouchableOpacity>
+
+                                {proofPhotos.length > 0 ? (
+                                    <View style={styles.proofRow}>
+                                        {proofPhotos.map((photo, index) => (
+                                            <View
+                                                key={`${photo.uri}-${index}`}
+                                                style={styles.proofThumbWrap}
+                                            >
+                                                <Image
+                                                    source={{ uri: photo.uri }}
+                                                    style={styles.proofThumb}
+                                                />
+                                                <TouchableOpacity
+                                                    style={styles.proofRemove}
+                                                    onPress={() =>
+                                                        removeProofPhoto(index)
+                                                    }
+                                                    hitSlop={6}
+                                                >
+                                                    <Ionicons
+                                                        name="close"
+                                                        size={13}
+                                                        color="#fff"
+                                                    />
+                                                </TouchableOpacity>
+                                            </View>
+                                        ))}
+                                    </View>
+                                ) : null}
+
+                                <TouchableOpacity
+                                    style={[
+                                        styles.proofBtn,
+                                        (!payment ||
+                                            proofPhotos.length === 0) &&
+                                            styles.proofBtnDisabled,
+                                    ]}
+                                    onPress={submitPaymentProof}
+                                    disabled={
+                                        submitting ||
+                                        !payment ||
+                                        proofPhotos.length === 0
+                                    }
+                                    activeOpacity={0.9}
+                                >
+                                    {submitting ? (
+                                        <ActivityIndicator color="#fff" />
+                                    ) : (
+                                        <Text style={styles.proofBtnText}>
+                                            J'ai payé · envoyer la preuve
+                                        </Text>
+                                    )}
+                                </TouchableOpacity>
+                                <Text style={styles.secureNote}>
+                                    🔒 Votre capture est uniquement visible par
+                                    l'équipe de vérification.
+                                </Text>
+                            </>
+                        )}
+                    </View>
+                )}
+
                 {cancelled && (
                     <Text style={styles.cancelReason}>
                         Commande annulée. Délai de paiement dépassé.
@@ -285,31 +721,11 @@ export default function OrderDetailScreen({ route, navigation }) {
             {isPending && (
                 <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
                     <TouchableOpacity
-                        style={styles.cancelBtn}
+                        style={[styles.cancelBtn, { flex: 1 }]}
                         activeOpacity={0.85}
                         onPress={() => setCancelOpen(true)}
                     >
-                        <Text style={styles.cancelText}>Annuler</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        activeOpacity={0.85}
-                        style={{ flex: 1 }}
-                        onPress={() =>
-                            navigation.navigate("Payment", {
-                                orderId: order.id ?? id,
-                                numero: order.numero,
-                                total: order.total,
-                            })
-                        }
-                    >
-                        <LinearGradient
-                            colors={COLORS.gradient}
-                            start={COLORS.gradientStart}
-                            end={COLORS.gradientEnd}
-                            style={styles.payBtn}
-                        >
-                            <Text style={styles.payText}>PAYEZ MAINTENANT</Text>
-                        </LinearGradient>
+                        <Text style={styles.cancelText}>Annuler la commande</Text>
                     </TouchableOpacity>
                 </View>
             )}
@@ -443,6 +859,161 @@ const styles = StyleSheet.create({
     sumVal: { color: COLORS.text, fontSize: 13 },
     totalLabel: { fontWeight: "800", color: COLORS.text, fontSize: 15 },
     totalVal: { fontWeight: "900", color: COLORS.accent, fontSize: 18 },
+
+    // Paiement dans le détail de commande (même étape que le site)
+    payHead: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 8,
+    },
+    methodPill: {
+        backgroundColor: COLORS.soft,
+        borderRadius: RADIUS.pill,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        marginBottom: 8,
+        maxWidth: "55%",
+    },
+    methodPillText: {
+        color: COLORS.primaryDark,
+        fontSize: 11,
+        fontWeight: "800",
+    },
+    codBox: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        backgroundColor: "#f8fafc",
+        borderRadius: 12,
+        padding: 12,
+        marginBottom: 12,
+    },
+    codTitle: { fontSize: 14, fontWeight: "800", color: COLORS.text },
+    codText: {
+        fontSize: 12.5,
+        color: COLORS.textLight,
+        lineHeight: 17,
+        marginTop: 2,
+    },
+    walletPayBtn: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 10,
+        borderWidth: 1,
+        borderColor: "rgba(102,126,234,0.35)",
+        backgroundColor: "rgba(102,126,234,0.06)",
+        borderRadius: 12,
+        padding: 12,
+        marginBottom: 6,
+    },
+    walletPayTitle: { fontSize: 13.5, fontWeight: "800", color: COLORS.text },
+    walletPaySub: { fontSize: 11.5, color: COLORS.textLight, marginTop: 2 },
+    payLabel: {
+        fontSize: 12.5,
+        fontWeight: "700",
+        color: COLORS.text,
+        marginTop: 12,
+        marginBottom: 7,
+    },
+    methodChoice: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 9,
+        borderWidth: 1,
+        borderColor: "#f1f5f9",
+        borderRadius: 11,
+        paddingVertical: 10,
+        paddingHorizontal: 10,
+        marginBottom: 7,
+    },
+    methodChoiceOn: {
+        borderColor: COLORS.primary,
+        backgroundColor: "rgba(102,126,234,0.06)",
+    },
+    methodName: { fontSize: 13.5, fontWeight: "700", color: COLORS.text },
+    methodProvider: { fontSize: 11.5, color: COLORS.textLight, marginTop: 2 },
+    payHint: { fontSize: 12.5, color: COLORS.textLight, lineHeight: 18 },
+    instructionsBox: {
+        backgroundColor: "#f8fafc",
+        borderRadius: 11,
+        padding: 11,
+        marginTop: 4,
+    },
+    instructionsText: {
+        fontSize: 12.5,
+        color: COLORS.text,
+        lineHeight: 18,
+    },
+    accountNumber: {
+        fontSize: 13,
+        fontWeight: "800",
+        color: COLORS.primaryDark,
+        marginTop: 7,
+    },
+    payInput: {
+        borderWidth: 1,
+        borderColor: COLORS.border,
+        borderRadius: 11,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        fontSize: 14,
+        color: COLORS.text,
+        backgroundColor: "#fff",
+    },
+    uploadBtn: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8,
+        borderWidth: 1.5,
+        borderStyle: "dashed",
+        borderColor: "rgba(102,126,234,0.5)",
+        borderRadius: 12,
+        paddingVertical: 13,
+        backgroundColor: "rgba(102,126,234,0.04)",
+    },
+    uploadText: {
+        color: COLORS.primaryDark,
+        fontWeight: "700",
+        fontSize: 13,
+    },
+    proofRow: { flexDirection: "row", gap: 9, marginTop: 10 },
+    proofThumbWrap: { position: "relative" },
+    proofThumb: {
+        width: 64,
+        height: 64,
+        borderRadius: 9,
+        backgroundColor: "#e5e7eb",
+    },
+    proofRemove: {
+        position: "absolute",
+        top: -6,
+        right: -6,
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        backgroundColor: "#dc2626",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    proofBtn: {
+        backgroundColor: COLORS.primaryDark,
+        borderRadius: 13,
+        paddingVertical: 14,
+        alignItems: "center",
+        justifyContent: "center",
+        marginTop: 14,
+    },
+    proofBtnDisabled: { opacity: 0.45 },
+    proofBtnText: { color: "#fff", fontWeight: "800", fontSize: 14.5 },
+    secureNote: {
+        fontSize: 11,
+        color: COLORS.textLight,
+        textAlign: "center",
+        marginTop: 10,
+        lineHeight: 16,
+    },
 
     cancelReason: {
         color: "#dc2626",

@@ -3,8 +3,114 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>@yield('title', 'Boutique')</title>
-<meta name="description" content="Boutique en ligne — offres flash, livraison offerte, paiement Mobile Money.">
+@php
+$siteName = config('app.name', 'MandenBaoubab');
+
+// Les sections Blade sont déjà échappées par Laravel : on les décode avant
+// de composer les métadonnées, puis Blade les échappe une seule fois.
+$decodeSection = static fn (string $value): string => trim(html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+
+$pageTitle = trim(preg_replace('/\s+/u', ' ', strip_tags($decodeSection($__env->yieldContent('title')))));
+$pageDescription = trim(preg_replace('/\s+/u', ' ', strip_tags($decodeSection($__env->yieldContent('meta_description')))));
+
+$seoTitle = $pageTitle !== '' ? $pageTitle . ' | ' . $siteName : $siteName . ' — Boutique en ligne au Mali';
+$seoDescription = $pageDescription !== '' ? $pageDescription : $siteName . ' — boutique en ligne au Mali : offres flash, livraison rapide à Bamako et dans tout le pays, paiement Mobile Money ou à la livraison.';
+$seoDescription = \Illuminate\Support\Str::limit(trim(preg_replace('/\s+/u', ' ', $seoDescription)), 160, '…');
+
+$seoCanonical = $decodeSection($__env->yieldContent('canonical')) ?: url()->current();
+$seoImage = $decodeSection($__env->yieldContent('og_image')) ?: asset('img/shop/hero-bg.jpg');
+$seoImageAlt = trim(preg_replace('/\s+/u', ' ', strip_tags($decodeSection($__env->yieldContent('og_image_alt'))))) ?: $siteName;
+$seoType = $decodeSection($__env->yieldContent('og_type')) ?: 'website';
+
+$privateRoutes = ['panier', 'checkout*', 'commande*', 'paiement.*', 'dashboard', 'profile*', 'favoris', 'notifications*', 'login', 'register', 'password.*', 'verification.*', 'admin.*', 'vendeur.*'];
+$seoRobots = $decodeSection($__env->yieldContent('robots')) ?: (request()->routeIs($privateRoutes) ? 'noindex, nofollow' : 'index, follow, max-image-preview:large');
+$structuredData = [
+    '@context' => 'https://schema.org',
+    '@graph' => [
+        [
+            '@type' => 'Organization',
+            '@id' => url('/') . '#organization',
+            'name' => $siteName,
+            'url' => url('/'),
+            'logo' => asset('assets/img/favicons/favicon.png'),
+            'telephone' => '+22382019583',
+            'email' => 'contact@mandenbaoubab.com',
+            'areaServed' => ['@type' => 'Country', 'name' => 'Mali'],
+            'contactPoint' => [
+                [
+                    '@type' => 'ContactPoint',
+                    'telephone' => '+22382019583',
+                    'contactType' => 'customer service',
+                    'availableLanguage' => 'French',
+                ],
+                [
+                    '@type' => 'ContactPoint',
+                    'telephone' => '+22378057895',
+                    'contactType' => 'customer service',
+                    'availableLanguage' => 'French',
+                ],
+            ],
+        ],
+        [
+            '@type' => 'Store',
+            '@id' => url('/') . '#store',
+            'name' => $siteName,
+            'url' => url('/'),
+            'image' => asset('img/shop/hero-bg.jpg'),
+            'telephone' => '+22382019583',
+            'email' => 'contact@mandenbaoubab.com',
+            'address' => [
+                '@type' => 'PostalAddress',
+                'addressLocality' => 'Bamako',
+                'addressCountry' => 'ML',
+            ],
+            'areaServed' => ['@type' => 'Country', 'name' => 'Mali'],
+            'openingHoursSpecification' => [
+                [
+                    '@type' => 'OpeningHoursSpecification',
+                    'dayOfWeek' => ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+                    'opens' => '09:00',
+                    'closes' => '18:00',
+                ],
+            ],
+            'priceRange' => 'FCFA',
+            'currenciesAccepted' => 'XOF',
+            'paymentAccepted' => 'Orange Money, Moov Money, Wave, espèces',
+        ],
+        [
+            '@type' => 'WebSite',
+            '@id' => url('/') . '#website',
+            'url' => url('/'),
+            'name' => $siteName,
+            'inLanguage' => 'fr-ML',
+            'publisher' => ['@id' => url('/') . '#organization'],
+            'potentialAction' => [
+                '@type' => 'SearchAction',
+                'target' => route('products') . '?q={search_term_string}',
+                'query-input' => 'required name=search_term_string',
+            ],
+        ],
+    ],
+];
+@endphp
+<title>{{ $seoTitle }}</title>
+<meta name="description" content="{{ $seoDescription }}">
+<meta name="robots" content="{{ $seoRobots }}">
+<link rel="canonical" href="{{ $seoCanonical }}">
+<meta property="og:site_name" content="{{ $siteName }}">
+<meta property="og:type" content="{{ $seoType }}">
+<meta property="og:title" content="{{ $seoTitle }}">
+<meta property="og:description" content="{{ $seoDescription }}">
+<meta property="og:url" content="{{ $seoCanonical }}">
+<meta property="og:image" content="{{ $seoImage }}">
+<meta property="og:image:alt" content="{{ $seoImageAlt }}">
+<meta property="og:locale" content="fr_ML">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ $seoTitle }}">
+<meta name="twitter:description" content="{{ $seoDescription }}">
+<meta name="twitter:image" content="{{ $seoImage }}">
+<meta name="twitter:image:alt" content="{{ $seoImageAlt }}">
+<script type="application/ld+json">{!! json_encode($structuredData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
 <meta name="theme-color" content="#4c1d95">
 <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
 <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/img/favicons/favicon.png') }}">
@@ -13,6 +119,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 @include('partials.boutique-style')
+@stack('head')
 </head>
 <body>
 @include('partials.boutique-sprite')
@@ -43,6 +150,22 @@ if(toast){setTimeout(function(){toast.style.opacity='0';setTimeout(function(){to
 // reveal + cascade cartes + progression + nav
 function cascadeCards(){document.querySelectorAll('.grid .card').forEach(function(c,i){if(!c.style.transitionDelay)c.style.transitionDelay=(Math.min(i,12)*70)+'ms';});}
 cascadeCards();
+/* Carte entière cliquable : toute la zone de la carte mène au produit.
+   Les liens et boutons internes (favori, « Voir le produit »...) gardent
+   leur comportement : on ne déclenche la navigation que hors de ces éléments. */
+document.addEventListener('click',function(e){
+var t=e.target;
+if(!t||!t.closest)return;
+var card=t.closest('[data-card-href]');
+if(!card)return;
+if(t.closest('a,button,input,select,textarea,label,summary'))return;
+if(window.getSelection&&String(window.getSelection()).length)return;
+var url=card.getAttribute('data-card-href');
+if(!url)return;
+if(e.ctrlKey||e.metaKey||e.shiftKey){window.open(url,'_blank','noopener');return;}
+if(window.Livewire&&typeof Livewire.navigate==='function'){Livewire.navigate(url);}
+else{window.location.href=url;}
+});
 var io=null;
 function observeRv(){
 var els=document.querySelectorAll('.rv:not(.in):not([data-rv-obs])');

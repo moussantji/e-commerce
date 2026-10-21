@@ -48,24 +48,53 @@ class ProductResource extends JsonResource
                 'value' => $c->pivot->value ?? null,
                 'unite' => $c->unite,
             ])->values()),
-            // Avis clients (liste)
-            'reviews' => $this->whenLoaded('reviews', fn () => $this->reviews->map(fn ($r) => [
-                'id' => $r->id,
-                'author' => optional($r->user)->name ?? 'Client',
-                'rating' => (int) ($r->nb_etoiles ?? 0),
-                'comment' => $r->commentaire,
-                'date' => optional($r->created_at)->diffForHumans(),
-                'images' => $r->relationLoaded('photos')
-                    ? $r->photos->map(fn ($p) => $this->abs($p->getImageUrl(300, 300)))->values()
-                    : [],
-                'response' => $r->relationLoaded('response') && $r->response ? [
-                    'message' => $r->response->message,
-                    'date' => optional($r->response->created_at)->diffForHumans(),
-                ] : null,
-            ])->values()),
+            // Avis clients (liste) + réponses imbriquées
+            'reviews' => $this->whenLoaded('reviews', fn () => $this->reviews
+                ->map(fn ($r) => $this->formatReview($r))
+                ->values()),
             'rating_avg' => round((float) ($this->reviews_avg_nb_etoiles ?? 0), 1),
             'rating_count' => (int) ($this->reviews_count ?? 0),
         ];
+    }
+
+    private function formatReview($review): array
+    {
+        $allReplies = $review->relationLoaded('replies') ? $review->replies : collect();
+        $repliesByParent = $allReplies->groupBy(fn ($reply) => (int) ($reply->parent_id ?? 0));
+
+        return [
+            'id' => $review->id,
+            'author' => optional($review->user)->name ?? 'Client',
+            'rating' => (int) ($review->nb_etoiles ?? 0),
+            'comment' => $review->commentaire,
+            'date' => optional($review->created_at)->diffForHumans(),
+            'images' => $review->relationLoaded('photos')
+                ? $review->photos->map(fn ($p) => $this->abs($p->getImageUrl(300, 300)))->values()
+                : [],
+            'response' => $review->relationLoaded('response') && $review->response ? [
+                'message' => $review->response->message,
+                'date' => optional($review->response->created_at)->diffForHumans(),
+            ] : null,
+            'replies' => $this->buildReplyTree($repliesByParent, 0),
+        ];
+    }
+
+    private function buildReplyTree($repliesByParent, int $parentId): array
+    {
+        return collect($repliesByParent->get($parentId, collect()))
+            ->map(function ($reply) use ($repliesByParent) {
+                return [
+                    'id' => $reply->id,
+                    'parent_id' => $reply->parent_id,
+                    'author' => optional($reply->user)->name ?? 'Client',
+                    'role' => optional($reply->user)->role,
+                    'message' => $reply->message,
+                    'date' => optional($reply->created_at)->diffForHumans(),
+                    'replies' => $this->buildReplyTree($repliesByParent, $reply->id),
+                ];
+            })
+            ->values()
+            ->all();
     }
 
     /** Transforme un chemin relatif en URL absolue basée sur l'hôte de la requête

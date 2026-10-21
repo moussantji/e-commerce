@@ -34,6 +34,7 @@ $slugRegex = '[0-9a-z\-]+';
 Route::get('/', [HomeController::class, 'index'])->name('home');
 // SEO
 Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
+Route::get('/robots.txt', [\App\Http\Controllers\SitemapController::class, 'robots'])->name('robots');
 // Pages légales
 Route::view('/conditions', 'legal.conditions')->name('conditions');
 Route::view('/confidentialite', 'legal.confidentialite')->name('confidentialite');
@@ -197,6 +198,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     })->name('contact');
 
     // Gestion des coupons
+    Route::post('coupons/{coupon}/distribute', [\App\Http\Controllers\Admin\CouponController::class, 'distribute'])
+        ->name('coupons.distribute');
     Route::resource('coupons', \App\Http\Controllers\Admin\CouponController::class)
         ->except(['show'])
         ->names('coupons');
