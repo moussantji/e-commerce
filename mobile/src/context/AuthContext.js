@@ -80,12 +80,13 @@ export function AuthProvider({ children }) {
     }, []);
 
     const markOnboarded = async () => {
+        // Mise à jour immédiate de l'UI : l'écriture disque peut attendre.
+        setHasOnboarded(true);
         try {
             await SecureStore.setItemAsync(ONBOARDED_KEY, "1");
         } catch (e) {
             /* ignore */
         }
-        setHasOnboarded(true);
     };
 
     // Permet, depuis le tout premier écran de connexion, de continuer sans compte.
@@ -132,21 +133,27 @@ export function AuthProvider({ children }) {
 
     const logout = async () => {
         authRequestRef.current += 1;
-        try {
-            await api.post("/logout");
-        } catch (e) {
-            // on déconnecte localement même si l'appel échoue
-        }
-        await SecureStore.deleteItemAsync(TOKEN_KEY);
-        // La déconnexion ne doit jamais renvoyer vers le mur de connexion :
-        // l'utilisateur continue en invité et peut consulter les produits.
-        await markOnboarded();
+
+        // Invalide le token côté serveur sans bloquer la déconnexion locale
+        // (hors ligne, l'utilisateur ne doit pas attendre 30 secondes).
+        const authorization = api.defaults.headers.common.Authorization;
+        api.post("/logout", null, {
+            timeout: 5000,
+            headers: authorization ? { Authorization: authorization } : {},
+        }).catch(() => {});
+
+        // Déconnexion locale immédiate : l'app continue en mode invité.
         setAuthToken(null);
         setToken(null);
         setUser(null);
         // Recharge l'app (remontage de la navigation) pour vider tout état
         // résiduel (paniers, écrans protégés, caches d'écran...).
         setSessionKey((k) => k + 1);
+
+        await Promise.allSettled([
+            markOnboarded(),
+            SecureStore.deleteItemAsync(TOKEN_KEY),
+        ]);
     };
 
     /** Recharge le profil si la session a été restaurée hors ligne. */
