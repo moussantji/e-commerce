@@ -241,11 +241,12 @@ export default function WalletScreen({ navigation }) {
                     behavior={Platform.OS === "ios" ? "padding" : "height"}
                     style={{ flex: 1 }}
                 >
-                    <Pressable style={styles.backdrop} onPress={() => setTopupOpen(false)}>
+                    <View style={styles.backdrop}>
                         <Pressable
-                            style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}
-                            onPress={() => {}}
-                        >
+                            style={StyleSheet.absoluteFill}
+                            onPress={() => setTopupOpen(false)}
+                        />
+                        <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
                             <Text style={styles.sheetTitle}>Recharger le portefeuille</Text>
 
                             <ScrollView
@@ -319,8 +320,8 @@ export default function WalletScreen({ navigation }) {
                                     {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>J'ai payé</Text>}
                                 </TouchableOpacity>
                             </ScrollView>
-                        </Pressable>
-                    </Pressable>
+                        </View>
+                    </View>
                 </KeyboardAvoidingView>
             </Modal>
 
@@ -330,11 +331,12 @@ export default function WalletScreen({ navigation }) {
                     behavior={Platform.OS === "ios" ? "padding" : "height"}
                     style={{ flex: 1 }}
                 >
-                    <Pressable style={styles.backdrop} onPress={() => setTransferOpen(false)}>
+                    <View style={styles.backdrop}>
                         <Pressable
-                            style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}
-                            onPress={() => {}}
-                        >
+                            style={StyleSheet.absoluteFill}
+                            onPress={() => setTransferOpen(false)}
+                        />
+                        <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
                             <Text style={styles.sheetTitle}>Transférer de l'argent</Text>
 
                             <ScrollView
@@ -401,8 +403,8 @@ export default function WalletScreen({ navigation }) {
                                     {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>Envoyer</Text>}
                                 </TouchableOpacity>
                             </ScrollView>
-                        </Pressable>
-                    </Pressable>
+                        </View>
+                    </View>
                 </KeyboardAvoidingView>
             </Modal>
         </View>
@@ -460,8 +462,8 @@ const styles = StyleSheet.create({
         padding: 18,
         maxHeight: "88%",
     },
-    sheetScroll: { flexGrow: 0, flexShrink: 1 },
-    sheetScrollContent: { paddingBottom: 4 },
+    sheetScroll: { flexShrink: 1 },
+    sheetScrollContent: { paddingBottom: 12 },
     sheetTitle: { fontSize: 17, fontWeight: "800", color: COLORS.text, marginBottom: 12 },
     fieldLabel: { fontSize: 12.5, fontWeight: "700", color: COLORS.textLight, marginTop: 12, marginBottom: 6 },
     input: {
