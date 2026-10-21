@@ -1,15 +1,15 @@
 <?php
 
-use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AddressController;
+use App\Http\Controllers\Api\AdminCatalogController;
+use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PaymentMethodController;
-use App\Http\Controllers\Api\AdminController;
-use App\Http\Controllers\Api\AdminCatalogController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\SearchController;
@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\ShippingMethodController;
 use App\Http\Controllers\Api\SocialAuthController;
 use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\WishlistController;
+use App\Http\Controllers\ImageUploadController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -54,6 +55,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/me/avatar', [AuthController::class, 'updateAvatar']);
     Route::post('/me/push-token', [AuthController::class, 'savePushToken']);
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    // Images produits/admin : JSON + base64, sans multipart.
+    Route::post('/uploads/images', [ImageUploadController::class, 'store']);
 
     // Avis clients + réponses imbriquées
     Route::post('/products/{id}/reviews', [ReviewController::class, 'store']);

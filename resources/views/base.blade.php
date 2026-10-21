@@ -432,5 +432,6 @@ txt.textContent=!okMail?'Adresse email invalide.':'Mot de passe requis.';
 })();
 </script>
 @stack('scripts')
+<script src="{{ asset('assets/js/json-image-upload.js') }}?v=1"></script>
 </body>
 </html>

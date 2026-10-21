@@ -35,7 +35,7 @@
             <div class="panel">
                 <form
                     action="{{ $product ? route('vendeur.products.update', $product) : route('vendeur.products.store') }}"
-                    method="POST" enctype="multipart/form-data">
+                    method="POST">
                     @csrf
                     @if ($product)
                         @method('PUT')
@@ -136,7 +136,35 @@
                                 @endforeach
                             </div>
                         @endif
-                        <input class="ctrl" id="vp-images" type="file" name="images[]" multiple accept="image/*">
+
+                        @php $oldUploaded = old('uploaded_images', []); @endphp
+                        <div class="g-thumbs" id="vp-new-images" style="margin:0 0 12px">
+                            @foreach ((array) $oldUploaded as $path)
+                                <span class="aprev" data-uploaded-preview="{{ $path }}">
+                                    <img src="{{ \App\Support\ImageUploads::url($path) }}" alt="Aperçu">
+                                    <button type="button" aria-label="Retirer"
+                                        data-remove-uploaded="{{ $path }}">×</button>
+                                </span>
+                            @endforeach
+                        </div>
+                        <div id="vp-uploaded-inputs" hidden>
+                            @foreach ((array) $oldUploaded as $path)
+                                <input type="hidden" name="uploaded_images[]" value="{{ $path }}"
+                                    data-uploaded-input="{{ $path }}">
+                            @endforeach
+                        </div>
+
+                        <input class="ctrl" id="vp-images" type="file" multiple accept="image/*"
+                            data-json-upload
+                            data-upload-url="{{ route('uploads.images') }}"
+                            data-csrf="{{ csrf_token() }}"
+                            data-inputs="#vp-uploaded-inputs"
+                            data-preview="#vp-new-images"
+                            data-max="10"
+                            data-existing-count="{{ $product?->photos->count() ?? 0 }}"
+                            data-status="#vp-upload-status">
+                        <p id="vp-upload-status" class="muted-sm" role="status" aria-live="polite"></p>
+                        @error('uploaded_images.*') <span class="avis-err">{{ $message }}</span> @enderror
                         @error('images.*') <span class="avis-err">{{ $message }}</span> @enderror
                     </div>
 

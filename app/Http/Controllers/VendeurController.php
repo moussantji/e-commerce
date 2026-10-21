@@ -2,15 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Brand;
+use App\Models\Categories;
 use App\Models\Commandes;
 use App\Models\Produits;
-use App\Models\Categories;
-use App\Models\Brand;
 use App\Models\Tag;
+use App\Models\User;
+use App\Notifications\CompteVendeurCree;
+use App\Rules\MalianPhone;
+use App\Support\AdminNotifier;
+use App\Support\ImageUploads;
+use App\Support\PhoneNumber;
+use App\Support\WhatsApp;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Espace vendeur : tableau de bord, ses produits et les commandes
@@ -109,6 +116,8 @@ class VendeurController extends Controller
             'tags.*' => 'exists:tags,id',
             'images' => 'nullable|array|max:10',
             'images.*' => 'image|max:2048',
+            'uploaded_images' => 'nullable|array|max:10',
+            'uploaded_images.*' => 'string|max:500',
             'is_active' => 'boolean',
         ]);
 
@@ -116,15 +125,19 @@ class VendeurController extends Controller
         $validated['is_active'] = $request->boolean('is_active');
 
         $tags = $validated['tags'] ?? [];
-        unset($validated['tags'], $validated['images']);
+        $uploadedImages = $request->input('uploaded_images', []);
+        unset($validated['tags'], $validated['images'], $validated['uploaded_images']);
 
         $produit = Produits::create($validated);
 
-        if (!empty($tags)) {
+        if (! empty($tags)) {
             $produit->tags()->sync($tags);
         }
         if ($request->hasFile('images')) {
             $produit->attachfiles($request->file('images'));
+        }
+        if (is_array($uploadedImages) && $uploadedImages !== [] && $request->user()) {
+            ImageUploads::attachToProduct($produit, $uploadedImages, $request->user());
         }
 
         return redirect()->route('vendeur.products.index')
@@ -153,24 +166,30 @@ class VendeurController extends Controller
             'price' => 'required|numeric|min:0',
             'sale_price' => 'nullable|numeric|min:0',
             'stock' => 'required|integer|min:0',
-            'sku' => 'nullable|string|max:100|unique:produits,sku,' . $product->id,
+            'sku' => 'nullable|string|max:100|unique:produits,sku,'.$product->id,
             'category_id' => 'nullable|exists:categories,id',
             'brand_id' => 'nullable|exists:brands,id',
             'tags' => 'nullable|array',
             'tags.*' => 'exists:tags,id',
             'images' => 'nullable|array|max:10',
             'images.*' => 'image|max:2048',
+            'uploaded_images' => 'nullable|array|max:10',
+            'uploaded_images.*' => 'string|max:500',
             'is_active' => 'boolean',
         ]);
 
         $validated['is_active'] = $request->boolean('is_active');
         $tags = $validated['tags'] ?? [];
-        unset($validated['tags'], $validated['images']);
+        $uploadedImages = $request->input('uploaded_images', []);
+        unset($validated['tags'], $validated['images'], $validated['uploaded_images']);
 
         $product->update($validated);
         $product->tags()->sync($tags);
         if ($request->hasFile('images')) {
             $product->attachfiles($request->file('images'));
+        }
+        if (is_array($uploadedImages) && $uploadedImages !== [] && $request->user()) {
+            ImageUploads::attachToProduct($product, $uploadedImages, $request->user());
         }
 
         return redirect()->route('vendeur.products.index')
@@ -216,19 +235,19 @@ class VendeurController extends Controller
         $validated = $request->validateWithBag('vendeur', [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email',
-            'tel' => ['required', 'string', 'max:20', new \App\Rules\MalianPhone()],
+            'tel' => ['required', 'string', 'max:20', new MalianPhone],
             'password' => 'required|string|min:8|confirmed',
         ]);
 
-        $tel = \App\Support\PhoneNumber::normalize($validated['tel']);
+        $tel = PhoneNumber::normalize($validated['tel']);
 
-        if (!$tel) {
+        if (! $tel) {
             return back()
                 ->withErrors(['tel' => 'Numéro WhatsApp invalide : 8 chiffres maliens attendus (ex : 70 00 00 00).'], 'vendeur')
                 ->withInput($request->except('password', 'password_confirmation'));
         }
 
-        $vendeur = \App\Models\User::create([
+        $vendeur = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'tel' => $tel,
@@ -239,27 +258,27 @@ class VendeurController extends Controller
         ]);
 
         // Notifie les admins (avec lien vers la fiche).
-        \App\Support\AdminNotifier::notifyPayment(
+        AdminNotifier::notifyPayment(
             'Nouveau vendeur à valider',
-            "{$vendeur->name} ({$vendeur->email} · " . \App\Support\PhoneNumber::pretty($tel) . ') demande un compte vendeur.',
+            "{$vendeur->name} ({$vendeur->email} · ".PhoneNumber::pretty($tel).') demande un compte vendeur.',
             ['type' => 'admin_user', 'id' => $vendeur->id],
         );
 
         // Email de confirmation au vendeur.
         try {
-            $vendeur->notify(new \App\Notifications\CompteVendeurCree());
+            $vendeur->notify(new CompteVendeurCree);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('Email vendeur échoué : ' . $e->getMessage());
+            Log::warning('Email vendeur échoué : '.$e->getMessage());
         }
 
         // Redirection WhatsApp avec ses informations.
-        $msg = "Bonjour, je viens de créer mon compte vendeur : {$vendeur->name} ({$vendeur->email} · " . \App\Support\PhoneNumber::pretty($tel) . '). Merci de le valider.';
-        $wa = \App\Support\WhatsApp::link($msg);
+        $msg = "Bonjour, je viens de créer mon compte vendeur : {$vendeur->name} ({$vendeur->email} · ".PhoneNumber::pretty($tel).'). Merci de le valider.';
+        $wa = WhatsApp::link($msg);
 
         return back()->with('vendeur_created', [
             'nom' => $vendeur->name,
             'email' => $vendeur->email,
-            'tel' => \App\Support\PhoneNumber::pretty($tel),
+            'tel' => PhoneNumber::pretty($tel),
             'wa' => $wa,
         ]);
     }

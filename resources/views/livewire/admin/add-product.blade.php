@@ -18,7 +18,7 @@
         </div>
     @endif
 
-    <form wire:submit.prevent="submit" enctype="multipart/form-data">
+    <form wire:submit.prevent="submit">
         <div class="dash-head">
             <div>
                 <h1>Ajouter un produit</h1>
@@ -62,23 +62,33 @@
                     <h2><svg class="ic">
                             <use href="#i-bag" />
                         </svg> Images du produit</h2>
-                    <input type="file" wire:model="images" id="ap-images" multiple accept="image/*" hidden>
-                    @if (count($images) > 0)
+                    @if (count($uploaded_images) > 0)
                         <div class="g-thumbs" style="margin:0 0 12px">
-                            @foreach ($images as $index => $image)
+                            @foreach ($uploaded_images as $index => $path)
                                 <span class="aprev">
-                                    <img src="{{ $image->temporaryUrl() }}" alt="Aperçu">
-                                    <button type="button" wire:click="removeImage({{ $index }})"
+                                    <img src="{{ \App\Support\ImageUploads::url($path) }}" alt="Aperçu">
+                                    <button type="button" wire:click="removeUploadedImage({{ $index }})"
                                         aria-label="Retirer">×</button>
                                 </span>
                             @endforeach
                         </div>
-                        <p class="muted-sm">{{ count($images) }} image(s) sélectionnée(s)</p>
+                        <p class="muted-sm">{{ count($uploaded_images) }} image(s) prête(s) à être
+                            enregistrée(s)</p>
                     @endif
+                    <input type="file" id="ap-images" multiple accept="image/*" hidden
+                        data-json-upload
+                        data-upload-url="{{ route('uploads.images') }}"
+                        data-csrf="{{ csrf_token() }}"
+                        data-livewire="1"
+                        data-max="{{ \App\Support\ImageUploads::MAX_PRODUCT_IMAGES }}"
+                        data-existing-count="{{ count($uploaded_images) }}"
+                        data-status="#ap-upload-status">
                     <label class="dropzone" for="ap-images"><svg class="ic">
                             <use href="#i-bag" />
                         </svg><span>Glissez des images ici ou cliquez pour parcourir<br><small
-                                style="color:var(--grey)">JPG, PNG — 2 Mo max par image</small></span></label>
+                                style="color:var(--grey)">JPG, PNG, WEBP — 2 Mo max par image</small></span></label>
+                    <p id="ap-upload-status" class="muted-sm" role="status" aria-live="polite"></p>
+                    @error('uploaded_images.*') <span class="avis-err">{{ $message }}</span> @enderror
                     @error('images.*') <span class="avis-err">{{ $message }}</span> @enderror
                 </div>
 

@@ -12,6 +12,7 @@ use App\Models\Produits;
 use App\Models\PromoCode;
 use App\Models\Tag;
 use App\Models\User;
+use App\Support\ImageUploads;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -59,12 +60,12 @@ class AdminCatalogController extends Controller
         $model = $cfg['model'];
         $query = $model::query();
 
-        if (!empty($cfg['with'])) {
+        if (! empty($cfg['with'])) {
             $query->with($cfg['with']);
         }
 
         $search = trim((string) $request->query('search', ''));
-        if ($search !== '' && !empty($cfg['searchable'])) {
+        if ($search !== '' && ! empty($cfg['searchable'])) {
             $query->where(function ($q) use ($cfg, $search) {
                 foreach ($cfg['searchable'] as $col) {
                     $q->orWhere($col, 'like', "%{$search}%");
@@ -94,15 +95,19 @@ class AdminCatalogController extends Controller
         $cfg = $this->resource($resource);
 
         $rules = $cfg['rules']($request, null);
-        if (!empty($cfg['image_folder'])) {
+        if (! empty($cfg['image_folder'])) {
             $rules['image'] = 'nullable|image|max:4096';
-            if (!empty($cfg['multiple_images'])) {
+            $rules['uploaded_image'] = 'nullable|string|max:500';
+            if (! empty($cfg['multiple_images'])) {
                 $rules['images'] = 'nullable|array|max:10';
                 $rules['images.*'] = 'image|max:4096';
+                $rules['uploaded_images'] = 'nullable|array|max:10';
+                $rules['uploaded_images.*'] = 'string|max:500';
             }
         }
         $data = $request->validate($rules);
-        unset($data['image'], $data['images']); // fichiers gérés séparément (voir handleImageUpload)
+        // Fichiers et chemins JSON gérés séparément (voir handleImageUpload).
+        unset($data['image'], $data['images'], $data['uploaded_image'], $data['uploaded_images']);
         $data = isset($cfg['prepare']) ? $cfg['prepare']($data, null) : $data;
 
         $model = $cfg['model'];
@@ -125,18 +130,28 @@ class AdminCatalogController extends Controller
         $item = $model::findOrFail($id);
 
         $rules = $cfg['rules']($request, $item);
-        if (!empty($cfg['image_folder'])) {
+        if (! empty($cfg['image_folder'])) {
             $rules['image'] = 'nullable|image|max:4096';
+            $rules['uploaded_image'] = 'nullable|string|max:500';
             $rules['remove_image'] = 'nullable|boolean';
-            if (!empty($cfg['multiple_images'])) {
+            if (! empty($cfg['multiple_images'])) {
                 $rules['images'] = 'nullable|array|max:10';
                 $rules['images.*'] = 'image|max:4096';
+                $rules['uploaded_images'] = 'nullable|array|max:10';
+                $rules['uploaded_images.*'] = 'string|max:500';
                 $rules['remove_images'] = 'nullable|array';
                 $rules['remove_images.*'] = 'integer';
             }
         }
         $data = $request->validate($rules);
-        unset($data['image'], $data['images'], $data['remove_image'], $data['remove_images']);
+        unset(
+            $data['image'],
+            $data['images'],
+            $data['uploaded_image'],
+            $data['uploaded_images'],
+            $data['remove_image'],
+            $data['remove_images'],
+        );
         $data = isset($cfg['prepare']) ? $cfg['prepare']($data, $item) : $data;
 
         $item->update($data);
@@ -164,7 +179,7 @@ class AdminCatalogController extends Controller
 
         // Les photos référencent le produit sans cascade : on les supprime
         // d'abord (le fichier est retiré par l'événement du modèle photos).
-        if (!empty($cfg['image_folder']) && method_exists($item, 'photos')) {
+        if (! empty($cfg['image_folder']) && method_exists($item, 'photos')) {
             $this->deletePhotos($item->photos()->get());
         }
 
@@ -201,8 +216,9 @@ class AdminCatalogController extends Controller
             return;
         }
 
-        if (!empty($cfg['multiple_images'])) {
+        if (! empty($cfg['multiple_images'])) {
             $this->handleMultipleImages($request, $item, $cfg);
+
             return;
         }
 
@@ -210,10 +226,25 @@ class AdminCatalogController extends Controller
         $remove = $request->boolean('remove_image');
         $hasFile = $request->hasFile('image');
 
+        // Image déjà téléversée en JSON/base64 (fallback sans multipart).
+        $uploadedPath = trim((string) $request->input('uploaded_image', ''));
+        if (
+            $uploadedPath !== ''
+            && ImageUploads::ownedBy($request->user(), $uploadedPath)
+            && ! ImageUploads::isAttached($uploadedPath)
+        ) {
+            $this->deletePhotos($item->photos()->get());
+            $item->photos()->create(['filename' => $uploadedPath]);
+            $item->forceFill([$column => $uploadedPath])->save();
+
+            return;
+        }
+
         // Retrait explicite de l'image existante (sans nouvel upload).
         if ($remove && ! $hasFile) {
             $this->deletePhotos($item->photos()->get());
             $item->forceFill([$column => null])->save();
+
             return;
         }
 
@@ -229,7 +260,7 @@ class AdminCatalogController extends Controller
         // Supprime les anciennes photos (fichier + enregistrement).
         $this->deletePhotos($item->photos()->get());
 
-        $filename = $file->store($cfg['image_folder'] . '/' . $item->id, 'public');
+        $filename = $file->store($cfg['image_folder'].'/'.$item->id, 'public');
         $item->photos()->create(['filename' => $filename]);
 
         // Conserve aussi le chemin dans la colonne dédiée (compatibilité web).
@@ -253,7 +284,7 @@ class AdminCatalogController extends Controller
                 'intval',
                 (array) $request->input('remove_images', [])
             ));
-            if (!empty($removeIds)) {
+            if (! empty($removeIds)) {
                 $this->deletePhotos(
                     $item->photos()->whereIn('id', $removeIds)->get()
                 );
@@ -279,8 +310,27 @@ class AdminCatalogController extends Controller
         // Ne jamais dépasser 10 images par produit.
         $remaining = max(0, 10 - $item->photos()->count());
         foreach (array_slice(array_values($files), 0, $remaining) as $file) {
-            $filename = $file->store($cfg['image_folder'] . '/' . $item->id, 'public');
+            $filename = $file->store($cfg['image_folder'].'/'.$item->id, 'public');
             $item->photos()->create(['filename' => $filename]);
+        }
+
+        // Images déjà téléversées en JSON/base64, dans l'ordre choisi.
+        $remaining = max(0, 10 - $item->photos()->count());
+        $uploadedPaths = array_slice(
+            array_values((array) $request->input('uploaded_images', [])),
+            0,
+            $remaining,
+        );
+        foreach ($uploadedPaths as $path) {
+            if (
+                ! is_string($path)
+                || ! ImageUploads::ownedBy($request->user(), $path)
+                || ImageUploads::isAttached($path)
+            ) {
+                continue;
+            }
+
+            $item->photos()->create(['filename' => $path]);
         }
 
         $this->syncPrimaryImage($item, $column);
@@ -344,7 +394,7 @@ class AdminCatalogController extends Controller
             return $path;
         }
 
-        return rtrim(request()->getSchemeAndHttpHost(), '/') . '/' . ltrim($path, '/');
+        return rtrim(request()->getSchemeAndHttpHost(), '/').'/'.ltrim($path, '/');
     }
 
     // ---------------------------------------------------------------------
@@ -367,8 +417,9 @@ class AdminCatalogController extends Controller
                     'is_active' => 'nullable|boolean',
                 ],
                 'prepare' => function (array $data, $item) {
-                    $data['slug'] = Str::slug($data['name']) . ($item ? '' : '-' . Str::lower(Str::random(4)));
+                    $data['slug'] = Str::slug($data['name']).($item ? '' : '-'.Str::lower(Str::random(4)));
                     $data['is_active'] = $data['is_active'] ?? true;
+
                     return $data;
                 },
                 'map' => fn ($m) => [
@@ -394,6 +445,7 @@ class AdminCatalogController extends Controller
                 ],
                 'prepare' => function (array $data, $item) {
                     $data['is_active'] = $data['is_active'] ?? true;
+
                     return $data;
                 },
                 'map' => fn ($m) => [
@@ -415,7 +467,8 @@ class AdminCatalogController extends Controller
                     'description' => 'nullable|string',
                 ],
                 'prepare' => function (array $data, $item) {
-                    $data['slug'] = Str::slug($data['name']) . ($item ? '' : '-' . Str::lower(Str::random(4)));
+                    $data['slug'] = Str::slug($data['name']).($item ? '' : '-'.Str::lower(Str::random(4)));
+
                     return $data;
                 },
                 'map' => fn ($m) => [
@@ -438,6 +491,7 @@ class AdminCatalogController extends Controller
                 ],
                 'prepare' => function (array $data, $item) {
                     $data['is_filterable'] = $data['is_filterable'] ?? false;
+
                     return $data;
                 },
                 'map' => fn ($m) => [
@@ -466,6 +520,7 @@ class AdminCatalogController extends Controller
                 ],
                 'prepare' => function (array $data, $item) {
                     $data['is_active'] = $data['is_active'] ?? true;
+
                     return $data;
                 },
                 'map' => fn ($m) => [
@@ -476,9 +531,9 @@ class AdminCatalogController extends Controller
                     'delivery_time_max' => $m->delivery_time_max,
                     'delivery_time' => trim(
                         ($m->delivery_time_min ? $m->delivery_time_min : '')
-                        . ($m->delivery_time_max ? '-' . $m->delivery_time_max : '')
-                        . ($m->delivery_time_min || $m->delivery_time_max
-                            ? ' ' . ($m->delivery_time_unit ?? 'jours')
+                        .($m->delivery_time_max ? '-'.$m->delivery_time_max : '')
+                        .($m->delivery_time_min || $m->delivery_time_max
+                            ? ' '.($m->delivery_time_unit ?? 'jours')
                             : '')
                     ),
                     'description' => $m->description,
@@ -504,6 +559,7 @@ class AdminCatalogController extends Controller
                 ],
                 'prepare' => function (array $data, $item) {
                     $data['is_active'] = $data['is_active'] ?? true;
+
                     return $data;
                 },
                 'map' => fn ($m) => [
@@ -544,7 +600,7 @@ class AdminCatalogController extends Controller
                         $data['is_automatic'] = $data['is_automatic'] ?? true;
                     }
 
-                    if (!empty($data['is_automatic'])) {
+                    if (! empty($data['is_automatic'])) {
                         PromoCode::where('id', '!=', $item?->id ?? 0)
                             ->where('is_automatic', true)
                             ->update(['is_automatic' => false]);
@@ -594,11 +650,12 @@ class AdminCatalogController extends Controller
                     if (empty($item)) {
                         $data['description'] = $data['description'] ?? '';
                         if (empty($data['sku'] ?? null)) {
-                            $data['sku'] = 'SKU-' . Str::upper(Str::random(8));
+                            $data['sku'] = 'SKU-'.Str::upper(Str::random(8));
                         }
                     } elseif (array_key_exists('description', $data) && $data['description'] === null) {
                         $data['description'] = '';
                     }
+
                     return $data;
                 },
                 'map' => fn ($m) => [
@@ -632,12 +689,13 @@ class AdminCatalogController extends Controller
                     'password' => $item ? 'nullable|string|min:6' : 'required|string|min:6',
                 ],
                 'prepare' => function (array $data, $item) {
-                    if (!empty($data['password'])) {
+                    if (! empty($data['password'])) {
                         $data['password'] = Hash::make($data['password']);
                     } else {
                         unset($data['password']);
                     }
                     $data['status'] = $data['status'] ?? 'active';
+
                     return $data;
                 },
                 'map' => fn ($m) => [

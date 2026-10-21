@@ -9,6 +9,7 @@ use App\Models\Commandes;
 use App\Models\Produits;
 use App\Models\Tag;
 use App\Models\User;
+use App\Support\ImageUploads;
 use App\Support\OrderStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -156,7 +157,7 @@ class SellerController extends Controller
         $data = $request->validate($this->productRules(null));
 
         $tags = $data['tags'] ?? [];
-        unset($data['tags'], $data['images'], $data['remove_images']);
+        unset($data['tags'], $data['images'], $data['remove_images'], $data['uploaded_images']);
 
         $data['vendeur_id'] = $seller->id;
         $data['is_active'] = $request->has('is_active')
@@ -189,7 +190,7 @@ class SellerController extends Controller
         $data = $request->validate($this->productRules($product));
 
         $tags = $data['tags'] ?? [];
-        unset($data['tags'], $data['images'], $data['remove_images']);
+        unset($data['tags'], $data['images'], $data['remove_images'], $data['uploaded_images']);
 
         $data['is_active'] = $request->has('is_active')
             ? $request->boolean('is_active')
@@ -298,6 +299,8 @@ class SellerController extends Controller
             'tags.*' => 'integer|exists:tags,id',
             'images' => 'nullable|array|max:10',
             'images.*' => 'image|max:4096',
+            'uploaded_images' => 'nullable|array|max:10',
+            'uploaded_images.*' => 'string|max:500',
             'image' => 'nullable|image|max:4096',
             'remove_images' => 'nullable|array',
             'remove_images.*' => 'integer',
@@ -346,6 +349,25 @@ class SellerController extends Controller
         foreach (array_slice(array_values($files), 0, $remaining) as $file) {
             $filename = $file->store('Produits/'.$product->id, 'public');
             $product->photos()->create(['filename' => $filename]);
+        }
+
+        // Images déjà téléversées en JSON/base64, dans l'ordre choisi.
+        $remaining = max(0, 10 - $product->photos()->count());
+        $uploadedPaths = array_slice(
+            array_values((array) $request->input('uploaded_images', [])),
+            0,
+            $remaining,
+        );
+        foreach ($uploadedPaths as $path) {
+            if (
+                ! is_string($path)
+                || ! ImageUploads::ownedBy($request->user(), $path)
+                || ImageUploads::isAttached($path)
+            ) {
+                continue;
+            }
+
+            $product->photos()->create(['filename' => $path]);
         }
 
         $first = $product->photos()->orderBy('id')->first();

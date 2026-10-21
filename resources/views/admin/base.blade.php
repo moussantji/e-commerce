@@ -85,5 +85,6 @@ window.addEventListener('scroll',function(){if(!planifie){planifie=true;requestA
 })();
 </script>
 @stack('scripts')
+<script src="{{ asset('assets/js/json-image-upload.js') }}?v=1"></script>
 </body>
 </html>

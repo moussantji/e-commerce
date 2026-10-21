@@ -43,6 +43,15 @@ class Produits extends Model
 
     protected static function booted(): void
     {
+        // La colonne `description` est NOT NULL en base alors que les
+        // formulaires (admin, vendeur, API) la laissent vide : on la
+        // normalise avant l'écriture pour éviter une erreur SQL.
+        static::saving(function (Produits $produit) {
+            if ($produit->description === null) {
+                $produit->description = '';
+            }
+        });
+
         // Référence auto (jamais de N/A) : PRD-00001, PRD-00002...
         static::created(function (Produits $produit) {
             if (empty($produit->sku)) {

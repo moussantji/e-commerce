@@ -2,45 +2,87 @@
 
 namespace App\Livewire\Admin;
 
-use DB;
-use App\Models\Tag;
 use App\Models\Brand;
-use Livewire\Component;
-use App\Models\Produits;
-use Livewire\WithFileUploads;
 use App\Models\Caracteristiques;
-use Illuminate\Support\Facades\Log;
 use App\Models\Categories as Category;
+use App\Models\Produits;
+use App\Models\Tag;
+use App\Models\User;
+use App\Support\ImageUploads;
+use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class AddProduct extends Component
 {
     use WithFileUploads;
 
     // Champs principaux
-    public $name, $description, $sku, $category_id, $brand_id, $vendeur_id;
+    public $name;
+
+    public $description;
+
+    public $sku;
+
+    public $category_id;
+
+    public $brand_id;
+
+    public $vendeur_id;
+
     public $images = [];
+
+    // Chemins des images déjà téléversées en JSON/base64 (sans multipart).
+    public $uploaded_images = [];
+
     public $selected_tags = [];
-    public $is_active = true, $is_featured = false;
+
+    public $is_active = true;
+
+    public $is_featured = false;
 
     // Inventaire
-    public $regular_price = 0, $sale_price = 0;
-    public $stock_quantity = 0, $stock_actuel = 0;
-    public $stock_transit = 0, $stock_total = 0;
+    public $regular_price = 0;
+
+    public $sale_price = 0;
+
+    public $stock_quantity = 0;
+
+    public $stock_actuel = 0;
+
+    public $stock_transit = 0;
+
+    public $stock_total = 0;
+
     public $last_restock = null;
+
     public $produit_created = false;
 
     // Livraison & Attributs
     public $shipping_type = 'phoenix';
-    public $fragile = false, $biodegradable = false;
-    public $frozen = false, $frozen_temp = '';
+
+    public $fragile = false;
+
+    public $biodegradable = false;
+
+    public $frozen = false;
+
+    public $frozen_temp = '';
 
     // Variants
     public $variant_options = [];
 
     // 📍 AJOUTE CES PROPRIÉTÉS
-    public $showCategoryModal = false, $newCategoryName = '';
-    public $showBrandModal = false, $newBrandName = '';
-    public $showTagModal = false, $newTagName = '';
+    public $showCategoryModal = false;
+
+    public $newCategoryName = '';
+
+    public $showBrandModal = false;
+
+    public $newBrandName = '';
+
+    public $showTagModal = false;
+
+    public $newTagName = '';
 
     protected $rules = [
         'name' => 'required|string|max:255',
@@ -58,6 +100,8 @@ class AddProduct extends Component
         'variant_options.*.type' => 'nullable|string',
         'images' => 'nullable|array|max:10',  // max 10 images
         'images.*' => 'image|max:2048',       // 2Mo max par image
+        'uploaded_images' => 'nullable|array|max:10',
+        'uploaded_images.*' => 'string|max:500',
     ];
 
     public function mount()
@@ -67,7 +111,7 @@ class AddProduct extends Component
         $this->variant_options = [[
             'type' => '',
             'values_input' => '',
-            'values' => []
+            'values' => [],
         ]];
     }
 
@@ -94,7 +138,51 @@ class AddProduct extends Component
 
     public function removeImage($index)
     {
-        $this->images = array_values(array_filter($this->images, fn($img, $key) => $key != $index, ARRAY_FILTER_USE_BOTH));
+        $this->images = array_values(array_filter($this->images, fn ($img, $key) => $key != $index, ARRAY_FILTER_USE_BOTH));
+    }
+
+    /**
+     * Reçoit les chemins renvoyés par le téléversement JSON et les garde en
+     * attente jusqu'à l'enregistrement du produit.
+     */
+    public function addUploadedImages(array $paths): void
+    {
+        $user = auth()->user();
+        if (! $user) {
+            return;
+        }
+
+        $valid = [];
+        foreach ($paths as $path) {
+            if (
+                is_string($path)
+                && ImageUploads::ownedBy($user, $path)
+                && ! ImageUploads::isAttached($path)
+            ) {
+                $valid[] = $path;
+            }
+        }
+
+        $capacity = max(0, ImageUploads::MAX_PRODUCT_IMAGES - count($this->uploaded_images));
+        $this->uploaded_images = array_values(array_unique(array_merge(
+            $this->uploaded_images,
+            array_slice($valid, 0, $capacity),
+        )));
+    }
+
+    public function removeUploadedImage(int $index): void
+    {
+        $path = $this->uploaded_images[$index] ?? null;
+        if (! $path) {
+            return;
+        }
+
+        unset($this->uploaded_images[$index]);
+        $this->uploaded_images = array_values($this->uploaded_images);
+
+        if ($user = auth()->user()) {
+            ImageUploads::deletePending($user, $path);
+        }
     }
 
     public function addStock()
@@ -142,19 +230,22 @@ class AddProduct extends Component
         ]);
 
         // Tags (sélection multiple du formulaire)
-        if (!empty($this->selected_tags)) {
+        if (! empty($this->selected_tags)) {
             $produit->tags()->sync($this->selected_tags);
         }
-        // ✅ ATTACHE les images avec ta méthode
+        // ✅ ATTACHE les images (multipart local + téléversements JSON)
         if ($this->images) {
             $produit->attachFiles($this->images);
+        }
+        if ($this->uploaded_images && ($user = auth()->user())) {
+            ImageUploads::attachToProduct($produit, $this->uploaded_images, $user);
         }
 
         // Active inventaire
         $this->produit_created = true;
         $this->stock_actuel = $this->stock_quantity ?? 0;
         foreach ($this->variant_options as $option) {
-            if (!empty($option['type']) && !empty($option['values'])) {
+            if (! empty($option['type']) && ! empty($option['values'])) {
                 foreach ($option['values'] as $value) {
                     $caracteristique = Caracteristiques::firstOrCreate(
                         ['type' => $option['type'], 'name' => ucfirst($option['type'])],
@@ -163,7 +254,7 @@ class AddProduct extends Component
 
                     // ✅ Utilise les bons noms de colonnes
                     $produit->caracteristiques()->attach($caracteristique->id, [
-                        'value' => $value
+                        'value' => $value,
                     ]);
                 }
             }
@@ -178,7 +269,7 @@ class AddProduct extends Component
         return view('livewire.admin.add-product', [
             'categories' => Category::all(),
             'brands' => Brand::all(),
-            'vendeurs' => \App\Models\User::where('role', 'vendeur')->orderBy('name')->get(),
+            'vendeurs' => User::where('role', 'vendeur')->orderBy('name')->get(),
             'all_tags' => Tag::orderBy('name')->get(),  // ✅ Objets pour vue
             // ✅ Passe les caractéristiques pour le select
             'caracteristiques_list' => Caracteristiques::orderBy('name')->get(),

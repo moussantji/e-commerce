@@ -18,6 +18,7 @@ import {
     Animated,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -33,8 +34,9 @@ import FocusTextInput, {
 } from "../components/FocusTextInput";
 
 const MAX_GALLERY_IMAGES = 10;
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 
-/** Normalise un asset expo-image-picker pour l'envoi multipart. */
+/** Normalise un asset expo-image-picker sans passer par FormData. */
 function formImage(asset, suffix = "") {
     const fileName =
         asset.fileName ||
@@ -45,23 +47,63 @@ function formImage(asset, suffix = "") {
         uri: asset.uri,
         name: fileName,
         type: mime,
-        // Sur le web, expo-image-picker fournit un vrai File : indispensable
-        // car FormData (navigateur) n'accepte pas les descripteurs React Native.
+        // Sur le web, expo-image-picker fournit un vrai File.
         file: asset.file || null,
     };
 }
 
-/** Ajoute une image au FormData (fichier navigateur ou descripteur natif). */
-function appendImagePart(fd, key, img) {
-    if (Platform.OS === "web" && img.file) {
-        fd.append(key, img.file, img.name);
-        return;
-    }
-    fd.append(key, {
-        uri: Platform.OS === "ios" ? img.uri.replace("file://", "") : img.uri,
-        name: img.name,
-        type: img.type,
+function readBlobAsDataUrl(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error("Impossible de lire l'image."));
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.readAsDataURL(blob);
     });
+}
+
+/** Lit une image locale et renvoie son contenu en base64 (sans préfixe). */
+async function imageToBase64(img) {
+    if (Platform.OS === "web") {
+        let blob = img.file;
+        if (!blob && img.uri) {
+            const response = await fetch(img.uri);
+            blob = await response.blob();
+        }
+        if (!blob) throw new Error("Image introuvable.");
+        if (blob.size > MAX_IMAGE_BYTES) {
+            throw new Error("Chaque image doit faire 2 Mo maximum.");
+        }
+        const dataUrl = await readBlobAsDataUrl(blob);
+        const comma = dataUrl.indexOf(",");
+        return comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl;
+    }
+
+    const info = await FileSystem.getInfoAsync(img.uri);
+    if (!info.exists) throw new Error("Image introuvable.");
+    if (info.size && info.size > MAX_IMAGE_BYTES) {
+        throw new Error("Chaque image doit faire 2 Mo maximum.");
+    }
+
+    return FileSystem.readAsStringAsync(img.uri, {
+        encoding: FileSystem.EncodingType.Base64,
+    });
+}
+
+/**
+ * Téléverse une image en JSON/base64 et renvoie son chemin serveur.
+ * Aucun multipart : le pare-feu de production le bloque avant PHP.
+ */
+async function uploadImage(img) {
+    const data = await imageToBase64(img);
+    const response = await api.post("/uploads/images", {
+        name: img.name,
+        mime: img.type || "image/jpeg",
+        data,
+    });
+
+    const path = response?.data?.path;
+    if (!path) throw new Error("Réponse de téléversement invalide.");
+    return path;
 }
 
 export default function AdminManageScreen({ route, navigation }) {
@@ -326,7 +368,7 @@ export default function AdminManageScreen({ route, navigation }) {
     const buildPayload = () => {
         const payload = {};
         for (const f of config.fields) {
-            if (f.type === "image" || f.type === "images") continue; // géré séparément (multipart)
+            if (f.type === "image" || f.type === "images") continue; // téléversé séparément
             const v = form[f.key];
             if (f.type === "switch") {
                 payload[f.key] = !!v;
@@ -356,12 +398,6 @@ export default function AdminManageScreen({ route, navigation }) {
         return payload;
     };
 
-    // Retourne les champs image qui contiennent une NOUVELLE image sélectionnée.
-    const pickedImageFields = () =>
-        config.fields.filter(
-            (f) => f.type === "image" && form[f.key] && form[f.key].uri && !form[f.key].existing,
-        );
-
     // Champs image existants que l'utilisateur a retirés dans le formulaire.
     const removedImageFields = () =>
         editing
@@ -369,14 +405,6 @@ export default function AdminManageScreen({ route, navigation }) {
                   (f) => f.type === "image" && editing[f.key] && !form[f.key],
               )
             : [];
-
-    // Nouvelles images de galerie sélectionnées (pas encore envoyées).
-    const hasNewGalleryImages = () =>
-        config.fields.some(
-            (f) =>
-                f.type === "images" &&
-                (form[f.key] || []).some((img) => img?.uri && !img.existing),
-        );
 
     // Identifiants des photos existantes retirées de la galerie.
     const removedGalleryImageIds = () => {
@@ -401,63 +429,43 @@ export default function AdminManageScreen({ route, navigation }) {
         return removed;
     };
 
-    const buildFormData = () => {
-        const fd = new FormData();
-        for (const f of config.fields) {
-            if (f.type === "image" || f.type === "images") continue;
-            const v = form[f.key];
-            if (f.type === "switch") {
-                fd.append(f.key, v ? "1" : "0");
-            } else if (f.type === "multiselect") {
-                // Laravel attend tags[] pour reconstruire un tableau.
-                // Le drapeau `_present` distingue « aucun tag » d'un champ
-                // absent, sinon un tableau vide ne peut pas vider la sélection.
-                fd.append(`${f.key}_present`, "1");
-                (Array.isArray(v) ? v : []).forEach((item) =>
-                    fd.append(`${f.key}[]`, String(item)),
-                );
-            } else if (f.type === "number") {
-                if (v !== "" && v != null) fd.append(f.key, String(v));
-                else if (editing && !f.required) fd.append(f.key, "");
-            } else {
-                const s = typeof v === "string" ? v.trim() : v;
-                if (s !== "" && s != null) fd.append(f.key, String(s));
-                else if (
-                    editing &&
-                    !f.required &&
-                    !f.createRequired &&
-                    f.type !== "password"
-                ) {
-                    // Champ vidé : Laravel le convertit en null, ce qui permet
-                    // de l'effacer (sauf description produit, normalisée serveur).
-                    fd.append(f.key, "");
-                }
-            }
-        }
-        pickedImageFields().forEach((f) => {
-            appendImagePart(fd, f.key, form[f.key]);
-        });
-
-        // Galerie produit : chaque fichier est envoyé sous `images[]`.
+    /**
+     * Téléverse les nouvelles images une par une en JSON/base64, puis ajoute
+     * leurs chemins au payload. Aucune requête multipart n'est produite.
+     */
+    const attachUploadedImages = async (payload) => {
+        const paths = [];
         config.fields
             .filter((f) => f.type === "images")
             .forEach((f) => {
-                (form[f.key] || [])
+                (Array.isArray(form[f.key]) ? form[f.key] : [])
                     .filter((img) => img?.uri && !img.existing)
-                    .forEach((img) => appendImagePart(fd, "images[]", img));
+                    .forEach((img) => paths.push(img));
             });
 
-        const removedGalleryIds = removedGalleryImageIds();
-        removedGalleryIds.forEach((id) => {
-            fd.append("remove_images[]", String(id));
-        });
-
-        // Image unique retirée (autres ressources que les produits).
-        if (removedImageFields().length > 0) {
-            fd.append("remove_image", "1");
+        const uploadedPaths = [];
+        for (const img of paths) {
+            uploadedPaths.push(await uploadImage(img));
+        }
+        if (uploadedPaths.length > 0) {
+            payload.uploaded_images = uploadedPaths;
         }
 
-        return fd;
+        const removedGalleryIds = removedGalleryImageIds();
+        if (removedGalleryIds.length > 0) {
+            payload.remove_images = removedGalleryIds;
+        }
+
+        for (const f of config.fields.filter((field) => field.type === "image")) {
+            const image = form[f.key];
+            if (image?.uri && !image.existing) {
+                payload.uploaded_image = await uploadImage(image);
+            } else if (removedImageFields().some((field) => field.key === f.key)) {
+                payload.remove_image = true;
+            }
+        }
+
+        return payload;
     };
 
     const validate = () => {
@@ -492,28 +500,12 @@ export default function AdminManageScreen({ route, navigation }) {
         if (!validate()) return;
         setSaving(true);
         try {
-            const hasImageChanges =
-                pickedImageFields().length > 0 ||
-                removedImageFields().length > 0 ||
-                hasNewGalleryImages() ||
-                removedGalleryImageIds().length > 0;
+            const payload = await attachUploadedImages(buildPayload());
 
-            if (hasImageChanges) {
-                // Envoi multipart (images + champs). PUT est simulé via _method
-                // car PHP ne parse pas le multipart sur une vraie requête PUT.
-                const fd = buildFormData();
-                if (editing) fd.append("_method", "PUT");
-                const url = editing ? `${base}/${editing.id}` : base;
-                await api.post(url, fd, {
-                    headers: { "Content-Type": "multipart/form-data" },
-                });
+            if (editing) {
+                await api.put(`${base}/${editing.id}`, payload);
             } else {
-                const payload = buildPayload();
-                if (editing) {
-                    await api.put(`${base}/${editing.id}`, payload);
-                } else {
-                    await api.post(base, payload);
-                }
+                await api.post(base, payload);
             }
 
             setFormOpen(false);

@@ -2,34 +2,79 @@
 
 namespace App\Livewire\Admin;
 
-use DB;
-use stdClass;
-use App\Models\Tag;
 use App\Models\Brand;
-use App\Models\photos;
-use Livewire\Component;
-use App\Models\Produits;
-use Livewire\WithFileUploads;
-use Illuminate\Validation\Rule;
 use App\Models\Caracteristiques;
 use App\Models\Categories as Category;
+use App\Models\photos;
+use App\Models\Produits;
+use App\Models\Tag;
+use App\Models\User;
+use App\Support\ImageUploads;
+use DB;
+use Illuminate\Validation\Rule;
+use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class EditProduct extends Component
 {
     use WithFileUploads;
 
     public $produit_id;
+
     public $produit;
 
     // Mêmes propriétés que AddProduct
-    public $name, $description, $sku, $regular_price, $sale_price;
-    public $images = [], $old_images;
-    public $stock_quantity, $stock_actuel, $stock_transit = 0, $stock_total = 0;
-    public $last_restock, $produit_created = true;
+    public $name;
+
+    public $description;
+
+    public $sku;
+
+    public $regular_price;
+
+    public $sale_price;
+
+    public $images = [];
+
+    public $old_images;
+
+    // Chemins des images déjà téléversées en JSON/base64 (sans multipart).
+    public $uploaded_images = [];
+
+    public $stock_quantity;
+
+    public $stock_actuel;
+
+    public $stock_transit = 0;
+
+    public $stock_total = 0;
+
+    public $last_restock;
+
+    public $produit_created = true;
+
     public $shipping_type = 'phoenix';
-    public $fragile = false, $biodegradable = false, $frozen = false, $frozen_temp = '';
-    public $category_id, $brand_id, $vendeur_id, $is_active = true, $is_featured = false;
+
+    public $fragile = false;
+
+    public $biodegradable = false;
+
+    public $frozen = false;
+
+    public $frozen_temp = '';
+
+    public $category_id;
+
+    public $brand_id;
+
+    public $vendeur_id;
+
+    public $is_active = true;
+
+    public $is_featured = false;
+
     public $selected_tags = [];
+
     public $variant_options = [];
 
     public function rules()
@@ -50,8 +95,10 @@ class EditProduct extends Component
             'selected_tags.*' => 'exists:tags,id',
             'category_id' => 'nullable|exists:categories,id',
             'brand_id' => 'nullable|exists:brands,id',
-        'vendeur_id' => 'nullable|exists:users,id',
+            'vendeur_id' => 'nullable|exists:users,id',
             'images.*' => 'nullable|image|max:2048',
+            'uploaded_images' => 'nullable|array|max:10',
+            'uploaded_images.*' => 'string|max:500',
             'variant_options.*.type' => 'nullable|string',
             'variant_options.*.values_input' => 'nullable|string',
         ];
@@ -63,11 +110,9 @@ class EditProduct extends Component
         $this->loadProduct();
         $this->addVariantOption();
 
-
         // ✅ Charge les CARACTÉRISTIQUES existantes
         $this->loadCaracteristiques();
     }
-
 
     public function loadProduct()
     {
@@ -105,10 +150,11 @@ class EditProduct extends Component
             ->groupBy('type')
             ->map(function ($caracs) {
                 $values = $caracs->pluck('pivot.value')->filter()->toArray();
+
                 return [
                     'type' => $caracs->first()->type,
                     'values_input' => implode(', ', $values),
-                    'values' => $values
+                    'values' => $values,
                 ];
             });
 
@@ -120,11 +166,10 @@ class EditProduct extends Component
             $this->variant_options = [[
                 'type' => '',
                 'values_input' => '',
-                'values' => []
+                'values' => [],
             ]];
         }
     }
-
 
     public function updatedVariantOptions($value, $key)
     {
@@ -141,20 +186,21 @@ class EditProduct extends Component
         $this->variant_options[] = [
             'type' => '',
             'values_input' => '',
-            'values' => []
+            'values' => [],
         ];
     }
 
     public function deletePhoto($photoId)
     {
         // Supprime de DB
-        Photos::find($photoId)?->delete();
+        photos::find($photoId)?->delete();
+
+        // La première photo restante devient l'image principale.
+        ImageUploads::syncPrimary($this->produit);
 
         // Recharge SEULEMENT les photos DB
         $this->old_images = $this->produit->fresh()->photos;
     }
-
-
 
     public function removeVariantOption($index)
     {
@@ -166,6 +212,55 @@ class EditProduct extends Component
     {
         unset($this->images[$index]);
         $this->images = array_values($this->images);
+    }
+
+    /**
+     * Reçoit les chemins renvoyés par le téléversement JSON et les garde en
+     * attente jusqu'à l'enregistrement du produit.
+     */
+    public function addUploadedImages(array $paths): void
+    {
+        $user = auth()->user();
+        if (! $user) {
+            return;
+        }
+
+        $valid = [];
+        foreach ($paths as $path) {
+            if (
+                is_string($path)
+                && ImageUploads::ownedBy($user, $path)
+                && ! ImageUploads::isAttached($path)
+            ) {
+                $valid[] = $path;
+            }
+        }
+
+        // La galerie existante compte dans la limite de 10 photos.
+        $existing = $this->produit?->photos()->count() ?? 0;
+        $capacity = max(
+            0,
+            ImageUploads::MAX_PRODUCT_IMAGES - $existing - count($this->uploaded_images),
+        );
+        $this->uploaded_images = array_values(array_unique(array_merge(
+            $this->uploaded_images,
+            array_slice($valid, 0, $capacity),
+        )));
+    }
+
+    public function removeUploadedImage(int $index): void
+    {
+        $path = $this->uploaded_images[$index] ?? null;
+        if (! $path) {
+            return;
+        }
+
+        unset($this->uploaded_images[$index]);
+        $this->uploaded_images = array_values($this->uploaded_images);
+
+        if ($user = auth()->user()) {
+            ImageUploads::deletePending($user, $path);
+        }
     }
 
     public function addStock()
@@ -206,10 +301,14 @@ class EditProduct extends Component
 
             // ✅ 1. VIDE les images temporaires
             $this->images = [];
-
-            // ✅ 2. Recharge les photos DB
-            $this->old_images = $this->produit->fresh()->photos;
         }
+        if ($this->uploaded_images && ($user = auth()->user())) {
+            ImageUploads::attachToProduct($this->produit, $this->uploaded_images, $user);
+            $this->uploaded_images = [];
+        }
+
+        // Recharge les photos DB après les éventuels ajouts.
+        $this->old_images = $this->produit->fresh()->photos;
 
         $this->produit->update($data);
 
@@ -221,7 +320,7 @@ class EditProduct extends Component
 
         // ✅ Ajoute nouvelles
         foreach ($this->variant_options as $option) {
-            if (!empty($option['type']) && !empty($option['values'])) {
+            if (! empty($option['type']) && ! empty($option['values'])) {
                 $caracteristique = Caracteristiques::firstOrCreate(
                     ['type' => $option['type']],
                     ['name' => ucfirst($option['type']), 'is_filterable' => true]
@@ -229,7 +328,7 @@ class EditProduct extends Component
 
                 foreach ($option['values'] as $value) {
                     $this->produit->caracteristiques()->attach($caracteristique->id, [
-                        'value' => trim($value)
+                        'value' => trim($value),
                     ]);
                 }
             }
@@ -244,7 +343,7 @@ class EditProduct extends Component
         return view('livewire.admin.edit-product', [
             'categories' => Category::all(),
             'brands' => Brand::all(),
-            'vendeurs' => \App\Models\User::where('role', 'vendeur')->orderBy('name')->get(),
+            'vendeurs' => User::where('role', 'vendeur')->orderBy('name')->get(),
             'all_tags' => Tag::orderBy('name')->get(),  // ✅ Objets pour vue
             'caracteristiques_list' => Caracteristiques::orderBy('name')->get(),
         ]);
