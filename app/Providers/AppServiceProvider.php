@@ -34,10 +34,16 @@ class AppServiceProvider extends ServiceProvider
                 ->line('Si vous n\'avez pas créé de compte, ignorez cet email.');
         });
 
-        // ✅ $user SEULEMENT pour admin/ et client/
+        // $user = utilisateur connecté pour les layouts admin/client.
+        // Ne jamais écraser un $user passé explicitement par un contrôleur :
+        // l'admin doit pouvoir consulter/modifier un autre compte que le sien.
         View::composer(['*'], function ($view) {
+            $hasExplicitUser = array_key_exists('user', $view->getData());
+
             if (Auth::check()) {
-                $view->with('user', Auth::user());
+                if (! $hasExplicitUser) {
+                    $view->with('user', Auth::user());
+                }
 
                 // 🔥 Compteur panier pour users connectés
                 $panierId = DB::table('paniers')
@@ -49,7 +55,9 @@ class AppServiceProvider extends ServiceProvider
                     DB::table('panier_produit')->where('paniers_id', $panierId)->sum('quantite')
                     : 0;
             } else {
-                $view->with('user', null);
+                if (! $hasExplicitUser) {
+                    $view->with('user', null);
+                }
                 $cartcount = session('cart_count', 0); // Panier invités
             }
 
