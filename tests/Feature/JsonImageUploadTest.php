@@ -39,6 +39,11 @@ class JsonImageUploadTest extends TestCase
 
         $this->assertStringStartsWith('uploads/vendeur-'.$seller->id.'/', $path);
         Storage::disk('public')->assertExists($path);
+
+        // L'URL d'aperçu passe par Glide, comme les photos définitives.
+        $url = $response->json('url');
+        $this->assertStringContainsString('/images/', $url);
+        $this->assertStringContainsString($path, $url);
     }
 
     public function test_un_client_ne_peut_pas_televerser_d_image(): void

@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use League\Glide\Urls\UrlBuilderFactory;
 
 /**
  * Téléversement d'images sans multipart.
@@ -102,9 +103,12 @@ class ImageUploads
             ]);
         }
 
+        // Aperçu : même générateur d'URL que les photos définitives
+        // (Glide `/images/...` signé). Si GD/Imagick manque, ImageController
+        // sert le fichier d'origine, donc l'aperçu reste fonctionnel.
         return [
             'path' => $path,
-            'url' => Storage::disk('public')->url($path),
+            'url' => self::url($path),
             'name' => $originalName,
         ];
     }
@@ -216,9 +220,17 @@ class ImageUploads
         Storage::disk('public')->delete((string) $path);
     }
 
-    /** URL publique d'un fichier du disque public. */
+    /**
+     * URL publique d'aperçu d'un fichier du disque public.
+     *
+     * Passe par Glide (`/images/{chemin}?w=...&s=...`) comme les photos
+     * définitives de `photos::getImageUrl()`, afin que l'aperçu affiché
+     * avant l'enregistrement soit identique à l'image finale.
+     */
     public static function url(string $path): string
     {
-        return Storage::disk('public')->url($path);
+        $urlBuilder = UrlBuilderFactory::create('/images/', config('glide.key'));
+
+        return $urlBuilder->getUrl($path, ['w' => 400, 'h' => 400, 'fit' => 'crop']);
     }
 }
