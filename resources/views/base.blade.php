@@ -33,19 +33,19 @@ $structuredData = [
             'name' => $siteName,
             'url' => url('/'),
             'logo' => asset('assets/img/favicons/favicon.png'),
-            'telephone' => '+22382019583',
+            'telephone' => '+22378057895',
             'email' => 'contact@mandenbaoubab.com',
             'areaServed' => ['@type' => 'Country', 'name' => 'Mali'],
             'contactPoint' => [
                 [
                     '@type' => 'ContactPoint',
-                    'telephone' => '+22382019583',
+                    'telephone' => '+22378057895',
                     'contactType' => 'customer service',
                     'availableLanguage' => 'French',
                 ],
                 [
                     '@type' => 'ContactPoint',
-                    'telephone' => '+22378057895',
+                    'telephone' => '+22382019583',
                     'contactType' => 'customer service',
                     'availableLanguage' => 'French',
                 ],
@@ -57,7 +57,7 @@ $structuredData = [
             'name' => $siteName,
             'url' => url('/'),
             'image' => asset('img/shop/hero-bg.jpg'),
-            'telephone' => '+22382019583',
+            'telephone' => '+22378057895',
             'email' => 'contact@mandenbaoubab.com',
             'address' => [
                 '@type' => 'PostalAddress',
