@@ -77,6 +77,7 @@ class SocialLoginController extends Controller
                 'provider_id' => $socialUser->getId(),
                 'password' => Str::random(40),
                 'role' => 'customer',
+                'status' => 'active',
             ]);
         }
 

@@ -39,6 +39,10 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            // Un client qui s'inscrit est actif immédiatement. Seuls les
+            // comptes vendeur restent inactifs en attente de validation.
+            'role' => 'customer',
+            'status' => 'active',
         ]);
 
         event(new Registered($user));

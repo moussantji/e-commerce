@@ -26,6 +26,12 @@ class RegistrationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
+        // Le client est actif dès l'inscription (pas de validation admin).
+        $this->assertDatabaseHas('users', [
+            'email' => 'test@example.com',
+            'role' => 'customer',
+            'status' => 'active',
+        ]);
         // Le client est redirigé vers l'accueil après inscription.
         $response->assertRedirect(route('home', absolute: false));
     }
