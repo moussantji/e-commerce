@@ -17,6 +17,7 @@ class SitemapController extends Controller
             ['loc' => route('client.brands.index'), 'freq' => 'weekly', 'prio' => '0.6'],
             ['loc' => route('conditions'), 'freq' => 'yearly', 'prio' => '0.3'],
             ['loc' => route('confidentialite'), 'freq' => 'yearly', 'prio' => '0.3'],
+            ['loc' => route('aide'), 'freq' => 'monthly', 'prio' => '0.5'],
         ];
 
         $categories = Categories::where('is_active', true)

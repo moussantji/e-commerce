@@ -25,6 +25,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\ImageUploadController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PageController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PhoneVerificationController;
 use App\Http\Controllers\PhotoControler;
@@ -47,6 +48,8 @@ Route::get('/robots.txt', [SitemapController::class, 'robots'])->name('robots');
 // Pages légales
 Route::view('/conditions', 'legal.conditions')->name('conditions');
 Route::view('/confidentialite', 'legal.confidentialite')->name('confidentialite');
+// Aide & support
+Route::get('/aide', [PageController::class, 'aide'])->name('aide');
 Route::get('/panier', [CartController::class, 'index'])->name('panier');
 Route::get('/produits', [HomeController::class, 'allProduits'])->name('products');
 Route::get('/favoris', [HomeController::class, 'favoris'])->name('favoris');

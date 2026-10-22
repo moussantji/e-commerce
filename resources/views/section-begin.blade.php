@@ -5,7 +5,7 @@
 <span class="sep hide-m"></span><span class="hide-m">Orange Money</span>
 <span class="sep hide-m"></span><span class="hide-m">Moov Money</span>
 <span class="sep hide-m"></span><span class="hide-m">Wave</span>
-<div class="top-push"><a href="{{ route('home') }}#aide">Aide</a><a href="tel:+22382019583">+223 82 01 95 83</a></div>
+<div class="top-push"><a href="{{ route('aide') }}">Aide</a><a href="tel:+22382019583">+223 82 01 95 83</a></div>
 </div>
 </div>
 <header class="shop-header">
