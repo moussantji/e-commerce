@@ -17,13 +17,18 @@ class ImageController extends Controller
     public function show(Request $request, string $path)
     {
         SignatureFactory::create(config('glide.key'))->validateRequest($request->path(), $request->all());
-        $server = ServerFactory::create([
-            'source' => Storage::disk('public')->getDriver(),
-            'cache' => Storage::disk('local')->getDriver(),
-            'cache_path_prefix' => '.cache',
-            'base_url' => 'images'
-        ]);
+
         try {
+            // La création du serveur peut échouer si GD/Imagick n'est pas
+            // installé : elle doit rester dans le try pour que le secours
+            // ci-dessous serve le fichier d'origine au lieu d'une erreur 500.
+            $server = ServerFactory::create([
+                'source' => Storage::disk('public')->getDriver(),
+                'cache' => Storage::disk('local')->getDriver(),
+                'cache_path_prefix' => '.cache',
+                'base_url' => 'images'
+            ]);
+
             // Glide 3 : génère ET renvoie directement les octets de l'image
             $imageData = $server->outputImage($path, $request->all());
 
