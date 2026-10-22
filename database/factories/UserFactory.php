@@ -29,6 +29,9 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            // Les comptes créés par les tests sont actifs par défaut ; les
+            // scénarios de bannissement passent explicitement 'inactive'.
+            'status' => 'active',
         ];
     }
 

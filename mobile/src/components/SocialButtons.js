@@ -95,6 +95,12 @@ async function signInWithBackend(socialExchange) {
 
     const parsed = Linking.parse(result.url);
     if (parsed.queryParams?.error) {
+        const reason = String(parsed.queryParams.error);
+        if (reason === "inactive") {
+            throw new Error(
+                "Votre compte est désactivé ou en attente de validation. Contactez le support.",
+            );
+        }
         throw new Error("La connexion Google a été refusée ou a échoué.");
     }
 

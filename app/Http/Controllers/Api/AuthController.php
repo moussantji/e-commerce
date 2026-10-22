@@ -56,6 +56,14 @@ class AuthController extends Controller
             ]);
         }
 
+        // Vendeur en attente de validation ou compte banni : pas de token.
+        if (! $user->isActive()) {
+            return response()->json([
+                'message' => $user->inactiveMessage(),
+                'code' => 'account_inactive',
+            ], 403);
+        }
+
         $user->forceFill(['last_login' => now(), 'last_activity' => now()])->save();
 
         $token = $user->createToken('mobile')->plainTextToken;

@@ -88,6 +88,13 @@ class SocialAuthController extends Controller
             ])->save();
         }
 
+        if (! $user->isActive()) {
+            return response()->json([
+                'message' => $user->inactiveMessage(),
+                'code' => 'account_inactive',
+            ], 403);
+        }
+
         $token = $user->createToken('mobile')->plainTextToken;
 
         return response()->json($this->userPayload($user, $token));
@@ -120,6 +127,13 @@ class SocialAuthController extends Controller
                 ['message' => 'Compte introuvable.'],
                 422,
             );
+        }
+
+        if (! $user->isActive()) {
+            return response()->json([
+                'message' => $user->inactiveMessage(),
+                'code' => 'account_inactive',
+            ], 403);
         }
 
         $user->forceFill([

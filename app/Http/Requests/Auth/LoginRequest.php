@@ -49,6 +49,20 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        $user = Auth::user();
+
+        // Compte vendeur en attente de validation ou compte banni : on refuse
+        // la connexion et on annule la session créée par Auth::attempt().
+        if ($user && ! $user->isActive()) {
+            Auth::guard('web')->logout();
+            $this->session()->invalidate();
+            $this->session()->regenerateToken();
+
+            throw ValidationException::withMessages([
+                'email' => $user->inactiveMessage(),
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

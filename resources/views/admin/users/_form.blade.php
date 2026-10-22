@@ -115,6 +115,8 @@
             </option>
         </select>
         @error('status') <span class="avis-err">{{ $message }}</span> @enderror
+        <span class="muted-sm" style="display:block;margin-top:6px">Un compte inactif ne peut pas se connecter
+            (vendeur en attente de validation ou compte banni).</span>
     </div>
     <div class="field" style="margin-bottom:0;justify-content:end">
         <label class="switch"><input type="checkbox" name="email_verified" value="1"

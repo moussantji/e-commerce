@@ -81,6 +81,16 @@ class SocialLoginController extends Controller
             ]);
         }
 
+        if (! $user->isActive()) {
+            if ($this->isMobileFlow()) {
+                return $this->mobileRedirect('error=inactive');
+            }
+
+            return redirect()
+                ->route('home', ['connexion' => 1])
+                ->with('error', $user->inactiveMessage());
+        }
+
         Auth::login($user, true);
 
         // App mobile : on échange un code court contre un token Sanctum via l'API.

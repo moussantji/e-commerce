@@ -18,7 +18,11 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
         $middleware->web(append: [
+            \App\Http\Middleware\EnsureAccountIsActive::class,
             \App\Http\Middleware\UpdateLastActivity::class,
+        ]);
+        $middleware->api(append: [
+            \App\Http\Middleware\EnsureAccountIsActive::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -189,6 +189,22 @@ class User extends Authenticatable implements MustVerifyEmail
         $this->notify(new \App\Notifications\ResetPasswordFrench($token));
     }
 
+    /** Seul un compte explicitement actif peut se connecter. */
+    public function isActive(): bool
+    {
+        return $this->status === 'active';
+    }
+
+    /** Message affiché lorsqu'un compte inactif / banni tente de se connecter. */
+    public function inactiveMessage(): string
+    {
+        if ($this->role === 'vendeur') {
+            return "Votre compte vendeur est en attente de validation par l'administration.";
+        }
+
+        return 'Votre compte est désactivé ou banni. Contactez le support.';
+    }
+
     /**
      * The attributes that should be mutated to dates.
      *
