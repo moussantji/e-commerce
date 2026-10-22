@@ -11,9 +11,9 @@
 <header class="shop-header">
 <div class="shop-wrap header-row">
 <a class="brand" href="{{ route('home') }}" aria-label="Accueil"><span class="mark"><svg class="ic"><use href="#i-store"/></svg></span><span class="brand-name">{{ config('app.name') }}</span></a>
-<form class="shop-search desktop" action="{{ route('products') }}" method="GET" role="search" onsubmit="return true">
+<form id="shopSearchForm" class="shop-search desktop" action="{{ route('products') }}" method="GET" role="search">
 <svg class="ic"><use href="#i-search"/></svg>
-<input id="shopSearchInput" type="search" name="q" value="{{ request('q') }}" placeholder="Rechercher un produit..." aria-label="Rechercher un produit" autocomplete="off" readonly>
+<input id="shopSearchInput" type="search" name="q" value="{{ request('q') }}" placeholder="Rechercher un produit..." aria-label="Rechercher un produit" autocomplete="off">
 </form>
 <div class="shop-actions">
 <a href="{{ auth()->check() ? route('favoris') : route('login') }}" aria-label="Favoris"><svg class="ic"><use href="#i-heart"/></svg></a>

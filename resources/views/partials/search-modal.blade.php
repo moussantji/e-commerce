@@ -18,12 +18,12 @@
 <button class="pop" type="button" data-q="4g">4G</button>
 </div>
 </div>
-<div class="sm-sec">
-<div class="sm-h">Meilleures offres</div>
+<div class="sm-sec" id="sm-offres-wrap">
+<div class="sm-h">Produits populaires</div>
 <div class="sm-list" id="sm-offres"></div>
 </div>
 </div>
-<div id="sm-results" hidden></div>
+<div id="sm-results" aria-live="polite" hidden></div>
 </div>
 <div class="sm-foot">
 <span class="k"><i>↵</i> ouvrir le premier résultat</span>
