@@ -233,11 +233,16 @@ class AdminCatalogController extends Controller
             && ImageUploads::ownedBy($request->user(), $uploadedPath)
             && ! ImageUploads::isAttached($uploadedPath)
         ) {
-            $this->deletePhotos($item->photos()->get());
-            $item->photos()->create(['filename' => $uploadedPath]);
-            $item->forceFill([$column => $uploadedPath])->save();
+            // Même emplacement que les fichiers multipart : {dossier}/{id}/...
+            $stored = ImageUploads::moveToFolder($uploadedPath, $cfg['image_folder'], $item->id);
 
-            return;
+            if ($stored !== null) {
+                $this->deletePhotos($item->photos()->get());
+                $item->photos()->create(['filename' => $stored]);
+                $item->forceFill([$column => $stored])->save();
+
+                return;
+            }
         }
 
         // Retrait explicite de l'image existante (sans nouvel upload).
@@ -330,7 +335,14 @@ class AdminCatalogController extends Controller
                 continue;
             }
 
-            $item->photos()->create(['filename' => $path]);
+            // Même emplacement que les fichiers multipart : {dossier}/{id}/...
+            $stored = ImageUploads::moveToFolder($path, $cfg['image_folder'], $item->id);
+
+            if ($stored === null) {
+                continue;
+            }
+
+            $item->photos()->create(['filename' => $stored]);
         }
 
         $this->syncPrimaryImage($item, $column);

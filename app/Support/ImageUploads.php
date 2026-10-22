@@ -137,8 +137,31 @@ class ImageUploads
     }
 
     /**
+     * Déplace une image téléversée dans le dossier définitif de l'enregistrement,
+     * avec la même convention que les modèles (`attachfiles()` / `$file->store()`) :
+     * `{dossier}/{id}/{40 caractères aléatoires}.{ext}`.
+     *
+     * Le fichier temporaire (`uploads/admin-10/...`) disparaît : l'image est
+     * ensuite servie par `photos::getImageUrl()` comme les images multipart.
+     */
+    public static function moveToFolder(string $path, string $folder, int $id): ?string
+    {
+        $disk = Storage::disk('public');
+
+        if (! $disk->exists($path)) {
+            return null;
+        }
+
+        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION)) ?: 'jpg';
+        $target = trim($folder, '/').'/'.$id.'/'.Str::random(40).'.'.$extension;
+
+        return $disk->move($path, $target) ? $target : null;
+    }
+
+    /**
      * Attache des images téléversées à un produit (10 photos maximum).
-     * La première photo de la galerie devient l'image principale.
+     * Chaque fichier est déplacé dans `Produits/{id}/`, comme le fait
+     * `Produits::attachfiles()`. La première photo devient l'image principale.
      */
     public static function attachToProduct(Produits $product, array $paths, User $user): int
     {
@@ -160,8 +183,14 @@ class ImageUploads
                 continue;
             }
 
-            $product->photos()->create(['filename' => $path]);
-            $existing[] = $path;
+            $stored = self::moveToFolder($path, 'Produits', $product->id);
+
+            if ($stored === null) {
+                continue;
+            }
+
+            $product->photos()->create(['filename' => $stored]);
+            $existing[] = $stored;
             $added++;
         }
 

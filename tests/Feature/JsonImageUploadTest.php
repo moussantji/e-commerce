@@ -90,9 +90,8 @@ class JsonImageUploadTest extends TestCase
         $product = Produits::where('name', 'Produit avec image JSON')->firstOrFail();
 
         $this->assertSame($seller->id, $product->vendeur_id);
-        $this->assertSame($path, $product->image);
         $this->assertCount(1, $product->photos);
-        $this->assertSame($path, $product->photos->first()->filename);
+        $this->assertProductImage($product, $path);
     }
 
     public function test_un_vendeur_ne_peut_pas_attacher_l_image_d_un_autre_vendeur(): void
@@ -139,8 +138,8 @@ class JsonImageUploadTest extends TestCase
 
         $product = Produits::where('name', 'Produit admin JSON')->firstOrFail();
 
-        $this->assertSame($path, $product->image);
         $this->assertCount(1, $product->photos);
+        $this->assertProductImage($product, $path);
     }
 
     public function test_l_admin_mobile_attache_une_image_unique_json_a_une_categorie(): void
@@ -160,8 +159,10 @@ class JsonImageUploadTest extends TestCase
 
         $category = Categories::where('name', 'Catégorie JSON')->firstOrFail();
 
-        $this->assertSame($path, $category->image);
         $this->assertCount(1, $category->photos);
+        $this->assertStringStartsWith('Category/'.$category->id.'/', (string) $category->image);
+        $this->assertSame($category->image, $category->photos->first()->filename);
+        $this->assertFalse(Storage::disk('public')->exists($path));
     }
 
     public function test_le_vendeur_web_attache_une_image_json_a_son_produit(): void
@@ -184,8 +185,8 @@ class JsonImageUploadTest extends TestCase
 
         $product = Produits::where('name', 'Produit vendeur web JSON')->firstOrFail();
 
-        $this->assertSame($path, $product->image);
         $this->assertCount(1, $product->photos);
+        $this->assertProductImage($product, $path);
     }
 
     public function test_le_vendeur_web_peut_creer_un_produit_sans_description(): void
@@ -210,8 +211,8 @@ class JsonImageUploadTest extends TestCase
         $product = Produits::where('name', 'Produit vendeur sans description')->firstOrFail();
 
         $this->assertSame('', $product->description);
-        $this->assertSame($path, $product->image);
         $this->assertCount(1, $product->photos);
+        $this->assertProductImage($product, $path);
     }
 
     public function test_l_admin_web_ajoute_une_image_json_depuis_livewire(): void
@@ -234,8 +235,8 @@ class JsonImageUploadTest extends TestCase
 
         $product = Produits::where('name', 'Produit Livewire JSON')->firstOrFail();
 
-        $this->assertSame($path, $product->image);
         $this->assertCount(1, $product->photos);
+        $this->assertProductImage($product, $path);
     }
 
     public function test_l_admin_web_modifie_un_produit_avec_une_image_json(): void
@@ -258,8 +259,8 @@ class JsonImageUploadTest extends TestCase
 
         $product->refresh();
 
-        $this->assertSame($path, $product->image);
         $this->assertCount(1, $product->photos);
+        $this->assertProductImage($product, $path);
     }
 
     public function test_l_admin_web_ajoute_un_produit_sans_description(): void
@@ -282,8 +283,26 @@ class JsonImageUploadTest extends TestCase
         $product = Produits::where('name', 'Produit Livewire sans description')->firstOrFail();
 
         $this->assertSame('', $product->description);
-        $this->assertSame($path, $product->image);
         $this->assertCount(1, $product->photos);
+        $this->assertProductImage($product, $path);
+    }
+
+    /**
+     * L'image attachée doit être déplacée dans Produits/{id}/ (même
+     * convention que Produits::attachfiles()) : le fichier temporaire
+     * uploads/{role}-{id}/... ne doit plus exister.
+     */
+    private function assertProductImage(Produits $product, string $tempPath): void
+    {
+        $stored = (string) $product->image;
+
+        $this->assertStringStartsWith('Produits/'.$product->id.'/', $stored);
+        $this->assertSame($stored, $product->photos->first()->filename);
+        $this->assertTrue(Storage::disk('public')->exists($stored));
+        $this->assertFalse(
+            Storage::disk('public')->exists($tempPath),
+            'Le fichier temporaire aurait dû être déplacé.'
+        );
     }
 
     private function uploadFor(User $user): string

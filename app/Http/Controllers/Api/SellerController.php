@@ -367,7 +367,14 @@ class SellerController extends Controller
                 continue;
             }
 
-            $product->photos()->create(['filename' => $path]);
+            // Même emplacement que les fichiers multipart : Produits/{id}/...
+            $stored = ImageUploads::moveToFolder($path, 'Produits', $product->id);
+
+            if ($stored === null) {
+                continue;
+            }
+
+            $product->photos()->create(['filename' => $stored]);
         }
 
         $first = $product->photos()->orderBy('id')->first();
